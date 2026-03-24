@@ -1,0 +1,10 @@
+# Backend ignores
+bin/
+obj/
+*.user
+*.suo
+.vs/
+
+# Sensitive config
+appsettings.json
+appsettings.*.json
