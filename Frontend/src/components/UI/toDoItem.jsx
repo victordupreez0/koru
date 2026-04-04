@@ -15,8 +15,8 @@ export default function ToDoItem() {
         <>
             {todos.map((todo, idx) => (
                 <div key={idx} className="my-2 bg-white rounded-lg w-full h-12 flex flex-row items-center space-x-2">
-                    <div className="w-9 h-9 bg-gray-200 rounded-md ml-2 flex items-center justify-center">
-                        <MdEditNote className="w-6 h-6 text-gray-500" />
+                    <div className="w-9 h-9 bg-[#9161C0] rounded-md ml-2 flex items-center justify-center">
+                        <MdEditNote className="w-6 h-6 text-white" />
                     </div>
                     <div className="ml-2 flex flex-col justify-center space-y-1 flex-1">
                         <h3 className="text-sm">{todo.title}</h3>

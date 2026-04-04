@@ -33,11 +33,11 @@ export default function Menu() {
       initial="hidden"
       animate="visible"
     >
-      <div className="navbar-start">
+      {/* <div className="navbar-start">
         <a className="py-2 px-3 mx-1 text-xl">Learn</a>
-      </div>
+      </div> */}
       <div className="navbar-center flex">
-        <motion.ul className="menu menu-horizontal px-1" variants={listVariants}>
+        <motion.ul className="menu menu-horizontal px-6" variants={listVariants}>
           {navItems.map((item) => (
             <NavItem key={item.label} {...item} variants={itemVariants} />
           ))}

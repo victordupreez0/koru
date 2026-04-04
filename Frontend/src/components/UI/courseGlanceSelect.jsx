@@ -22,12 +22,12 @@ export default function CourseGlanceSelect() {
                             key={course.code}
                             className={`btn !rounded-full !border-transparent flex items-center !px-1 justify-between min-w-fit transition-colors duration-150 focus:outline-none focus:ring-0 active:outline-none active:ring-0
                                 hover:shadow-md hover:!border-transparent
-                                ${isActive ? "!bg-black !text-white" : "!bg-white !text-black"}`}
+                                ${isActive ? "!bg-[#3C0078] !text-white" : "!bg-white !text-black"}`}
                             onClick={() => setActive(course.code)}
                         >
                             <span className="avatar avatar-placeholder">
                                 <span className={`w-8 h-8 rounded-full flex items-center font-bold justify-center aspect-square overflow-hidden transition-colors duration-150
-                                    ${isActive ? "bg-white text-black" : "bg-neutral text-neutral-content"}`}
+                                    ${isActive ? "bg-white text-black" : "bg-[#3C0078] text-neutral-content"}`}
                                 >
                                     <span className="text-xs">{course.avatar}</span>
                                 </span>

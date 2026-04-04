@@ -1,3 +1,4 @@
+import AnnouncementsItem from "./UI/announcementsItem";
 import NextClassItem from "./UI/nextClassItem";
 import ToDoItem from "./UI/toDoItem";
 
@@ -14,7 +15,7 @@ export default function CourseGlanceDisplay() {
         <NextClassItem />
 
         <h3 className="font-medium">Announcements:</h3>
-
+        <AnnouncementsItem />
         </div>
         
         
