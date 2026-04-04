@@ -1,14 +1,15 @@
+@import url("https://fonts.googleapis.com/css2?family=Gabarito:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap");
 @import "tailwindcss";
 @plugin "daisyui";
 
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: "Poppins", system-ui, -apple-system, "Segoe UI", sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  color-scheme: light;
+  color: rgba(0, 0, 0, 0.87);
+  background-color: #f6f6f6;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -17,11 +18,11 @@
 
 a {
   font-weight: 500;
-  color: #646cff;
+  color: #000000;
   text-decoration: inherit;
 }
 a:hover {
-  color: #535bf2;
+  color: #000000;
 }
 
 body {
@@ -33,6 +34,11 @@ body {
 h1 {
   font-size: 3.2em;
   line-height: 1.1;
+}
+
+h1,
+h2 {
+  font-family: "Gabarito", system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
 button {
@@ -47,11 +53,12 @@ button {
   transition: border-color 0.25s;
 }
 button:hover {
-  border-color: #646cff;
+  border-color: #000000;
 }
 button:focus,
 button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 @media (prefers-color-scheme: light) {
@@ -60,9 +67,26 @@ button:focus-visible {
     background-color: #ffffff;
   }
   a:hover {
-    color: #747bff;
+    color: #000000;
   }
   button {
     background-color: #f9f9f9;
   }
+}
+
+.scrollbar-black {
+  scrollbar-width: thin; /* For Firefox */
+  scrollbar-color: #111 #e5e7eb00;
+}
+.scrollbar-black::-webkit-scrollbar {
+  height: 4px;  /* Thinner scrollbar */
+  width: 4px;
+  background: #e5e7eb;
+}
+.scrollbar-black::-webkit-scrollbar-thumb {
+  background: #111;
+  border-radius: 8px;
+}
+.scrollbar-black::-webkit-scrollbar-track {
+  background: #e5e7eb;
 }
