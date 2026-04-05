@@ -1,10 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
-import {
-  MdPerson,
-  MdSettings,
-} from "react-icons/md";
-import NavItem from "./UI/navItem";
+import { User, Settings } from "@solar-icons/react";
+import SideNavItem from "./UI/sideNavItem";
 
 const navbarVariants = {
   hidden: { opacity: 0, x: -20 },
@@ -24,8 +21,8 @@ const itemVariants = {
 export default function SideMenu() {
 
   const footerItems = [
-    { label: "Profile", href: "#profile", icon: <MdPerson className="h-6 w-6" aria-hidden="true" /> },
-    { label: "Settings", href: "#settings", icon: <MdSettings className="h-6 w-6" aria-hidden="true" /> },
+    { label: "Profile", href: "#profile", icon: <User weight="Outline" size={24} color="currentColor" /> },
+    { label: "Settings", href: "#settings", icon: <Settings weight="Outline" size={24} color="currentColor" /> },
   ];
 
   return (
@@ -36,9 +33,9 @@ export default function SideMenu() {
       animate="visible"
     >
       <div className="navbar-center flex">
-        <motion.ul className="menu menu-vertical" variants={listVariants}>
+        <motion.ul className="menu menu-vertical p-1 m-0" variants={listVariants}>
           {footerItems.map((item) => (
-            <NavItem key={item.label} {...item} variants={itemVariants} />
+            <SideNavItem key={item.label} {...item} variants={itemVariants} />
           ))}
         </motion.ul>
       </div>

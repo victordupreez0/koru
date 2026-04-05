@@ -1,6 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { MdDashboard, MdMenuBook, MdCalendarMonth, MdQueryStats } from "react-icons/md";
+import { SpeedometerLow, Book, Calendar, PieChart2 } from "@solar-icons/react";
+
 import NavItem from "./UI/navItem";
 
 const navbarVariants = {
@@ -20,10 +21,10 @@ const itemVariants = {
 
 export default function Menu() {
   const navItems = [
-    { label: "Home", href: "#home", icon: <MdDashboard className="h-6 w-6" aria-hidden="true" /> },
-    { label: "Courses", href: "#courses", icon: <MdMenuBook className="h-6 w-6" aria-hidden="true" /> },
-    { label: "Calendar", href: "#calendar", icon: <MdCalendarMonth className="h-6 w-6" aria-hidden="true" /> },
-    { label: "Analytics", href: "#analytics", icon: <MdQueryStats className="h-6 w-6" aria-hidden="true" /> },
+    { label: "Home", href: "#home", icon: <SpeedometerLow weight="Outline" size={24} color="currentColor" /> },
+    { label: "Courses", href: "#courses", icon: <Book weight="Outline" size={24} color="currentColor" /> },
+    { label: "Calendar", href: "#calendar", icon: <Calendar weight="Outline" size={24} color="currentColor" /> },
+    { label: "Analytics", href: "#analytics", icon: <PieChart2 weight="Outline" size={24} color="currentColor" /> },
   ];
 
   return (
@@ -37,7 +38,7 @@ export default function Menu() {
         <a className="py-2 px-3 mx-1 text-xl">Learn</a>
       </div> */}
       <div className="navbar-center flex">
-        <motion.ul className="menu menu-horizontal px-6" variants={listVariants}>
+        <motion.ul className="menu menu-horizontal p-0 m-0" variants={listVariants}>
           {navItems.map((item) => (
             <NavItem key={item.label} {...item} variants={itemVariants} />
           ))}

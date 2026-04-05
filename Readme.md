@@ -43,6 +43,9 @@ src/
 - For custom scrollbars, see the `.scrollbar-black` class in `src/index.css`.
 - If you want to add new Tailwind classes, just use them in your components—no extra setup needed.
 
-For more info, see [Tailwind Docs](https://tailwindcss.com/docs/utility-first) or ask your group lead!
+For Tailwind https://tailwindcss.com/docs
 
+For Solar icons check here: https://solar-icons.vercel.app/icons (Use these icons, NOT REACT ICONS)
+
+For DaisyUI elements check here: https://daisyui.com/components/ (simply copy jsx code and paste inside your component)
 
