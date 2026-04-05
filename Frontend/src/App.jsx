@@ -1,7 +1,7 @@
 import Menu from "./components/menu";
 import SideMenu from "./components/sideMenu";
 import Dashboard from "./pages/dashboard";
-import "./App.css";
+
 
 function App() {
   return (
