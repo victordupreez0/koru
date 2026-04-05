@@ -6,7 +6,7 @@ export default function AnnouncementsItem({
   time = "11:23AM"
 }) {
   return (
-    <div className="my-2  bg-white rounded-lg w-full h-12 flex flex-row items-center px-3 py-2 min-h-[56px]">
+    <div className="my-2  bg-white rounded-lg w-full h-12 flex flex-row items-center px-3 py-2 min-h-[56px]  transition-all duration-200 hover:scale-[1.02] hover:shadow-md hover:bg-[#9BE9EA]/5">
       <div className="w-8 h-8 bg-[#9BE9EA] rounded-full flex items-center justify-center">
         <MdPersonOutline className="w-6 h-6 text-black" />
       </div>

@@ -76,7 +76,7 @@ button:focus-visible {
 
 .scrollbar-black {
   scrollbar-width: thin; /* For Firefox */
-  scrollbar-color: #111 #e5e7eb00;
+  scrollbar-color: #FF8731 #e5e7eb00;
 }
 .scrollbar-black::-webkit-scrollbar {
   height: 4px;  /* Thinner scrollbar */
