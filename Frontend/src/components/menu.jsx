@@ -21,10 +21,10 @@ const itemVariants = {
 
 export default function Menu() {
   const navItems = [
-    { label: "Home", href: "#home", icon: <SpeedometerLow weight="Outline" size={24} color="currentColor" /> },
-    { label: "Courses", href: "#courses", icon: <Book weight="Outline" size={24} color="currentColor" /> },
-    { label: "Calendar", href: "#calendar", icon: <Calendar weight="Outline" size={24} color="currentColor" /> },
-    { label: "Analytics", href: "#analytics", icon: <PieChart2 weight="Outline" size={24} color="currentColor" /> },
+    { label: "Home", href: "/", icon: <SpeedometerLow weight="Outline" size={24} color="currentColor" /> },
+    { label: "Courses", href: "/courses", icon: <Book weight="Outline" size={24} color="currentColor" /> },
+    { label: "Calendar", href: "/calendar", icon: <Calendar weight="Outline" size={24} color="currentColor" /> },
+    { label: "Analytics", href: "/analytics", icon: <PieChart2 weight="Outline" size={24} color="currentColor" /> },
   ];
 
   return (
