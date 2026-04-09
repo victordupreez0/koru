@@ -4,8 +4,7 @@ using LearnOnline.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-
+// Register MVC controllers so ASP.NET can discover our API endpoints
 builder.Services.AddControllers();
 
 // Allow the React frontend (Vite dev server) to call our API
@@ -17,17 +16,19 @@ builder.Services.AddCors(options =>
               .AllowAnyMethod());
 });
 
+// Swagger / OpenAPI for interactive API docs at /swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddOpenApi();
 
+// Register the EF Core database context with the PostgreSQL connection string
 builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("LearnOnlineDb")));
 
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// In development, expose Swagger UI and the OpenAPI endpoint
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -42,6 +43,7 @@ app.UseCors("AllowFrontend");
 
 app.UseAuthorization();
 
+// Map all controller routes (e.g. /api/Event, /api/User, etc.)
 app.MapControllers();
 
 app.Run();
