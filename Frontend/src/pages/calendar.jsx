@@ -5,7 +5,7 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 
-// Service layer – all fetch calls to our C# backend
+// Service layer – all fetch calls to our backend
 import {
   getEvents,
   createEvent,
@@ -64,7 +64,7 @@ export default function CalendarPage() {
   const [modalMode, setModalMode] = useState("create"); // "create" | "edit"
   const [selectedEvent, setSelectedEvent] = useState(null);
 
-  // Fetch all events from the C# backend on mount
+  // Fetch all events from the backend on mount
   useEffect(() => {
     let cancelled = false;
     async function load() {
