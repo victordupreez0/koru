@@ -10,7 +10,7 @@ function App() {
     <BrowserRouter>
       <Menu />
       <SideMenu />
-      <main className="pt-24 pl-40 pr-4">
+      <main className="pt-24 pl-40 pr-40">
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/calendar" element={<CalendarPage />} />

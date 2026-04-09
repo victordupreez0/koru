@@ -54,6 +54,8 @@ namespace LearnOnline.Controllers
             ev.StartTime = updated.StartTime;
             ev.EndTime = updated.EndTime;
             ev.CreatedBy = updated.CreatedBy;
+            ev.BgColor = updated.BgColor;
+            ev.TextColor = updated.TextColor;
             ev.CourseId = updated.CourseId;
 
             await _context.SaveChangesAsync();

@@ -20,6 +20,10 @@ namespace LearnOnline.Models
 
         public string? CreatedBy { get; set; }
 
+        // Calendar display colours (used by the calendar component)
+        public string? BgColor { get; set; }
+        public string? TextColor { get; set; }
+
         [Required]
         public string CourseId { get; set; } = null!;
 

@@ -90,3 +90,12 @@ button:focus-visible {
 .scrollbar-black::-webkit-scrollbar-track {
   background: #e5e7eb;
 }
+
+/* FullCalendar – override today highlight to match our purple accent */
+.fc .fc-day-today {
+  background-color: rgb(255, 135, 49, 0.8) !important;
+  color:rgb(255, 255, 255) !important;
+}
+.fc .fc-day-today .fc-daygrid-day-number {
+  color: #ffffff !important;
+}
