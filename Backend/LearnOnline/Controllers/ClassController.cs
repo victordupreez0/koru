@@ -5,6 +5,8 @@ using LearnOnline.Models;
 
 namespace LearnOnline.Controllers
 {
+    // Class API – CRUD for scheduled class sessions
+    // Each Class is a time-slot in a Timetable linked to a Course
     [ApiController]
     [Route("api/[controller]")]
     public class ClassController : ControllerBase
@@ -15,6 +17,7 @@ namespace LearnOnline.Controllers
             _context = context;
         }
 
+        // GET /api/Class – return all class sessions with their Timetable and Course
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Class>>> GetAll()
         {
@@ -24,6 +27,7 @@ namespace LearnOnline.Controllers
                 .ToListAsync();
         }
 
+        // GET /api/Class/{id} – return a single class session by ID
         [HttpGet("{id}")]
         public async Task<ActionResult<Class>> GetById(string id)
         {
@@ -35,6 +39,7 @@ namespace LearnOnline.Controllers
             return cls;
         }
 
+        // POST /api/Class – create a new class session
         [HttpPost]
         public async Task<ActionResult<Class>> Create(Class cls)
         {
@@ -44,6 +49,7 @@ namespace LearnOnline.Controllers
             return CreatedAtAction(nameof(GetById), new { id = cls.Id }, cls);
         }
 
+        // PUT /api/Class/{id} – update room, day, times, or reassign to a different timetable/course
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(string id, Class updated)
         {
@@ -62,6 +68,7 @@ namespace LearnOnline.Controllers
             return NoContent();
         }
 
+        // DELETE /api/Class/{id} – permanently remove a class session
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(string id)
         {

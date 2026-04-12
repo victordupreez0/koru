@@ -1,6 +1,9 @@
 import { MdPersonOutline, MdAccessTime } from "react-icons/md";
 import { motion } from "framer-motion";
 
+// Expanded event card – used for the NEXT upcoming event on the timeline
+// Larger layout with a purple accent bar, subtitle, lecturer avatar row, and duration pill
+// Fades out and turns grey when the event is in the past
 export default function TimelineEventExpanded({
   title = "DV300 - Theory",
   subtitle = "Project Proposal Pitch",
@@ -17,18 +20,18 @@ export default function TimelineEventExpanded({
       transition={{ duration: 0.35, ease: "easeOut" }}
       className={`flex-1 pb-5 cursor-pointer transition-opacity duration-300 ${isPast ? "opacity-45" : "opacity-100"}`}
     >
-      {/* Time label */}
+      {/* Time range label above the card */}
       <p className={`text-sm font-semibold mb-2.5 ml-0.5 tracking-wide ${isPast ? "text-gray-400 line-through" : "text-gray-600"}`}>
         {timeRange}
       </p>
 
-      {/* Expanded card */}
+      {/* Main card container */}
       <div className={`border rounded-2xl overflow-hidden transition-shadow duration-200 ${isPast ? "bg-gray-50 border-gray-100" : "bg-white border-gray-200 shadow-sm hover:shadow-md"}`}>
-        {/* Accent bar – greyed when past */}
+        {/* Top accent bar – purple gradient for active, grey for past */}
         <div className={`h-1.5 w-full ${isPast ? "bg-gray-200" : "bg-gradient-to-r from-[#3C0078] to-[#7B2FBE]"}`} />
 
         <div className="p-5">
-          {/* Header row */}
+          {/* Header – title, subtitle, and location badge */}
           <div className="flex items-start justify-between gap-3 mb-4">
             <div className="flex-1 min-w-0">
               <h3 className="text-xl font-semibold text-black leading-tight font-['Gabarito']">
@@ -41,11 +44,12 @@ export default function TimelineEventExpanded({
             </span>
           </div>
 
-          {/* Spacer */}
+          {/* Spacer between header and footer */}
           <div className="h-12" />
 
-          {/* Footer row */}
+          {/* Footer – lecturer info and duration pill */}
           <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+            {/* Lecturer avatar and name */}
             <div className="flex items-center gap-3">
               <div className={`w-9 h-9 rounded-full flex items-center justify-center ${isPast ? "bg-gray-100" : "bg-[#3C0078]/10"}`}>
                 <MdPersonOutline className={`w-5 h-5 ${isPast ? "text-gray-400" : "text-[#3C0078]"}`} />
@@ -59,6 +63,8 @@ export default function TimelineEventExpanded({
                 </span>
               </div>
             </div>
+
+            {/* Duration pill with clock icon */}
             <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full ${isPast ? "bg-gray-100" : "bg-[#FF8731]/10"}`}>
               <MdAccessTime className={`w-4 h-4 ${isPast ? "text-gray-400" : "text-[#FF8731]"}`} />
               <span className={`text-sm font-semibold ${isPast ? "text-gray-400" : "text-[#FF8731]"}`}>{duration}</span>

@@ -5,6 +5,8 @@ using LearnOnline.Models;
 
 namespace LearnOnline.Controllers
 {
+    // Feedback API – CRUD for teacher feedback on student submissions
+    // Each feedback entry is tied to a specific Submission and Teacher
     [ApiController]
     [Route("api/[controller]")]
     public class FeedbackController : ControllerBase
@@ -15,6 +17,7 @@ namespace LearnOnline.Controllers
             _context = context;
         }
 
+        // GET /api/Feedback – return all feedback with their Submission and Teacher
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Feedback>>> GetAll()
         {
@@ -24,6 +27,7 @@ namespace LearnOnline.Controllers
                 .ToListAsync();
         }
 
+        // GET /api/Feedback/{id} – return a single feedback entry by ID
         [HttpGet("{id}")]
         public async Task<ActionResult<Feedback>> GetById(string id)
         {
@@ -35,6 +39,7 @@ namespace LearnOnline.Controllers
             return feedback;
         }
 
+        // POST /api/Feedback – create new feedback on a submission
         [HttpPost]
         public async Task<ActionResult<Feedback>> Create(Feedback feedback)
         {
@@ -45,6 +50,7 @@ namespace LearnOnline.Controllers
             return CreatedAtAction(nameof(GetById), new { id = feedback.Id }, feedback);
         }
 
+        // PUT /api/Feedback/{id} – update the feedback content or reassign it
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(string id, Feedback updated)
         {
@@ -59,6 +65,7 @@ namespace LearnOnline.Controllers
             return NoContent();
         }
 
+        // DELETE /api/Feedback/{id} – permanently remove a feedback entry
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(string id)
         {

@@ -5,6 +5,8 @@ using LearnOnline.Models;
 
 namespace LearnOnline.Controllers
 {
+    // Event API – full CRUD for calendar events
+    // Used by the FullCalendar frontend to create, read, update, and delete events
     [ApiController]
     [Route("api/[controller]")]
     public class EventController : ControllerBase
@@ -15,6 +17,7 @@ namespace LearnOnline.Controllers
             _context = context;
         }
 
+        // GET /api/Event – return all events with their related Course
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Event>>> GetAll()
         {
@@ -23,6 +26,7 @@ namespace LearnOnline.Controllers
                 .ToListAsync();
         }
 
+        // GET /api/Event/{id} – return a single event by its ID
         [HttpGet("{id}")]
         public async Task<ActionResult<Event>> GetById(string id)
         {
@@ -33,6 +37,7 @@ namespace LearnOnline.Controllers
             return ev;
         }
 
+        // POST /api/Event – create a new event and return it with a 201 status
         [HttpPost]
         public async Task<ActionResult<Event>> Create(Event ev)
         {
@@ -42,6 +47,8 @@ namespace LearnOnline.Controllers
             return CreatedAtAction(nameof(GetById), new { id = ev.Id }, ev);
         }
 
+        // PUT /api/Event/{id} – update all fields of an existing event
+        // Called by the frontend on modal save and on drag-and-drop / resize
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(string id, Event updated)
         {
@@ -54,12 +61,15 @@ namespace LearnOnline.Controllers
             ev.StartTime = updated.StartTime;
             ev.EndTime = updated.EndTime;
             ev.CreatedBy = updated.CreatedBy;
+            ev.BgColor = updated.BgColor;
+            ev.TextColor = updated.TextColor;
             ev.CourseId = updated.CourseId;
 
             await _context.SaveChangesAsync();
             return NoContent();
         }
 
+        // DELETE /api/Event/{id} – permanently remove an event
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(string id)
         {

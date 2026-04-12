@@ -5,6 +5,8 @@ using LearnOnline.Models;
 
 namespace LearnOnline.Controllers
 {
+    // Submission API – CRUD for student submissions against assignments
+    // Students upload their work here; teachers then grade and give feedback
     [ApiController]
     [Route("api/[controller]")]
     public class SubmissionController : ControllerBase
@@ -15,6 +17,7 @@ namespace LearnOnline.Controllers
             _context = context;
         }
 
+        // GET /api/Submission – return all submissions with their Assignment and Student
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Submission>>> GetAll()
         {
@@ -24,6 +27,7 @@ namespace LearnOnline.Controllers
                 .ToListAsync();
         }
 
+        // GET /api/Submission/{id} – return a single submission by ID
         [HttpGet("{id}")]
         public async Task<ActionResult<Submission>> GetById(string id)
         {
@@ -35,6 +39,7 @@ namespace LearnOnline.Controllers
             return submission;
         }
 
+        // POST /api/Submission – submit work for an assignment
         [HttpPost]
         public async Task<ActionResult<Submission>> Create(Submission submission)
         {
@@ -45,6 +50,7 @@ namespace LearnOnline.Controllers
             return CreatedAtAction(nameof(GetById), new { id = submission.Id }, submission);
         }
 
+        // PUT /api/Submission/{id} – update a submission's file or status
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(string id, Submission updated)
         {
@@ -60,6 +66,7 @@ namespace LearnOnline.Controllers
             return NoContent();
         }
 
+        // DELETE /api/Submission/{id} – permanently remove a submission
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(string id)
         {

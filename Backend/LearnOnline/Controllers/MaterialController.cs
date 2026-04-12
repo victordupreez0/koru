@@ -5,6 +5,8 @@ using LearnOnline.Models;
 
 namespace LearnOnline.Controllers
 {
+    // Material API – CRUD for course materials (slides, PDFs, videos, etc.)
+    // Teachers upload materials; students access them through the course view
     [ApiController]
     [Route("api/[controller]")]
     public class MaterialController : ControllerBase
@@ -15,6 +17,7 @@ namespace LearnOnline.Controllers
             _context = context;
         }
 
+        // GET /api/Material – return all materials with their related Course
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Material>>> GetAll()
         {
@@ -23,6 +26,7 @@ namespace LearnOnline.Controllers
                 .ToListAsync();
         }
 
+        // GET /api/Material/{id} – return a single material by ID
         [HttpGet("{id}")]
         public async Task<ActionResult<Material>> GetById(string id)
         {
@@ -33,6 +37,7 @@ namespace LearnOnline.Controllers
             return material;
         }
 
+        // POST /api/Material – upload a new material to a course
         [HttpPost]
         public async Task<ActionResult<Material>> Create(Material material)
         {
@@ -43,6 +48,7 @@ namespace LearnOnline.Controllers
             return CreatedAtAction(nameof(GetById), new { id = material.Id }, material);
         }
 
+        // PUT /api/Material/{id} – update a material's metadata or file URL
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(string id, Material updated)
         {
@@ -59,6 +65,7 @@ namespace LearnOnline.Controllers
             return NoContent();
         }
 
+        // DELETE /api/Material/{id} – permanently remove a material
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(string id)
         {
