@@ -5,6 +5,8 @@ using LearnOnline.Models;
 
 namespace LearnOnline.Controllers
 {
+    // Grade API – CRUD for scores awarded to student submissions
+    // Each grade records who graded it and when, for audit purposes
     [ApiController]
     [Route("api/[controller]")]
     public class GradeController : ControllerBase
@@ -15,6 +17,7 @@ namespace LearnOnline.Controllers
             _context = context;
         }
 
+        // GET /api/Grade – return all grades with their Submission and Grader
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Grade>>> GetAll()
         {
@@ -24,6 +27,7 @@ namespace LearnOnline.Controllers
                 .ToListAsync();
         }
 
+        // GET /api/Grade/{id} – return a single grade by ID
         [HttpGet("{id}")]
         public async Task<ActionResult<Grade>> GetById(string id)
         {
@@ -35,6 +39,7 @@ namespace LearnOnline.Controllers
             return grade;
         }
 
+        // POST /api/Grade – record a new grade for a submission
         [HttpPost]
         public async Task<ActionResult<Grade>> Create(Grade grade)
         {
@@ -45,6 +50,7 @@ namespace LearnOnline.Controllers
             return CreatedAtAction(nameof(GetById), new { id = grade.Id }, grade);
         }
 
+        // PUT /api/Grade/{id} – update a grade (re-grade) and refresh the timestamp
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(string id, Grade updated)
         {
@@ -60,6 +66,7 @@ namespace LearnOnline.Controllers
             return NoContent();
         }
 
+        // DELETE /api/Grade/{id} – permanently remove a grade record
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(string id)
         {
