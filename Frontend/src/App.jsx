@@ -7,6 +7,7 @@ import SideMenu from "./components/sideMenu";
 // Page components – rendered based on the current route
 import Dashboard from "./pages/dashboard";
 import CalendarPage from "./pages/calendar";
+import Courses from "./pages/courses";
 
 // Root application component – sets up routing and the shared layout
 function App() {
@@ -23,6 +24,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/calendar" element={<CalendarPage />} />
+          <Route path="/courses" element={<Courses />} />
         </Routes>
       </main>
     </BrowserRouter>
