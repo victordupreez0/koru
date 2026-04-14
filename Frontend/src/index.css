@@ -30,6 +30,13 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  scrollbar-width: none;
+  /* Firefox */
+}
+
+*::-webkit-scrollbar {
+  display: none;
+  /* Chrome, Safari, Edge */
 }
 
 h1 {

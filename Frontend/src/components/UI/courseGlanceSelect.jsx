@@ -61,8 +61,6 @@ export default function CourseGlanceSelect() {
                     );
                 })}
             </motion.div>
-            {/* Fade overlay */}
-            <div className="pointer-events-none absolute top-0 right-0 bottom-5 z-10 w-8 bg-gradient-to-l from-[#f5f5f5] to-transparent" />
         </div>
     );
 }

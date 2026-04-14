@@ -115,8 +115,7 @@ export default function TodayTimeline() {
 
       {/* ── Scrollable timeline with fade overlays ── */}
       <div className="relative">
-        {/* Top fade */}
-        <div className="pointer-events-none absolute top-0 left-0 right-0 h-12 z-10 bg-gradient-to-b from-[#f5f5f5] to-transparent" />
+
 
         {/* Scrollable list */}
         <div className="max-h-[520px] overflow-y-auto scrollbar-black pr-1 flex flex-col">
@@ -161,8 +160,7 @@ export default function TodayTimeline() {
           })}
         </div>
 
-        {/* Bottom fade */}
-        <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-12 z-10 bg-gradient-to-t from-[#f5f5f5] to-transparent" />
+
       </div>
     </div>
   );

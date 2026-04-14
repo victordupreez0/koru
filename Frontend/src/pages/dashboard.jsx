@@ -2,14 +2,15 @@ import React from "react";
 import { motion } from "framer-motion";
 import CourseGlance from "../components/courseGlance";
 import TodayTimeline from "../components/todayTimeline";
+import AssignmentsProgress from "../components/assignmentsProgress";
 
 
 export default function Dashboard() {
   return (
-    <div className="grid grid-cols-3 gap-8 items-start w-full">
+    <div className="grid grid-cols-3 gap-8 items-start w-full pr-50">
       <CourseGlance />
       <TodayTimeline />
-      <div>{/* Third component coming soon */}</div>
+      <AssignmentsProgress />
     </div>
   );
 }
