@@ -18,7 +18,7 @@ export default function CourseGlanceSelect() {
         ...courses.filter((course) => course.code !== active),
     ].filter(Boolean);
     return (
-        <div className="relative w-fit max-w-[350px] z-50 h-fit scrollbar-black">
+        <div className="relative w-full z-50 h-fit scrollbar-black">
             <motion.div layout className="relative z-0 flex flex-row space-x-2 overflow-x-auto pr-8 pb-5 scrollbar-hide">
                 {orderedCourses.map((course) => {
                     const isActive = active === course.code;

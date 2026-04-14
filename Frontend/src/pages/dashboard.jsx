@@ -6,9 +6,10 @@ import TodayTimeline from "../components/todayTimeline";
 
 export default function Dashboard() {
   return (
-    <div className="flex flex-row gap-8 items-start">
+    <div className="grid grid-cols-3 gap-8 items-start w-full">
       <CourseGlance />
       <TodayTimeline />
+      <div>{/* Third component coming soon */}</div>
     </div>
   );
 }

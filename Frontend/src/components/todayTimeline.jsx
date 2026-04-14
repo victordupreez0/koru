@@ -100,7 +100,7 @@ export default function TodayTimeline() {
   const nextIdx = getNextEventIndex(events, now);
 
   return (
-    <div className="w-[350px]">
+    <div className="w-full">
       {/* ── Header ── */}
       <div className="flex items-center gap-2.5 mt-5 mb-1">
         <h2 className="text-2xl font-['Gabarito']">Today</h2>
