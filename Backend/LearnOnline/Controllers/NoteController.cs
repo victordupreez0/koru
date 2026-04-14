@@ -5,6 +5,8 @@ using LearnOnline.Models;
 
 namespace LearnOnline.Controllers
 {
+    // Note API – CRUD for text notes linked to a course and student
+    // Notes can be written by teachers or students and are visible to a specific student
     [ApiController]
     [Route("api/[controller]")]
     public class NoteController : ControllerBase
@@ -15,6 +17,7 @@ namespace LearnOnline.Controllers
             _context = context;
         }
 
+        // GET /api/Note – return all notes with their Course, Student, and Author
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Note>>> GetAll()
         {
@@ -25,6 +28,7 @@ namespace LearnOnline.Controllers
                 .ToListAsync();
         }
 
+        // GET /api/Note/{id} – return a single note by ID
         [HttpGet("{id}")]
         public async Task<ActionResult<Note>> GetById(string id)
         {
@@ -37,6 +41,7 @@ namespace LearnOnline.Controllers
             return note;
         }
 
+        // POST /api/Note – create a new note for a student in a course
         [HttpPost]
         public async Task<ActionResult<Note>> Create(Note note)
         {
@@ -47,6 +52,7 @@ namespace LearnOnline.Controllers
             return CreatedAtAction(nameof(GetById), new { id = note.Id }, note);
         }
 
+        // PUT /api/Note/{id} – update a note's content or reassign it
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(string id, Note updated)
         {
@@ -62,6 +68,7 @@ namespace LearnOnline.Controllers
             return NoContent();
         }
 
+        // DELETE /api/Note/{id} – permanently remove a note
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(string id)
         {

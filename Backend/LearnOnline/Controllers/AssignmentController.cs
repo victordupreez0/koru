@@ -5,6 +5,8 @@ using LearnOnline.Models;
 
 namespace LearnOnline.Controllers
 {
+    // Assignment API – CRUD for course assignments (tasks, projects, exams)
+    // Teachers create assignments; students submit work against them
     [ApiController]
     [Route("api/[controller]")]
     public class AssignmentController : ControllerBase
@@ -15,6 +17,7 @@ namespace LearnOnline.Controllers
             _context = context;
         }
 
+        // GET /api/Assignment – return all assignments with their related Course
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Assignment>>> GetAll()
         {
@@ -23,6 +26,7 @@ namespace LearnOnline.Controllers
                 .ToListAsync();
         }
 
+        // GET /api/Assignment/{id} – return a single assignment by ID
         [HttpGet("{id}")]
         public async Task<ActionResult<Assignment>> GetById(string id)
         {
@@ -33,6 +37,7 @@ namespace LearnOnline.Controllers
             return assignment;
         }
 
+        // POST /api/Assignment – create a new assignment for a course
         [HttpPost]
         public async Task<ActionResult<Assignment>> Create(Assignment assignment)
         {
@@ -43,6 +48,7 @@ namespace LearnOnline.Controllers
             return CreatedAtAction(nameof(GetById), new { id = assignment.Id }, assignment);
         }
 
+        // PUT /api/Assignment/{id} – update an existing assignment's details
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(string id, Assignment updated)
         {
@@ -59,6 +65,7 @@ namespace LearnOnline.Controllers
             return NoContent();
         }
 
+        // DELETE /api/Assignment/{id} – permanently remove an assignment
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(string id)
         {

@@ -5,6 +5,8 @@ using LearnOnline.Models;
 
 namespace LearnOnline.Controllers
 {
+    // Subject API – CRUD for the subject catalogue
+    // Subjects are the templates; Courses are specific offerings of a Subject
     [ApiController]
     [Route("api/[controller]")]
     public class SubjectController : ControllerBase
@@ -15,12 +17,14 @@ namespace LearnOnline.Controllers
             _context = context;
         }
 
+        // GET /api/Subject – return all subjects in the catalogue
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Subject>>> GetAll()
         {
             return await _context.Subjects.ToListAsync();
         }
 
+        // GET /api/Subject/{id} – return a single subject by ID
         [HttpGet("{id}")]
         public async Task<ActionResult<Subject>> GetById(string id)
         {
@@ -29,6 +33,7 @@ namespace LearnOnline.Controllers
             return subject;
         }
 
+        // POST /api/Subject – add a new subject to the catalogue
         [HttpPost]
         public async Task<ActionResult<Subject>> Create(Subject subject)
         {
@@ -39,6 +44,7 @@ namespace LearnOnline.Controllers
             return CreatedAtAction(nameof(GetById), new { id = subject.Id }, subject);
         }
 
+        // PUT /api/Subject/{id} – update a subject's name, code, or description
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(string id, Subject updated)
         {
@@ -54,6 +60,7 @@ namespace LearnOnline.Controllers
             return NoContent();
         }
 
+        // DELETE /api/Subject/{id} – permanently remove a subject from the catalogue
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(string id)
         {

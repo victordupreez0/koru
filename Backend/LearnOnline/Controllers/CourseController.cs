@@ -5,6 +5,8 @@ using LearnOnline.Models;
 
 namespace LearnOnline.Controllers
 {
+    // Course API – CRUD for course offerings
+    // Each course links a Subject to a Teacher for a specific term and year
     [ApiController]
     [Route("api/[controller]")]
     public class CourseController : ControllerBase
@@ -15,6 +17,7 @@ namespace LearnOnline.Controllers
             _context = context;
         }
 
+        // GET /api/Course – return all courses with their Subject and Teacher
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Course>>> GetAll()
         {
@@ -24,6 +27,7 @@ namespace LearnOnline.Controllers
                 .ToListAsync();
         }
 
+        // GET /api/Course/{id} – return a single course by ID
         [HttpGet("{id}")]
         public async Task<ActionResult<Course>> GetById(string id)
         {
@@ -35,6 +39,7 @@ namespace LearnOnline.Controllers
             return course;
         }
 
+        // POST /api/Course – create a new course offering
         [HttpPost]
         public async Task<ActionResult<Course>> Create(Course course)
         {
@@ -45,6 +50,7 @@ namespace LearnOnline.Controllers
             return CreatedAtAction(nameof(GetById), new { id = course.Id }, course);
         }
 
+        // PUT /api/Course/{id} – update an existing course's details
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(string id, Course updated)
         {
@@ -61,6 +67,7 @@ namespace LearnOnline.Controllers
             return NoContent();
         }
 
+        // DELETE /api/Course/{id} – permanently remove a course
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(string id)
         {

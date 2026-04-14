@@ -4,27 +4,34 @@ import { SpeedometerLow, Book, Calendar, PieChart2 } from "@solar-icons/react";
 
 import NavItem from "./UI/navItem";
 
+// Framer Motion variants for the staggered entrance animation
+// The navbar fades in and slides down, then each nav item staggers in
 const navbarVariants = {
   hidden: { opacity: 0, y: -20 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
 };
 
+// Container variant – staggers its children (the nav items) one after another
 const listVariants = {
   hidden: { opacity: 0 },
   visible: { opacity: 1, transition: { staggerChildren: 0.08, delayChildren: 0.1 } },
 };
 
+// Individual nav item entrance animation
 const itemVariants = {
   hidden: { opacity: 0, y: -6 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.25, ease: "easeOut" } },
 };
 
+// Top navigation bar – floating pill centred at the top of the viewport
+// Contains icon-based links for the main pages of the app
 export default function Menu() {
+  // Each item maps to a route defined in App.jsx
   const navItems = [
-    { label: "Home", href: "#home", icon: <SpeedometerLow weight="Outline" size={24} color="currentColor" /> },
-    { label: "Courses", href: "#courses", icon: <Book weight="Outline" size={24} color="currentColor" /> },
-    { label: "Calendar", href: "#calendar", icon: <Calendar weight="Outline" size={24} color="currentColor" /> },
-    { label: "Analytics", href: "#analytics", icon: <PieChart2 weight="Outline" size={24} color="currentColor" /> },
+    { label: "Home", href: "/", icon: <SpeedometerLow weight="Outline" size={24} color="currentColor" /> },
+    { label: "Courses", href: "/courses", icon: <Book weight="Outline" size={24} color="currentColor" /> },
+    { label: "Calendar", href: "/calendar", icon: <Calendar weight="Outline" size={24} color="currentColor" /> },
+    { label: "Analytics", href: "/analytics", icon: <PieChart2 weight="Outline" size={24} color="currentColor" /> },
   ];
 
   const [activeLabel, setActiveLabel] = useState("Home");

@@ -1,16 +1,20 @@
+// Timeline node – the vertical track element between event cards
+// Renders a connecting line above, a dot in the middle, and a connecting line below
+// Visual state changes based on whether the event is active (next up), past, first, or last
 export default function TimelineNode({ isActive = false, isPast = false, isFirst = false, isLast = false }) {
+  // Past events get a lighter connecting line
   const lineColor = isPast ? "bg-gray-200" : "bg-gray-300";
 
   return (
     <div className="flex flex-col items-center w-6 shrink-0">
-      {/* Top line */}
+      {/* Top connecting line – hidden for the first event */}
       {!isFirst ? (
         <div className={`w-[2px] flex-1 min-h-[20px] ${lineColor}`} />
       ) : (
         <div className="flex-1 min-h-[20px]" />
       )}
 
-      {/* Dot */}
+      {/* Centre dot – active = large purple, past = grey filled, future = outlined */}
       <div
         className={`rounded-full shrink-0 transition-all duration-300 ${
           isActive
@@ -21,7 +25,7 @@ export default function TimelineNode({ isActive = false, isPast = false, isFirst
         }`}
       />
 
-      {/* Bottom line */}
+      {/* Bottom connecting line – hidden for the last event */}
       {!isLast ? (
         <div className={`w-[2px] flex-1 min-h-[20px] ${lineColor}`} />
       ) : (

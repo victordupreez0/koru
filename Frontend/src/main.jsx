@@ -3,6 +3,8 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
 
+// Mount the React app into the #root div defined in index.html
+// StrictMode enables extra development warnings for common mistakes
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <App />
