@@ -24,7 +24,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/calendar" element={<CalendarPage />} />
-          <Route path="/courses" element={<Courses />} />
+          <Route path="/courses/*" element={<Courses />} />
         </Routes>
       </main>
     </BrowserRouter>
