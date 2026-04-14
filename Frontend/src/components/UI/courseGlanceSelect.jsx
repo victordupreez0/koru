@@ -35,14 +35,14 @@ export default function CourseGlanceSelect() {
                             }}
                             className={`btn !rounded-full !border-transparent flex items-center overflow-hidden transition-colors duration-200 focus:outline-none focus:ring-0 active:outline-none active:ring-0
                                 hover:shadow-md hover:!border-transparent
-                                ${isActive ? "!bg-[#3C0078] !text-white !px-2 justify-start" : "!bg-white !text-black p-0 justify-center items-center"}`}
+                                ${isActive ? "!bg-[#9BE9EA] !text-black !px-2 justify-start" : "!bg-white !text-black p-0 justify-center items-center"}`}
                             style={{ minWidth: 0, minHeight: 0, padding: isActive ? undefined : 0, display: 'flex', alignItems: 'center', justifyContent: isActive ? 'flex-start' : 'center' }}
                             onClick={() => setActive(course.code)}
                         >
-                            <span className={`flex items-center w-full ${isActive ? '' : 'justify-center'}`} style={{height: '100%'}}>
-                                <span className="avatar avatar-placeholder flex-shrink-0 flex items-center justify-center" style={{height: '100%'}}>
+                            <span className={`flex items-center w-full ${isActive ? '' : 'justify-center'}`} style={{ height: '100%' }}>
+                                <span className="avatar avatar-placeholder flex-shrink-0 flex items-center justify-center" style={{ height: '100%' }}>
                                     <span className={`w-8 h-8 rounded-full flex items-center font-bold justify-center aspect-square overflow-hidden transition-colors duration-150
-                                        ${isActive ? "bg-white text-black" : "bg-[#3C0078] text-neutral-content"}`}
+                                        ${isActive ? "bg-white text-black" : "bg-[#9BE9EA] text-black"}`}
                                     >
                                         <span className="text-xs">{course.avatar}</span>
                                     </span>

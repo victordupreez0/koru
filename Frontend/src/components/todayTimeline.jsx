@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { MdAdd } from "react-icons/md";
+import { motion } from "framer-motion";
 import TimelineNode from "./UI/timelineNode";
 import TimelineEventExpanded from "./UI/timelineEventExpanded";
 import TimelineEventCompressed from "./UI/timelineEventCompressed";
@@ -102,14 +103,16 @@ export default function TodayTimeline() {
   return (
     <div className="w-full">
       {/* ── Header ── */}
-      <div className="flex items-center gap-2.5 mt-5 mb-1">
+      <div className="flex items-center justify-between mt-5 mb-1">
         <h2 className="text-2xl font-['Gabarito']">Today</h2>
-        <button
-          className="w-7 h-7 rounded-full border-2 border-[#3C0078] flex items-center justify-center bg-transparent p-0 hover:bg-[#3C0078]/8 transition-colors cursor-pointer"
+        <motion.button
+          whileHover={{ scale: 1.3 }}
+          transition={{ type: "spring", stiffness: 400, damping: 10 }}
+          className="group w-7 h-7 rounded-full flex items-center justify-center bg-gray-100 p-0 hover:bg-[#3C0078] transition-colors cursor-pointer"
           aria-label="Add event"
         >
-          <MdAdd className="w-4 h-4 text-[#3C0078]" />
-        </button>
+          <MdAdd className="w-4 h-4 text-[#000000] group-hover:text-[#ffffff] transition-colors" />
+        </motion.button>
       </div>
       <p className="text-sm text-gray-400 mb-5 font-medium">{formatDate(now)}</p>
 

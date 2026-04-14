@@ -1,5 +1,5 @@
-import React from "react";
-import { motion } from "framer-motion";
+import React, { useState } from "react";
+import { motion, LayoutGroup } from "framer-motion";
 import { SpeedometerLow, Book, Calendar, PieChart2 } from "@solar-icons/react";
 
 import NavItem from "./UI/navItem";
@@ -27,6 +27,8 @@ export default function Menu() {
     { label: "Analytics", href: "#analytics", icon: <PieChart2 weight="Outline" size={24} color="currentColor" /> },
   ];
 
+  const [activeLabel, setActiveLabel] = useState("Home");
+
   return (
     <motion.div
       className="navbar bg-base-100 text-gray-400 w-fit rounded-full shadow-sm fixed top-4 left-1/2 -translate-x-1/2 z-50"
@@ -34,15 +36,20 @@ export default function Menu() {
       initial="hidden"
       animate="visible"
     >
-      {/* <div className="navbar-start">
-        <a className="py-2 px-3 mx-1 text-xl">Learn</a>
-      </div> */}
       <div className="navbar-center flex">
-        <motion.ul className="menu menu-horizontal p-0 m-0" variants={listVariants}>
-          {navItems.map((item) => (
-            <NavItem key={item.label} {...item} variants={itemVariants} />
-          ))}
-        </motion.ul>
+        <LayoutGroup>
+          <motion.ul className="menu menu-horizontal p-0 m-0" variants={listVariants}>
+            {navItems.map((item) => (
+              <NavItem
+                key={item.label}
+                {...item}
+                variants={itemVariants}
+                isActive={activeLabel === item.label}
+                onClick={() => setActiveLabel(item.label)}
+              />
+            ))}
+          </motion.ul>
+        </LayoutGroup>
       </div>
     </motion.div>
   );
