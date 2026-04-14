@@ -5,6 +5,8 @@ using LearnOnline.Models;
 
 namespace LearnOnline.Controllers
 {
+    // Enrollment API – CRUD for student-course enrolments
+    // Links students to courses and tracks their enrolment status
     [ApiController]
     [Route("api/[controller]")]
     public class EnrollmentController : ControllerBase
@@ -15,6 +17,7 @@ namespace LearnOnline.Controllers
             _context = context;
         }
 
+        // GET /api/Enrollment – return all enrolments with their Course and Student
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Enrollment>>> GetAll()
         {
@@ -24,6 +27,7 @@ namespace LearnOnline.Controllers
                 .ToListAsync();
         }
 
+        // GET /api/Enrollment/{id} – return a single enrolment by ID
         [HttpGet("{id}")]
         public async Task<ActionResult<Enrollment>> GetById(string id)
         {
@@ -35,6 +39,7 @@ namespace LearnOnline.Controllers
             return enrollment;
         }
 
+        // POST /api/Enrollment – enrol a student in a course
         [HttpPost]
         public async Task<ActionResult<Enrollment>> Create(Enrollment enrollment)
         {
@@ -45,6 +50,7 @@ namespace LearnOnline.Controllers
             return CreatedAtAction(nameof(GetById), new { id = enrollment.Id }, enrollment);
         }
 
+        // PUT /api/Enrollment/{id} – update enrolment status (e.g. Active → Dropped)
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(string id, Enrollment updated)
         {
@@ -59,6 +65,7 @@ namespace LearnOnline.Controllers
             return NoContent();
         }
 
+        // DELETE /api/Enrollment/{id} – permanently remove an enrolment record
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(string id)
         {

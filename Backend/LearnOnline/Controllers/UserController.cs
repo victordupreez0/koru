@@ -6,6 +6,9 @@ using LearnOnline.Models.DTOs;
 
 namespace LearnOnline.Controllers
 {
+    // User API – handles registration, login, and CRUD for user accounts
+    // Passwords are hashed with BCrypt before storage
+    // Responses use UserResponseDto to avoid exposing the password hash
     [ApiController]
     [Route("api/[controller]")]
     public class UserController : ControllerBase
@@ -16,6 +19,7 @@ namespace LearnOnline.Controllers
             _context = context;
         }
 
+        // Helper – convert a User entity to a safe response DTO (no password hash)
         private static UserResponseDto ToResponseDto(User user) => new()
         {
             Id = user.Id,
@@ -29,6 +33,7 @@ namespace LearnOnline.Controllers
             IsActive = user.IsActive
         };
 
+        // GET /api/User – return all users (minus password hashes)
         [HttpGet]
         public async Task<ActionResult<IEnumerable<UserResponseDto>>> GetAll()
         {
@@ -36,6 +41,7 @@ namespace LearnOnline.Controllers
             return Ok(users.Select(ToResponseDto));
         }
 
+        // GET /api/User/{id} – return a single user by ID
         [HttpGet("{id}")]
         public async Task<ActionResult<UserResponseDto>> GetById(string id)
         {
@@ -44,6 +50,8 @@ namespace LearnOnline.Controllers
             return Ok(ToResponseDto(user));
         }
 
+        // POST /api/User/register – create a new account
+        // Checks for duplicate emails and hashes the password with BCrypt
         [HttpPost("register")]
         public async Task<ActionResult<UserResponseDto>> Register(CreateUserDto dto)
         {
@@ -68,6 +76,8 @@ namespace LearnOnline.Controllers
             return CreatedAtAction(nameof(GetById), new { id = user.Id }, ToResponseDto(user));
         }
 
+        // POST /api/User/login – authenticate with email + password
+        // Returns the user's ID and role on success, or 401 on failure
         [HttpPost("login")]
         public async Task<ActionResult> Login(LoginDto dto)
         {
@@ -82,6 +92,7 @@ namespace LearnOnline.Controllers
             return Ok(new { message = "Login successful", userId = user.Id, role = user.Role.ToString() });
         }
 
+        // PUT /api/User/{id} – update a user's profile fields
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(string id, User updated)
         {
@@ -100,6 +111,7 @@ namespace LearnOnline.Controllers
             return NoContent();
         }
 
+        // DELETE /api/User/{id} – permanently remove a user account
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(string id)
         {
