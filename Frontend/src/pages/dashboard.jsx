@@ -7,7 +7,7 @@ import AssignmentsProgress from "../components/assignmentsProgress";
 
 export default function Dashboard() {
   return (
-    <div className="grid grid-cols-3 gap-8 items-start w-full pr-50">
+    <div className="grid grid-cols-3 gap-8 items-start w-full ">
       <CourseGlance />
       <TodayTimeline />
       <AssignmentsProgress />

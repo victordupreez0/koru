@@ -1,5 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 
 export default function NavItem({ label, href = "#", icon, className = "", variants, isActive, onClick }) {
   return (
@@ -21,12 +22,8 @@ export default function NavItem({ label, href = "#", icon, className = "", varia
         />
       )}
 
-      <a
-        href={href}
-        onClick={(e) => {
-          e.preventDefault();
-          onClick?.();
-        }}
+      <Link
+        to={href}
         className={`relative z-10 rounded-full px-5 py-3 inline-flex items-center justify-center select-none
           ${isActive ? "text-black" : "text-gray-400"}
           ${className}`.trim()}
@@ -34,7 +31,7 @@ export default function NavItem({ label, href = "#", icon, className = "", varia
         aria-label={label}
       >
         {icon ?? <span className="text-sm font-medium">{label}</span>}
-      </a>
+      </Link>
     </motion.li>
   );
 }
