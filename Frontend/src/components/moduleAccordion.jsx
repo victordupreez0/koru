@@ -33,14 +33,14 @@ function AccordionItem({ title, children, defaultOpen = false }) {
 }
 
 function SubNavItem({ label, isActive, onClick }) {
-    return (
-        <li 
-            onClick={onClick}
-            className={`px-8 py-3 text-sm transition-colors hover:bg-gray-200 cursor-pointer ${isActive ? "bg-gray-200 font-bold border-l-4 border-black" : ""}`}
-        >
-            {label}
-        </li>
-    );
+  return (
+    <li
+      onClick={onClick}
+      className={`px-8 py-3 text-sm transition-colors hover:bg-gray-200 cursor-pointer ${isActive ? "bg-gray-200 font-bold border-l-4 border-black" : ""}`}
+    >
+      {label}
+    </li>
+  );
 }
 
 export default function ModuleAccordion() {
@@ -60,9 +60,9 @@ export default function ModuleAccordion() {
       {items.map((section) => (
         <AccordionItem key={section.title} title={section.title} defaultOpen={section.defaultOpen}>
           {section.subItems.map((subItem) => (
-            <SubNavItem 
-              key={subItem} 
-              label={subItem} 
+            <SubNavItem
+              key={subItem}
+              label={subItem}
               isActive={activeItem === subItem}
               onClick={() => setActiveItem(subItem)}
             />

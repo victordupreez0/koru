@@ -26,8 +26,8 @@ function CourseHomeView() {
                         <div>
                             <h3 className="font-bold text-sm mb-2 uppercase tracking-wide border-b border-black inline-block">Term 1:</h3>
                             <p className="text-sm leading-relaxed text-gray-800 mt-2">
-                                Inclusive & Neurodiverse UX focuses on building a strong human-centred foundation for advanced UX practice. 
-                                You will explore accessibility, inclusive design patterns, cognitive load, sensory design, and universal design 
+                                Inclusive & Neurodiverse UX focuses on building a strong human-centred foundation for advanced UX practice.
+                                You will explore accessibility, inclusive design patterns, cognitive load, sensory design, and universal design
                                 thinking to better understand how diverse users experience digital products.
                             </p>
                         </div>
@@ -42,13 +42,13 @@ function CourseModulesView() {
     return (
         <div className="flex-1 flex h-full overflow-hidden">
             {/* Third-tier Nav: Modules Accordion */}
-            <div className="flex flex-col h-full border-r border-gray-200 bg-white p-8">
+            <div className="flex flex-col h-full border-r border-gray-200 p-8">
                 <h2 className="text-2xl font-bold mb-8">Modules</h2>
                 <ModuleAccordion />
             </div>
 
             {/* Main Content: Nested View with rounded border from screenshot */}
-            <div className="flex-1 p-8 overflow-y-auto bg-[#F5F5F5]">
+            <div className="flex-1 p-8 overflow-y-auto">
                 <div className="bg-[#EAEAEA] p-12 rounded-[40px] border border-gray-300 shadow-sm relative">
                     <header className="mb-8">
                         <h1 className="text-2xl font-semibold tracking-tight">User Experience Design 300 | Semester 1</h1>
@@ -74,7 +74,7 @@ function CourseModulesView() {
                     </section>
                     {/* Expand icon at bottom-right of the screenshot card */}
                     <div className="absolute bottom-6 right-6 p-2 bg-gray-200 rounded-full hover:bg-gray-300 cursor-pointer">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h6v6" /><path d="M9 21H3v-6" /><path d="M21 3l-7 7" /><path d="M3 21l7-7" /></svg>
                     </div>
                 </div>
             </div>
@@ -94,9 +94,9 @@ export default function Courses() {
     const isModulesPage = location.pathname.includes("/modules");
 
     return (
-        <div className="flex h-screen bg-[#F5F5F5] overflow-hidden">
+        <div className="flex h-screen overflow-hidden">
             {/* Leftmost Course Navigation Bar */}
-            <div className="flex flex-col h-full py-8 px-4 items-center gap-6 border-r border-gray-200 bg-white">
+            <div className="flex flex-col h-full py-8 px-4 items-center gap-6 ">
                 <CourseMenu />
                 <div className="mt-auto">
                     <SideMenu />
@@ -104,7 +104,7 @@ export default function Courses() {
             </div>
 
             {/* Middle Section: Second Navigation Bar for course-internal links */}
-            <div className="flex flex-col h-full border-r border-gray-200 bg-white">
+            <div className="flex flex-col h-full border-r border-gray-200">
                 <CourseSecondaryNav />
             </div>
 
