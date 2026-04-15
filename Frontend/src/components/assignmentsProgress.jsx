@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { MdAdd } from "react-icons/md";
 import { motion } from "framer-motion";
+import confetti from "canvas-confetti";
 import AssignmentItem from "./UI/assignmentItem";
 import ProgressRing from "./UI/progressRing";
 
@@ -36,8 +37,35 @@ const initialAssignments = [
 export default function AssignmentsProgress() {
   const [assignments, setAssignments] = useState(initialAssignments);
 
+  // Fire confetti with brand colors
+  function fireConfetti() {
+    const colors = ["#3C0078", "#FF8731", "#87CEFA"];
+    // Left burst
+    confetti({
+      particleCount: 80,
+      spread: 70,
+      origin: { x: 0.25, y: 0.3 },
+      colors,
+      gravity: 0.8,
+      scalar: 1.1,
+    });
+    // Right burst
+    confetti({
+      particleCount: 80,
+      spread: 70,
+      origin: { x: 0.75, y: 0.3 },
+      colors,
+      gravity: 0.8,
+      scalar: 1.1,
+    });
+  }
+
   // Toggle an assignment's completed status
   function toggleAssignment(id) {
+    const target = assignments.find((a) => a.id === id);
+    if (target && !target.completed) {
+      fireConfetti();
+    }
     setAssignments((prev) =>
       prev.map((a) => (a.id === id ? { ...a, completed: !a.completed } : a))
     );
