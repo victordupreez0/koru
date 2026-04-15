@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React from "react";
+import { useLocation } from "react-router-dom";
 import { motion, LayoutGroup } from "framer-motion";
 import { SpeedometerLow, Book, Calendar, PieChart2 } from "@solar-icons/react";
 
@@ -34,7 +35,7 @@ export default function Menu() {
     { label: "Analytics", href: "/analytics", icon: <PieChart2 weight="Outline" size={24} color="currentColor" /> },
   ];
 
-  const [activeLabel, setActiveLabel] = useState("Home");
+  const location = useLocation();
 
   return (
     <motion.div
@@ -51,8 +52,11 @@ export default function Menu() {
                 key={item.label}
                 {...item}
                 variants={itemVariants}
-                isActive={activeLabel === item.label}
-                onClick={() => setActiveLabel(item.label)}
+                isActive={
+                  item.href === "/"
+                    ? location.pathname === "/"
+                    : location.pathname.startsWith(item.href)
+                }
               />
             ))}
           </motion.ul>
