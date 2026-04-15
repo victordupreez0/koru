@@ -58,6 +58,10 @@ export default function AssignmentsProgress() {
       gravity: 0.8,
       scalar: 1.1,
     });
+
+    // Pulse background orbs vibrant for 3 seconds
+    document.body.classList.add("orbs-vibrant");
+    setTimeout(() => document.body.classList.remove("orbs-vibrant"), 3000);
   }
 
   // Toggle an assignment's completed status

@@ -29,9 +29,8 @@ export default function AssignmentItem({
       {/* Text */}
       <div className="flex-1 min-w-0">
         <h4
-          className={`text-base font-semibold leading-tight font-['Gabarito'] ${
-            completed ? "text-gray-400 line-through" : "text-black"
-          }`}
+          className={`text-base font-semibold leading-tight font-['Gabarito'] ${completed ? "text-gray-400 line-through" : "text-black"
+            }`}
         >
           {title}
         </h4>
@@ -56,7 +55,7 @@ export default function AssignmentItem({
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: "spring", stiffness: 300, damping: 20 }}
-            className="w-4 h-4 text-white"
+            className="w-4 h-4 text-[#3C0078]"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
