@@ -98,6 +98,10 @@ export default function Courses() {
             {/* Leftmost Course Navigation Bar */}
             <div className="flex flex-col h-full py-8 px-4 items-center gap-6 ">
                 <CourseMenu />
+
+                <div className="mt-auto">
+                    <SideMenu />
+                </div>
                 <div className="mt-auto">
                     <SideMenu />
                 </div>
@@ -111,5 +115,5 @@ export default function Courses() {
             {/* Main Content Area: Replaced by Module View if on /modules */}
             {isModulesPage ? <CourseModulesView /> : <CourseHomeView />}
         </div>
-    )
+    );
 }

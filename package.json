@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "@solar-icons/react": "^1.1.0",
+    "canvas-confetti": "^1.9.4",
     "solar-icon-set": "^2.0.1"
   }
 }
