@@ -1,5 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
+import Menu from "../components/menu";
+import SideMenu from "../components/sideMenu";
 
 // Dashboard widgets
 import CourseGlance from "../components/courseGlance";
@@ -9,7 +11,13 @@ import TodayTimeline from "../components/todayTimeline";
 // Displays the course glance panel on the left and today's timeline on the right
 export default function Dashboard() {
   return (
+    
     <div className="flex flex-row gap-8 items-start">
+       {/* Top navigation bar (floating, centred) */}
+      <Menu />
+
+      {/* Side navigation bar (floating, bottom-left) */}
+      <SideMenu />
       {/* Left column – course overview with todo, next class & announcements */}
       <CourseGlance />
 

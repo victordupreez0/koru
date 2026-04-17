@@ -4,6 +4,8 @@ import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
+import Menu from "../components/menu";
+import SideMenu from "../components/sideMenu";
 
 // Service layer – all fetch calls to our backend
 import {
@@ -153,11 +155,17 @@ export default function CalendarPage() {
   }, []);
 
   return (
+    
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
     >
+       {/* Top navigation bar (floating, centred) */}
+      <Menu />
+
+      {/* Side navigation bar (floating, bottom-left) */}
+      <SideMenu />
       {/* Page header */}
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-['Gabarito']">Calendar</h2>
