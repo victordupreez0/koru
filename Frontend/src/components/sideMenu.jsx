@@ -35,7 +35,7 @@ export default function SideMenu() {
     <motion.div
       className="navbar bg-base-100 text-gray-400 w-fit rounded-full shadow-sm fixed bottom-4 left-4 z-50"
       variants={navbarVariants}
-      initial="hidden"
+      initial="hidden"  
       animate="visible"
     >
       {/* Vertical list of side navigation items */}

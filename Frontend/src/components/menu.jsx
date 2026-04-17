@@ -1,5 +1,6 @@
 import React from "react";
-import { motion } from "framer-motion";
+import { useLocation } from "react-router-dom";
+import { motion, LayoutGroup } from "framer-motion";
 import { SpeedometerLow, Book, Calendar, PieChart2 } from "@solar-icons/react";
 
 import NavItem from "./UI/navItem";
@@ -34,6 +35,8 @@ export default function Menu() {
     { label: "Analytics", href: "/analytics", icon: <PieChart2 weight="Outline" size={24} color="currentColor" /> },
   ];
 
+  const location = useLocation();
+
   return (
     <motion.div
       className="navbar bg-base-100 text-gray-400 w-fit rounded-full shadow-sm fixed top-4 left-1/2 -translate-x-1/2 z-50"
@@ -41,13 +44,23 @@ export default function Menu() {
       initial="hidden"
       animate="visible"
     >
-      {/* Horizontal list of navigation items */}
       <div className="navbar-center flex">
-        <motion.ul className="menu menu-horizontal p-0 m-0" variants={listVariants}>
-          {navItems.map((item) => (
-            <NavItem key={item.label} {...item} variants={itemVariants} />
-          ))}
-        </motion.ul>
+        <LayoutGroup>
+          <motion.ul className="menu menu-horizontal p-0 m-0" variants={listVariants}>
+            {navItems.map((item) => (
+              <NavItem
+                key={item.label}
+                {...item}
+                variants={itemVariants}
+                isActive={
+                  item.href === "/"
+                    ? location.pathname === "/"
+                    : location.pathname.startsWith(item.href)
+                }
+              />
+            ))}
+          </motion.ul>
+        </LayoutGroup>
       </div>
     </motion.div>
   );
