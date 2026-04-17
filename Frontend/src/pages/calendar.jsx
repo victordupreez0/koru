@@ -168,7 +168,7 @@ export default function CalendarPage() {
       {error && <p className="text-sm text-red-500 mb-4">Could not load events: {error}</p>}
 
       {/* FullCalendar inside a white card container */}
-      <div className="bg-white rounded-2xl shadow-sm p-4">
+      <div className=" p-4">
         <FullCalendar
           ref={calendarRef}
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}

@@ -1,24 +1,37 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { NavLink } from "react-router-dom";
+import { Link } from "react-router-dom";
 
-// Single navigation item used inside the top Menu bar
-// Uses React Router's NavLink so the active route gets highlighted automatically
-// Props: label (accessible name), href (route path), icon (React element), variants (framer-motion)
-export default function NavItem({ label, href = "/", icon, className = "", variants }) {
+export default function NavItem({ label, href = "#", icon, className = "", variants, isActive, onClick }) {
   return (
-    <motion.li variants={variants}>
-      {/* NavLink applies the "isActive" class when the current URL matches href */}
-      <NavLink
+    <motion.li variants={variants} className="relative">
+      {/* Animated liquid pill background */}
+      {isActive && (
+        <motion.div
+          layoutId="nav-pill"
+          className="absolute inset-0 bg-gray-200/70 rounded-full"
+          transition={{
+            layout: {
+              type: "spring",
+              stiffness: 400,
+              damping: 28,
+              mass: 0.9,
+            },
+          }}
+          style={{ zIndex: 0, originX: 0.5, originY: 0.5 }}
+        />
+      )}
+
+      <Link
         to={href}
-        className={({ isActive }) =>
-          `rounded-full px-5 py-3 inline-flex items-center justify-center ${isActive ? "text-white bg-base-300" : ""} ${className}`.trim()
-        }
+        className={`relative z-10 rounded-full px-5 py-3 inline-flex items-center justify-center select-none
+          ${isActive ? "text-black" : "text-gray-400"}
+          ${className}`.trim()}
+        style={{ WebkitTapHighlightColor: "transparent" }}
         aria-label={label}
       >
-        {/* Show the icon if provided, otherwise fall back to the text label */}
         {icon ?? <span className="text-sm font-medium">{label}</span>}
-      </NavLink>
+      </Link>
     </motion.li>
   );
 }
