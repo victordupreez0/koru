@@ -2,9 +2,9 @@ import React from "react";
 import { Link } from "react-router-dom";
 
 const defaultRoutes = {
-    student: "/student/login",
-    teacher: "/teacher/login",
-    admin: "/admin/login",
+  student: "/login",
+  teacher: "/login",
+  admin: "/login",
 };
 
 export default function OnboardingButton({ role, icon, to }) {

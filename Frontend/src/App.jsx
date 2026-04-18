@@ -4,6 +4,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Dashboard from "./pages/dashboard";
 import CalendarPage from "./pages/calendar";
 import Onboarding from "./pages/onboarding";
+import Login from "./pages/login";
+import Signup from "./pages/signup";
 
 // Root application component – sets up routing and the shared layout
 function App() {
@@ -16,6 +18,8 @@ function App() {
           <Route path="/" element={<Onboarding />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/calendar" element={<CalendarPage />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
         </Routes>
       </main>
     </BrowserRouter>

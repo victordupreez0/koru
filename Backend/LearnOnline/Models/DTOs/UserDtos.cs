@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace LearnOnline.Models.DTOs
 {
     // DTO for creating a new user (registration)
@@ -17,6 +19,38 @@ namespace LearnOnline.Models.DTOs
     {
         public string Email { get; set; } = null!;
         public string Password { get; set; } = null!;
+    }
+
+    // DTO for Google authentication using an ID token from Google Identity Services
+    public class GoogleAuthDto
+    {
+        // Google ID token returned by Google Identity Services on the frontend
+        public string Credential { get; set; } = null!;
+
+        // Optional role chosen on the sign-up form for first-time Google users
+        public UserRole Role { get; set; } = UserRole.student;
+    }
+
+    // Response from Google's tokeninfo endpoint
+    public class GoogleTokenInfoDto
+    {
+        [JsonPropertyName("email")]
+        public string? Email { get; set; }
+
+        [JsonPropertyName("email_verified")]
+        public string? EmailVerified { get; set; }
+
+        [JsonPropertyName("given_name")]
+        public string? GivenName { get; set; }
+
+        [JsonPropertyName("family_name")]
+        public string? FamilyName { get; set; }
+
+        [JsonPropertyName("picture")]
+        public string? Picture { get; set; }
+
+        [JsonPropertyName("aud")]
+        public string? Audience { get; set; }
     }
 
     // DTO returned to the frontend after auth or user queries
