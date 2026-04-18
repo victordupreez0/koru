@@ -1,9 +1,9 @@
 import React from "react";
 
 // Reusable auth input – keeps login and sign-up fields visually consistent
-export default function AuthInput({ label, error, className = "", ...props }) {
+export default function AuthInput({ label, error, className = "", labelClassName = "text-slate-700", ...props }) {
   return (
-    <label className="flex w-full flex-col gap-2 text-sm font-medium text-slate-700">
+    <label className={`flex w-full flex-col gap-2 text-sm font-medium ${labelClassName}`}>
       <span>{label}</span>
       <input
         {...props}

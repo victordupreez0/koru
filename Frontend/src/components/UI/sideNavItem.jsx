@@ -1,20 +1,22 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { NavLink } from "react-router-dom";
 
 // Single navigation item used inside the SideMenu bar (bottom-left)
-// Renders a circular icon button with a hover state
-// Props: label (accessible name), href (link target), icon (React element), variants (framer-motion)
-export default function SideNavItem({ label, href = "#", icon, className = "", variants }) {
+// Uses React Router so settings can open without a full page reload
+export default function SideNavItem({ label, href = "/", icon, className = "", variants }) {
   return (
     <motion.li variants={variants}>
-      <a
-        href={href}
-        className={`inline-flex h-11 w-11 items-center justify-center rounded-full transition-colors hover:bg-base-200 ${className}`.trim()}
+      <NavLink
+        to={href}
+        className={({ isActive }) =>
+          `inline-flex h-11 w-11 items-center justify-center rounded-full transition-colors hover:bg-base-200 ${isActive ? "bg-base-300 text-white" : ""} ${className}`.trim()
+        }
         aria-label={label}
       >
         {/* Show the icon if provided, otherwise fall back to the text label */}
         {icon ?? <span className="text-sm font-medium">{label}</span>}
-      </a>
+      </NavLink>
     </motion.li>
   );
 }

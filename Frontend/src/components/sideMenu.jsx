@@ -27,8 +27,8 @@ export default function SideMenu() {
 
   // Links shown in the side menu
   const footerItems = [
-    { label: "Profile", href: "#profile", icon: <User weight="Outline" size={24} color="currentColor" /> },
-    { label: "Settings", href: "#settings", icon: <Settings weight="Outline" size={24} color="currentColor" /> },
+    { label: "Profile", href: "/dashboard", icon: <User weight="Outline" size={24} color="currentColor" /> },
+    { label: "Settings", href: "/settings", icon: <Settings weight="Outline" size={24} color="currentColor" /> },
   ];
 
   return (

@@ -193,6 +193,47 @@ namespace LearnOnline.Controllers
             });
         }
 
+        // PUT /api/User/profile/{id} – update the signed-in user's account details from settings
+        [HttpPut("profile/{id}")]
+        public async Task<ActionResult<UserResponseDto>> UpdateProfile(string id, UpdateUserProfileDto updated)
+        {
+            var user = await _context.Users.FindAsync(id);
+            if (user == null) return NotFound();
+
+            var email = updated.Email.Trim().ToLowerInvariant();
+            var emailTaken = await _context.Users.AnyAsync(u => u.Id != id && u.Email == email);
+            if (emailTaken)
+                return Conflict(new { message = "Email already registered" });
+
+            user.Email = email;
+            user.FirstName = updated.FirstName.Trim();
+            user.LastName = updated.LastName.Trim();
+            user.Role = updated.Role;
+            user.ProfileImageUrl = updated.ProfileImageUrl ?? user.ProfileImageUrl;
+            user.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+            return Ok(ToResponseDto(user));
+        }
+
+        // POST /api/User/change-password/{id} – verify the current password and save the new one
+        [HttpPost("change-password/{id}")]
+        public async Task<ActionResult> ChangePassword(string id, ChangePasswordDto dto)
+        {
+            var user = await _context.Users.FindAsync(id);
+            if (user == null) return NotFound(new { message = "User not found" });
+
+            bool validPassword = BCrypt.Net.BCrypt.Verify(dto.CurrentPassword, user.PasswordHash);
+            if (!validPassword)
+                return Unauthorized(new { message = "Current password is incorrect" });
+
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.NewPassword);
+            user.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+            return Ok(new { message = "Password updated successfully" });
+        }
+
         // PUT /api/User/{id} – update a user's profile fields
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(string id, User updated)

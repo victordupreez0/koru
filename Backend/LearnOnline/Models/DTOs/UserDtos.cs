@@ -31,6 +31,23 @@ namespace LearnOnline.Models.DTOs
         public UserRole Role { get; set; } = UserRole.student;
     }
 
+    // DTO for updating the user's profile information from the settings page
+    public class UpdateUserProfileDto
+    {
+        public string Email { get; set; } = null!;
+        public string FirstName { get; set; } = null!;
+        public string LastName { get; set; } = null!;
+        public UserRole Role { get; set; }
+        public string? ProfileImageUrl { get; set; }
+    }
+
+    // DTO for securely changing a user's password from the settings page
+    public class ChangePasswordDto
+    {
+        public string CurrentPassword { get; set; } = null!;
+        public string NewPassword { get; set; } = null!;
+    }
+
     // Response from Google's tokeninfo endpoint
     public class GoogleTokenInfoDto
     {

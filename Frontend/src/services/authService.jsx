@@ -49,3 +49,34 @@ export async function loginWithGoogle(credential, role = "student") {
 export function saveAuthSession(data) {
   localStorage.setItem("learnonline.auth", JSON.stringify(data));
 }
+
+// Read the current saved auth session from local storage
+export function getStoredAuthSession() {
+  try {
+    return JSON.parse(localStorage.getItem("learnonline.auth") || "null");
+  } catch {
+    return null;
+  }
+}
+
+// PUT /api/User/profile/:id – update the user's profile information from settings
+export async function updateUserProfile(id, payload) {
+  const res = await fetch(`${API_BASE}/User/profile/${encodeURIComponent(id)}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  return handleResponse(res);
+}
+
+// POST /api/User/change-password/:id – change the user's password after verifying the current one
+export async function changeUserPassword(id, payload) {
+  const res = await fetch(`${API_BASE}/User/change-password/${encodeURIComponent(id)}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  return handleResponse(res);
+}
