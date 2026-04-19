@@ -36,7 +36,7 @@ function SubNavItem({ label, isActive, onClick }) {
   return (
     <li
       onClick={onClick}
-      className={`px-8 py-3 text-sm transition-colors hover:bg-gray-200 cursor-pointer ${isActive ? "bg-gray-200 font-bold border-l-4 border-black" : ""}`}
+      className={`px-4 py-2 text-[13px] transition-colors hover:bg-gray-200 cursor-pointer ${isActive ? "bg-gray-200 font-bold border-l-4 border-black" : ""}`}
     >
       {label}
     </li>
@@ -56,7 +56,7 @@ export default function ModuleAccordion() {
   ];
 
   return (
-    <div className="w-64 flex flex-col border-t border-black">
+    <div className="w-48 flex flex-col border-t border-black">
       {items.map((section) => (
         <AccordionItem key={section.title} title={section.title} defaultOpen={section.defaultOpen}>
           {section.subItems.map((subItem) => (
