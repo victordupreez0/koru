@@ -14,6 +14,7 @@ import Logo from "../assets/Logo.png";
 export default function Onboarding() {
   return (
     <div
+      data-tts-root="true"
       className="fixed inset-0 m-0 flex h-screen w-screen items-center justify-center overflow-hidden bg-center bg-cover bg-no-repeat"
       style={{ backgroundImage: `url(${OnboardBackground})` }}
     >

@@ -10,7 +10,7 @@ import AssignmentsProgress from "../components/assignmentsProgress";
 export default function Dashboard() {
   return (
     
-    <div className="flex flex-row gap-8 items-start">
+    <div data-tts-root="true" className="flex flex-row gap-8 items-start">
        {/* Top navigation bar (floating, centred) */}
       <Menu />
 
