@@ -6,6 +6,9 @@ import ClickSpark from "./components/UI/clickSpark";
 import CalendarPage from "./pages/calendar";
 import Courses from './pages/courses'
 import Onboarding from "./pages/onboarding";
+import Login from "./pages/login";
+import Signup from "./pages/signup";
+import SettingsPage from "./pages/settings";
 
 // Root application component – sets up routing and the shared layout
 function App() {
@@ -26,6 +29,9 @@ function App() {
           <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/calendar" element={<CalendarPage />} />
             <Route path="/courses/*" element={<Courses />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/settings" element={<SettingsPage />} />
           </Routes>
         </main>
       </ClickSpark>
