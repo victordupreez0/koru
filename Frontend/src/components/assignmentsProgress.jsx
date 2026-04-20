@@ -16,6 +16,16 @@ export default function AssignmentsProgress() {
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const getRank = (dueDate) => {
+      const now = new Date();
+      const due = new Date(dueDate);
+      const diffDays = (due - now) / (1000 * 60 * 60 * 24);
+      if (diffDays < -7) return 3; // Closed
+      if (diffDays < 0) return 0; // Late
+      if (diffDays <= 5) return 1; // Due Soon
+      return 2; // Due
+  };
+
   useEffect(() => {
     let mounted = true;
     async function fetchAssignments() {
@@ -24,15 +34,17 @@ export default function AssignmentsProgress() {
         setLoading(true);
         const data = await getStudentAssignments(user.userId);
         
-        // Map backend schema to our required UI schema
+        // Map backend schema to our required UI schema and sort by priority
         const mapped = data.map(dbAssignment => ({
           id: dbAssignment.id,
           title: dbAssignment.title,
           dueDate: new Date(dbAssignment.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }),
           courseCode: dbAssignment.course?.subject?.code || "N/A",
-          completed: false, // Default to uncompleted until submission model is wired
-        }));
+          completed: false,
+          rank: getRank(dbAssignment.dueDate)
+        })).sort((a, b) => a.rank - b.rank);
 
+        // For the aesthetic of the minimal dashboard, let's list all dynamically
         if (mounted) setAssignments(mapped);
       } catch (err) {
         console.error("Failed loading assignments:", err);
@@ -92,12 +104,13 @@ export default function AssignmentsProgress() {
   return (
     <div className="w-full">
       {/* ── Assignments Header ── */}
-      <div className="flex items-center justify-between mt-5 mb-4">
+      <div className="flex items-center justify-between mt-5 mb-1">
         <h2 className="text-2xl font-['Gabarito']">Assignments</h2>
       </div>
+      <p className="text-sm text-transparent mb-5 font-medium select-none" aria-hidden="true">Spacer</p>
 
       {/* ── Assignment Cards ── */}
-      <div className="flex flex-col gap-3 min-h-[160px]">
+      <div className="flex flex-col gap-3 min-h-[160px] max-h-[520px] overflow-y-auto scrollbar-black pr-2">
         {loading ? (
             <div className="text-gray-400 text-sm font-medium w-full text-center mt-8">Loading assignments...</div>
         ) : assignments.length === 0 ? (
