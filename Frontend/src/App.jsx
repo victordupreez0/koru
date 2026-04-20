@@ -30,6 +30,9 @@ function App() {
             <Route path="/calendar" element={<CalendarPage />} />
             <Route path="/courses/*" element={<Courses />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/student/login" element={<Login role="student" />} />
+            <Route path="/teacher/login" element={<Login role="teacher" />} />
+            <Route path="/admin/login" element={<Login role="admin" />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/settings" element={<SettingsPage />} />
           </Routes>
