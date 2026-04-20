@@ -115,7 +115,7 @@ const scaleIn = {
 
 function CourseAnnouncementsView() {
     return (
-        <motion.div className="flex-1 p-8 overflow-y-auto" initial="hidden" animate="visible" variants={staggerContainer}>
+        <motion.div data-tts-root="true" className="flex-1 p-8 overflow-y-auto" initial="hidden" animate="visible" variants={staggerContainer}>
             <motion.header variants={slideUp} className="mb-12">
                 <h1 className="text-3xl font-semibold tracking-tight">Announcements</h1>
                 <p className="text-gray-500 mt-2">Latest updates from your lecturers</p>
@@ -143,7 +143,7 @@ function CourseAnnouncementsView() {
 
 function CourseAssignmentsView() {
     return (
-        <motion.div className="flex-1 p-8 overflow-y-auto" initial="hidden" animate="visible" variants={staggerContainer}>
+        <motion.div data-tts-root="true" className="flex-1 p-8 overflow-y-auto" initial="hidden" animate="visible" variants={staggerContainer}>
             <motion.header variants={slideUp} className="mb-12 flex justify-between items-end">
                 <div>
                     <h1 className="text-3xl font-semibold tracking-tight">Assignments</h1>
@@ -191,7 +191,7 @@ function CourseAssignmentsView() {
 
 function CourseAttendanceView() {
     return (
-        <motion.div className="flex-1 p-8 overflow-y-auto" initial="hidden" animate="visible" variants={staggerContainer}>
+        <motion.div data-tts-root="true" className="flex-1 p-8 overflow-y-auto" initial="hidden" animate="visible" variants={staggerContainer}>
             <motion.header variants={slideUp} className="mb-12">
                 <h1 className="text-3xl font-semibold tracking-tight">Attendance</h1>
                 <p className="text-gray-500 mt-2">UX300 | Academic Presence Tracking</p>
@@ -243,7 +243,7 @@ function CourseAttendanceView() {
 
 function CourseGradesView() {
     return (
-        <motion.div className="flex-1 p-8 overflow-y-auto" initial="hidden" animate="visible" variants={staggerContainer}>
+        <motion.div data-tts-root="true" className="flex-1 p-8 overflow-y-auto" initial="hidden" animate="visible" variants={staggerContainer}>
             <motion.header variants={slideUp} className="mb-12">
                 <h1 className="text-3xl font-semibold tracking-tight text-gray-900">Grades</h1>
                 <p className="text-gray-500 mt-2">UX300 | Academic Performance Overview</p>
@@ -296,7 +296,7 @@ function CourseGradesView() {
 
 function CourseHomeView() {
   return (
-    <div className="flex-1 flex flex-col p-8 overflow-y-auto">
+    <div data-tts-root="true" className="flex-1 flex flex-col p-8 overflow-y-auto">
       <header className="mb-8">
         <h1 className="text-3xl font-semibold tracking-tight">
           User Experience Design 300 | Semester 1
@@ -336,7 +336,7 @@ function CourseHomeView() {
 
 function CourseModulesView() {
   return (
-    <div className="flex-1 flex h-full overflow-hidden">
+    <div data-tts-root="true" className="flex-1 flex h-full overflow-hidden">
       {/* Third-tier Nav: Modules Accordion */}
       <div className="flex flex-col h-full border-r border-gray-200 p-8">
         <h2 className="text-2xl font-bold mb-8">Modules</h2>
