@@ -16,14 +16,20 @@ export default function AssignmentsProgress() {
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const getRank = (dueDate) => {
+  const getRankAndState = (dbAssignment) => {
+      // Mock submitted ones
+      if (dbAssignment.title === "Usability Testing Report" || dbAssignment.title === "Literature Review Module") {
+          return { rank: 4, uiState: 'Submitted', isCompleted: true };
+      }
+
       const now = new Date();
-      const due = new Date(dueDate);
+      const due = new Date(dbAssignment.dueDate);
       const diffDays = (due - now) / (1000 * 60 * 60 * 24);
-      if (diffDays < -7) return 3; // Closed
-      if (diffDays < 0) return 0; // Late
-      if (diffDays <= 5) return 1; // Due Soon
-      return 2; // Due
+      
+      if (diffDays < -7) return { rank: 3, uiState: 'Closed', isCompleted: false };
+      if (diffDays < 0) return { rank: 0, uiState: 'Late', isCompleted: false };
+      if (diffDays <= 5) return { rank: 1, uiState: 'Due Soon', isCompleted: false };
+      return { rank: 2, uiState: 'Due', isCompleted: false };
   };
 
   useEffect(() => {
@@ -35,14 +41,18 @@ export default function AssignmentsProgress() {
         const data = await getStudentAssignments(user.userId);
         
         // Map backend schema to our required UI schema and sort by priority
-        const mapped = data.map(dbAssignment => ({
-          id: dbAssignment.id,
-          title: dbAssignment.title,
-          dueDate: new Date(dbAssignment.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }),
-          courseCode: dbAssignment.course?.subject?.code || "N/A",
-          completed: false,
-          rank: getRank(dbAssignment.dueDate)
-        })).sort((a, b) => a.rank - b.rank);
+        const mapped = data.map(dbAssignment => {
+          const { rank, uiState, isCompleted } = getRankAndState(dbAssignment);
+          return {
+            id: dbAssignment.id,
+            title: dbAssignment.title,
+            dueDate: new Date(dbAssignment.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }),
+            courseCode: dbAssignment.course?.subject?.code || "N/A",
+            completed: isCompleted,
+            rank,
+            uiState
+          };
+        }).sort((a, b) => a.rank - b.rank);
 
         // For the aesthetic of the minimal dashboard, let's list all dynamically
         if (mounted) setAssignments(mapped);
@@ -123,6 +133,7 @@ export default function AssignmentsProgress() {
                 dueDate={assignment.dueDate}
                 courseCode={assignment.courseCode}
                 completed={assignment.completed}
+                uiState={assignment.uiState}
                 onToggle={() => toggleAssignment(assignment.id)}
             />
             ))
