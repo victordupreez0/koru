@@ -37,6 +37,40 @@ namespace LearnOnline.Controllers
             return assignment;
         }
 
+        // GET /api/Assignment/course/{courseId} – return assignments strictly for a course
+        [HttpGet("course/{courseId}")]
+        public async Task<ActionResult<IEnumerable<Assignment>>> GetByCourseId(string courseId)
+        {
+            var assignments = await _context.Assignments
+                .Include(a => a.Course)
+                    .ThenInclude(c => c.Subject)
+                .Where(a => a.CourseId == courseId)
+                .OrderBy(a => a.DueDate)
+                .ToListAsync();
+
+            return assignments;
+        }
+
+        // GET /api/Assignment/student/{studentId} – return global assignments across all enrolled active courses
+        [HttpGet("student/{studentId}")]
+        public async Task<ActionResult<IEnumerable<Assignment>>> GetByStudentId(string studentId)
+        {
+            // Extract the IDs of the active courses to prevent massive joins loading full course entity models into RAM
+            var enrolledCourseIds = await _context.Enrollments
+                .Where(e => e.StudentId == studentId && e.Status == "Active")
+                .Select(e => e.CourseId)
+                .ToListAsync();
+
+            var assignments = await _context.Assignments
+                .Include(a => a.Course)
+                    .ThenInclude(c => c.Subject)
+                .Where(a => enrolledCourseIds.Contains(a.CourseId))
+                .OrderBy(a => a.DueDate)
+                .ToListAsync();
+
+            return assignments;
+        }
+
         // POST /api/Assignment – create a new assignment for a course
         [HttpPost]
         public async Task<ActionResult<Assignment>> Create(Assignment assignment)

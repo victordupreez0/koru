@@ -2,19 +2,22 @@ import React from "react";
 import { NavLink } from "react-router-dom";
 import { motion } from "framer-motion";
 
-const SECONDARY_NAV_ITEMS = [
-    { label: "Home", href: "/courses", end: true },
-    { label: "Announcements", href: "/courses/announcements" },
-    { label: "Assignments", href: "/courses/assignments" },
-    { label: "Modules", href: "/courses/modules" },
-    { label: "Grades", href: "/courses/grades" },
-    { label: "Attendance", href: "/courses/attendance" },
+const BASE_NAV_ITEMS = [
+    { label: "Home", pathSuffix: "", end: true },
+    { label: "Announcements", pathSuffix: "/announcements" },
+    { label: "Assignments", pathSuffix: "/assignments" },
+    { label: "Modules", pathSuffix: "/modules" },
+    { label: "Grades", pathSuffix: "/grades" },
+    { label: "Attendance", pathSuffix: "/attendance" },
 ];
 
 /**
  * CourseSecondaryNav Component
  */
-export default function CourseSecondaryNav() {
+export default function CourseSecondaryNav({ activeCourseId }) {
+    // Generate the base link using the newly introduced ID
+    const basePath = `/courses/${activeCourseId || ""}`;
+
     return (
         <motion.div 
             initial={{ opacity: 0, x: -20 }}
@@ -22,7 +25,7 @@ export default function CourseSecondaryNav() {
             className="w-44 py-8 flex flex-col gap-1"
         >
             <ul className="flex flex-col">
-                {SECONDARY_NAV_ITEMS.map((item, index) => (
+                {BASE_NAV_ITEMS.map((item, index) => (
                     <motion.li
                         key={item.label}
                         initial={{ opacity: 0, x: -10 }}
@@ -31,7 +34,7 @@ export default function CourseSecondaryNav() {
                         className="list-none"
                     >
                         <NavLink
-                            to={item.href}
+                            to={`${basePath}${item.pathSuffix}`}
                             end={item.end}
                             className={({ isActive }) => 
                                 `flex items-center gap-3 px-4 py-1.5 text-sm font-medium transition-all duration-200 border-l-2 ${
