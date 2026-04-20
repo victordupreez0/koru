@@ -7,7 +7,17 @@ namespace LearnOnline.Data
     {
         public static void Seed(AppDbContext context)
         {
-            // Ensure the schema is created
+            // Aiven blocks EnsureDeleted() via locked `postgres` access. 
+            // We will manually drop the cascade to rebuild cleanly and delete ghost columns.
+            if (context.Courses.Any()) {
+                context.Assignments.RemoveRange(context.Assignments);
+                context.Enrollments.RemoveRange(context.Enrollments);
+                context.Courses.RemoveRange(context.Courses);
+                context.Subjects.RemoveRange(context.Subjects);
+                context.SaveChanges();
+            }
+
+            // Ensure the schema is newly created perfectly
             context.Database.EnsureCreated();
 
             // 1. Seed Default Developer Accounts
@@ -76,6 +86,46 @@ namespace LearnOnline.Data
                 context.Courses.Add(course);
                 context.SaveChanges();
                 context.Enrollments.Add(new Enrollment { Status = "Active", CourseId = course.Id, StudentId = student.Id });
+                context.SaveChanges();
+            }
+
+            // 3. Seed Mock Assignments for existing courses
+            // If there are no assignments anywhere in the DB, let's seed them.
+            if (!context.Assignments.Any())
+            {
+                var uxCourseId = context.Courses.FirstOrDefault(c => c.Subject != null && c.Subject.Code == "UX300")?.Id;
+                var dvCourseId = context.Courses.FirstOrDefault(c => c.Subject != null && c.Subject.Code == "DV300")?.Id;
+                var vcCourseId = context.Courses.FirstOrDefault(c => c.Subject != null && c.Subject.Code == "VC300")?.Id;
+
+                var now = DateTime.UtcNow;
+
+                // UX Assignments
+                if (uxCourseId != null) {
+                    context.Assignments.AddRange(
+                        new Assignment { CourseId = uxCourseId, Title = "High-Fidelity Prototyping", Description = "Submit your final high-fidelity Figma prototype with interactive states.", MaxPoints = 100, DueDate = now.AddDays(14) },
+                        new Assignment { CourseId = uxCourseId, Title = "Usability Testing Report", Description = "Conduct a usability test and draft a full analysis brief.", MaxPoints = 100, DueDate = now.AddDays(-2) }, // Late
+                        new Assignment { CourseId = uxCourseId, Title = "Component Library Delivery", Description = "Build a scalable component library using design tokens.", MaxPoints = 50, DueDate = now.AddDays(2) }     // Due Soon
+                    );
+                }
+
+                // DV Assignments
+                if (dvCourseId != null) {
+                    context.Assignments.AddRange(
+                        new Assignment { CourseId = dvCourseId, Title = "React Dashboard Component", Description = "Build a dynamic React Dashboard using Framer Motion.", MaxPoints = 100, DueDate = now.AddDays(-10) }, // Closed
+                        new Assignment { CourseId = dvCourseId, Title = ".NET API Auth Setup", Description = "Configure Bearer tokens and role authorization inside an ASP.NET container.", MaxPoints = 100, DueDate = now.AddDays(1) }, // Due Soon
+                        new Assignment { CourseId = dvCourseId, Title = "SQL Schema Design", Description = "Draft your ER diagram and migrate your database layer.", MaxPoints = 50, DueDate = now.AddDays(4) } // Due Soon
+                    );
+                }
+
+                // VC Assignments
+                if (vcCourseId != null) {
+                    context.Assignments.AddRange(
+                        new Assignment { CourseId = vcCourseId, Title = "Essay Draft", Description = "Submit an initial draft analyzing semiotics in digital design.", MaxPoints = 100, DueDate = now.AddDays(-1) }, // Late
+                        new Assignment { CourseId = vcCourseId, Title = "Visual Deconstruction Presentation", Description = "Provide recorded feedback on an existing ad campaign.", MaxPoints = 100, DueDate = now.AddDays(30) }, // Due
+                        new Assignment { CourseId = vcCourseId, Title = "Literature Review Module", Description = "Compare 3 distinct articles focusing on sensory experiences.", MaxPoints = 50, DueDate = now.AddDays(-20) } // Closed
+                    );
+                }
+
                 context.SaveChanges();
             }
         }
