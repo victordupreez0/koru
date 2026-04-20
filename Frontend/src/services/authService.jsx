@@ -12,51 +12,27 @@ async function handleResponse(res) {
   return data;
 }
 
-// POST /api/User/register – create a standard email/password account
-export async function registerUser(payload) {
-  const res = await fetch(`${API_BASE}/User/register`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-
-  return handleResponse(res);
-}
-
 // POST /api/User/login – sign an existing user into the platform
-export async function loginUser(payload) {
+// The expectedRole is checked client-side against the backend response
+// to ensure users log in via the correct portal (student/teacher/admin)
+export async function loginUser({ email, password, expectedRole }) {
   const res = await fetch(`${API_BASE}/User/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
+    body: JSON.stringify({ email, password }),
   });
 
-  return handleResponse(res);
-}
+  const data = await handleResponse(res);
 
-// POST /api/User/google – exchange a Google credential for an app session
-export async function loginWithGoogle(credential, role = "student") {
-  const res = await fetch(`${API_BASE}/User/google`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ credential, role }),
-  });
-
-  return handleResponse(res);
-}
-
-// Persist the authenticated user locally so the app can reuse the session later
-export function saveAuthSession(data) {
-  localStorage.setItem("learnonline.auth", JSON.stringify(data));
-}
-
-// Read the current saved auth session from local storage
-export function getStoredAuthSession() {
-  try {
-    return JSON.parse(localStorage.getItem("learnonline.auth") || "null");
-  } catch {
-    return null;
+  // Role guard – the backend returns the user's actual role; reject
+  // if it doesn't match the portal they used to sign in
+  if (expectedRole && data.role?.toLowerCase() !== expectedRole.toLowerCase()) {
+    throw new Error(
+      `This account is registered as a ${data.role}. Please use the correct login portal.`
+    );
   }
+
+  return data;
 }
 
 // PUT /api/User/profile/:id – update the user's profile information from settings
@@ -80,3 +56,15 @@ export async function changeUserPassword(id, payload) {
 
   return handleResponse(res);
 }
+
+// POST /api/User/google – exchange a Google credential for an app session
+export async function loginWithGoogle(credential, role = "student") {
+  const res = await fetch(`${API_BASE}/User/google`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ credential, role }),
+  });
+
+  return handleResponse(res);
+}
+

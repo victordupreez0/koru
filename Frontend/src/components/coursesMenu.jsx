@@ -1,35 +1,10 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import SideNavItem from "./UI/sideNavItem";
-
-// Dummy course data - easier for linking to backend later
-const COURSES = [
-    {
-        id: "1",
-        label: "DV300",
-        href: "/courses/1",
-        code: "DV",
-        number: "300",
-        color: "#DC2626" // Red-600
-    },
-    {
-        id: "2",
-        label: "UX300",
-        href: "/courses/2",
-        code: "UX",
-        number: "300",
-        color: "#3C0078" // Brand Purple
-    },
-    {
-        id: "3",
-        label: "VC300",
-        href: "/courses/3",
-        code: "VC",
-        number: "300",
-        color: "#059669" // Emerald-600
-    },
-];
+import { useCourses } from "../contexts/CoursesContext";
+import CourseManagerModal from "./courseManagerModal";
+import { Eye } from "@solar-icons/react";
 
 // Framer Motion variants matching SideMenu.jsx
 const navbarVariants = {
@@ -76,26 +51,47 @@ const CourseItem = ({ course, isActive }) => (
  */
 export default function CourseMenu() {
     const location = useLocation();
+    const { visibleCourses } = useCourses();
+    const [modalOpen, setModalOpen] = useState(false);
 
     return (
-        <motion.div
-            className="navbar bg-white/80 backdrop-blur-md w-fit rounded-full shadow-lg fixed left-4 top-1/2 -translate-y-1/2 z-50 p-2 py-4 border border-[#3C0078]/10"
-            variants={navbarVariants}
-            initial="hidden"
-            animate="visible"
-        >
-            <div className="navbar-center flex flex-col items-center">
-                <motion.ul className="flex flex-col items-center p-0 m-0 gap-5" variants={listVariants}>
-                    {COURSES.map((course) => (
-                        <CourseItem 
-                            key={course.id} 
-                            course={course} 
-                            isActive={location.pathname.startsWith(course.href)} 
-                        />
-                    ))}
-                </motion.ul>
-            </div>
-        </motion.div>
+        <>
+            <motion.div
+                className="navbar bg-white/80 backdrop-blur-md w-fit rounded-[40px] shadow-lg fixed left-4 top-1/2 -translate-y-1/2 z-40 p-2 py-4 border border-[#3C0078]/10"
+                variants={navbarVariants}
+                initial="hidden"
+                animate="visible"
+            >
+                <div className="navbar-center flex flex-col items-center gap-4">
+                    <motion.ul className="flex flex-col items-center p-0 m-0 gap-5" variants={listVariants}>
+                        {visibleCourses.length > 0 ? (
+                            visibleCourses.map((course) => (
+                                <CourseItem 
+                                    key={course.id} 
+                                    course={course} 
+                                    isActive={location.pathname.startsWith(course.href) || (location.pathname === "/courses" && visibleCourses[0].id === course.id)} 
+                                />
+                            ))
+                        ) : (
+                            <li className="text-xs text-gray-400 font-bold p-2 text-center w-14">No Classes</li>
+                        )}
+                    </motion.ul>
+                    
+                    {/* View all courses separator and trigger button */}
+                    <div className="w-8 h-px bg-gray-200 mt-2 mb-1"></div>
+                    <button 
+                        onClick={() => setModalOpen(true)}
+                        className="flex flex-col items-center justify-center w-12 h-12 rounded-xl text-gray-400 hover:text-[#3C0078] hover:bg-gray-100 transition-all cursor-pointer"
+                        title="Manage Enrolled Courses"
+                    >
+                        <Eye size={24} />
+                    </button>
+                </div>
+            </motion.div>
+
+            {/* Injected pop up modal for managing all courses locally */}
+            <CourseManagerModal isOpen={modalOpen} onClose={() => setModalOpen(false)} />
+        </>
     );
 }
 
