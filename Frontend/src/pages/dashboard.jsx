@@ -1,5 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
+import Menu from "../components/menu";
+import SideMenu from "../components/sideMenu";
 import CourseGlance from "../components/courseGlance";
 import TodayTimeline from "../components/todayTimeline";
 import AssignmentsProgress from "../components/assignmentsProgress";
@@ -7,7 +9,14 @@ import AssignmentsProgress from "../components/assignmentsProgress";
 
 export default function Dashboard() {
   return (
-    <div className="grid grid-cols-3 gap-8 items-start w-full ">
+    
+    <div className="flex flex-row gap-8 items-start">
+       {/* Top navigation bar (floating, centred) */}
+      <Menu />
+
+      {/* Side navigation bar (floating, bottom-left) */}
+      <SideMenu />
+      {/* Left column – course overview with todo, next class & announcements */}
       <CourseGlance />
       <TodayTimeline />
       <AssignmentsProgress />
