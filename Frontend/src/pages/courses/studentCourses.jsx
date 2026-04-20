@@ -1,5 +1,6 @@
-import React from "react";
-import { Link, useLocation } from "react-router-dom";
+import React, { useEffect } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useCourses } from "../../contexts/CoursesContext";
 import CourseMenu from "../../components/coursesMenu";
 import CourseSecondaryNav from "../../components/courseSecondaryNav";
 import SideMenu from "../../components/sideMenu";
@@ -294,21 +295,16 @@ function CourseGradesView() {
     );
 }
 
-function CourseHomeView() {
+function CourseHomeView({ subject, course, loading }) {
   return (
     <div className="flex-1 flex flex-col p-8 overflow-y-auto">
       <header className="mb-8">
         <h1 className="text-3xl font-semibold tracking-tight">
-          User Experience Design 300 | Semester 1
+          {loading ? "Loading course details..." : `${subject?.name || "Unknown"} | ${course?.term || ""}`}
         </h1>
-        <p className="text-xl text-gray-700 mt-2">UX300</p>
+        <p className="text-xl text-gray-700 mt-2">{loading ? "..." : subject?.code}</p>
       </header>
 
-      {/* Top navigation bar (floating, centred) */}
-      <Menu />
-
-      {/* Side navigation bar (floating, bottom-left) */}
-      <SideMenu />
       {/* Left column – course overview with todo, next class & announcements */}
       <main className="space-y-12">
         <div className="w-full h-80 bg-[#D9D9D9] rounded-2xl shadow-sm"></div>
@@ -317,14 +313,10 @@ function CourseHomeView() {
             <h2 className="text-xl font-bold mb-4">Course Overview</h2>
             <div>
               <h3 className="font-bold text-sm mb-2 uppercase tracking-wide border-b border-black inline-block">
-                Term 1:
+                {course?.term || "Term 1"}:
               </h3>
               <p className="text-sm leading-relaxed text-gray-800 mt-2">
-                Inclusive & Neurodiverse UX focuses on building a strong
-                human-centred foundation for advanced UX practice. You will
-                explore accessibility, inclusive design patterns, cognitive
-                load, sensory design, and universal design thinking to better
-                understand how diverse users experience digital products.
+                {loading ? "Loading..." : subject?.description || "No description provided."}
               </p>
             </div>
           </section>
@@ -387,8 +379,34 @@ function CourseModulesView() {
  */
 export default function StudentCourses() {
     const location = useLocation();
+    const navigate = useNavigate();
+    const { visibleCourses, loading } = useCourses();
+
+    // The route matches /courses/:courseId/:subpage 
+    // E.g. pathParts = ["courses", "dfg897-...", "grades"]
+    const pathParts = location.pathname.split('/').filter(Boolean);
+    const activeCourseId = pathParts.length > 1 ? pathParts[1] : null;
+
+    // React Router Guard: If the user navigates merely to /courses without specifying an ID, 
+    // we drop them smoothly into the first available course.
+    useEffect(() => {
+        if (!loading && visibleCourses.length > 0) {
+            const courseExistsInList = visibleCourses.find(c => c.id === activeCourseId);
+            if (!activeCourseId || !courseExistsInList) {
+                navigate(`/courses/${visibleCourses[0].id}`, { replace: true });
+            }
+        }
+    }, [loading, visibleCourses, activeCourseId, navigate]);
+
+    // Build the resolved standard course object
+    const course = visibleCourses.find(c => c.id === activeCourseId) || visibleCourses[0] || null;
+    const subject = course ? {
+        name: course.subjectName,
+        code: course.label,
+        description: course.description
+    } : null;
     
-    // Normalize path to handle trailing slashes and base path
+    // Normalize sub-path checks based on the end of the URL
     const path = location.pathname;
     
     const isGradesPage = path.endsWith("/grades");
@@ -402,6 +420,9 @@ export default function StudentCourses() {
 
     return (
         <div className="flex h-screen overflow-hidden">
+            {/* The global top menu that was previously disappearing */}
+            <Menu />
+            
             {/* Leftmost Course Navigation Bar */}
             <div className="flex flex-col h-full py-8 px-4 items-center gap-6 ">
                 <CourseMenu />
@@ -413,7 +434,7 @@ export default function StudentCourses() {
 
       {/* Middle Section: Second Navigation Bar for course-internal links */}
       <div className="flex flex-col h-full border-r border-gray-200">
-        <CourseSecondaryNav />
+        <CourseSecondaryNav activeCourseId={activeCourseId || (visibleCourses[0]?.id)} />
       </div>
 
             {/* Main Content Area */}
@@ -428,7 +449,7 @@ export default function StudentCourses() {
             ) : isModulesPage ? (
                 <CourseModulesView />
             ) : (
-                <CourseHomeView />
+                <CourseHomeView subject={subject} course={course} loading={loading} />
             )}
         </div>
     );

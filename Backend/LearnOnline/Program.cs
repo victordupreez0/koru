@@ -34,6 +34,15 @@ builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(builder
 
 var app = builder.Build();
 
+// ----- Execute the Database Seeder -----
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    var context = services.GetRequiredService<AppDbContext>();
+    DbSeeder.Seed(context);
+}
+// ---------------------------------------
+
 // In development, expose Swagger UI and the OpenAPI endpoint
 if (app.Environment.IsDevelopment())
 {
