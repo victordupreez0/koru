@@ -1,48 +1,40 @@
 import React from "react";
+import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import SideNavItem from "./UI/sideNavItem";
 
 // Dummy course data - easier for linking to backend later
 const COURSES = [
     {
-        id: 1,
+        id: "1",
         label: "DV300",
         href: "/courses/1",
-        icon: (
-            <div className="flex flex-col items-center justify-center bg-base-200 w-11 h-11 rounded-xl">
-                <span className="text-sm font-bold -mb-1">DV</span>
-                <span className="text-[10px] opacity-70">300</span>
-            </div>
-        )
+        code: "DV",
+        number: "300",
+        color: "#DC2626" // Red-600
     },
     {
-        id: 2,
+        id: "2",
         label: "UX300",
         href: "/courses/2",
-        icon: (
-            <div className="flex flex-col items-center justify-center bg-base-200 w-15 h-11 ">
-                <span className="text-sm font-bold -mb-1">UX</span>
-                <span className="text-[10px] opacity-70">300</span>
-            </div>
-        )
+        code: "UX",
+        number: "300",
+        color: "#3C0078" // Brand Purple
     },
     {
-        id: 3,
+        id: "3",
         label: "VC300",
         href: "/courses/3",
-        icon: (
-            <div className="flex flex-col items-center justify-center bg-base-200 w-11 h-11 rounded-xl">
-                <span className="text-sm font-bold -mb-1">VC</span>
-                <span className="text-[10px] opacity-70">300</span>
-            </div>
-        )
+        code: "VC",
+        number: "300",
+        color: "#059669" // Emerald-600
     },
 ];
 
 // Framer Motion variants matching SideMenu.jsx
 const navbarVariants = {
     hidden: { opacity: 0, x: -20 },
-    visible: { opacity: 1, x: 0, transition: { duration: 0.5, ease: "easeOut" } },
+    visible: { opacity: 1, x: 0,  transition: { duration: 0.5, ease: "easeOut" } },
 };
 
 const listVariants = {
@@ -55,37 +47,56 @@ const itemVariants = {
     visible: { opacity: 1, x: 0, transition: { duration: 0.25, ease: "easeOut" } },
 };
 
+const CourseItem = ({ course, isActive }) => (
+    <motion.li variants={itemVariants} className="list-none">
+        <Link
+            to={course.href}
+            style={{ 
+                backgroundColor: isActive ? course.color : "transparent",
+                borderColor: course.color,
+                color: isActive ? "#FFFFFF" : course.color
+            }}
+            className={`flex flex-col items-center justify-center w-14 h-14 rounded-2xl border-2 transition-all duration-300 ${
+                isActive 
+                ? "shadow-md" 
+                : "hover:bg-gray-50"
+            }`}
+        >
+            <span className="text-sm font-bold opacity-100 leading-none">{course.code}</span>
+            <span className="text-[10px] font-bold opacity-100 leading-none mt-0.5">{course.number}</span>
+        </Link>
+    </motion.li>
+);
+
 /**
  * CourseMenu Component
  * 
- * A vertical navigation bar that lists enrolled courses.
- * Uses a constant COURSES for easy backend data linking.
- * Each item is rendered as a squared-off icon with stacked text (Course Code over Year/Level).
+ * Far-left sidebar specifically for switching between different courses.
+ * Renders squared-off avatars for each enrolled course with active states.
  */
 export default function CourseMenu() {
+    const location = useLocation();
 
     return (
         <motion.div
-            className="navbar bg-base-100 text-gray-400 w-fit rounded-full shadow-sm fixed left-4 top-1/2 -translate-y-1/2 z-50"
+            className="navbar bg-white/80 backdrop-blur-md w-fit rounded-full shadow-lg fixed left-4 top-1/2 -translate-y-1/2 z-50 p-2 py-4 border border-[#3C0078]/10"
             variants={navbarVariants}
             initial="hidden"
             animate="visible"
         >
             <div className="navbar-center flex flex-col items-center">
-                <motion.ul className="menu menu-vertical p-1 m-0 gap-2" variants={listVariants}>
+                <motion.ul className="flex flex-col items-center p-0 m-0 gap-5" variants={listVariants}>
                     {COURSES.map((course) => (
-                        <SideNavItem
-                            key={course.id}
-                            label={course.label}
-                            href={course.href}
-                            icon={course.icon}
-                            variants={itemVariants}
+                        <CourseItem 
+                            key={course.id} 
+                            course={course} 
+                            isActive={location.pathname.startsWith(course.href)} 
                         />
                     ))}
                 </motion.ul>
             </div>
         </motion.div>
-    )
-
-
+    );
 }
+
+
