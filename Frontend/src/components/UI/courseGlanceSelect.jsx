@@ -1,30 +1,39 @@
 
 
 
-const courses = [
-    { code: "UX300", avatar: "UX", color: "btn-neutral" },
-    { code: "DV300", avatar: "DV", color: "!bg-white" },
-    { code: "VC300", avatar: "VC", color: "!bg-white" },
-    { code: "PP300", avatar: "PP", color: "!bg-white" },
-];
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { useCourses } from "../../contexts/CoursesContext";
 
 export default function CourseGlanceSelect() {
-    const [active, setActive] = useState(courses[0].code);
+    const { visibleCourses } = useCourses();
+    const [active, setActive] = useState(null);
+
+    // Initialise active course smoothly when data arrives
+    useEffect(() => {
+        if (visibleCourses.length > 0 && !active) {
+            setActive(visibleCourses[0].label);
+        }
+    }, [visibleCourses, active]);
+
+    // Handle empty state protecting UI from crashing
+    if (visibleCourses.length === 0) {
+        return <div className="text-sm font-medium text-gray-400 pl-2">No active courses.</div>;
+    }
+
+    // Push the active course to the front of the horizontal scroll stack
     const orderedCourses = [
-        courses.find((course) => course.code === active),
-        ...courses.filter((course) => course.code !== active),
+        visibleCourses.find((course) => course.label === active),
+        ...visibleCourses.filter((course) => course.label !== active),
     ].filter(Boolean);
     return (
         <div className="relative w-full z-50 h-fit scrollbar-black">
             <motion.div layout className="relative z-0 flex flex-row space-x-2 overflow-x-auto pr-8 pb-5 scrollbar-hide">
                 {orderedCourses.map((course) => {
-                    const isActive = active === course.code;
+                    const isActive = active === course.label;
                     return (
                         <motion.button
-                            key={course.code}
+                            key={course.id}
                             layout="position"
                             initial={false}
                             animate={isActive ? { width: 116, height: 40 } : { width: 40, height: 40 }}
@@ -37,14 +46,14 @@ export default function CourseGlanceSelect() {
                                 hover:shadow-md hover:!border-transparent
                                 ${isActive ? "!bg-[#9BE9EA] !text-black !px-2 justify-start" : "!bg-white !text-black p-0 justify-center items-center"}`}
                             style={{ minWidth: 0, minHeight: 0, padding: isActive ? undefined : 0, display: 'flex', alignItems: 'center', justifyContent: isActive ? 'flex-start' : 'center' }}
-                            onClick={() => setActive(course.code)}
+                            onClick={() => setActive(course.label)}
                         >
                             <span className={`flex items-center w-full ${isActive ? '' : 'justify-center'}`} style={{ height: '100%' }}>
                                 <span className="avatar avatar-placeholder flex-shrink-0 flex items-center justify-center" style={{ height: '100%' }}>
                                     <span className={`w-8 h-8 rounded-full flex items-center font-bold justify-center aspect-square overflow-hidden transition-colors duration-150
                                         ${isActive ? "bg-white text-black" : "bg-[#9BE9EA] text-black"}`}
                                     >
-                                        <span className="text-xs">{course.avatar}</span>
+                                        <span className="text-xs">{course.code}</span>
                                     </span>
                                 </span>
                                 <motion.span
@@ -54,7 +63,7 @@ export default function CourseGlanceSelect() {
                                     className="text-sm font-medium whitespace-nowrap pl-2 pr-0 overflow-hidden"
                                     style={{ display: isActive ? "inline-block" : "none" }}
                                 >
-                                    {course.code}
+                                    {course.label}
                                 </motion.span>
                             </span>
                         </motion.button>

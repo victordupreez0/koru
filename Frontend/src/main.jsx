@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
 import { AuthProvider } from './contexts/AuthContext'
+import { CoursesProvider } from './contexts/CoursesContext'
 
 // Mount the React app into the #root div defined in index.html
 // StrictMode enables extra development warnings for common mistakes
@@ -10,7 +11,9 @@ import { AuthProvider } from './contexts/AuthContext'
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <AuthProvider>
-      <App />
+      <CoursesProvider>
+        <App />
+      </CoursesProvider>
     </AuthProvider>
   </StrictMode>,
 )
