@@ -3,9 +3,9 @@ import { Link } from "react-router-dom";
 
 // Default routes – used when no custom destination is passed into the button
 const defaultRoutes = {
-  student: "/student/login",
-  teacher: "/teacher/login",
-  admin: "/admin/login",
+  student: "/login",
+  teacher: "/login",
+  admin: "/login",
 };
 
 // Reusable onboarding button – displays a role card and links to the correct page
