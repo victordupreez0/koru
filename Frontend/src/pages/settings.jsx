@@ -15,10 +15,9 @@ import AuthInput from "../components/UI/authInput";
 import { useTextToSpeech } from "../hooks/useTextToSpeech";
 import {
   changeUserPassword,
-  getStoredAuthSession,
-  saveAuthSession,
   updateUserProfile,
 } from "../services/authService";
+import { useAuth } from "../contexts/AuthContext";
 
 const SETTINGS_STORAGE_KEY = "learnonline.settings";
 
@@ -66,7 +65,7 @@ function ToggleRow({ icon, title, description, checked, onChange, darkMode }) {
 
 // Settings page – lets the user update profile details, password, and accessibility preferences
 export default function SettingsPage() {
-  const session = getStoredAuthSession();
+  const { user: session, login: updateSession } = useAuth();
   const [settings, setSettings] = useState(() => {
     try {
       const saved = JSON.parse(localStorage.getItem(SETTINGS_STORAGE_KEY) || "null");
@@ -159,9 +158,9 @@ export default function SettingsPage() {
 
       if (userId) {
         const updated = await updateUserProfile(userId, payload);
-        saveAuthSession({ ...session, ...updated, role: updated.role || payload.role });
+        updateSession({ ...session, ...updated, role: updated.role || payload.role });
       } else {
-        saveAuthSession({ ...session, ...payload });
+        updateSession({ ...session, ...payload });
       }
 
       setProfileMessage("Your account details have been updated.");
