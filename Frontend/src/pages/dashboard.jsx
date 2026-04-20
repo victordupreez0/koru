@@ -1,25 +1,23 @@
 import React from "react";
-import { motion } from "framer-motion";
-import Menu from "../components/menu";
-import SideMenu from "../components/sideMenu";
-import CourseGlance from "../components/courseGlance";
-import TodayTimeline from "../components/todayTimeline";
-import AssignmentsProgress from "../components/assignmentsProgress";
+import { useAuth } from "../contexts/AuthContext";
 
+// View components
+import StudentDashboard from "./dashboards/studentDashboard";
+import TeacherDashboard from "./dashboards/teacherDashboard";
+import AdminDashboard from "./dashboards/adminDashboard";
 
+// The unified Dashboard route - acts as a traffic controller based on user role
 export default function Dashboard() {
-  return (
-    
-    <div className="flex flex-row gap-8 items-start">
-       {/* Top navigation bar (floating, centred) */}
-      <Menu />
+  const { role } = useAuth();
 
-      {/* Side navigation bar (floating, bottom-left) */}
-      <SideMenu />
-      {/* Left column – course overview with todo, next class & announcements */}
-      <CourseGlance />
-      <TodayTimeline />
-      <AssignmentsProgress />
-    </div>
-  );
+  if (role === "admin") {
+    return <AdminDashboard />;
+  }
+
+  if (role === "teacher") {
+    return <TeacherDashboard />;
+  }
+
+  // Default assumption fallback is the student dashboard
+  return <StudentDashboard />;
 }
