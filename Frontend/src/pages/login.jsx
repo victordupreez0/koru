@@ -110,6 +110,7 @@ export default function Login({ role = "student" }) {
 
   return (
     <div
+      data-tts-root="true"
       className="fixed inset-0 flex min-h-screen items-center justify-center bg-cover bg-center px-4 py-8"
       style={{ backgroundImage: `url(${Background})` }}
     >

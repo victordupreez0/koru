@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 // Page components – rendered based on the current route
 import Dashboard from "./pages/dashboard";
 import ClickSpark from "./components/UI/clickSpark";
+import RouteSpeechAnnouncer from "./components/UI/routeSpeechAnnouncer";
 import CalendarPage from "./pages/calendar";
 import Courses from './pages/courses'
 import Onboarding from "./pages/onboarding";
@@ -14,6 +15,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 function App() {
   return (
     <BrowserRouter>
+      <RouteSpeechAnnouncer />
       <ClickSpark
         sparkColor="#3C0078"
         sparkSize={10}
