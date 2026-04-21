@@ -179,7 +179,7 @@ export default function StudentCalendar() {
           {activeView === "month" && (
             <motion.div
               key="month"
-              className="w-full overflow-hidden"
+              className="w-full"
               variants={viewVariants}
               initial="hidden"
               animate="visible"

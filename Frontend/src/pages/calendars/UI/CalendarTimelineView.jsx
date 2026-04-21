@@ -132,18 +132,67 @@ export default function CalendarTimelineView({ events = [], weeks = [] }) {
                       }}
                     />
 
-                    {/* Event pill */}
-                    <div className="flex items-center gap-1.5 bg-white rounded-full px-2.5 py-[5px] text-[10px] font-medium text-gray-700 shadow-sm overflow-hidden">
-                      <span className="shrink-0 text-gray-400">
-                        {ICONS[evt.type] ?? ICONS.class}
-                      </span>
-                      <span className="truncate max-w-[90px]">{evt.title}</span>
-                      {(evt.startTime || evt.endTime) && (
-                        <span className="shrink-0 text-[9px] text-gray-400 leading-tight text-right whitespace-nowrap ml-1">
-                          {evt.startTime && <span className="block">{evt.startTime}</span>}
-                          {evt.endTime   && <span className="block">{evt.endTime}</span>}
-                        </span>
+                    {/* Pill + tooltip wrapper */}
+                    <div className="relative group">
+
+                      {/* ── Hover tooltip ── */}
+                      {(evt.lecturer || evt.location || evt.startTime) && (
+                        <div className={[
+                          "absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50",
+                          "w-52 bg-white rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.12)] p-3",
+                          "pointer-events-none",
+                          "opacity-0 group-hover:opacity-100",
+                          "translate-y-1.5 group-hover:translate-y-0",
+                          "transition-all duration-200 ease-out",
+                        ].join(" ")}>
+                          {/* Icon + title */}
+                          <div className="flex items-center gap-2 mb-2.5">
+                            <div className="w-8 h-8 rounded-xl border border-gray-200 bg-gray-50 flex items-center justify-center shrink-0 text-gray-500">
+                              {ICONS[evt.type] ?? ICONS.class}
+                            </div>
+                            <span className="font-semibold text-[13px] text-gray-900 leading-snug">{evt.title}</span>
+                          </div>
+                          {/* Divider */}
+                          <div className="h-px bg-gray-100 mb-2" />
+                          {/* Meta rows */}
+                          <div className="flex flex-col gap-1.5">
+                            {evt.startTime && (
+                              <div className="flex items-center gap-1.5 text-[11px] text-gray-500">
+                                <svg className="shrink-0 text-gray-400" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                <span>{evt.startTime}{evt.endTime ? ` – ${evt.endTime}` : ""}</span>
+                              </div>
+                            )}
+                            {evt.lecturer && (
+                              <div className="flex items-center gap-1.5 text-[11px] text-gray-500">
+                                <svg className="shrink-0 text-gray-400" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                <span className="truncate">{evt.lecturer}</span>
+                              </div>
+                            )}
+                            {evt.location && (
+                              <div className="flex items-center gap-1.5 text-[11px] text-gray-400">
+                                <svg className="shrink-0" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                                <span className="truncate">{evt.location}</span>
+                              </div>
+                            )}
+                          </div>
+                          {/* Caret */}
+                          <div className="absolute left-1/2 -translate-x-1/2 -bottom-[5px] w-2.5 h-2.5 bg-white rotate-45 shadow-[1px_1px_0px_rgba(0,0,0,0.04)]" />
+                        </div>
                       )}
+
+                      {/* ── Event pill ── */}
+                      <div className="flex items-center gap-1.5 bg-white rounded-full px-2.5 py-[5px] text-[10px] font-medium text-gray-700 shadow-sm cursor-pointer transition-all duration-150 hover:-translate-y-px hover:shadow-md">
+                        <span className="shrink-0 text-gray-400">
+                          {ICONS[evt.type] ?? ICONS.class}
+                        </span>
+                        <span className="truncate max-w-[90px]">{evt.title}</span>
+                        {(evt.startTime || evt.endTime) && (
+                          <span className="shrink-0 text-[9px] text-gray-400 leading-tight text-right whitespace-nowrap ml-1">
+                            {evt.startTime && <span className="block">{evt.startTime}</span>}
+                            {evt.endTime   && <span className="block">{evt.endTime}</span>}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
