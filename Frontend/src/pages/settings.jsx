@@ -113,6 +113,7 @@ export default function SettingsPage() {
   // Persist settings and apply their effects across the app without a separate context
   useEffect(() => {
     localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
+    window.dispatchEvent(new Event("learnonline-settings-changed"));
     document.documentElement.style.fontSize = `${settings.textSize}%`;
     document.body.style.lineHeight = `${settings.lineSpacing / 100}`;
     document.body.classList.toggle("theme-dark", settings.theme === "dark");
@@ -120,12 +121,7 @@ export default function SettingsPage() {
     document.body.classList.remove("theme-high-contrast", "reduce-motion", "focus-mode");
   }, [settings]);
 
-  // Speak the page title and description when text-to-speech is enabled
-  useEffect(() => {
-    if (settings.ttsEnabled) {
-      speak("Accessibility settings. Customize your learning experience.");
-    }
-  }, [settings.ttsEnabled, speak]);
+  // Manual preview is available from the text-to-speech section below.
 
   function updateSetting(key, value) {
     setSettings((current) => ({ ...current, [key]: value }));
@@ -208,7 +204,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className={`w-full pb-10 ${settings.font === "OpenDyslexic" ? "dyslexic-font" : ""} ${pageClasses.wrapper}`}>
+    <div data-tts-root="true" className={`w-full pb-10 ${settings.font === "OpenDyslexic" ? "dyslexic-font" : ""} ${pageClasses.wrapper}`}>
       <Menu />
       <SideMenu />
 
@@ -348,7 +344,7 @@ export default function SettingsPage() {
                 />
               </div>
 
-              <button type="button" onClick={() => speak("This is a preview of the text to speech accessibility setting.")} className={`mt-4 inline-flex min-h-[44px] items-center justify-center gap-2 rounded-2xl border-2 px-4 py-3 font-semibold ${pageClasses.secondaryButton}`}>
+              <button type="button" onClick={() => speak("This is a preview of the text to speech accessibility setting.", { force: true })} className={`mt-4 inline-flex min-h-[44px] items-center justify-center gap-2 rounded-2xl border-2 px-4 py-3 font-semibold ${pageClasses.secondaryButton}`}>
                 <Volume2 size={18} />
                 <span>Preview voice</span>
               </button>
