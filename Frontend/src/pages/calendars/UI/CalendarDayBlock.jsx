@@ -11,13 +11,15 @@ import CalendarDayBlockEvent from "./CalendarDayBlockEvent";
  *  - isToday   (boolean)       : Highlight cell as today.
  *  - isOutside (boolean)       : Day belongs to adjacent month (muted).
  *  - events    (array)         : Array of event objects for this day.
- *                                Shape: { id, title, startTime, endTime, type }
+ *                                Shape: { id, title, startTime, endTime, type, lecturer?, location? }
  */
 export default function CalendarDayBlock({ day, isToday = false, isOutside = false, events = [] }) {
   return (
     <div
       className={[
         "min-h-[140px] p-2.5 flex flex-col gap-1.5 border-r border-gray-200 last:border-r-0 transition-colors duration-150",
+        // Overflow visible so tooltips can escape the cell
+        "overflow-visible",
         isToday   ? "bg-gray-100"  : "bg-transparent",
         isOutside ? "opacity-40"   : "",
       ].join(" ")}
@@ -34,7 +36,7 @@ export default function CalendarDayBlock({ day, isToday = false, isOutside = fal
         </span>
       )}
 
-      {/* Event pills */}
+      {/* Event pills — pass all fields so tooltip has full context */}
       {events.map((evt) => (
         <CalendarDayBlockEvent
           key={evt.id}
@@ -42,6 +44,8 @@ export default function CalendarDayBlock({ day, isToday = false, isOutside = fal
           startTime={evt.startTime}
           endTime={evt.endTime}
           type={evt.type}
+          lecturer={evt.lecturer}
+          location={evt.location}
         />
       ))}
     </div>
