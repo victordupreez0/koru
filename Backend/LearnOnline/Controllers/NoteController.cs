@@ -59,6 +59,7 @@ namespace LearnOnline.Controllers
             var note = await _context.Notes.FindAsync(id);
             if (note == null) return NotFound();
 
+            note.Title = updated.Title;
             note.Content = updated.Content;
             note.CourseId = updated.CourseId;
             note.StudentId = updated.StudentId;

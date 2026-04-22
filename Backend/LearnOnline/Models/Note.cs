@@ -10,6 +10,9 @@ namespace LearnOnline.Models
         [Key]
         public string Id { get; set; } = Guid.NewGuid().ToString();
 
+        // The note's title
+        public string Title { get; set; } = "Untitled Note";
+
         // The note's text content
         public string? Content { get; set; }
 
