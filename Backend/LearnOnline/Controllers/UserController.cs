@@ -1,3 +1,4 @@
+using System.Net.Http.Json;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using LearnOnline.Data;
@@ -13,10 +14,16 @@ namespace LearnOnline.Controllers
     [Route("api/[controller]")]
     public class UserController : ControllerBase
     {
+        // Injected services – database access, outbound HTTP for Google, and app configuration
         private readonly AppDbContext _context;
-        public UserController(AppDbContext context)
+        private readonly IHttpClientFactory _httpClientFactory;
+        private readonly IConfiguration _configuration;
+
+        public UserController(AppDbContext context, IHttpClientFactory httpClientFactory, IConfiguration configuration)
         {
             _context = context;
+            _httpClientFactory = httpClientFactory;
+            _configuration = configuration;
         }
 
         // Helper – convert a User entity to a safe response DTO (no password hash)
@@ -55,16 +62,18 @@ namespace LearnOnline.Controllers
         [HttpPost("register")]
         public async Task<ActionResult<UserResponseDto>> Register(CreateUserDto dto)
         {
-            if (await _context.Users.AnyAsync(u => u.Email == dto.Email))
+            var email = dto.Email.Trim().ToLowerInvariant();
+
+            if (await _context.Users.AnyAsync(u => u.Email == email))
                 return Conflict(new { message = "Email already registered" });
 
             var user = new User
             {
                 Id = Guid.NewGuid().ToString(),
-                Email = dto.Email,
+                Email = email,
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
-                FirstName = dto.FirstName,
-                LastName = dto.LastName,
+                FirstName = dto.FirstName.Trim(),
+                LastName = dto.LastName.Trim(),
                 Role = dto.Role,
                 ProfileImageUrl = dto.ProfileImageUrl,
                 CreatedAt = DateTime.UtcNow,
@@ -77,19 +86,152 @@ namespace LearnOnline.Controllers
         }
 
         // POST /api/User/login – authenticate with email + password
-        // Returns the user's ID and role on success, or 401 on failure
+        // Returns the user's profile on success, or 401 on failure
         [HttpPost("login")]
         public async Task<ActionResult> Login(LoginDto dto)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == dto.Email);
-            if (user == null)
+            // Normalize the email before looking for a matching active user
+            var email = dto.Email.Trim().ToLowerInvariant();
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+            if (user == null || !user.IsActive)
                 return Unauthorized(new { message = "Invalid email or password" });
 
             bool validPassword = BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash);
             if (!validPassword)
                 return Unauthorized(new { message = "Invalid email or password" });
 
-            return Ok(new { message = "Login successful", userId = user.Id, role = user.Role.ToString() });
+            return Ok(new
+            {
+                message = "Login successful",
+                userId = user.Id,
+                email = user.Email,
+                firstName = user.FirstName,
+                lastName = user.LastName,
+                role = user.Role.ToString(),
+                profileImageUrl = user.ProfileImageUrl
+            });
+        }
+
+        // GET /api/User/google-config – exposes the Google client ID used by the frontend sign-in button
+        [HttpGet("google-config")]
+        public ActionResult GetGoogleConfig()
+        {
+            return Ok(new { clientId = _configuration["GoogleAuth:ClientId"] ?? string.Empty });
+        }
+
+        // POST /api/User/google – authenticate with Google and create the account if needed
+        [HttpPost("google")]
+        public async Task<ActionResult> GoogleAuth(GoogleAuthDto dto)
+        {
+            if (string.IsNullOrWhiteSpace(dto.Credential))
+                return BadRequest(new { message = "Google credential is required" });
+
+            // Ask Google to validate the received ID token and return the user's profile details
+            var client = _httpClientFactory.CreateClient();
+            var url = $"https://oauth2.googleapis.com/tokeninfo?id_token={Uri.EscapeDataString(dto.Credential)}";
+            var tokenInfo = await client.GetFromJsonAsync<GoogleTokenInfoDto>(url);
+
+            if (tokenInfo == null || string.IsNullOrWhiteSpace(tokenInfo.Email))
+                return Unauthorized(new { message = "Google authentication failed" });
+
+            if (!string.Equals(tokenInfo.EmailVerified, "true", StringComparison.OrdinalIgnoreCase))
+                return Unauthorized(new { message = "Google email address is not verified" });
+
+            // If a client ID is configured, ensure the incoming token was issued for this app only
+            var configuredClientId = _configuration["GoogleAuth:ClientId"];
+            if (!string.IsNullOrWhiteSpace(configuredClientId) &&
+                !string.Equals(tokenInfo.Audience, configuredClientId, StringComparison.Ordinal))
+            {
+                return Unauthorized(new { message = "Google client ID mismatch" });
+            }
+
+            // Match the Google account to an existing user or create one for first-time access
+            var email = tokenInfo.Email.Trim().ToLowerInvariant();
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+
+            if (user == null)
+            {
+                user = new User
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    Email = email,
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword(Guid.NewGuid().ToString("N")),
+                    FirstName = string.IsNullOrWhiteSpace(tokenInfo.GivenName) ? "Google" : tokenInfo.GivenName,
+                    LastName = string.IsNullOrWhiteSpace(tokenInfo.FamilyName) ? "User" : tokenInfo.FamilyName,
+                    Role = dto.Role,
+                    ProfileImageUrl = tokenInfo.Picture,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow,
+                    IsActive = true
+                };
+
+                _context.Users.Add(user);
+            }
+            else
+            {
+                if (!user.IsActive)
+                    return Unauthorized(new { message = "This account is inactive" });
+
+                if (!string.IsNullOrWhiteSpace(tokenInfo.Picture))
+                    user.ProfileImageUrl = tokenInfo.Picture;
+
+                user.UpdatedAt = DateTime.UtcNow;
+            }
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                message = "Google login successful",
+                userId = user.Id,
+                email = user.Email,
+                firstName = user.FirstName,
+                lastName = user.LastName,
+                role = user.Role.ToString(),
+                profileImageUrl = user.ProfileImageUrl,
+                provider = "Google"
+            });
+        }
+
+        // PUT /api/User/profile/{id} – update the signed-in user's account details from settings
+        [HttpPut("profile/{id}")]
+        public async Task<ActionResult<UserResponseDto>> UpdateProfile(string id, UpdateUserProfileDto updated)
+        {
+            var user = await _context.Users.FindAsync(id);
+            if (user == null) return NotFound();
+
+            var email = updated.Email.Trim().ToLowerInvariant();
+            var emailTaken = await _context.Users.AnyAsync(u => u.Id != id && u.Email == email);
+            if (emailTaken)
+                return Conflict(new { message = "Email already registered" });
+
+            user.Email = email;
+            user.FirstName = updated.FirstName.Trim();
+            user.LastName = updated.LastName.Trim();
+            user.Role = updated.Role;
+            user.ProfileImageUrl = updated.ProfileImageUrl ?? user.ProfileImageUrl;
+            user.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+            return Ok(ToResponseDto(user));
+        }
+
+        // POST /api/User/change-password/{id} – verify the current password and save the new one
+        [HttpPost("change-password/{id}")]
+        public async Task<ActionResult> ChangePassword(string id, ChangePasswordDto dto)
+        {
+            var user = await _context.Users.FindAsync(id);
+            if (user == null) return NotFound(new { message = "User not found" });
+
+            bool validPassword = BCrypt.Net.BCrypt.Verify(dto.CurrentPassword, user.PasswordHash);
+            if (!validPassword)
+                return Unauthorized(new { message = "Current password is incorrect" });
+
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.NewPassword);
+            user.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+            return Ok(new { message = "Password updated successfully" });
         }
 
         // PUT /api/User/{id} – update a user's profile fields
@@ -99,7 +241,7 @@ namespace LearnOnline.Controllers
             var user = await _context.Users.FindAsync(id);
             if (user == null) return NotFound();
 
-            user.Email = updated.Email;
+            user.Email = updated.Email.Trim().ToLowerInvariant();
             user.FirstName = updated.FirstName;
             user.LastName = updated.LastName;
             user.Role = updated.Role;

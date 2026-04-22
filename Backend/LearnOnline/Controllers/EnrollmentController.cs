@@ -33,10 +33,27 @@ namespace LearnOnline.Controllers
         {
             var enrollment = await _context.Enrollments
                 .Include(e => e.Course)
+                    .ThenInclude(c => c.Subject)
                 .Include(e => e.Student)
                 .FirstOrDefaultAsync(e => e.Id == id);
             if (enrollment == null) return NotFound();
             return enrollment;
+        }
+
+        // GET /api/Enrollment/student/{studentId} – return all active courses a student is enrolled in
+        [HttpGet("student/{studentId}")]
+        public async Task<ActionResult<IEnumerable<Enrollment>>> GetByStudentId(string studentId)
+        {
+            var enrollments = await _context.Enrollments
+                .Include(e => e.Course)
+                    .ThenInclude(c => c.Subject)
+                .Include(e => e.Course.Teacher)
+                .Where(e => e.StudentId == studentId && e.Status == "Active")
+                .ToListAsync();
+
+            if (!enrollments.Any()) return NotFound("No active courses found for this student.");
+            
+            return enrollments;
         }
 
         // POST /api/Enrollment – enrol a student in a course
