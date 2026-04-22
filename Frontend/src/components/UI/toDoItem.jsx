@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { MdEditNote, MdCheckBoxOutlineBlank } from "react-icons/md";
+import { MdEditNote } from "react-icons/md";
+import { ChevronRight } from "lucide-react";
 import { getCourseAssignments } from "../../services/assignmentService";
 
 // To-Do item list – renders inside the Course Glance card
@@ -73,9 +74,9 @@ export default function ToDoItem({ activeCourseId }) {
                         <h3 className="text-xs text-gray-500">{todo.due}</h3>
                     </div>
 
-                    {/* Checkbox placeholder – will toggle completion state later */}
+                    {/* Arrow icon */}
                     <div className="w-9 h-9 flex items-center justify-center mr-2">
-                        <MdCheckBoxOutlineBlank className="w-6 h-6 text-gray-400" />
+                        <ChevronRight className="w-5 h-5 text-gray-400" />
                     </div>
                 </div>
             ))}
