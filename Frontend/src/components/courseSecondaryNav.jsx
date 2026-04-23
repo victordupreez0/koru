@@ -17,13 +17,13 @@ const BASE_NAV_ITEMS = [
  */
 export default function CourseSecondaryNav({ activeCourseId }) {
     // Generate the base link using the newly introduced ID
-    const basePath = `/courses/${activeCourseId || ""}`;
+    const basePath = activeCourseId ? `/courses/${activeCourseId}` : "/courses";
 
     return (
         <motion.div 
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="w-44 py-8 flex flex-col gap-1"
+            className="w-44 py-8 flex flex-col gap-1 overflow-hidden"
         >
             <ul className="flex flex-col">
                 {BASE_NAV_ITEMS.map((item, index) => (
@@ -35,19 +35,32 @@ export default function CourseSecondaryNav({ activeCourseId }) {
                         className="list-none"
                     >
                         <NavLink
-                            to={`${basePath}${item.pathSuffix}`}
+                            to={item.pathSuffix ? `${basePath}${item.pathSuffix}` : basePath}
                             end={item.end}
                             className={({ isActive }) => 
-                                `flex items-center gap-3 px-4 py-1.5 text-sm font-medium transition-all duration-200 border-l-2 ${
+                                `relative flex items-center gap-3 px-4 py-1.5 text-sm font-medium transition-all duration-200 border-l-2 ${
                                     isActive 
                                     ? "text-[#3C0078] border-[#3C0078] font-bold bg-[#3C0078]/5" 
                                     : "text-gray-500 border-transparent hover:text-[#3C0078] hover:bg-[#3C0078]/5"
                                 }`
                             }
                         >
-                            <div className="flex items-center w-full justify-between">
-                                <span>{item.label}</span>
-                            </div>
+                            {({ isActive }) => (
+                                <div className="flex items-center w-full justify-between">
+                                    <span>{item.label}</span>
+                                    {isActive && (
+                                        <motion.div
+                                            layoutId="activeBall"
+                                            className="w-1.5 h-1.5 rounded-full bg-[#3C0078]"
+                                            transition={{
+                                                type: "spring",
+                                                stiffness: 300,
+                                                damping: 30
+                                            }}
+                                        />
+                                    )}
+                                </div>
+                            )}
                         </NavLink>
                     </motion.li>
                 ))}
