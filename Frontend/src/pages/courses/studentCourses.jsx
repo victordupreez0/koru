@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useCourses } from "../../contexts/CoursesContext";
 import CourseMenu from "../../components/coursesMenu";
@@ -6,8 +6,8 @@ import CourseSecondaryNav from "../../components/courseSecondaryNav";
 import SideMenu from "../../components/sideMenu";
 import Menu from "../../components/menu";
 import ModuleAccordion from "../../components/moduleAccordion";
-import { Bell, Calendar, Folder, Upload, InfoCircle, CheckCircle, CloseCircle } from "@solar-icons/react";
-import { motion } from "framer-motion";
+import { Bell, Calendar, Folder, Upload, InfoCircle, CheckCircle, CloseCircle, CloseSquare, Letter, User } from "@solar-icons/react";
+import { motion, AnimatePresence } from "framer-motion";
 import AttendanceChart from "../../components/UI/attendanceChart";
 import AttendanceVisualizer from "../../components/UI/attendanceVisualizer";
 import { getCourseAssignments } from "../../services/assignmentService";
@@ -108,29 +108,158 @@ const scaleIn = {
 };
 
 function CourseAnnouncementsView() {
+    const [selectedId, setSelectedId] = useState(null);
+    const selectedAnnouncement = ANNOUNCEMENTS_DATA.find(a => a.id === selectedId);
+
     return (
         <motion.div className="flex-1 p-8 overflow-y-auto" initial="hidden" animate="visible" variants={staggerContainer}>
             <motion.header variants={slideUp} className="mb-12">
                 <h1 className="text-3xl font-semibold tracking-tight">Announcements</h1>
                 <p className="text-gray-500 mt-2">Latest updates from your lecturers</p>
             </motion.header>
-            <div className="space-y-6 max-w-4xl">
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-6xl">
                 {ANNOUNCEMENTS_DATA.map((post) => (
-                    <motion.div key={post.id} variants={slideUp} className="bg-white p-8 rounded-[32px] border border-gray-100 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
-                        <div className="absolute left-0 top-0 bottom-0 w-1.5" style={{ backgroundColor: post.color }} />
-                        <div className="flex justify-between items-start mb-4">
-                            <div className="flex items-center gap-3">
+                    <motion.div 
+                        key={post.id} 
+                        layoutId={`ann_container_${post.id}`}
+                        onClick={() => setSelectedId(post.id)}
+                        variants={slideUp} 
+                        className="bg-white p-8 rounded-[38px] border border-gray-100 shadow-sm hover:shadow-xl transition-all cursor-pointer relative overflow-hidden group"
+                        whileHover={{ y: -5 }}
+                    >
+                        <motion.div 
+                            layoutId={`ann_stripe_${post.id}`}
+                            className="absolute left-0 top-0 bottom-0 w-1.5" 
+                            style={{ backgroundColor: post.color }} 
+                        />
+                        <div className="flex justify-between items-start mb-6">
+                            <motion.div layoutId={`ann_meta_${post.id}`} className="flex items-center gap-3">
                                 <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider text-white" style={{ backgroundColor: post.color }}>{post.label}</span>
                                 <span className="text-sm text-gray-400">{post.date}</span>
-                            </div>
-                            <button className="text-gray-300 hover:text-gray-600"><Bell size={20} /></button>
+                            </motion.div>
+                            <motion.div layoutId={`ann_icon_${post.id}`} className="text-gray-200">
+                                <Bell size={24} />
+                            </motion.div>
                         </div>
-                        <h2 className="text-xl font-bold text-gray-900 group-hover:text-[#3C0078] transition-colors">{post.title}</h2>
-                        <p className="text-xs font-medium text-gray-500 mt-1">Posted by {post.lecturer}</p>
-                        <p className="text-gray-600 mt-4 leading-relaxed">{post.preview}</p>
+                        <motion.h2 
+                            layoutId={`ann_title_${post.id}`}
+                            className="text-2xl font-bold text-gray-900 group-hover:text-[#3C0078] transition-colors leading-tight"
+                        >
+                            {post.title}
+                        </motion.h2>
+                        <motion.div layoutId={`ann_author_${post.id}`}>
+                            <p className="text-xs font-bold uppercase tracking-widest text-[#3C0078] mt-2 opacity-60">Posted by {post.lecturer}</p>
+                        </motion.div>
+                        <motion.p layoutId={`ann_preview_${post.id}`} className="text-gray-500 mt-4 leading-relaxed line-clamp-2">
+                            {post.preview}
+                        </motion.p>
                     </motion.div>
                 ))}
             </div>
+
+            <AnimatePresence>
+                {selectedId && (
+                    <>
+                        {/* Overlay backdrop */}
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setSelectedId(null)}
+                            className="fixed inset-0 bg-black/40 backdrop-blur-md z-[100]"
+                        />
+
+                        {/* Modal container */}
+                        <div className="fixed inset-0 z-[101] flex items-center justify-center p-4 pointer-events-none">
+                            <motion.div
+                                layoutId={`ann_container_${selectedId}`}
+                                className="bg-white w-full max-w-2xl rounded-[48px] shadow-2xl relative overflow-hidden pointer-events-auto"
+                                transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                            >
+                                <motion.div 
+                                    layoutId={`ann_stripe_${selectedId}`}
+                                    className="absolute left-0 top-0 bottom-0 w-3" 
+                                    style={{ backgroundColor: selectedAnnouncement.color }} 
+                                />
+                                
+                                <div className="p-12">
+                                    <div className="flex justify-between items-start mb-10">
+                                        <motion.div layoutId={`ann_meta_${selectedId}`} className="flex items-center gap-4">
+                                            <span className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest text-white" style={{ backgroundColor: selectedAnnouncement.color }}>
+                                                {selectedAnnouncement.label}
+                                            </span>
+                                            <span className="text-sm font-medium text-gray-400">{selectedAnnouncement.date}</span>
+                                        </motion.div>
+                                        <div className="flex gap-2">
+                                            <motion.div layoutId={`ann_icon_${selectedId}`} className="text-gray-100 hidden md:block">
+                                                <Bell size={32} />
+                                            </motion.div>
+                                            <button 
+                                                onClick={(e) => { e.stopPropagation(); setSelectedId(null); }}
+                                                className="w-12 h-12 flex items-center justify-center rounded-full bg-gray-50 text-gray-400 hover:bg-gray-100 hover:text-gray-900 transition-colors"
+                                            >
+                                                <CloseSquare size={24} />
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <motion.h2 
+                                        layoutId={`ann_title_${selectedId}`}
+                                        className="text-4xl font-black text-gray-900 leading-tight mb-4"
+                                    >
+                                        {selectedAnnouncement.title}
+                                    </motion.h2>
+
+                                    <motion.div layoutId={`ann_author_${selectedId}`} className="flex items-center gap-3 mb-10 pb-10 border-b border-gray-100">
+                                        <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-[#3C0078]">
+                                            <User size={20} />
+                                        </div>
+                                        <div>
+                                            <p className="text-xs font-black uppercase tracking-widest text-gray-400">Published By</p>
+                                            <p className="font-bold text-[#3C0078]">{selectedAnnouncement.lecturer}</p>
+                                        </div>
+                                    </motion.div>
+
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: 0.2 }}
+                                        className="prose prose-purple max-w-none"
+                                    >
+                                        <motion.p layoutId={`ann_preview_${selectedId}`} className="text-xl leading-relaxed text-gray-600 mb-6 font-medium">
+                                            {selectedAnnouncement.preview}
+                                        </motion.p>
+                                        <p className="text-gray-500 leading-relaxed text-lg">
+                                            Please make sure to check the attached documents in the resources section if any are mentioned. If you have any follow-up questions regarding this announcement, feel free to reach out to the lecturer during office hours or post in the discussion forum.
+                                        </p>
+                                    </motion.div>
+
+                                    <motion.div 
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: 0.3 }}
+                                        className="mt-12 flex items-center justify-between"
+                                    >
+                                        <button 
+                                            onClick={() => setSelectedId(null)}
+                                            className="px-8 py-3 rounded-2xl bg-[#3C0078]/5 text-[#3C0078] font-bold text-xs uppercase tracking-widest hover:bg-[#3C0078] hover:text-white transition-all"
+                                        >
+                                            Back to list
+                                        </button>
+                                        <div className="flex gap-4">
+                                            <button className="flex items-center gap-2 text-gray-400 hover:text-[#3C0078] transition-colors">
+                                                <Letter size={18} />
+                                                <span className="text-xs font-bold uppercase tracking-widest">Share</span>
+                                            </button>
+                                        </div>
+                                    </motion.div>
+                                </div>
+                            </motion.div>
+                        </div>
+                    </>
+                )}
+            </AnimatePresence>
         </motion.div>
     );
 }
@@ -341,28 +470,171 @@ function CourseGradesView() {
 }
 
 function CourseHomeView({ subject, course, loading }) {
+  // Use subject imageUrl or a placeholder if not present
+  var sampleImg = "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=800&q=80";
+  const courseImage = subject?.imageUrl || sampleImg;
+
   return (
-    <div className="flex-1 flex flex-col p-8 overflow-y-auto">
-      <header className="mb-8">
-        <h1 className="text-3xl font-semibold tracking-tight">
+    <div className="flex-1 flex flex-col p-12 overflow-y-auto">
+      <header className="mb-12">
+        <h1 className="text-4xl font-semibold tracking-tight">
           {loading ? "Loading course details..." : `${subject?.name || "Unknown"} | ${course?.term || ""}`}
         </h1>
-        <p className="text-xl text-gray-700 mt-2">{loading ? "..." : subject?.code}</p>
+        <p className="text-xl text-gray-500 mt-3 font-medium">{loading ? "..." : subject?.code}</p>
       </header>
 
       {/* Left column – course overview with todo, next class & announcements */}
-      <main className="space-y-12">
-        <div className="w-full h-80 bg-[#D9D9D9] rounded-2xl shadow-sm"></div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
+      <main className="space-y-24 w-full flex flex-col items-center">
+        <div className="w-full h-[500px] rounded-[60px] shadow-sm overflow-hidden">
+          <img 
+            src={courseImage} 
+            alt={subject?.name} 
+            className="w-full h-full object-cover"
+          />
+        </div>
+        
+        <div className="w-full max-w-6xl space-y-24">
           <section>
-            <h2 className="text-xl font-bold mb-4">Course Overview</h2>
-            <div>
-              <h3 className="font-bold text-sm mb-2 uppercase tracking-wide border-b border-black inline-block">
-                {course?.term || "Term 1"}:
-              </h3>
-              <p className="text-sm leading-relaxed text-gray-800 mt-2">
-                {loading ? "Loading..." : subject?.description || "No description provided."}
-              </p>
+            <h2 className="text-3xl font-bold mb-12 tracking-tight">Course Overview</h2>
+            <div className="flex flex-col md:flex-row gap-24 items-stretch">
+              <div className="flex-1 flex flex-col justify-between">
+                <div>
+                  <h3 className="font-bold text-xs mb-6 uppercase tracking-[0.2em] text-[#3C0078] border-b-2 border-[#3C0078] inline-block pb-1">
+                    Term 1
+                  </h3>
+                  <p className="text-lg leading-relaxed text-gray-600 min-h-[120px]">
+                    {loading ? "Loading..." : subject?.description || "In this term, students will focus on the foundational principles of user experience design, understanding user psychology, and master the basics of research methodologies."}
+                  </p>
+                </div>
+                <div className="mt-8">
+                  <Link to="#" className="inline-flex items-center gap-2 text-[#3C0078] font-bold text-sm uppercase tracking-widest hover:translate-x-1 transition-transform">
+                    Full Term Overview <span>→</span>
+                  </Link>
+                </div>
+              </div>
+
+              <div className="flex-1 flex flex-col justify-between border-l border-gray-100 pl-24">
+                <div>
+                  <h3 className="font-bold text-xs mb-6 uppercase tracking-[0.2em] text-[#3C0078] border-b-2 border-[#3C0078] inline-block pb-1">
+                    Term 2
+                  </h3>
+                  <p className="text-lg leading-relaxed text-gray-600 min-h-[120px]">
+                    Building on the foundations, Term 2 shifts towards advanced prototyping, usability testing, and the integration of professional design hand-off processes for industry-standard delivery.
+                  </p>
+                </div>
+                <div className="mt-8">
+                  <Link to="#" className="inline-flex items-center gap-2 text-[#3C0078] font-bold text-sm uppercase tracking-widest hover:translate-x-1 transition-transform">
+                    Full Term Overview <span>→</span>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section className="w-full grid grid-cols-1 lg:grid-cols-2 gap-12 pt-12 border-t border-gray-100">
+            {/* Lecturer Section on the Left */}
+            <div className="bg-gray-50/30 rounded-[60px] p-12 border border-gray-100 flex flex-col items-center md:items-start text-center md:text-left gap-12">
+              <div className="flex flex-col md:flex-row items-center gap-14">
+                <div className="relative group shrink-0">
+                  {/* Enhanced Glowing Pulse Animation - Now Teal */}
+                  <motion.div 
+                    animate={{ 
+                      scale: [1, 1.25, 1],
+                      opacity: [0.2, 0.5, 0.2]
+                    }}
+                    transition={{ 
+                      duration: 3, 
+                      repeat: Infinity, 
+                      ease: "easeInOut" 
+                    }}
+                    className="absolute -inset-10 rounded-full bg-[#14B8A6]/20 blur-3xl z-0"
+                  />
+                  
+                  {/* Enhanced Floating Ring - Now Teal */}
+                  <motion.div 
+                    animate={{ 
+                      rotate: 360,
+                      scale: [1, 1.05, 1]
+                    }}
+                    transition={{ 
+                      duration: 15, 
+                      repeat: Infinity, 
+                      ease: "linear" 
+                    }}
+                    className="absolute -inset-4 rounded-full border-2 border-dashed border-[#14B8A6]/40 z-0"
+                  />
+                  
+                  {/* Lecturer Image MUCH LARGER - No Shadow */}
+                  <div className="w-56 h-56 rounded-full overflow-hidden border-8 border-white relative z-10">
+                    <img 
+                      src={subject?.lecturerImage || "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=1976&auto=format&fit=crop"} 
+                      alt="Lecturer" 
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col space-y-2">
+                  <span className="text-[10px] font-black text-[#14B8A6] uppercase tracking-[0.4em] block">Module Head</span>
+                  <h3 className="text-3xl font-bold text-gray-900 tracking-tight">{subject?.lecturerName || "Dr. Sarah Miller"}</h3>
+                  <p className="text-gray-600 font-bold text-lg tracking-tight">Design Lead & Senior Researcher</p>
+                </div>
+              </div>
+
+              <div className="w-full">
+                <a 
+                  href={`mailto:${subject?.lecturerEmail || "sarah.miller@university.ac.za"}`}
+                  className="w-full md:w-auto inline-flex justify-center items-center gap-4 bg-transparent border-2 border-[#14B8A6] text-[#14B8A6] px-10 py-4 rounded-full font-bold text-base tracking-widest uppercase transition-all duration-300 hover:bg-[#14B8A6] hover:text-white hover:shadow-xl hover:shadow-[#14B8A6]/20"
+                >
+                  <span>Email Lecturer</span>
+                  <span className="text-xl">→</span>
+                </a>
+              </div>
+            </div>
+
+            {/* Quick Links Section on the Right - Asymmetric and Clean */}
+            <div className="flex flex-col p-4">
+              <h3 className="text-2xl font-bold mb-8 tracking-tight pl-4 text-gray-900">Quick Links</h3>
+              
+              <div className="flex flex-wrap gap-4 items-start content-start">
+                <a
+                  href="#"
+                  className="bg-white border-2 border-gray-100 text-gray-700 px-8 py-5 rounded-[28px] font-bold text-sm tracking-widest uppercase transition-all duration-300 hover:border-[#14B8A6] hover:bg-[#14B8A6] hover:text-white flex items-center gap-3"
+                >
+                  <span>Figma Workflow</span>
+                  <span className="opacity-30">/</span>
+                </a>
+
+                <a
+                  href="#"
+                  className="bg-white border-2 border-gray-100 text-gray-700 px-6 py-5 rounded-[28px] font-bold text-xs tracking-widest uppercase transition-all duration-300 hover:border-[#14B8A6] hover:bg-[#14B8A6] hover:text-white"
+                >
+                  <span>Terms</span>
+                </a>
+
+                <a
+                  href="#"
+                  className="bg-white border-2 border-gray-100 text-gray-700 px-8 py-5 rounded-[28px] font-bold text-sm tracking-widest uppercase transition-all duration-300 hover:border-[#14B8A6] hover:bg-[#14B8A6] hover:text-white flex items-center gap-3"
+                >
+                  <span>Miro Board</span>
+                  <span className="opacity-30">#</span>
+                </a>
+
+                <a
+                  href="#"
+                  className="bg-white border-2 border-gray-100 text-gray-700 px-6 py-5 rounded-[28px] font-bold text-xs tracking-widest uppercase transition-all duration-300 hover:border-[#14B8A6] hover:bg-[#14B8A6] hover:text-white"
+                >
+                  <span>Attendance</span>
+                </a>
+
+                <a
+                  href="#"
+                  className="w-full bg-white border-2 border-gray-100 text-gray-700 p-8 rounded-[40px] font-bold text-sm tracking-widest uppercase transition-all duration-300 hover:border-[#14B8A6] hover:bg-[#14B8A6] hover:text-white flex justify-between items-center group"
+                >
+                  <span>Request Contact Session</span>
+                  <span className="text-gray-300 group-hover:text-white group-hover:translate-x-1 transition-all">→</span>
+                </a>
+              </div>
             </div>
           </section>
         </div>
@@ -380,24 +652,24 @@ function CourseModulesView() {
         <ModuleAccordion />
       </div>
 
-            {/* Main Content: Nested View with rounded border from screenshot */}
-            <div className="flex-1 p-8 overflow-y-auto pb-24 ">
-                <div className="bg-white p-12 rounded-[40px] border-2 border-gray-300 shadow-sm relative">
-                    <header className="mb-8">
-                        <h1 className="text-2xl font-semibold tracking-tight">User Experience Design 300 | Semester 1</h1>
-                        <p className="text-lg text-gray-700 mt-1">UX300</p>
-                    </header>
-                    <div className="w-full h-64 bg-[#D9D9D9] rounded-2xl mb-8"></div>
-                    <section>
-                        <h3 className="text-lg font-bold mb-4">Course Overview</h3>
-                        <div className="grid grid-cols-2 gap-8">
-                            <div>
-                                <h4 className="font-bold text-xs uppercase tracking-wide">Term 1:</h4>
-                                <p className="text-xs leading-relaxed text-gray-800 mt-2">
-                                    Inclusive & Neurodiverse UX focuses on building a strong human-centred foundation...
-                                </p>
-                            </div>
-                            <div>
+      {/* Main Content: Nested View with rounded border from screenshot */}
+      <div className="flex-1 p-8 overflow-y-auto pb-24 ">
+        <div className="bg-white p-12 rounded-[40px] border-2 border-gray-300 shadow-sm relative">
+          <header className="mb-8">
+            <h1 className="text-2xl font-semibold tracking-tight">User Experience Design 300 | Semester 1</h1>
+            <p className="text-lg text-gray-700 mt-1">UX300</p>
+          </header>
+          <div className="w-full h-64 bg-[#D9D9D9] rounded-2xl mb-8"></div>
+          <section>
+            <h3 className="text-lg font-bold mb-4">Course Overview</h3>
+            <div className="grid grid-cols-2 gap-8">
+              <div>
+                <h4 className="font-bold text-xs uppercase tracking-wide">Term 1:</h4>
+                <p className="text-xs leading-relaxed text-gray-800 mt-2">
+                  Inclusive & Neurodiverse UX focuses on building a strong human-centred foundation...
+                </p>
+              </div>
+              <div>
                                 <h4 className="font-bold text-xs uppercase tracking-wide">Term 2:</h4>
                                 <p className="text-xs leading-relaxed text-gray-800 mt-2">
                                     Inclusive & Neurodiverse UX focuses on building a strong human-centred foundation...
@@ -817,6 +1089,7 @@ export default function StudentCourses() {
     const isModulesPage = path.endsWith("/modules");
     const isNotesPage = path.endsWith("/notes");
     
+
     // Home logic: If we are at /courses or /courses/:id NOT ending in a sub-path
     const isHomePage = !isGradesPage && !isAnnouncementsPage && !isAssignmentsPage && !isAttendancePage && !isModulesPage && !isNotesPage;
 
