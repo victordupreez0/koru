@@ -5,32 +5,29 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useCourses } from "../../contexts/CoursesContext";
 
-export default function CourseGlanceSelect() {
-    const { visibleCourses } = useCourses();
-    const [active, setActive] = useState(null);
-
+export default function CourseGlanceSelect({ activeCourseId, setActiveCourseId, visibleCourses }) {
     // Initialise active course smoothly when data arrives
     useEffect(() => {
-        if (visibleCourses.length > 0 && !active) {
-            setActive(visibleCourses[0].label);
+        if (visibleCourses?.length > 0 && !activeCourseId) {
+            setActiveCourseId(visibleCourses[0].id);
         }
-    }, [visibleCourses, active]);
+    }, [visibleCourses, activeCourseId, setActiveCourseId]);
 
     // Handle empty state protecting UI from crashing
-    if (visibleCourses.length === 0) {
+    if (!visibleCourses || visibleCourses.length === 0) {
         return <div className="text-sm font-medium text-gray-400 pl-2">No active courses.</div>;
     }
 
     // Push the active course to the front of the horizontal scroll stack
     const orderedCourses = [
-        visibleCourses.find((course) => course.label === active),
-        ...visibleCourses.filter((course) => course.label !== active),
+        visibleCourses.find((course) => course.id === activeCourseId),
+        ...visibleCourses.filter((course) => course.id !== activeCourseId),
     ].filter(Boolean);
     return (
         <div className="relative w-full z-50 h-fit scrollbar-black">
             <motion.div layout className="relative z-0 flex flex-row space-x-2 overflow-x-auto pr-8 pb-5 scrollbar-hide">
                 {orderedCourses.map((course) => {
-                    const isActive = active === course.label;
+                    const isActive = activeCourseId === course.id;
                     return (
                         <motion.button
                             key={course.id}
@@ -46,7 +43,7 @@ export default function CourseGlanceSelect() {
                                 hover:shadow-md hover:!border-transparent
                                 ${isActive ? "!bg-[#9BE9EA] !text-black !px-2 justify-start" : "!bg-white !text-black p-0 justify-center items-center"}`}
                             style={{ minWidth: 0, minHeight: 0, padding: isActive ? undefined : 0, display: 'flex', alignItems: 'center', justifyContent: isActive ? 'flex-start' : 'center' }}
-                            onClick={() => setActive(course.label)}
+                            onClick={() => setActiveCourseId(course.id)}
                         >
                             <span className={`flex items-center w-full ${isActive ? '' : 'justify-center'}`} style={{ height: '100%' }}>
                                 <span className="avatar avatar-placeholder flex-shrink-0 flex items-center justify-center" style={{ height: '100%' }}>

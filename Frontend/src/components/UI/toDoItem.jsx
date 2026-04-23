@@ -1,16 +1,61 @@
-
-import { MdEditNote, MdCheckBoxOutlineBlank } from "react-icons/md";
-
-// Static placeholder list of to-do tasks – will be replaced by backend data later
-const todos = [
-    { title: "Research Document", due: "Due Tomorrow" },
-    { title: "Read Chapter 5", due: "Due Friday" },
-    { title: "Submit Assignment", due: "Due Next Week" },
-];
+import { useState, useEffect } from "react";
+import { MdEditNote } from "react-icons/md";
+import { ChevronRight } from "lucide-react";
+import { getCourseAssignments } from "../../services/assignmentService";
 
 // To-Do item list – renders inside the Course Glance card
 // Each row shows a task icon, the task title, its due date, and a checkbox placeholder
-export default function ToDoItem() {
+export default function ToDoItem({ activeCourseId }) {
+    const [todos, setTodos] = useState([]);
+    const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        let mounted = true;
+        async function fetchAssignments() {
+            if (!activeCourseId) {
+                setTodos([]);
+                return;
+            }
+            try {
+                setLoading(true);
+                const data = await getCourseAssignments(activeCourseId);
+                
+                // Filter for upcoming assignments (Due Date hasn't passed)
+                const now = new Date();
+                const upcoming = data
+                    .filter(a => new Date(a.dueDate) > now)
+                    .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate))
+                    .slice(0, 3) // showing max 3 upcoming ones
+                    .map(a => {
+                        const due = new Date(a.dueDate);
+                        const diffDays = Math.ceil((due - now) / (1000 * 60 * 60 * 24));
+                        let dueLabel = "Due soon";
+                        if (diffDays === 1) dueLabel = "Due Tomorrow";
+                        else if (diffDays <= 7) dueLabel = `Due in ${diffDays} days`;
+                        else dueLabel = `Due ${due.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`;
+                        
+                        return { title: a.title, due: dueLabel };
+                    });
+
+                if (mounted) setTodos(upcoming);
+            } catch (err) {
+                console.error("Failed to load upcoming to-dos:", err);
+            } finally {
+                if (mounted) setLoading(false);
+            }
+        }
+        fetchAssignments();
+        return () => { mounted = false; };
+    }, [activeCourseId]);
+
+    if (loading) {
+        return <div className="text-sm text-gray-400 py-2">Loading tasks...</div>;
+    }
+
+    if (todos.length === 0) {
+        return <div className="text-sm text-gray-400 py-2">No upcoming tasks!</div>;
+    }
+
     return (
         <>
             {todos.map((todo, idx) => (
@@ -29,9 +74,9 @@ export default function ToDoItem() {
                         <h3 className="text-xs text-gray-500">{todo.due}</h3>
                     </div>
 
-                    {/* Checkbox placeholder – will toggle completion state later */}
+                    {/* Arrow icon */}
                     <div className="w-9 h-9 flex items-center justify-center mr-2">
-                        <MdCheckBoxOutlineBlank className="w-6 h-6 text-gray-400" />
+                        <ChevronRight className="w-5 h-5 text-gray-400" />
                     </div>
                 </div>
             ))}
