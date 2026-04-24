@@ -154,3 +154,220 @@ a:hover {
   box-shadow: none !important;
   outline: none !important;
 }
+
+/* ─── Novel / Tiptap Editor Styles ─── */
+.novel-editor-wrapper .tiptap {
+  outline: none;
+  min-height: 300px;
+  font-family: "Poppins", system-ui, sans-serif;
+  font-size: 1rem;
+  line-height: 1.75;
+  color: #1a1a1a;
+}
+
+.novel-editor-wrapper .tiptap > * + * {
+  margin-top: 0.25rem;
+}
+
+/* Headings */
+.novel-editor-wrapper .tiptap h1 {
+  font-family: "Gabarito", system-ui, sans-serif;
+  font-size: 2.25rem;
+  font-weight: 700;
+  line-height: 1.2;
+  margin: 0;
+  color: #0f0f0f;
+}
+
+.novel-editor-wrapper .tiptap h2 {
+  font-family: "Gabarito", system-ui, sans-serif;
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1.3;
+  margin: 0;
+  color: #1a1a1a;
+}
+
+.novel-editor-wrapper .tiptap h3 {
+  font-family: "Poppins", system-ui, sans-serif;
+  font-size: 1.35rem;
+  font-weight: 600;
+  line-height: 1.4;
+  margin: 0;
+  color: #2a2a2a;
+}
+
+/* Paragraphs */
+.novel-editor-wrapper .tiptap p {
+  margin: 0;
+}
+
+.novel-editor-wrapper .tiptap p.is-empty {
+  min-height: 1.75em;
+}
+
+/* Italic */
+.novel-editor-wrapper .tiptap em,
+.novel-editor-wrapper .tiptap i {
+  font-style: italic;
+}
+
+/* Bold */
+.novel-editor-wrapper .tiptap strong,
+.novel-editor-wrapper .tiptap b {
+  font-weight: 700;
+}
+
+/* Underline */
+.novel-editor-wrapper .tiptap u {
+  text-decoration: underline;
+}
+
+/* Strikethrough */
+.novel-editor-wrapper .tiptap s {
+  text-decoration: line-through;
+}
+
+/* Inline code */
+.novel-editor-wrapper .tiptap code {
+  background: #f3f0ff;
+  color: #3C0078;
+  padding: 0.15em 0.4em;
+  border-radius: 6px;
+  font-size: 0.875em;
+  font-family: "Fira Code", "Consolas", monospace;
+}
+
+/* Code blocks */
+.novel-editor-wrapper .tiptap pre {
+  background: #1e1e2e;
+  color: #cdd6f4;
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  overflow-x: auto;
+  margin: 1rem 0;
+  font-family: "Fira Code", "Consolas", monospace;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+.novel-editor-wrapper .tiptap pre code {
+  background: none;
+  color: inherit;
+  padding: 0;
+  border-radius: 0;
+  font-size: inherit;
+}
+
+/* Bullet lists */
+.novel-editor-wrapper .tiptap ul {
+  list-style-type: disc;
+  padding-left: 1.5rem;
+  margin: 0.5rem 0;
+}
+
+.novel-editor-wrapper .tiptap ul ul {
+  list-style-type: circle;
+}
+
+.novel-editor-wrapper .tiptap ul ul ul {
+  list-style-type: square;
+}
+
+/* Numbered lists */
+.novel-editor-wrapper .tiptap ol {
+  list-style-type: decimal;
+  padding-left: 1.5rem;
+  margin: 0.5rem 0;
+}
+
+/* List items */
+.novel-editor-wrapper .tiptap li {
+  margin: 0.25rem 0;
+}
+
+.novel-editor-wrapper .tiptap li p {
+  margin: 0;
+}
+
+/* Blockquotes */
+.novel-editor-wrapper .tiptap blockquote {
+  border-left: 4px solid #3C0078;
+  padding-left: 1rem;
+  margin: 1rem 0;
+  color: #555;
+  font-style: italic;
+  background: #f9f8fc;
+  border-radius: 0 12px 12px 0;
+  padding: 0.75rem 1rem 0.75rem 1.25rem;
+}
+
+/* Horizontal rule */
+.novel-editor-wrapper .tiptap hr {
+  border: none;
+  border-top: 2px solid #e5e5e5;
+  margin: 1.5rem 0;
+}
+
+/* Task lists */
+.novel-editor-wrapper .tiptap ul[data-type="taskList"] {
+  list-style: none;
+  padding-left: 0;
+}
+
+.novel-editor-wrapper .tiptap ul[data-type="taskList"] li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+/* Placeholder */
+.novel-editor-wrapper .tiptap p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: #aaa;
+  pointer-events: none;
+  height: 0;
+}
+
+/* Suppress Novel built-in artifacts (drag handles, resizers, node decorations) */
+.novel-editor-wrapper .tiptap .ProseMirror-separator {
+  display: none !important;
+}
+
+.novel-editor-wrapper .tiptap .ProseMirror-trailingBreak {
+  display: none;
+}
+
+.novel-editor-wrapper [data-moveable],
+.novel-editor-wrapper .moveable-control-box,
+.novel-editor-wrapper .moveable-line,
+.novel-editor-wrapper .moveable-control {
+  display: none !important;
+}
+
+.novel-editor-wrapper .tiptap > *:first-child {
+  margin-top: 0;
+}
+
+.novel-editor-wrapper .tiptap *:not(blockquote):not(pre):not(code):not(table):not(th):not(td) {
+  outline: none !important;
+}
+
+/* Hide ProseMirror gapcursor (the L-shaped bracket in empty blocks) */
+.novel-editor-wrapper .ProseMirror-gapcursor,
+.novel-editor-wrapper .ProseMirror-gapcursor::after {
+  display: none !important;
+  border-top: none !important;
+}
+
+/* react-moveable renders as a portal outside the editor — suppress globally */
+.moveable-control-box,
+.moveable-line,
+.moveable-control,
+.moveable-direction,
+[class*="moveable"] {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
