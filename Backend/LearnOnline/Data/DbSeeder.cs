@@ -97,32 +97,32 @@ namespace LearnOnline.Data
                 var dvCourseId = context.Courses.FirstOrDefault(c => c.Subject != null && c.Subject.Code == "DV300")?.Id;
                 var vcCourseId = context.Courses.FirstOrDefault(c => c.Subject != null && c.Subject.Code == "VC300")?.Id;
 
-                var now = DateTime.UtcNow;
+                var baseDate = DateTime.UtcNow.Date; // Anchors to exactly midnight today so times don't drift on restart
 
                 // UX Assignments
                 if (uxCourseId != null) {
                     context.Assignments.AddRange(
-                        new Assignment { CourseId = uxCourseId, Title = "High-Fidelity Prototyping", Description = "Submit your final high-fidelity Figma prototype with interactive states.", MaxPoints = 100, DueDate = now.AddDays(14) },
-                        new Assignment { CourseId = uxCourseId, Title = "Usability Testing Report", Description = "Conduct a usability test and draft a full analysis brief.", MaxPoints = 100, DueDate = now.AddDays(-2) }, // Late
-                        new Assignment { CourseId = uxCourseId, Title = "Component Library Delivery", Description = "Build a scalable component library using design tokens.", MaxPoints = 50, DueDate = now.AddDays(2) }     // Due Soon
+                        new Assignment { CourseId = uxCourseId, Title = "High-Fidelity Prototyping", Description = "Submit your final high-fidelity Figma prototype with interactive states.", MaxPoints = 100, DueDate = baseDate.AddDays(14).AddHours(23).AddMinutes(59) }, // exactly 11:59 PM
+                        new Assignment { CourseId = uxCourseId, Title = "Usability Testing Report", Description = "Conduct a usability test and draft a full analysis brief.", MaxPoints = 100, DueDate = baseDate.AddDays(-2).AddHours(10) }, // Late, exactly 10:00 AM
+                        new Assignment { CourseId = uxCourseId, Title = "Component Library Delivery", Description = "Build a scalable component library using design tokens.", MaxPoints = 50, DueDate = baseDate.AddDays(2).AddHours(15) } // Due Soon, exactly 15:00 PM
                     );
                 }
 
                 // DV Assignments
                 if (dvCourseId != null) {
                     context.Assignments.AddRange(
-                        new Assignment { CourseId = dvCourseId, Title = "React Dashboard Component", Description = "Build a dynamic React Dashboard using Framer Motion.", MaxPoints = 100, DueDate = now.AddDays(-10) }, // Closed
-                        new Assignment { CourseId = dvCourseId, Title = ".NET API Auth Setup", Description = "Configure Bearer tokens and role authorization inside an ASP.NET container.", MaxPoints = 100, DueDate = now.AddDays(1) }, // Due Soon
-                        new Assignment { CourseId = dvCourseId, Title = "SQL Schema Design", Description = "Draft your ER diagram and migrate your database layer.", MaxPoints = 50, DueDate = now.AddDays(4) } // Due Soon
+                        new Assignment { CourseId = dvCourseId, Title = "React Dashboard Component", Description = "Build a dynamic React Dashboard using Framer Motion.", MaxPoints = 100, DueDate = baseDate.AddDays(-10).AddHours(23).AddMinutes(59) }, // Closed, exactly 11:59 PM
+                        new Assignment { CourseId = dvCourseId, Title = ".NET API Auth Setup", Description = "Configure Bearer tokens and role authorization inside an ASP.NET container.", MaxPoints = 100, DueDate = baseDate.AddDays(1).AddHours(10) }, // Due Soon, exactly 10:00 AM
+                        new Assignment { CourseId = dvCourseId, Title = "SQL Schema Design", Description = "Draft your ER diagram and migrate your database layer.", MaxPoints = 50, DueDate = baseDate.AddDays(4).AddHours(12) } // Due Soon, exactly 12:00 PM
                     );
                 }
 
                 // VC Assignments
                 if (vcCourseId != null) {
                     context.Assignments.AddRange(
-                        new Assignment { CourseId = vcCourseId, Title = "Essay Draft", Description = "Submit an initial draft analyzing semiotics in digital design.", MaxPoints = 100, DueDate = now.AddDays(-1) }, // Late
-                        new Assignment { CourseId = vcCourseId, Title = "Visual Deconstruction Presentation", Description = "Provide recorded feedback on an existing ad campaign.", MaxPoints = 100, DueDate = now.AddDays(30) }, // Due
-                        new Assignment { CourseId = vcCourseId, Title = "Literature Review Module", Description = "Compare 3 distinct articles focusing on sensory experiences.", MaxPoints = 50, DueDate = now.AddDays(-20) } // Closed
+                        new Assignment { CourseId = vcCourseId, Title = "Essay Draft", Description = "Submit an initial draft analyzing semiotics in digital design.", MaxPoints = 100, DueDate = baseDate.AddDays(-1).AddHours(23).AddMinutes(59) }, // Late, exactly 11:59 PM
+                        new Assignment { CourseId = vcCourseId, Title = "Visual Deconstruction Presentation", Description = "Provide recorded feedback on an existing ad campaign.", MaxPoints = 100, DueDate = baseDate.AddDays(30).AddHours(10) }, // Due, exactly 10:00 AM
+                        new Assignment { CourseId = vcCourseId, Title = "Literature Review Module", Description = "Compare 3 distinct articles focusing on sensory experiences.", MaxPoints = 50, DueDate = baseDate.AddDays(-20).AddHours(8) } // Closed, exactly 08:00 AM
                     );
                 }
 

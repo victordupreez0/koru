@@ -159,6 +159,9 @@ namespace TodoApi.Migrations
                     b.Property<string>("Id")
                         .HasColumnType("text");
 
+                    b.Property<string>("BgColor")
+                        .HasColumnType("text");
+
                     b.Property<string>("CourseId")
                         .IsRequired()
                         .HasColumnType("text");
@@ -177,6 +180,9 @@ namespace TodoApi.Migrations
 
                     b.Property<DateTime?>("StartTime")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("TextColor")
+                        .HasColumnType("text");
 
                     b.Property<string>("Title")
                         .HasColumnType("text");
@@ -295,6 +301,10 @@ namespace TodoApi.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("StudentId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("text");
 

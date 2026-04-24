@@ -7,6 +7,7 @@ const BASE_NAV_ITEMS = [
     { label: "Announcements", pathSuffix: "/announcements" },
     { label: "Assignments", pathSuffix: "/assignments" },
     { label: "Modules", pathSuffix: "/modules" },
+    { label: "Notes", pathSuffix: "/notes" },
     { label: "Grades", pathSuffix: "/grades" },
     { label: "Attendance", pathSuffix: "/attendance" },
 ];
