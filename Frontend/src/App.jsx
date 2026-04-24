@@ -10,6 +10,7 @@ import Onboarding from "./pages/onboarding";
 import Login from "./pages/login";
 import SettingsPage from "./pages/settings";
 import ProtectedRoute from "./components/ProtectedRoute";
+import Profile from "./pages/profile/profile";
 
 // Root application component – sets up routing and the shared layout
 function App() {
@@ -38,6 +39,10 @@ function App() {
             <Route path="/calendar" element={<ProtectedRoute><CalendarPage /></ProtectedRoute>} />
             <Route path="/courses/*" element={<ProtectedRoute><Courses /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
+
+            {/* Profile routes*/}
+            <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+            <Route path="/profile/:slug" element={<Profile publicRoute />} />
 
             {/* Catch-all – redirect unknown paths to landing */}
             <Route path="*" element={<Navigate to="/" replace />} />
