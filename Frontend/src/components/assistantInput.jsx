@@ -13,7 +13,7 @@ import {
   Send
 } from "lucide-react";
 
-export default function AssistantInput() {
+export default function AssistantInput({ onSend, hideChips = false }) {
   const [isToolsOpen, setIsToolsOpen] = useState(false);
   const [prompt, setPrompt] = useState("");
   const dropdownRef = useRef(null);
@@ -40,17 +40,28 @@ export default function AssistantInput() {
     <div className="w-full max-w-4xl mx-auto flex flex-col items-center">
 
       {/* Suggestion Chips */}
-      <div className="flex flex-wrap gap-3 mb-6 justify-center">
-        <button className="px-5 py-2.5 rounded-full bg-white/60 hover:bg-white/90 border border-white/50 shadow-sm backdrop-blur-md text-sm font-medium text-slate-700 transition-all">
-          📊 Analyze recent grades
-        </button>
-        <button className="px-5 py-2.5 rounded-full bg-white/60 hover:bg-white/90 border border-white/50 shadow-sm backdrop-blur-md text-sm font-medium text-slate-700 transition-all">
-          📅 Plan next week
-        </button>
-        <button className="px-5 py-2.5 rounded-full bg-white/60 hover:bg-white/90 border border-white/50 shadow-sm backdrop-blur-md text-sm font-medium text-slate-700 transition-all">
-          ✍️ Draft announcements
-        </button>
-      </div>
+      {!hideChips && (
+        <div className="flex flex-wrap gap-3 mb-6 justify-center">
+          <button 
+            onClick={() => onSend("Analyze recent grades")}
+            className="px-5 py-2.5 rounded-full bg-white/60 hover:bg-white/90 border border-white/50 shadow-sm backdrop-blur-md text-sm font-medium text-slate-700 transition-all"
+          >
+            📊 Analyze recent grades
+          </button>
+          <button 
+            onClick={() => onSend("Plan next week")}
+            className="px-5 py-2.5 rounded-full bg-white/60 hover:bg-white/90 border border-white/50 shadow-sm backdrop-blur-md text-sm font-medium text-slate-700 transition-all"
+          >
+            📅 Plan next week
+          </button>
+          <button 
+            onClick={() => onSend("Draft announcements")}
+            className="px-5 py-2.5 rounded-full bg-white/60 hover:bg-white/90 border border-white/50 shadow-sm backdrop-blur-md text-sm font-medium text-slate-700 transition-all"
+          >
+            ✍️ Draft announcements
+          </button>
+        </div>
+      )}
 
       {/* Main Input Container */}
       <div className="relative w-full bg-white/80 backdrop-blur-xl border border-white shadow-2xl rounded-3xl p-3 flex flex-col transition-all duration-300 focus-within:shadow-[#3C0078]/10 focus-within:ring-2 focus-within:ring-[#3C0078]/20">
@@ -64,6 +75,15 @@ export default function AssistantInput() {
             placeholder="Ask your assistant anything..."
             className="w-full bg-transparent resize-none outline-none text-slate-800 placeholder:text-gray-400 min-h-[44px] max-h-[200px] text-lg font-medium"
             rows={1}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                if (prompt.trim() && onSend) {
+                  onSend(prompt.trim());
+                  setPrompt("");
+                }
+              }
+            }}
             onInput={(e) => {
               e.target.style.height = 'auto';
               e.target.style.height = e.target.scrollHeight + 'px';
@@ -130,6 +150,12 @@ export default function AssistantInput() {
             </button>
             {prompt.trim().length > 0 && (
                 <motion.button 
+                  onClick={() => {
+                    if (prompt.trim() && onSend) {
+                      onSend(prompt.trim());
+                      setPrompt("");
+                    }
+                  }}
                   initial={{ scale: 0, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   whileHover={{ scale: 1.05 }}
