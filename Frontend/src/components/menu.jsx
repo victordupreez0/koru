@@ -1,7 +1,7 @@
 import React from "react";
 import { useLocation } from "react-router-dom";
 import { motion, LayoutGroup } from "framer-motion";
-import { SpeedometerLow, Book, Calendar, PieChart2 } from "@solar-icons/react";
+import { SpeedometerLow, Book, Calendar, Stars, PieChart, PieChart2 } from "@solar-icons/react";
 
 import NavItem from "./UI/navItem";
 
@@ -33,6 +33,8 @@ export default function Menu() {
     { label: "Courses", href: "/courses", icon: <Book weight="Outline" size={24} color="currentColor" /> },
     { label: "Calendar", href: "/calendar", icon: <Calendar weight="Outline" size={24} color="currentColor" /> },
     { label: "Analytics", href: "/analytics", icon: <PieChart2 weight="Outline" size={24} color="currentColor" /> },
+    { label: "Assistant", href: "/teacherassistant", icon: <Stars weight="Outline" size={24} color="currentColor" /> },
+
   ];
 
   const location = useLocation();

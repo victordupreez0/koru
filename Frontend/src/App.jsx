@@ -39,7 +39,7 @@ function App() {
             <Route path="/calendar" element={<ProtectedRoute><CalendarPage /></ProtectedRoute>} />
             <Route path="/courses/*" element={<ProtectedRoute><Courses /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
-            <Route path="/analytics" element={<ProtectedRoute><TeacherAssistant /></ProtectedRoute>} />
+            <Route path="/teacherassistant" element={<ProtectedRoute><TeacherAssistant /></ProtectedRoute>} />
 
             {/* Catch-all – redirect unknown paths to landing */}
             <Route path="*" element={<Navigate to="/" replace />} />
