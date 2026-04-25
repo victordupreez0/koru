@@ -498,27 +498,33 @@ function AssignmentTypeIcon({ type, size = 18 }) {
     );
 }
 
-function CreateAssignmentDrawer({ onClose, onSave }) {
+function CreateAssignmentDrawer({ onClose, onSave, initialData }) {
+    const isEditing = !!initialData;
     const [form, setForm] = React.useState({
-        title: "",
-        description: "",
-        type: "online",
-        points: 100,
-        gradeDisplay: "Percentage",
-        submissionType: "Online",
-        assignedTo: "Everyone",
-        dueDate: "",
-        availableFrom: "",
-        availableUntil: "",
-        published: false,
-        group: "g1",
+        title: initialData?.title ?? "",
+        description: initialData?.description ?? "",
+        type: initialData?.type ?? "online",
+        points: initialData?.points ?? 100,
+        gradeDisplay: initialData?.gradeDisplay ?? "Percentage",
+        submissionType: initialData?.submissionType ?? "Online",
+        assignedTo: initialData?.assignedTo ?? "Everyone",
+        dueDate: initialData?.dueDate ?? "",
+        availableFrom: initialData?.availableFrom ?? "",
+        availableUntil: initialData?.availableUntil ?? "",
+        published: initialData?.published ?? false,
+        group: initialData?.group ?? "g1",
+        id: initialData?.id ?? null,
+        submissions: initialData?.submissions ?? 0,
+        totalStudents: initialData?.totalStudents ?? 26,
     });
 
     const handleChange = (field, value) => setForm(prev => ({ ...prev, [field]: value }));
 
     const handleSubmit = (publish) => {
         if (!form.title.trim()) return;
-        onSave({ ...form, published: publish, id: `a_${Date.now()}`, submissions: 0, totalStudents: 26 });
+        const payload = { ...form, published: publish };
+        if (!isEditing) payload.id = `a_${Date.now()}`;
+        onSave(payload);
     };
 
     return (
@@ -541,7 +547,7 @@ function CreateAssignmentDrawer({ onClose, onSave }) {
                 {/* Drawer Header */}
                 <div className="flex justify-between items-center px-10 py-8 border-b border-gray-100 shrink-0">
                     <div>
-                        <h2 className="text-2xl font-bold text-gray-900">Create Assignment</h2>
+                        <h2 className="text-2xl font-bold text-gray-900">{isEditing ? "Edit Assignment" : "Create Assignment"}</h2>
                         <p className="text-sm text-gray-400 mt-1">Fill in the details below</p>
                     </div>
                     <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-500">
@@ -709,13 +715,13 @@ function CreateAssignmentDrawer({ onClose, onSave }) {
                         onClick={() => handleSubmit(false)}
                         className="flex-1 py-4 rounded-2xl border-2 border-gray-200 text-gray-700 font-bold text-xs uppercase tracking-widest hover:bg-gray-50 transition-all"
                     >
-                        Save as Draft
+                        {isEditing ? "Save as Draft" : "Save as Draft"}
                     </button>
                     <button
                         onClick={() => handleSubmit(true)}
                         className="flex-1 py-4 rounded-2xl bg-[#3C0078] text-white font-bold text-xs uppercase tracking-widest hover:bg-[#2A0054] transition-all shadow-lg shadow-[#3C0078]/20 flex items-center justify-center gap-2"
                     >
-                        <Eye size={16} /> Publish
+                        <Eye size={16} /> {isEditing ? "Save & Publish" : "Publish"}
                     </button>
                 </div>
             </motion.div>
@@ -723,7 +729,7 @@ function CreateAssignmentDrawer({ onClose, onSave }) {
     );
 }
 
-function AssignmentGroupRow({ group, onTogglePublish, onDelete }) {
+function AssignmentGroupRow({ group, onTogglePublish, onDelete, onEdit }) {
     const [expanded, setExpanded] = React.useState(true);
 
     return (
@@ -745,12 +751,6 @@ function AssignmentGroupRow({ group, onTogglePublish, onDelete }) {
                         {group.assignments.length} assignment{group.assignments.length !== 1 ? "s" : ""}
                     </span>
                 </div>
-                <button
-                    onClick={e => e.stopPropagation()}
-                    className="p-2 rounded-xl text-gray-300 hover:text-gray-600 hover:bg-white transition-all"
-                >
-                    <Edit2 size={16} />
-                </button>
             </div>
 
             {/* Assignment Rows */}
@@ -824,6 +824,15 @@ function AssignmentGroupRow({ group, onTogglePublish, onDelete }) {
                                         {item.published ? "Published" : "Draft"}
                                     </button>
 
+                                    {/* Edit */}
+                                    <button
+                                        onClick={() => onEdit(group.id, item.id)}
+                                        className="shrink-0 p-2 rounded-xl text-gray-200 hover:text-[#3C0078] hover:bg-[#3C0078]/10 transition-all opacity-0 group-hover:opacity-100"
+                                        title="Edit assignment"
+                                    >
+                                        <Edit2 size={16} />
+                                    </button>
+
                                     {/* Delete */}
                                     <button
                                         onClick={() => onDelete(group.id, item.id)}
@@ -844,6 +853,7 @@ function AssignmentGroupRow({ group, onTogglePublish, onDelete }) {
 function CourseAssignmentsView({ subject }) {
     const [groups, setGroups] = React.useState(ASSIGNMENT_GROUPS_DATA);
     const [showDrawer, setShowDrawer] = React.useState(false);
+    const [editingAssignment, setEditingAssignment] = React.useState(null);
     const [activeTypeFilter, setActiveTypeFilter] = React.useState("all");
 
     const totalWeight = groups.reduce((sum, g) => sum + g.weight, 0);
@@ -870,13 +880,34 @@ function CourseAssignmentsView({ subject }) {
         ));
     };
 
-    const handleSave = (newAssignment) => {
-        setGroups(prev => prev.map(g =>
-            g.id !== newAssignment.group ? g : {
+    const handleEdit = (groupId, assignmentId) => {
+        const group = groups.find(g => g.id === groupId);
+        const assignment = group?.assignments.find(a => a.id === assignmentId);
+        if (assignment) {
+            setEditingAssignment({ ...assignment, group: groupId });
+            setShowDrawer(true);
+        }
+    };
+
+    const handleSave = (savedAssignment) => {
+        if (editingAssignment) {
+            // Update existing
+            setGroups(prev => prev.map(g => ({
                 ...g,
-                assignments: [...g.assignments, newAssignment]
-            }
-        ));
+                assignments: g.assignments.map(a =>
+                    a.id !== savedAssignment.id ? a : { ...a, ...savedAssignment }
+                )
+            })));
+        } else {
+            // Add new
+            setGroups(prev => prev.map(g =>
+                g.id !== savedAssignment.group ? g : {
+                    ...g,
+                    assignments: [...g.assignments, savedAssignment]
+                }
+            ));
+        }
+        setEditingAssignment(null);
         setShowDrawer(false);
     };
 
@@ -977,11 +1008,8 @@ function CourseAssignmentsView({ subject }) {
 
             {/* Assignment Groups */}
             <motion.div variants={slideUp}>
-                <div className="flex items-center justify-between mb-5">
+                <div className="mb-5">
                     <h2 className="text-sm font-black uppercase tracking-widest text-gray-400">Assignment Groups</h2>
-                    <button className="text-[10px] font-bold uppercase tracking-widest text-[#3C0078] hover:underline">
-                        Manage Weights
-                    </button>
                 </div>
 
                 {filteredGroups.length === 0 ? (
@@ -995,6 +1023,7 @@ function CourseAssignmentsView({ subject }) {
                             group={group}
                             onTogglePublish={handleTogglePublish}
                             onDelete={handleDelete}
+                            onEdit={handleEdit}
                         />
                     ))
                 )}
@@ -1012,9 +1041,13 @@ function CourseAssignmentsView({ subject }) {
                 </button>
             </motion.div>
 
-            {/* Create Assignment Drawer */}
+            {/* Create / Edit Assignment Drawer */}
             {showDrawer && (
-                <CreateAssignmentDrawer onClose={() => setShowDrawer(false)} onSave={handleSave} />
+                <CreateAssignmentDrawer
+                    onClose={() => { setShowDrawer(false); setEditingAssignment(null); }}
+                    onSave={handleSave}
+                    initialData={editingAssignment}
+                />
             )}
         </motion.div>
     );
