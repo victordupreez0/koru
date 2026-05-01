@@ -4,7 +4,8 @@ import { motion } from "framer-motion";
 import SideNavItem from "./UI/sideNavItem";
 import { useCourses } from "../contexts/CoursesContext";
 import CourseManagerModal from "./courseManagerModal";
-import { Eye } from "@solar-icons/react";
+import { Eye, AddCircle } from "@solar-icons/react";
+import { useAuth } from "../contexts/AuthContext";
 
 // Framer Motion variants matching SideMenu.jsx
 const navbarVariants = {
@@ -53,6 +54,7 @@ export default function CourseMenu() {
     const location = useLocation();
     const { visibleCourses } = useCourses();
     const [modalOpen, setModalOpen] = useState(false);
+    const { role } = useAuth();
 
     return (
         <>
@@ -79,6 +81,17 @@ export default function CourseMenu() {
                     
                     {/* View all courses separator and trigger button */}
                     <div className="w-8 h-px bg-gray-200 mt-2 mb-1"></div>
+                    
+                    {role === "teacher" && (
+                        <button 
+                            onClick={() => console.log("Add new course logic here")}
+                            className="flex flex-col items-center justify-center w-12 h-12 rounded-xl text-green-500 hover:text-green-600 hover:bg-green-50 transition-all cursor-pointer mb-2"
+                            title="Add New Course"
+                        >
+                            <AddCircle size={24} />
+                        </button>
+                    )}
+
                     <button 
                         onClick={() => setModalOpen(true)}
                         className="flex flex-col items-center justify-center w-12 h-12 rounded-xl text-gray-400 hover:text-[#3C0078] hover:bg-gray-100 transition-all cursor-pointer"
