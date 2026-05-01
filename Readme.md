@@ -2,7 +2,11 @@
 
 ## Backend (ASP.NET Core)
 1. Open a terminal in the `Backend` folder.
+
 2. Run:
+  
+  cd LearnOnline
+  dotnet watch run
    dotnet run
 3. The API will be available at the URL shown in the terminal.
 
