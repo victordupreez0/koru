@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Moon,
@@ -48,7 +48,7 @@ function ToggleRow({ icon, title, description, checked, onChange, darkMode }) {
         </div>
       </div>
 
-      <span className="relative inline-flex h-7 w-12 items-center">
+      <span className="relative inline-flex h-7 w-16 items-center">
         <input
           type="checkbox"
           checked={checked}
@@ -98,6 +98,8 @@ export default function SettingsPage() {
 
   const darkMode = settings.theme === "dark";
 
+  const domApplyTimer = useRef(null);
+
   const pageClasses = useMemo(
     () => ({
       wrapper: darkMode ? "text-slate-100" : "text-slate-900",
@@ -113,15 +115,26 @@ export default function SettingsPage() {
     [darkMode],
   );
 
-  // Persist settings and apply their effects across the app without a separate context
+  // Persist settings and apply their effects across the app without a separate context.
+  // Font-size and line-height changes are debounced so that dragging a slider does not
+  // cause the whole page to constantly reflow — they commit 120 ms after the last move.
   useEffect(() => {
     localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
     window.dispatchEvent(new Event("learnonline-settings-changed"));
-    document.documentElement.style.fontSize = `${settings.textSize}%`;
-    document.body.style.lineHeight = `${settings.lineSpacing / 100}`;
     document.body.classList.toggle("theme-dark", settings.theme === "dark");
     document.body.classList.toggle("dyslexic-font", settings.font === "OpenDyslexic");
     document.body.classList.remove("theme-high-contrast", "reduce-motion", "focus-mode");
+
+    // Debounce the layout-affecting DOM changes
+    if (domApplyTimer.current) clearTimeout(domApplyTimer.current);
+    domApplyTimer.current = setTimeout(() => {
+      document.documentElement.style.fontSize = `${settings.textSize}%`;
+      document.body.style.lineHeight = `${settings.lineSpacing / 100}`;
+    }, 120);
+
+    return () => {
+      if (domApplyTimer.current) clearTimeout(domApplyTimer.current);
+    };
   }, [settings]);
 
   // Manual preview is available from the text-to-speech section below.

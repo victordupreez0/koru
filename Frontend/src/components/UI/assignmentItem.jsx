@@ -23,7 +23,7 @@ export default function AssignmentItem({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: "easeOut" }}
       className={`w-full border rounded-2xl px-4 py-3.5 flex items-center gap-3 transition-all duration-300 cursor-pointer
-        ${completed ? "bg-gray-50 border-gray-100 opacity-50" : "bg-white border-gray-200 hover:shadow-md"}`}
+        ${completed ? "bg-gray-50 dark:bg-slate-800/50 border-gray-100 dark:border-slate-700 opacity-50" : "bg-white dark:bg-slate-800 border-gray-200 dark:border-slate-700 hover:shadow-md"}`}
     >
       {/* Icon */}
       <div
@@ -38,14 +38,14 @@ export default function AssignmentItem({
       {/* Text */}
       <div className="flex-1 min-w-0">
         <h4
-          className={`text-base font-semibold leading-tight font-['Gabarito'] ${completed ? "text-gray-400 line-through" : "text-black"
+          className={`text-base font-semibold leading-tight font-['Gabarito'] ${completed ? "text-gray-400 dark:text-slate-600 line-through" : "text-black dark:text-slate-100"
             }`}
         >
           {title}
         </h4>
-        <p className="text-xs text-gray-400 mt-0.5 flex flex-wrap items-center gap-2">
-          <span><span className="font-bold text-gray-500">DUE</span> {dueDate}</span>
-          <span className="font-bold text-black">{courseCode}</span>
+        <p className="text-xs text-gray-400 dark:text-slate-500 mt-0.5 flex flex-wrap items-center gap-2">
+          <span><span className="font-bold text-gray-500 dark:text-slate-400">DUE</span> {dueDate}</span>
+          <span className="font-bold text-black dark:text-slate-200">{courseCode}</span>
           {uiState && !completed && (
               <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest ${getUiStateColor(uiState)}`}>{uiState}</span>
           )}

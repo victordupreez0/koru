@@ -103,9 +103,9 @@ export default function TodayTimeline() {
     <div className="w-full">
       {/* ── Header ── */}
       <div className="flex items-center justify-between mt-5 mb-1">
-        <h2 className="text-2xl font-['Gabarito']">Today</h2>
+        <h2 className="text-2xl font-['Gabarito'] dark:text-slate-100">Today</h2>
       </div>
-      <p className="text-sm text-gray-400 mb-5 font-medium">{formatDate(now)}</p>
+      <p className="text-sm text-gray-400 dark:text-slate-500 mb-5 font-medium">{formatDate(now)}</p>
 
       {/* ── Scrollable timeline with fade overlays ── */}
       <div className="relative">

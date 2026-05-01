@@ -63,8 +63,8 @@ export default function CourseSecondaryNav({ activeCourseId }) {
                                 className={({ isActive }) => 
                                     `relative flex items-center gap-3 px-4 py-1.5 text-sm font-medium transition-all duration-200 border-l-2 ${
                                         isActive 
-                                        ? "text-[#3C0078] border-[#3C0078] font-bold bg-[#3C0078]/5" 
-                                        : "text-gray-500 border-transparent hover:text-[#3C0078] hover:bg-[#3C0078]/5"
+                                        ? "text-[#3C0078] dark:text-purple-300 border-[#3C0078] dark:border-purple-400 font-bold bg-[#3C0078]/5 dark:bg-purple-900/20" 
+                                        : "text-gray-500 dark:text-slate-400 border-transparent hover:text-[#3C0078] dark:hover:text-purple-300 hover:bg-[#3C0078]/5 dark:hover:bg-purple-900/20"
                                     }`
                                 }
                             >
@@ -112,7 +112,7 @@ export default function CourseSecondaryNav({ activeCourseId }) {
                                 autoFocus
                                 type="text"
                                 placeholder="Link name..."
-                                className="w-full bg-gray-50 border border-black/10 rounded-lg px-3 py-2 text-xs outline-none focus:border-black transition-colors"
+                                className="w-full bg-gray-50 dark:bg-slate-700 border border-black/10 dark:border-slate-600 rounded-lg px-3 py-2 text-xs outline-none focus:border-black dark:focus:border-slate-400 transition-colors dark:text-slate-200 dark:placeholder-slate-500"
                                 value={newItemLabel}
                                 onChange={(e) => setNewItemLabel(e.target.value)}
                                 onKeyDown={(e) => {
@@ -129,7 +129,7 @@ export default function CourseSecondaryNav({ activeCourseId }) {
                                 </button>
                                 <button
                                     onClick={() => setIsAdding(false)}
-                                    className="p-1.5 bg-gray-100 text-gray-500 rounded-lg hover:bg-gray-200"
+                                    className="p-1.5 bg-gray-100 dark:bg-slate-700 text-gray-500 dark:text-slate-400 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-600"
                                 >
                                     <X size={14} />
                                 </button>
@@ -138,7 +138,7 @@ export default function CourseSecondaryNav({ activeCourseId }) {
                     ) : (
                         <button
                             onClick={() => setIsAdding(true)}
-                            className="w-full flex items-center justify-center gap-2 py-3 border-2 border-dashed border-black/10 rounded-xl text-[10px] font-bold uppercase tracking-widest text-gray-400 hover:border-black/30 hover:text-black transition-all"
+                            className="w-full flex items-center justify-center gap-2 py-3 border-2 border-dashed border-black/10 dark:border-slate-600 rounded-xl text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-slate-500 hover:border-black/30 dark:hover:border-slate-400 hover:text-black dark:hover:text-slate-200 transition-all"
                         >
                             <Plus size={14} /> Add Link
                         </button>

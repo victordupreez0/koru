@@ -4,9 +4,9 @@ import ChipListEditor from "./ChipListEditor";
 import { ensureHttps, slugify } from "../pages/profile/profileUtils";
 
 const PANEL_CLASS =
-  "rounded-[28px] border border-white/60 bg-white/85 p-6 shadow-[0_16px_40px_rgba(15,23,42,0.08)] backdrop-blur-md transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_20px_44px_rgba(15,23,42,0.12)]";
+  "rounded-[28px] border border-white/60 bg-white/85 dark:bg-slate-800 p-6 shadow-[0_16px_40px_rgba(15,23,42,0.08)] backdrop-blur-md transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_20px_44px_rgba(15,23,42,0.12)]";
 const INPUT_CLASS =
-  "rounded-2xl border border-slate-300 bg-white/90 px-4 py-2.5 transition focus:border-[#3C0078] focus:outline-none focus:ring-2 focus:ring-[#3C0078]/20";
+  "rounded-2xl border border-slate-300 bg-white/90 dark:bg-slate-700 px-4 py-2.5 transition focus:border-[#3C0078] focus:outline-none focus:ring-2 focus:ring-[#3C0078]/20";
 
 export default function ProfileSidebar({
   profile,
@@ -75,7 +75,7 @@ export default function ProfileSidebar({
               placeholder="Profile photo URL (or upload below)"
               className={`w-full ${INPUT_CLASS}`}
             />
-            <label className="inline-flex w-fit cursor-pointer items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50">
+            <label className="inline-flex w-fit cursor-pointer items-center gap-2 rounded-xl border border-slate-300 bg-white dark:bg-slate-700 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50">
               <Upload size={14} /> Upload profile image
               <input
                 type="file"
@@ -131,7 +131,7 @@ export default function ProfileSidebar({
           {privacySectionConfig.map(([key, label]) => (
             <label
               key={key}
-              className="flex cursor-pointer items-center justify-between rounded-xl border border-slate-200 bg-white/70 px-3 py-2 text-sm"
+              className="flex cursor-pointer items-center justify-between rounded-xl border border-slate-200 bg-white/70 dark:bg-slate-800 px-3 py-2 text-sm"
             >
               <span>{label}</span>
               <input
@@ -163,7 +163,7 @@ export default function ProfileSidebar({
           <button
             type="button"
             onClick={copyShareUrl}
-            className="mt-3 inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:-translate-y-0.5 hover:bg-slate-100"
+            className="mt-3 inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white dark:bg-slate-700 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:-translate-y-0.5 hover:bg-slate-100"
           >
             <Copy size={14} /> {copied ? "Copied!" : "Copy link"}
           </button>

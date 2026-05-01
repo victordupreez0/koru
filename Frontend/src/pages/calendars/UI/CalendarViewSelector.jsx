@@ -53,7 +53,7 @@ const VIEWS = [
 export default function CalendarViewSelector({ activeView, onChange }) {
   return (
     <div
-      className="inline-flex items-center gap-0.5 bg-gray-100 rounded-full p-1"
+      className="inline-flex items-center gap-0.5 bg-gray-100 dark:bg-slate-800 rounded-full p-1"
       role="tablist"
       aria-label="Calendar view"
     >
@@ -68,13 +68,13 @@ export default function CalendarViewSelector({ activeView, onChange }) {
             onClick={() => onChange(id)}
             className={[
               "relative flex items-center gap-1.5 rounded-full px-4 py-1.5 text-[13px] cursor-pointer border-none transition-colors duration-150 font-[inherit]",
-              isActive ? "text-gray-900 font-semibold" : "text-gray-400 font-medium hover:text-gray-700",
+              isActive ? "text-gray-900 dark:text-slate-100 font-semibold" : "text-gray-400 dark:text-slate-500 font-medium hover:text-gray-700 dark:hover:text-slate-300",
             ].join(" ")}
           >
             {/* Sliding white pill */}
             {isActive && (
               <motion.span
-                className="absolute inset-0 rounded-full bg-white shadow-sm z-[-1]"
+                className="absolute inset-0 rounded-full bg-white dark:bg-slate-600 shadow-sm z-[-1]"
                 layoutId="cal-view-pill"
                 transition={{ type: "spring", stiffness: 380, damping: 32 }}
               />

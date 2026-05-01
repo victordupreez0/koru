@@ -35,7 +35,7 @@ const CourseItem = ({ course, isActive }) => (
             className={`flex flex-col items-center justify-center w-14 h-14 rounded-2xl border-2 transition-all duration-300 ${
                 isActive 
                 ? "shadow-md" 
-                : "hover:bg-gray-50"
+                : "hover:bg-gray-50 dark:hover:bg-slate-700"
             }`}
         >
             <span className="text-sm font-bold opacity-100 leading-none">{course.code}</span>
@@ -59,7 +59,7 @@ export default function CourseMenu() {
     return (
         <>
             <motion.div
-                className="navbar bg-white/80 backdrop-blur-md w-fit rounded-[40px] shadow-lg fixed left-4 top-1/2 -translate-y-1/2 z-40 p-2 py-4 border border-[#3C0078]/10"
+                className="navbar bg-white/80 dark:bg-slate-800/90 backdrop-blur-md w-fit rounded-[40px] shadow-lg fixed left-4 top-1/2 -translate-y-1/2 z-40 p-2 py-4 border border-[#3C0078]/10 dark:border-slate-700"
                 variants={navbarVariants}
                 initial="hidden"
                 animate="visible"
@@ -75,12 +75,12 @@ export default function CourseMenu() {
                                 />
                             ))
                         ) : (
-                            <li className="text-xs text-gray-400 font-bold p-2 text-center w-14">No Classes</li>
+                            <li className="text-xs text-gray-400 dark:text-slate-500 font-bold p-2 text-center w-14">No Classes</li>
                         )}
                     </motion.ul>
                     
                     {/* View all courses separator and trigger button */}
-                    <div className="w-8 h-px bg-gray-200 mt-2 mb-1"></div>
+                    <div className="w-8 h-px bg-gray-200 dark:bg-slate-600 mt-2 mb-1"></div>
                     
                     {role === "teacher" && (
                         <button 
@@ -94,7 +94,7 @@ export default function CourseMenu() {
 
                     <button 
                         onClick={() => setModalOpen(true)}
-                        className="flex flex-col items-center justify-center w-12 h-12 rounded-xl text-gray-400 hover:text-[#3C0078] hover:bg-gray-100 transition-all cursor-pointer"
+                        className="flex flex-col items-center justify-center w-12 h-12 rounded-xl text-gray-400 dark:text-slate-500 hover:text-[#3C0078] dark:hover:text-purple-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition-all cursor-pointer"
                         title="Manage Enrolled Courses"
                     >
                         <Eye size={24} />
