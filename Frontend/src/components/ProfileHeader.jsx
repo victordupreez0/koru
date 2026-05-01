@@ -3,7 +3,7 @@ import { BadgeCheck, UserRound } from "lucide-react";
 
 export default function ProfileHeader({ profile, roleLabel }) {
   return (
-    <section className="relative overflow-hidden rounded-[28px] bg-white/90 p-6 shadow-[0_16px_40px_rgba(15,23,42,0.1)] backdrop-blur-md">
+    <section className="relative overflow-hidden rounded-[28px] bg-white/90 dark:bg-slate-800 p-6 shadow-[0_16px_40px_rgba(15,23,42,0.1)] backdrop-blur-md">
       <div className="flex flex-wrap items-start gap-4">
         {profile.header.photoUrl ? (
           <img

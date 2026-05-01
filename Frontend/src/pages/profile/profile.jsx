@@ -275,7 +275,7 @@ export default function Profile({ publicRoute = false }) {
 
   // Render
   return (
-    <div data-tts-root="true" className="relative w-full pb-10 text-slate-900">
+    <div data-tts-root="true" className="relative w-full pb-10 text-slate-900 dark:text-slate-100">
       <Menu />
       <SideMenu />
 

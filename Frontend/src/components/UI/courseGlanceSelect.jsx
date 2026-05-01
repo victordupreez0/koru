@@ -41,7 +41,7 @@ export default function CourseGlanceSelect({ activeCourseId, setActiveCourseId, 
                             }}
                             className={`btn !rounded-full !border-transparent flex items-center overflow-hidden transition-colors duration-200 focus:outline-none focus:ring-0 active:outline-none active:ring-0
                                 hover:shadow-md hover:!border-transparent
-                                ${isActive ? "!bg-[#9BE9EA] !text-black !px-2 justify-start" : "!bg-white !text-black p-0 justify-center items-center"}`}
+                                ${isActive ? "!bg-[#9BE9EA] !text-black !px-2 justify-start" : "!bg-white dark:!bg-slate-700 !text-black dark:!text-slate-200 p-0 justify-center items-center"}`}
                             style={{ minWidth: 0, minHeight: 0, padding: isActive ? undefined : 0, display: 'flex', alignItems: 'center', justifyContent: isActive ? 'flex-start' : 'center' }}
                             onClick={() => setActiveCourseId(course.id)}
                         >

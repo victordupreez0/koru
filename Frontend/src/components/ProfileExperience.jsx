@@ -3,9 +3,7 @@ import { Briefcase } from "lucide-react";
 import ChipListEditor from "./ChipListEditor";
 
 const PANEL_CLASS =
-  "rounded-[28px] border border-white/60 bg-white/85 p-6 shadow-[0_16px_40px_rgba(15,23,42,0.08)] backdrop-blur-md transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_20px_44px_rgba(15,23,42,0.12)]";
-
-// Experience always shows ChipListEditor (no edit-mode guard).
+  "rounded-[28px] border border-white/60 bg-white/85 dark:bg-slate-800 p-6 shadow-[0_16px_40px_rgba(15,23,42,0.08)] backdrop-blur-md transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_20px_44px_rgba(15,23,42,0.12)]"; (no edit-mode guard).
 // Changes are blocked on publicRoute by the parent's updateProfile.
 export default function ProfileExperience({ experienceGroups, updateProfile }) {
   return (

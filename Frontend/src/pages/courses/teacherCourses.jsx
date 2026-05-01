@@ -268,7 +268,7 @@ function CourseAnnouncementsView() {
           <h1 className="text-3xl font-semibold tracking-tight">
             Announcements
           </h1>
-          <p className="text-gray-500 mt-2">
+          <p className="text-gray-500 dark:text-slate-400 mt-2">
             Latest updates from your lecturers
           </p>
         </div>
@@ -292,15 +292,15 @@ function CourseAnnouncementsView() {
               initial={{ opacity: 0, y: -20, height: 0 }}
               animate={{ opacity: 1, y: 0, height: "auto" }}
               exit={{ opacity: 0, y: -20, height: 0 }}
-              className="bg-white p-8 rounded-[38px] border-2 border-dashed border-[#3C0078]/20 shadow-sm mb-12 overflow-hidden"
+              className="bg-white dark:bg-slate-800 p-8 rounded-[38px] border-2 border-dashed border-[#3C0078]/20 shadow-sm mb-12 overflow-hidden"
             >
               <div className="flex justify-between items-center mb-8">
-                <h3 className="text-xl font-bold text-gray-900 italic">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-slate-100 italic">
                   Drafting New Announcement
                 </h3>
                 <button
                   onClick={() => setIsAdding(false)}
-                  className="text-gray-400 hover:text-gray-900 transition-colors"
+                  className="text-gray-400 dark:text-slate-500 hover:text-gray-900 dark:hover:text-slate-100 transition-colors"
                 >
                   <CloseSquare size={24} />
                 </button>
@@ -309,13 +309,13 @@ function CourseAnnouncementsView() {
               <div className="flex flex-col gap-8 mb-8">
                 <div className="flex flex-col md:flex-row gap-6">
                   <div className="flex-[3]">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2 block">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-slate-500 mb-2 block">
                       Announcement Title
                     </label>
                     <input
                       type="text"
                       placeholder="What's the update about?"
-                      className="w-full bg-gray-50 border-none rounded-2xl px-6 py-4 text-gray-900 font-medium focus:ring-2 focus:ring-[#3C0078]/20 transition-all"
+                      className="w-full bg-gray-50 dark:bg-slate-800/50 border-none rounded-2xl px-6 py-4 text-gray-900 dark:text-slate-100 font-medium focus:ring-2 focus:ring-[#3C0078]/20 transition-all"
                       value={newAnnouncement.title}
                       onChange={(e) =>
                         setNewAnnouncement({
@@ -326,11 +326,11 @@ function CourseAnnouncementsView() {
                     />
                   </div>
                   <div className="flex-1">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2 block">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-slate-500 mb-2 block">
                       Label
                     </label>
                     <select
-                      className="w-full bg-gray-50 border-none rounded-2xl px-6 py-4 text-gray-900 font-medium focus:ring-2 focus:ring-[#3C0078]/20 transition-all appearance-none"
+                      className="w-full bg-gray-50 dark:bg-slate-800/50 border-none rounded-2xl px-6 py-4 text-gray-900 dark:text-slate-100 font-medium focus:ring-2 focus:ring-[#3C0078]/20 transition-all appearance-none"
                       value={newAnnouncement.label}
                       onChange={(e) => {
                         const labels = {
@@ -358,7 +358,7 @@ function CourseAnnouncementsView() {
                   <textarea
                     rows={6}
                     placeholder="Write your announcement details here..."
-                    className="w-full bg-gray-50 border-none rounded-2xl px-8 py-6 text-gray-900 text-lg font-medium focus:ring-2 focus:ring-[#3C0078]/20 transition-all resize-none leading-relaxed"
+                    className="w-full bg-gray-50 dark:bg-slate-800/50 border-none rounded-2xl px-8 py-6 text-gray-900 dark:text-slate-100 text-lg font-medium focus:ring-2 focus:ring-[#3C0078]/20 transition-all resize-none leading-relaxed"
                     value={newAnnouncement.preview}
                     onChange={(e) =>
                       setNewAnnouncement({
@@ -389,7 +389,7 @@ function CourseAnnouncementsView() {
               layoutId={`ann_container_${post.id}`}
               onClick={() => setSelectedId(post.id)}
               variants={slideUp}
-              className="bg-white p-8 rounded-[38px] border border-gray-100 shadow-sm hover:shadow-xl transition-all cursor-pointer relative overflow-hidden group"
+              className="bg-white dark:bg-slate-800 p-8 rounded-[38px] border border-gray-100 dark:border-slate-700 shadow-sm hover:shadow-xl transition-all cursor-pointer relative overflow-hidden group"
               whileHover={{ y: -5 }}
             >
               <motion.div
@@ -408,7 +408,7 @@ function CourseAnnouncementsView() {
                   >
                     {post.label}
                   </span>
-                  <span className="text-sm text-gray-400">{post.date}</span>
+                  <span className="text-sm text-gray-400 dark:text-slate-500">{post.date}</span>
                 </motion.div>
                 <motion.div
                   layoutId={`ann_icon_${post.id}`}
@@ -419,7 +419,7 @@ function CourseAnnouncementsView() {
               </div>
               <motion.h2
                 layoutId={`ann_title_${post.id}`}
-                className="text-2xl font-bold text-gray-900 group-hover:text-[#3C0078] transition-colors leading-tight"
+                className="text-2xl font-bold text-gray-900 dark:text-slate-100 group-hover:text-[#3C0078] transition-colors leading-tight"
               >
                 {post.title}
               </motion.h2>
@@ -430,7 +430,7 @@ function CourseAnnouncementsView() {
               </motion.div>
               <motion.p
                 layoutId={`ann_preview_${post.id}`}
-                className="text-gray-500 mt-4 leading-relaxed line-clamp-2"
+                className="text-gray-500 dark:text-slate-400 mt-4 leading-relaxed line-clamp-2"
               >
                 {post.preview}
               </motion.p>
@@ -455,7 +455,7 @@ function CourseAnnouncementsView() {
             <div className="fixed inset-0 z-[101] flex items-center justify-center p-4 pointer-events-none">
               <motion.div
                 layoutId={`ann_container_${selectedId}`}
-                className="bg-white w-full max-w-2xl rounded-[48px] shadow-2xl relative overflow-hidden pointer-events-auto"
+                className="bg-white dark:bg-slate-800 w-full max-w-2xl rounded-[48px] shadow-2xl relative overflow-hidden pointer-events-auto"
                 transition={{ type: "spring", damping: 25, stiffness: 200 }}
               >
                 <motion.div
@@ -476,7 +476,7 @@ function CourseAnnouncementsView() {
                       >
                         {selectedAnnouncement.label}
                       </span>
-                      <span className="text-sm font-medium text-gray-400">
+                      <span className="text-sm font-medium text-gray-400 dark:text-slate-500">
                         {selectedAnnouncement.date}
                       </span>
                     </motion.div>
@@ -492,7 +492,7 @@ function CourseAnnouncementsView() {
                           e.stopPropagation();
                           setSelectedId(null);
                         }}
-                        className="w-12 h-12 flex items-center justify-center rounded-full bg-gray-50 text-gray-400 hover:bg-gray-100 hover:text-gray-900 transition-colors"
+                        className="w-12 h-12 flex items-center justify-center rounded-full bg-gray-50 dark:bg-slate-800/50 text-gray-400 dark:text-slate-500 hover:bg-gray-100 dark:hover:bg-slate-700 hover:text-gray-900 dark:hover:text-slate-100 transition-colors"
                       >
                         <CloseSquare size={24} />
                       </button>
@@ -501,14 +501,14 @@ function CourseAnnouncementsView() {
 
                   <motion.h2
                     layoutId={`ann_title_${selectedId}`}
-                    className="text-4xl font-black text-gray-900 leading-tight mb-4"
+                    className="text-4xl font-black text-gray-900 dark:text-slate-100 leading-tight mb-4"
                   >
                     {selectedAnnouncement.title}
                   </motion.h2>
 
                   <motion.div
                     layoutId={`ann_author_${selectedId}`}
-                    className="flex items-center gap-3 mb-10 pb-10 border-b border-gray-100"
+                    className="flex items-center gap-3 mb-10 pb-10 border-b border-gray-100 dark:border-slate-700"
                   >
                     <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-[#3C0078]">
                       <User size={20} />
@@ -531,11 +531,11 @@ function CourseAnnouncementsView() {
                   >
                     <motion.p
                       layoutId={`ann_preview_${selectedId}`}
-                      className="text-xl leading-relaxed text-gray-600 mb-6 font-medium"
+                      className="text-xl leading-relaxed text-gray-600 dark:text-slate-400 mb-6 font-medium"
                     >
                       {selectedAnnouncement.preview}
                     </motion.p>
-                    <p className="text-gray-500 leading-relaxed text-lg">
+                    <p className="text-gray-500 dark:text-slate-400 leading-relaxed text-lg">
                       Please make sure to check the attached documents in the
                       resources section if any are mentioned. If you have any
                       follow-up questions regarding this announcement, feel free
@@ -557,13 +557,13 @@ function CourseAnnouncementsView() {
                       Back to list
                     </button>
                     <div className="flex gap-4">
-                      <button className="flex items-center gap-2 text-gray-400 hover:text-red-500 transition-colors">
+                      <button className="flex items-center gap-2 text-gray-400 dark:text-slate-500 hover:text-red-500 transition-colors">
                         <Trash2 size={18} />
                         <span className="text-xs font-bold uppercase tracking-widest">
                           Delete
                         </span>
                       </button>
-                      <button className="flex items-center gap-2 text-gray-400 hover:text-[#3C0078] transition-colors">
+                      <button className="flex items-center gap-2 text-gray-400 dark:text-slate-500 hover:text-[#3C0078] transition-colors">
                         <Letter size={18} />
                         <span className="text-xs font-bold uppercase tracking-widest">
                           Share
@@ -867,22 +867,22 @@ function CreateAssignmentDrawer({ onClose, onSave, initialData }) {
         animate={{ x: 0 }}
         exit={{ x: "100%" }}
         transition={{ type: "spring", damping: 28, stiffness: 220 }}
-        className="fixed right-0 top-0 bottom-0 z-[101] w-full max-w-xl bg-white shadow-2xl flex flex-col overflow-hidden"
+        className="fixed right-0 top-0 bottom-0 z-[101] w-full max-w-xl bg-white dark:bg-slate-800 shadow-2xl flex flex-col overflow-hidden"
         style={{ borderRadius: "40px 0 0 40px" }}
       >
         {/* Drawer Header */}
-        <div className="flex justify-between items-center px-10 py-8 border-b border-gray-100 shrink-0">
+        <div className="flex justify-between items-center px-10 py-8 border-b border-gray-100 dark:border-slate-700 shrink-0">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-slate-100">
               {isEditing ? "Edit Assignment" : "Create Assignment"}
             </h2>
-            <p className="text-sm text-gray-400 mt-1">
+            <p className="text-sm text-gray-400 dark:text-slate-500 mt-1">
               Fill in the details below
             </p>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-500"
+            className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors text-gray-500 dark:text-slate-400"
           >
             <X size={22} />
           </button>
@@ -892,7 +892,7 @@ function CreateAssignmentDrawer({ onClose, onSave, initialData }) {
         <div className="flex-1 overflow-y-auto px-10 py-8 space-y-8">
           {/* Assignment Type */}
           <div>
-            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3 block">
+            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-slate-500 mb-3 block">
               Assignment Type
             </label>
             <div className="grid grid-cols-3 gap-2">
@@ -905,7 +905,7 @@ function CreateAssignmentDrawer({ onClose, onSave, initialData }) {
                     className={`flex flex-col items-center gap-2 p-3 rounded-2xl border-2 text-center transition-all ${
                       form.type === t.id
                         ? "border-[#3C0078] bg-[#3C0078]/5"
-                        : "border-gray-100 hover:border-gray-200 bg-gray-50"
+                        : "border-gray-100 dark:border-slate-700 hover:border-gray-200 dark:hover:border-slate-600 bg-gray-50 dark:bg-slate-800/50"
                     }`}
                   >
                     <span
@@ -926,7 +926,7 @@ function CreateAssignmentDrawer({ onClose, onSave, initialData }) {
 
           {/* Title */}
           <div>
-            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2 block">
+            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-slate-500 mb-2 block">
               Title
             </label>
             <input
@@ -934,13 +934,13 @@ function CreateAssignmentDrawer({ onClose, onSave, initialData }) {
               placeholder="Assignment title..."
               value={form.title}
               onChange={(e) => handleChange("title", e.target.value)}
-              className="w-full bg-gray-50 rounded-2xl px-5 py-4 text-gray-900 font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-[#3C0078]/20 border border-transparent transition-all"
+              className="w-full bg-gray-50 dark:bg-slate-800/50 rounded-2xl px-5 py-4 text-gray-900 dark:text-slate-100 font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-[#3C0078]/20 border border-transparent transition-all"
             />
           </div>
 
           {/* Description */}
           <div>
-            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2 block">
+            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-slate-500 mb-2 block">
               Instructions / Description
             </label>
             <textarea
@@ -948,14 +948,14 @@ function CreateAssignmentDrawer({ onClose, onSave, initialData }) {
               placeholder="Write the assignment instructions here..."
               value={form.description}
               onChange={(e) => handleChange("description", e.target.value)}
-              className="w-full bg-gray-50 rounded-2xl px-5 py-4 text-gray-900 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#3C0078]/20 border border-transparent transition-all resize-none leading-relaxed"
+              className="w-full bg-gray-50 dark:bg-slate-800/50 rounded-2xl px-5 py-4 text-gray-900 dark:text-slate-100 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#3C0078]/20 border border-transparent transition-all resize-none leading-relaxed"
             />
           </div>
 
           {/* Points & Grade Display */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2 block">
+              <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-slate-500 mb-2 block">
                 Points
               </label>
               <input
@@ -965,17 +965,17 @@ function CreateAssignmentDrawer({ onClose, onSave, initialData }) {
                 onChange={(e) =>
                   handleChange("points", parseInt(e.target.value) || 0)
                 }
-                className="w-full bg-gray-50 rounded-2xl px-5 py-4 text-gray-900 font-bold text-sm focus:outline-none focus:ring-2 focus:ring-[#3C0078]/20 border border-transparent transition-all"
+                className="w-full bg-gray-50 dark:bg-slate-800/50 rounded-2xl px-5 py-4 text-gray-900 dark:text-slate-100 font-bold text-sm focus:outline-none focus:ring-2 focus:ring-[#3C0078]/20 border border-transparent transition-all"
               />
             </div>
             <div>
-              <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2 block">
+              <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-slate-500 mb-2 block">
                 Grade Display
               </label>
               <select
                 value={form.gradeDisplay}
                 onChange={(e) => handleChange("gradeDisplay", e.target.value)}
-                className="w-full bg-gray-50 rounded-2xl px-5 py-4 text-gray-900 font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-[#3C0078]/20 border border-transparent transition-all appearance-none"
+                className="w-full bg-gray-50 dark:bg-slate-800/50 rounded-2xl px-5 py-4 text-gray-900 dark:text-slate-100 font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-[#3C0078]/20 border border-transparent transition-all appearance-none"
               >
                 {GRADE_DISPLAY_OPTIONS.map((o) => (
                   <option key={o}>{o}</option>
@@ -987,13 +987,13 @@ function CreateAssignmentDrawer({ onClose, onSave, initialData }) {
           {/* Submission Type & Assignees */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2 block">
+              <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-slate-500 mb-2 block">
                 Submission Type
               </label>
               <select
                 value={form.submissionType}
                 onChange={(e) => handleChange("submissionType", e.target.value)}
-                className="w-full bg-gray-50 rounded-2xl px-5 py-4 text-gray-900 font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-[#3C0078]/20 border border-transparent transition-all appearance-none"
+                className="w-full bg-gray-50 dark:bg-slate-800/50 rounded-2xl px-5 py-4 text-gray-900 dark:text-slate-100 font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-[#3C0078]/20 border border-transparent transition-all appearance-none"
               >
                 {SUBMISSION_TYPE_OPTIONS.map((o) => (
                   <option key={o}>{o}</option>
@@ -1001,13 +1001,13 @@ function CreateAssignmentDrawer({ onClose, onSave, initialData }) {
               </select>
             </div>
             <div>
-              <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2 block">
+              <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-slate-500 mb-2 block">
                 Assign To
               </label>
               <select
                 value={form.assignedTo}
                 onChange={(e) => handleChange("assignedTo", e.target.value)}
-                className="w-full bg-gray-50 rounded-2xl px-5 py-4 text-gray-900 font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-[#3C0078]/20 border border-transparent transition-all appearance-none"
+                className="w-full bg-gray-50 dark:bg-slate-800/50 rounded-2xl px-5 py-4 text-gray-900 dark:text-slate-100 font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-[#3C0078]/20 border border-transparent transition-all appearance-none"
               >
                 {ASSIGN_TO_OPTIONS.map((o) => (
                   <option key={o}>{o}</option>
@@ -1018,13 +1018,13 @@ function CreateAssignmentDrawer({ onClose, onSave, initialData }) {
 
           {/* Assignment Group */}
           <div>
-            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2 block">
+            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-slate-500 mb-2 block">
               Assignment Group
             </label>
             <select
               value={form.group}
               onChange={(e) => handleChange("group", e.target.value)}
-              className="w-full bg-gray-50 rounded-2xl px-5 py-4 text-gray-900 font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-[#3C0078]/20 border border-transparent transition-all appearance-none"
+              className="w-full bg-gray-50 dark:bg-slate-800/50 rounded-2xl px-5 py-4 text-gray-900 dark:text-slate-100 font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-[#3C0078]/20 border border-transparent transition-all appearance-none"
             >
               {ASSIGNMENT_GROUPS_DATA.map((g) => (
                 <option key={g.id} value={g.id}>
@@ -1036,24 +1036,24 @@ function CreateAssignmentDrawer({ onClose, onSave, initialData }) {
 
           {/* Dates */}
           <div>
-            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3 block">
+            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-slate-500 mb-3 block">
               Dates
             </label>
-            <div className="bg-gray-50 rounded-[28px] p-6 space-y-4">
+            <div className="bg-gray-50 dark:bg-slate-800/50 rounded-[28px] p-6 space-y-4">
               <div>
-                <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2 block">
+                <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-slate-500 mb-2 block">
                   Due Date
                 </label>
                 <input
                   type="datetime-local"
                   value={form.dueDate}
                   onChange={(e) => handleChange("dueDate", e.target.value)}
-                  className="w-full bg-white rounded-2xl px-5 py-3 text-gray-900 font-medium text-sm focus:outline-none focus:ring-2 focus:ring-[#3C0078]/20 border border-gray-100 transition-all"
+                  className="w-full bg-white dark:bg-slate-800 rounded-2xl px-5 py-3 text-gray-900 dark:text-slate-100 font-medium text-sm focus:outline-none focus:ring-2 focus:ring-[#3C0078]/20 border border-gray-100 dark:border-slate-700 transition-all"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2 block">
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-slate-500 mb-2 block">
                     Available From
                   </label>
                   <input
@@ -1062,11 +1062,11 @@ function CreateAssignmentDrawer({ onClose, onSave, initialData }) {
                     onChange={(e) =>
                       handleChange("availableFrom", e.target.value)
                     }
-                    className="w-full bg-white rounded-2xl px-4 py-3 text-gray-900 font-medium text-sm focus:outline-none focus:ring-2 focus:ring-[#3C0078]/20 border border-gray-100 transition-all"
+                    className="w-full bg-white dark:bg-slate-800 rounded-2xl px-4 py-3 text-gray-900 dark:text-slate-100 font-medium text-sm focus:outline-none focus:ring-2 focus:ring-[#3C0078]/20 border border-gray-100 dark:border-slate-700 transition-all"
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2 block">
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-slate-500 mb-2 block">
                     Available Until
                   </label>
                   <input
@@ -1075,7 +1075,7 @@ function CreateAssignmentDrawer({ onClose, onSave, initialData }) {
                     onChange={(e) =>
                       handleChange("availableUntil", e.target.value)
                     }
-                    className="w-full bg-white rounded-2xl px-4 py-3 text-gray-900 font-medium text-sm focus:outline-none focus:ring-2 focus:ring-[#3C0078]/20 border border-gray-100 transition-all"
+                    className="w-full bg-white dark:bg-slate-800 rounded-2xl px-4 py-3 text-gray-900 dark:text-slate-100 font-medium text-sm focus:outline-none focus:ring-2 focus:ring-[#3C0078]/20 border border-gray-100 dark:border-slate-700 transition-all"
                   />
                 </div>
               </div>
@@ -1084,10 +1084,10 @@ function CreateAssignmentDrawer({ onClose, onSave, initialData }) {
         </div>
 
         {/* Drawer Footer */}
-        <div className="px-10 py-6 border-t border-gray-100 flex gap-3 shrink-0">
+        <div className="px-10 py-6 border-t border-gray-100 dark:border-slate-700 flex gap-3 shrink-0">
           <button
             onClick={() => handleSubmit(false)}
-            className="flex-1 py-4 rounded-2xl border-2 border-gray-200 text-gray-700 font-bold text-xs uppercase tracking-widest hover:bg-gray-50 transition-all"
+            className="flex-1 py-4 rounded-2xl border-2 border-gray-200 dark:border-slate-600 text-gray-700 dark:text-slate-200 font-bold text-xs uppercase tracking-widest hover:bg-gray-50 dark:hover:bg-slate-800/50 transition-all"
           >
             {isEditing ? "Save as Draft" : "Save as Draft"}
           </button>
@@ -1133,12 +1133,12 @@ function AssignmentGroupRow({
     <motion.div variants={slideUp} className="mb-6">
       {/* Group Header */}
       <div
-        className="flex items-center justify-between px-6 py-4 bg-gray-50 rounded-[24px] cursor-pointer hover:bg-gray-100 transition-colors mb-3"
+        className="flex items-center justify-between px-6 py-4 bg-gray-50 dark:bg-slate-800/50 rounded-[24px] cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors mb-3"
         onClick={() => setExpanded((e) => !e)}
       >
         <div className="flex items-center gap-4">
           <span
-            className="text-gray-400 transition-transform"
+            className="text-gray-400 dark:text-slate-500 transition-transform"
             style={{
               transform: expanded ? "rotate(0deg)" : "rotate(-90deg)",
               display: "inline-block",
@@ -1146,7 +1146,7 @@ function AssignmentGroupRow({
           >
             <ChevronDown size={18} />
           </span>
-          <span className="font-bold text-gray-900 text-base">
+          <span className="font-bold text-gray-900 dark:text-slate-100 text-base">
             {group.name}
           </span>
           {/* Editable weight pill */}
@@ -1183,7 +1183,7 @@ function AssignmentGroupRow({
                 setWeightDraft(String(group.weight));
                 setEditingWeight(true);
               }}
-              className="group/weight flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-gray-400 bg-white px-3 py-1 rounded-full border border-gray-200 hover:border-[#3C0078]/40 hover:text-[#3C0078] transition-all"
+              className="group/weight flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-slate-500 bg-white dark:bg-slate-800 px-3 py-1 rounded-full border border-gray-200 dark:border-slate-700 hover:border-[#3C0078]/40 hover:text-[#3C0078] transition-all"
               title="Click to edit weight"
             >
               {group.weight}% of grade
@@ -1193,7 +1193,7 @@ function AssignmentGroupRow({
               />
             </button>
           )}
-          <span className="text-[10px] text-gray-400 font-medium">
+          <span className="text-[10px] text-gray-400 dark:text-slate-500 font-medium">
             {group.assignments.length} assignment
             {group.assignments.length !== 1 ? "s" : ""}
           </span>
@@ -1221,7 +1221,7 @@ function AssignmentGroupRow({
                 <motion.div
                   key={item.id}
                   layout
-                  className="bg-white border border-gray-100 rounded-[28px] px-7 py-5 flex items-center gap-5 hover:shadow-lg hover:border-[#3C0078]/10 transition-all group"
+                  className="bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-[28px] px-7 py-5 flex items-center gap-5 hover:shadow-lg hover:border-[#3C0078]/10 transition-all group"
                 >
                   {/* Type icon */}
                   <span
@@ -1239,11 +1239,11 @@ function AssignmentGroupRow({
                       <span className="font-bold text-gray-900 group-hover:text-[#3C0078] transition-colors truncate">
                         {item.title}
                       </span>
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400 whitespace-nowrap">
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-slate-500 whitespace-nowrap">
                         {typeInfo?.label}
                       </span>
                     </div>
-                    <div className="flex items-center gap-5 mt-1.5 text-xs text-gray-400 flex-wrap">
+                    <div className="flex items-center gap-5 mt-1.5 text-xs text-gray-400 dark:text-slate-500 flex-wrap">
                       <span>
                         {item.points} pts · {item.gradeDisplay}
                       </span>
@@ -1263,10 +1263,10 @@ function AssignmentGroupRow({
 
                   {/* Submission progress */}
                   <div className="shrink-0 flex flex-col items-end gap-1 min-w-[90px]">
-                    <span className="text-xs font-bold text-gray-700">
+                    <span className="text-xs font-bold text-gray-700 dark:text-slate-200">
                       {item.submissions}/{item.totalStudents} submitted
                     </span>
-                    <div className="w-20 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                    <div className="w-20 h-1.5 bg-gray-100 dark:bg-slate-700 rounded-full overflow-hidden">
                       <div
                         className="h-full bg-[#3C0078] rounded-full transition-all"
                         style={{ width: `${submissionPct}%` }}
@@ -1280,7 +1280,7 @@ function AssignmentGroupRow({
                     className={`shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all ${
                       item.published
                         ? "bg-green-50 text-green-700 hover:bg-red-50 hover:text-red-600"
-                        : "bg-gray-100 text-gray-400 hover:bg-green-50 hover:text-green-600"
+                        : "bg-gray-100 dark:bg-slate-700 text-gray-400 dark:text-slate-500 hover:bg-green-50 hover:text-green-600"
                     }`}
                     title={
                       item.published ? "Click to unpublish" : "Click to publish"
@@ -1433,7 +1433,7 @@ function CourseAssignmentsView({ subject }) {
       >
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">Assignments</h1>
-          <p className="text-gray-500 mt-2">
+          <p className="text-gray-500 dark:text-slate-400 mt-2">
             {subject?.code || "Module"} | Manage Assessments & Briefs
           </p>
         </div>
@@ -1470,15 +1470,15 @@ function CourseAssignmentsView({ subject }) {
         ].map((stat) => (
           <div
             key={stat.label}
-            className={`rounded-[28px] px-7 py-6 flex flex-col gap-1 ${stat.accent ? "bg-[#3C0078] text-white" : "bg-white border border-gray-100 shadow-sm"}`}
+            className={`rounded-[28px] px-7 py-6 flex flex-col gap-1 ${stat.accent ? "bg-[#3C0078] text-white" : "bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 shadow-sm"}`}
           >
             <span
-              className={`text-[10px] font-black uppercase tracking-widest ${stat.accent ? "text-white/60" : "text-gray-400"}`}
+              className={`text-[10px] font-black uppercase tracking-widest ${stat.accent ? "text-white/60" : "text-gray-400 dark:text-slate-500"}`}
             >
               {stat.label}
             </span>
             <span
-              className={`text-4xl font-black italic ${stat.accent ? "text-white" : "text-gray-900"}`}
+              className={`text-4xl font-black italic ${stat.accent ? "text-white" : "text-gray-900 dark:text-slate-100"}`}
             >
               {stat.value}
             </span>
@@ -1488,7 +1488,7 @@ function CourseAssignmentsView({ subject }) {
 
       {/* Assignment Type Overview Cards */}
       <motion.div variants={slideUp} className="mb-10">
-        <h2 className="text-sm font-black uppercase tracking-widest text-gray-400 mb-4">
+        <h2 className="text-sm font-black uppercase tracking-widest text-gray-400 dark:text-slate-500 mb-4">
           Assignment Types
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
@@ -1509,7 +1509,7 @@ function CourseAssignmentsView({ subject }) {
                 className={`flex flex-col items-start gap-3 p-5 rounded-[24px] border-2 text-left transition-all ${
                   isActive
                     ? "border-[#3C0078] bg-[#3C0078]/5 shadow-md"
-                    : "border-gray-100 bg-white hover:border-gray-200 hover:shadow-sm"
+                    : "border-gray-100 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-gray-200 dark:hover:border-slate-600 hover:shadow-sm"
                 }`}
               >
                 <span
@@ -1519,11 +1519,11 @@ function CourseAssignmentsView({ subject }) {
                 </span>
                 <div>
                   <p
-                    className={`text-[10px] font-black uppercase tracking-widest leading-tight ${isActive ? "text-[#3C0078]" : "text-gray-500"}`}
+                    className={`text-[10px] font-black uppercase tracking-widest leading-tight ${isActive ? "text-[#3C0078]" : "text-gray-500 dark:text-slate-400"}`}
                   >
                     {t.label}
                   </p>
-                  <p className="text-2xl font-black italic text-gray-900 mt-1">
+                  <p className="text-2xl font-black italic text-gray-900 dark:text-slate-100 mt-1">
                     {count}
                   </p>
                 </div>
@@ -1536,7 +1536,7 @@ function CourseAssignmentsView({ subject }) {
       {/* All filter pill */}
       {activeTypeFilter !== "all" && (
         <motion.div variants={slideUp} className="mb-6 flex items-center gap-3">
-          <span className="text-sm text-gray-500">Filtering by:</span>
+          <span className="text-sm text-gray-500 dark:text-slate-400">Filtering by:</span>
           <button
             onClick={() => setActiveTypeFilter("all")}
             className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#3C0078]/10 text-[#3C0078] font-bold text-xs uppercase tracking-widest hover:bg-[#3C0078]/20 transition-all"
@@ -1550,13 +1550,13 @@ function CourseAssignmentsView({ subject }) {
       {/* Assignment Groups */}
       <motion.div variants={slideUp}>
         <div className="mb-5">
-          <h2 className="text-sm font-black uppercase tracking-widest text-gray-400">
+          <h2 className="text-sm font-black uppercase tracking-widest text-gray-400 dark:text-slate-500">
             Assignment Groups
           </h2>
         </div>
 
         {filteredGroups.length === 0 ? (
-          <div className="text-center py-20 bg-gray-50 rounded-[40px] border border-gray-100 text-gray-400 font-medium">
+          <div className="text-center py-20 bg-gray-50 dark:bg-slate-800/50 rounded-[40px] border border-gray-100 dark:border-slate-700 text-gray-400 dark:text-slate-500 font-medium">
             No assignments match this filter.
           </div>
         ) : (
@@ -1624,15 +1624,15 @@ function CourseAttendanceView() {
         className="mb-12 flex justify-between items-end"
       >
         <div>
-          <h1 className="text-3xl font-semibold tracking-tight text-gray-900">
+          <h1 className="text-3xl font-semibold tracking-tight text-gray-900 dark:text-slate-100">
             Attendance & Presence
           </h1>
-          <p className="text-gray-500 mt-2">
+          <p className="text-gray-500 dark:text-slate-400 mt-2">
             UX300 | Academic Presence Analytics
           </p>
         </div>
         <div className="flex gap-4">
-          <button className="px-6 py-3 rounded-2xl border border-gray-200 text-sm font-semibold hover:bg-gray-50 transition-colors flex items-center gap-2 shadow-sm">
+          <button className="px-6 py-3 rounded-2xl border border-gray-200 dark:border-slate-700 text-sm font-semibold hover:bg-gray-50 dark:hover:bg-slate-800/50 transition-colors flex items-center gap-2 shadow-sm">
             <Folder size={18} /> Export Log
           </button>
           <button className="px-6 py-3 rounded-2xl bg-[#3C0078] text-white text-sm font-semibold shadow-lg shadow-[#3C0078]/20 hover:bg-[#2A0054] transition-all">
@@ -1644,11 +1644,11 @@ function CourseAttendanceView() {
       {/* Attendance Analytics Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12 items-stretch">
         <motion.div variants={scaleIn} className="lg:col-span-2">
-          <div className="bg-white rounded-[40px] border border-gray-100 shadow-sm p-8 h-full flex flex-col">
+          <div className="bg-white dark:bg-slate-800 rounded-[40px] border border-gray-100 dark:border-slate-700 shadow-sm p-8 h-full flex flex-col">
             <div className="flex justify-between items-center mb-6">
               <div>
                 <h3 className="text-xl font-bold">Class Attendance Overview</h3>
-                <p className="text-sm text-gray-400">Semester 1 | UX300</p>
+                <p className="text-sm text-gray-400 dark:text-slate-500">Semester 1 | UX300</p>
               </div>
               <div className="bg-green-50 px-4 py-2 rounded-2xl">
                 <span className="text-green-600 font-bold text-sm">
@@ -1678,16 +1678,16 @@ function CourseAttendanceView() {
             </div>
           </div>
 
-          <div className="bg-white rounded-[40px] border border-gray-100 shadow-sm p-8 flex-1 group hover:border-[#3C0078]/20 transition-all cursor-pointer">
+          <div className="bg-white dark:bg-slate-800 rounded-[40px] border border-gray-100 dark:border-slate-700 shadow-sm p-8 flex-1 group hover:border-[#3C0078]/20 transition-all cursor-pointer">
             <div className="flex justify-between items-center mb-6">
-              <span className="text-[10px] uppercase font-bold tracking-[0.2em] text-gray-400">
+              <span className="text-[10px] uppercase font-bold tracking-[0.2em] text-gray-400 dark:text-slate-500">
                 Class Engagement
               </span>
               <div className="flex -space-x-2">
                 {[1, 2, 3].map((i) => (
                   <div
                     key={i}
-                    className="w-6 h-6 rounded-full border-2 border-white bg-gray-100 flex items-center justify-center text-[8px] font-bold"
+                    className="w-6 h-6 rounded-full border-2 border-white dark:border-slate-800 bg-gray-100 dark:bg-slate-700 flex items-center justify-center text-[8px] font-bold"
                   >
                     {String.fromCharCode(64 + i)}
                   </div>
@@ -1700,12 +1700,12 @@ function CourseAttendanceView() {
                 {[30, 80, 45, 95, 60, 40, 85].map((h, i) => (
                   <div
                     key={i}
-                    className={`w-full rounded-t-lg transition-all duration-500 bg-gray-100 group-hover:bg-[#3C0078]/10 ${i === 3 ? "bg-[#3C0078]" : ""}`}
+                    className={`w-full rounded-t-lg transition-all duration-500 bg-gray-100 dark:bg-slate-700 group-hover:bg-[#3C0078]/10 ${i === 3 ? "bg-[#3C0078]" : ""}`}
                     style={{ height: `${h}%` }}
                   ></div>
                 ))}
               </div>
-              <div className="flex justify-between items-center bg-gray-50 rounded-2xl p-4">
+              <div className="flex justify-between items-center bg-gray-50 dark:bg-slate-800/50 rounded-2xl p-4">
                 <div>
                   <p className="text-[10px] font-black uppercase tracking-widest text-[#3C0078]">
                     Peak Activity
@@ -1713,7 +1713,7 @@ function CourseAttendanceView() {
                   <p className="text-xl font-black italic">Thursday</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-slate-500">
                     Avg Session
                   </p>
                   <p className="text-xl font-black italic">42m</p>
@@ -1726,12 +1726,12 @@ function CourseAttendanceView() {
 
       <motion.div
         variants={slideUp}
-        className="bg-white rounded-[48px] border border-gray-100 shadow-sm overflow-hidden mb-12"
+        className="bg-white dark:bg-slate-800 rounded-[48px] border border-gray-100 dark:border-slate-700 shadow-sm overflow-hidden mb-12"
       >
         <div className="px-10 py-8 border-b border-gray-50 flex justify-between items-center">
           <h2 className="text-2xl font-bold">Students Attendance</h2>
           <div className="flex gap-2">
-            <button className="p-2.5 rounded-xl bg-gray-50 text-gray-400 hover:bg-gray-100">
+            <button className="p-2.5 rounded-xl bg-gray-50 dark:bg-slate-700 text-gray-400 dark:text-slate-500 hover:bg-gray-100 dark:hover:bg-slate-600">
               <Filter size={20} />
             </button>
           </div>
@@ -1739,19 +1739,19 @@ function CourseAttendanceView() {
         <table className="w-full text-left">
           <thead>
             <tr className="bg-gray-50/30">
-              <th className="px-10 py-5 text-[10px] font-black uppercase tracking-widest text-gray-400">
+              <th className="px-10 py-5 text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-slate-500">
                 Student Info
               </th>
-              <th className="px-10 py-5 text-[10px] font-black uppercase tracking-widest text-gray-400 text-center">
+              <th className="px-10 py-5 text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-slate-500 text-center">
                 Sessions Present
               </th>
-              <th className="px-10 py-5 text-[10px] font-black uppercase tracking-widest text-gray-400 text-center">
+              <th className="px-10 py-5 text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-slate-500 text-center">
                 Present Rate
               </th>
-              <th className="px-10 py-5 text-[10px] font-black uppercase tracking-widest text-gray-400">
+              <th className="px-10 py-5 text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-slate-500">
                 Status
               </th>
-              <th className="px-10 py-5 text-[10px] font-black uppercase tracking-widest text-gray-400 text-right">
+              <th className="px-10 py-5 text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-slate-500 text-right">
                 Actions
               </th>
             </tr>
@@ -1768,26 +1768,26 @@ function CourseAttendanceView() {
                       {student.avatar}
                     </div>
                     <div>
-                      <div className="font-bold text-gray-900 group-hover:text-[#3C0078] transition-colors">
+                      <div className="font-bold text-gray-900 dark:text-slate-100 group-hover:text-[#3C0078] transition-colors">
                         {student.name}
                       </div>
-                      <div className="text-xs text-gray-400 mt-1">
+                      <div className="text-xs text-gray-400 dark:text-slate-500 mt-1">
                         {student.email}
                       </div>
                     </div>
                   </div>
                 </td>
                 <td className="px-10 py-6 text-center">
-                  <span className="text-sm font-bold text-gray-900">
+                  <span className="text-sm font-bold text-gray-900 dark:text-slate-100">
                     24/26 Sessions
                   </span>
                 </td>
                 <td className="px-10 py-6 text-center">
                   <div className="flex flex-col items-center gap-1.5">
-                    <span className="text-base font-black italic text-gray-900">
+                    <span className="text-base font-black italic text-gray-900 dark:text-slate-100">
                       {student.attendance}
                     </span>
-                    <div className="w-16 h-1 bg-gray-100 rounded-full overflow-hidden">
+                    <div className="w-16 h-1 bg-gray-100 dark:bg-slate-700 rounded-full overflow-hidden">
                       <div
                         className={`h-full rounded-full ${
                           parseInt(student.attendance) > 80
@@ -1819,7 +1819,7 @@ function CourseAttendanceView() {
                   </span>
                 </td>
                 <td className="px-10 py-6 text-right">
-                  <button className="px-5 py-2 rounded-xl border border-gray-100 text-[10px] font-black uppercase tracking-[0.15em] text-gray-400 group-hover:bg-[#3C0078] group-hover:text-white group-hover:border-[#3C0078] transition-all whitespace-nowrap shadow-sm">
+                  <button className="px-5 py-2 rounded-xl border border-gray-100 dark:border-slate-700 text-[10px] font-black uppercase tracking-[0.15em] text-gray-400 dark:text-slate-500 group-hover:bg-[#3C0078] group-hover:text-white group-hover:border-[#3C0078] transition-all whitespace-nowrap shadow-sm">
                     View Student
                   </button>
                 </td>

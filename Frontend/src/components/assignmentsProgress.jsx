@@ -115,16 +115,16 @@ export default function AssignmentsProgress() {
     <div className="w-full">
       {/* ── Assignments Header ── */}
       <div className="flex items-center justify-between mt-5 mb-1">
-        <h2 className="text-2xl font-['Gabarito']">Assignments</h2>
+        <h2 className="text-2xl font-['Gabarito'] dark:text-slate-100">Assignments</h2>
       </div>
       <p className="text-sm text-transparent mb-5 font-medium select-none" aria-hidden="true">Spacer</p>
 
       {/* ── Assignment Cards ── */}
       <div className="flex flex-col gap-3 min-h-[160px] max-h-[520px] overflow-y-auto scrollbar-black pr-2">
         {loading ? (
-            <div className="text-gray-400 text-sm font-medium w-full text-center mt-8">Loading assignments...</div>
+            <div className="text-gray-400 dark:text-slate-500 text-sm font-medium w-full text-center mt-8">Loading assignments...</div>
         ) : assignments.length === 0 ? (
-            <div className="text-gray-400 text-sm font-medium w-full text-center mt-8">You have no upcoming assignments.</div>
+            <div className="text-gray-400 dark:text-slate-500 text-sm font-medium w-full text-center mt-8">You have no upcoming assignments.</div>
         ) : (
             assignments.map((assignment) => (
             <AssignmentItem
@@ -141,10 +141,10 @@ export default function AssignmentsProgress() {
       </div>
 
       {/* ── Progress Header ── */}
-      <h2 className="text-2xl font-['Gabarito'] mt-8 mb-2">Progress</h2>
+      <h2 className="text-2xl font-['Gabarito'] mt-8 mb-2 dark:text-slate-100">Progress</h2>
 
       {/* ── Progress Ring ── */}
-      <div className="w-full bg-gray-100 rounded-2xl border border-gray-200 p-4">
+      <div className="w-full bg-gray-100 dark:bg-slate-800 rounded-2xl border border-gray-200 dark:border-slate-700 p-4">
         <ProgressRing percentage={progress} />
       </div>
     </div>
