@@ -49,3 +49,5 @@ For Solar icons check here: https://solar-icons.vercel.app/icons (Use these icon
 
 For DaisyUI elements check here: https://daisyui.com/components/ (simply copy jsx code and paste inside your component)
 
+For Electron: npm install --save-dev electron-packager
+              npx electron-packager . <name>
