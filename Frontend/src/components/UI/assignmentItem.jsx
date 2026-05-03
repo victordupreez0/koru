@@ -28,10 +28,10 @@ export default function AssignmentItem({
       {/* Icon */}
       <div
         className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0
-          ${completed ? "bg-gray-100" : "bg-[#3C0078]/8"}`}
+          ${completed ? "bg-gray-100 dark:bg-slate-700" : "bg-[#3C0078]/8 dark:bg-[#9BE9EA]/10"}`}
       >
         <MdEditNote
-          className={`w-5 h-5 ${completed ? "text-gray-400" : "text-[#3C0078]"}`}
+          className={`w-5 h-5 ${completed ? "text-gray-400 dark:text-slate-500" : "text-[#3C0078] dark:text-[#9BE9EA]"}`}
         />
       </div>
 
@@ -55,7 +55,7 @@ export default function AssignmentItem({
       {/* Actions */}
       {completed ? (
         <div
-          className="w-7 h-7 rounded-lg border-2 border-[#3C0078] bg-[#3C0078] flex items-center justify-center shrink-0"
+          className="w-7 h-7 rounded-lg border-2 border-[#3C0078] dark:border-[#9BE9EA] bg-[#3C0078] dark:bg-[#0f766e] flex items-center justify-center shrink-0"
           aria-label="Completed"
         >
           <motion.svg
@@ -76,7 +76,7 @@ export default function AssignmentItem({
             onClick={(e) => {
                 e.stopPropagation();
             }}
-            className="px-4 py-2 bg-[#3C0078] rounded-xl text-[10px] font-bold uppercase tracking-widest text-white hover:bg-gray-800 transition-all shadow-sm shrink-0"
+            className="px-4 py-2 bg-[#3C0078] dark:bg-[#0f766e] rounded-xl text-[10px] font-bold uppercase tracking-widest text-white hover:bg-gray-800 dark:hover:bg-[#14b8a6] transition-all shadow-sm shrink-0"
         >
             {uiState === 'Closed' ? 'View' : 'Submit'}
         </button>

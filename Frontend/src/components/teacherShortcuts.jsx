@@ -50,16 +50,16 @@ export default function TeacherShortcuts() {
     <div className="w-full">
       {/* ── Header ── */}
       <div className="flex items-center justify-between mt-5 mb-1">
-        <h2 className="text-2xl font-['Gabarito']">Shortcuts</h2>
+        <h2 className="text-2xl font-['Gabarito'] dark:text-slate-100">Shortcuts</h2>
         <button
           onClick={() => setIsAdding(!isAdding)}
-          className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
+          className="w-8 h-8 rounded-full bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 flex items-center justify-center transition-colors"
           aria-label="Add shortcut"
         >
-          <Plus className="w-4 h-4 text-gray-600" />
+          <Plus className="w-4 h-4 text-gray-600 dark:text-slate-400" />
         </button>
       </div>
-      <p className="text-sm text-gray-400 mb-5 font-medium">Quick access links</p>
+      <p className="text-sm text-gray-400 dark:text-slate-500 mb-5 font-medium">Quick access links</p>
 
       {/* ── Add shortcut form ── */}
       <AnimatePresence>
@@ -70,7 +70,7 @@ export default function TeacherShortcuts() {
             exit={{ opacity: 0, height: 0 }}
             className="overflow-hidden mb-4"
           >
-            <div className="bg-white border border-gray-200 rounded-2xl p-4 flex flex-col gap-3">
+            <div className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-2xl p-4 flex flex-col gap-3">
               <div className="flex items-center gap-2">
                 <input
                   type="text"
@@ -78,24 +78,24 @@ export default function TeacherShortcuts() {
                   value={newLabel}
                   onChange={(e) => setNewLabel(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleAdd()}
-                  className="flex-1 text-sm border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-[#3C0078] transition-colors"
+                  className="flex-1 text-sm border border-gray-200 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-500 rounded-lg px-3 py-2 outline-none focus:border-[#3C0078] dark:focus:border-purple-400 transition-colors"
                 />
               </div>
               <div className="flex items-center gap-2">
-                <Link2 className="w-4 h-4 text-gray-400 shrink-0" />
+                <Link2 className="w-4 h-4 text-gray-400 dark:text-slate-500 shrink-0" />
                 <input
                   type="text"
                   placeholder="URL (optional)"
                   value={newUrl}
                   onChange={(e) => setNewUrl(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleAdd()}
-                  className="flex-1 text-sm border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-[#3C0078] transition-colors"
+                  className="flex-1 text-sm border border-gray-200 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-500 rounded-lg px-3 py-2 outline-none focus:border-[#3C0078] dark:focus:border-purple-400 transition-colors"
                 />
               </div>
               <div className="flex gap-2 justify-end">
                 <button
                   onClick={() => setIsAdding(false)}
-                  className="px-3 py-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 transition-colors"
+                  className="px-3 py-1.5 text-xs font-medium text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200 transition-colors"
                 >
                   Cancel
                 </button>
@@ -124,7 +124,7 @@ export default function TeacherShortcuts() {
               animate="visible"
               exit="exit"
               layout
-              className="group relative inline-flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 rounded-full text-sm font-medium text-gray-700 hover:border-[#3C0078]/30 hover:shadow-md hover:bg-[#3C0078]/[0.03] transition-all duration-300 cursor-pointer"
+              className="group relative inline-flex items-center gap-2 px-5 py-2.5 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-full text-sm font-medium text-gray-700 dark:text-slate-300 hover:border-[#3C0078]/30 dark:hover:border-purple-500/40 hover:shadow-md hover:bg-[#3C0078]/[0.03] dark:hover:bg-purple-900/20 transition-all duration-300 cursor-pointer"
             >
               {shortcut.label}
               {/* Remove button – appears on hover */}

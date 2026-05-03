@@ -39,7 +39,7 @@ export default function TimelineEventExpanded({
               </h3>
               <p className="text-sm text-gray-400 dark:text-slate-500 mt-1">{subtitle}</p>
             </div>
-            <span className={`text-xs font-semibold px-3 py-1.5 rounded-full shrink-0 ${isPast ? "text-gray-400 bg-gray-100 dark:text-slate-500 dark:bg-slate-700" : "text-[#3C0078] bg-[#3C0078]/8 dark:text-purple-300 dark:bg-purple-900/30"}`}>
+            <span className={`text-xs font-semibold px-3 py-1.5 rounded-full shrink-0 ${isPast ? "text-gray-400 bg-gray-100 dark:text-slate-500 dark:bg-slate-700" : "text-[#3C0078] bg-[#3C0078]/8 dark:text-[#9BE9EA] dark:bg-[#9BE9EA]/10"}`}>
               {location}
             </span>
           </div>
@@ -51,8 +51,8 @@ export default function TimelineEventExpanded({
           <div className="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-slate-700">
             {/* Lecturer avatar and name */}
             <div className="flex items-center gap-3">
-              <div className={`w-9 h-9 rounded-full flex items-center justify-center ${isPast ? "bg-gray-100 dark:bg-slate-700" : "bg-[#3C0078]/10 dark:bg-purple-900/30"}`}>
-                <MdPersonOutline className={`w-5 h-5 ${isPast ? "text-gray-400 dark:text-slate-600" : "text-[#3C0078] dark:text-purple-300"}`} />
+              <div className={`w-9 h-9 rounded-full flex items-center justify-center ${isPast ? "bg-gray-100 dark:bg-slate-700" : "bg-[#3C0078]/10 dark:bg-[#9BE9EA]/10"}`}>
+                <MdPersonOutline className={`w-5 h-5 ${isPast ? "text-gray-400 dark:text-slate-600" : "text-[#3C0078] dark:text-[#9BE9EA]"}`} />
               </div>
               <div className="flex flex-col">
                 <span className="text-[11px] text-gray-400 dark:text-slate-500 leading-tight uppercase tracking-wider font-medium">

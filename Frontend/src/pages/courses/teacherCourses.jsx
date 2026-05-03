@@ -1909,15 +1909,15 @@ function CourseGradesView() {
         className="mb-12 flex justify-between items-end"
       >
         <div>
-          <h1 className="text-3xl font-semibold tracking-tight text-gray-900">
+          <h1 className="text-3xl font-semibold tracking-tight text-gray-900 dark:text-slate-100">
             Grades & Performance
           </h1>
-          <p className="text-gray-500 mt-2">
+          <p className="text-gray-500 dark:text-slate-400 mt-2">
             UX300 | Class Performance Analytics
           </p>
         </div>
         <div className="flex gap-4">
-          <button className="px-6 py-3 rounded-2xl border border-gray-200 text-sm font-semibold hover:bg-gray-50 transition-colors flex items-center gap-2 shadow-sm">
+          <button className="px-6 py-3 rounded-2xl border border-gray-200 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700 text-sm font-semibold hover:bg-gray-50 transition-colors flex items-center gap-2 shadow-sm">
             <Folder size={18} /> Export CSV
           </button>
         </div>
@@ -1926,18 +1926,17 @@ function CourseGradesView() {
       {/* Grades Analytics Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12 items-stretch">
         <motion.div variants={scaleIn} className="lg:col-span-2">
-          <div className="bg-white rounded-[40px] border border-gray-100 shadow-sm p-8 h-full flex flex-col">
+          <div className="bg-white dark:bg-slate-800 rounded-[40px] border border-gray-100 dark:border-slate-700 shadow-sm p-8 h-full flex flex-col">
             <div className="flex justify-between items-center mb-6">
               <div>
-                <h3 className="text-xl font-bold">
+                <h3 className="text-xl font-bold dark:text-slate-100">
                   Class Average Distribution
                 </h3>
-                <p className="text-sm text-gray-400">
-                  Total Assignments | UX300
+                <p className="text-sm text-gray-400 dark:text-slate-500">
                 </p>
               </div>
-              <div className="bg-[#3C0078]/5 px-4 py-2 rounded-2xl">
-                <span className="text-[#3C0078] font-bold text-sm">
+              <div className="bg-[#3C0078]/5 dark:bg-[#9BE9EA]/10 px-4 py-2 rounded-2xl">
+                <span className="text-[#3C0078] dark:text-[#9BE9EA] font-bold text-sm">
                   Target: 75%
                 </span>
               </div>
@@ -1970,20 +1969,18 @@ function CourseGradesView() {
             </div>
           </div>
 
-          <div className="bg-white rounded-[40px] border border-gray-100 shadow-sm p-8 flex-1 group hover:border-[#3C0078]/20 transition-all">
-            <span className="text-[10px] uppercase font-bold tracking-[0.2em] text-gray-400 block mb-6">
-              Highest Performance
+          <div className="bg-white dark:bg-slate-800 rounded-[40px] border border-gray-100 dark:border-slate-700 shadow-sm p-8 flex-1 group hover:border-[#3C0078]/20 dark:hover:border-[#9BE9EA]/20 transition-all">
+            <span className="text-[10px] uppercase font-bold tracking-[0.2em] text-gray-400 dark:text-slate-500 block mb-6">
             </span>
             <div className="flex items-center gap-4">
               <div className="w-14 h-14 rounded-2xl bg-green-50 flex items-center justify-center text-green-600 font-black italic text-xl shadow-inner">
                 A+
               </div>
               <div>
-                <h4 className="text-2xl font-black italic text-gray-900 leading-none">
+                <h4 className="text-2xl font-black italic text-gray-900 dark:text-slate-100 leading-none">
                   94.2%
                 </h4>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mt-2">
-                  Emma Watson
+                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-slate-500 mt-2">
                 </p>
               </div>
             </div>
@@ -1993,32 +1990,32 @@ function CourseGradesView() {
 
       <motion.div
         variants={slideUp}
-        className="bg-white rounded-[48px] border border-gray-100 shadow-sm overflow-hidden mb-12"
+        className="bg-white dark:bg-slate-800 rounded-[48px] border border-gray-100 dark:border-slate-700 shadow-sm overflow-hidden mb-12"
       >
         <div className="px-10 py-8 border-b border-gray-50 flex justify-between items-center">
-          <h2 className="text-2xl font-bold">Students List</h2>
+          <h2 className="text-2xl font-bold dark:text-slate-100">Students List</h2>
           <div className="flex gap-2">
-            <button className="p-2.5 rounded-xl bg-gray-50 text-gray-400 hover:bg-gray-100">
+            <button className="p-2.5 rounded-xl bg-gray-50 dark:bg-slate-700 text-gray-400 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-600">
               <InfoCircle size={20} />
             </button>
           </div>
         </div>
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="border-b border-gray-50 bg-gray-50/30">
-              <th className="px-10 py-5 text-xs font-bold uppercase tracking-wider text-gray-400">
+            <tr className="border-b border-gray-50 dark:border-slate-700 bg-gray-50/30 dark:bg-slate-900/30">
+              <th className="px-10 py-5 text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-slate-500">
                 Student Info
               </th>
-              <th className="px-10 py-5 text-xs font-bold uppercase tracking-wider text-gray-400 text-center">
+              <th className="px-10 py-5 text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-slate-500 text-center">
                 Attendance
               </th>
-              <th className="px-10 py-5 text-xs font-bold uppercase tracking-wider text-gray-400 text-center">
+              <th className="px-10 py-5 text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-slate-500 text-center">
                 Avg Grade
               </th>
-              <th className="px-10 py-5 text-xs font-bold uppercase tracking-wider text-gray-400">
+              <th className="px-10 py-5 text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-slate-500">
                 Status
               </th>
-              <th className="px-10 py-5 text-xs font-bold uppercase tracking-wider text-gray-400 text-right">
+              <th className="px-10 py-5 text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-slate-500 text-right">
                 Actions
               </th>
             </tr>
@@ -2036,10 +2033,10 @@ function CourseGradesView() {
                       {student.avatar}
                     </div>
                     <div>
-                      <div className="font-bold text-gray-900 group-hover:text-[#3C0078] transition-colors">
+                      <div className="font-bold text-gray-900 dark:text-slate-100 group-hover:text-[#3C0078] dark:group-hover:text-[#9BE9EA] transition-colors">
                         {student.name}
                       </div>
-                      <div className="text-xs text-gray-400 mt-1">
+                      <div className="text-xs text-gray-400 dark:text-slate-500 mt-1">
                         {student.email}
                       </div>
                     </div>
@@ -2047,10 +2044,9 @@ function CourseGradesView() {
                 </td>
                 <td className="px-10 py-6 text-center">
                   <div className="flex flex-col items-center gap-1.5">
-                    <span className="text-base font-bold text-gray-900">
-                      {student.attendance}
+                    <span className="text-base font-bold text-gray-900 dark:text-slate-100">
                     </span>
-                    <div className="w-16 h-1 bg-gray-100 rounded-full overflow-hidden">
+                    <div className="w-16 h-1 bg-gray-100 dark:bg-slate-600 rounded-full overflow-hidden">
                       <div
                         className={`h-full rounded-full ${
                           parseInt(student.attendance) > 80
@@ -2065,7 +2061,7 @@ function CourseGradesView() {
                   </div>
                 </td>
                 <td className="px-10 py-6 text-center">
-                  <span className="text-lg font-black italic text-gray-900">
+                  <span className="text-lg font-black italic text-gray-900 dark:text-slate-100">
                     {student.avgGrade}
                   </span>
                 </td>
@@ -2073,19 +2069,19 @@ function CourseGradesView() {
                   <span
                     className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm ${
                       student.status === "Excellent"
-                        ? "bg-green-100 text-green-700"
+                        ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
                         : student.status === "Good"
-                          ? "bg-blue-50 text-blue-700"
+                          ? "bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
                           : student.status === "At Risk"
-                            ? "bg-orange-50 text-orange-700"
-                            : "bg-red-50 text-red-700"
+                            ? "bg-orange-50 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400"
+                            : "bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400"
                     }`}
                   >
                     {student.status}
                   </span>
                 </td>
                 <td className="px-10 py-6 text-right">
-                  <button className="px-5 py-2 rounded-xl border border-gray-100 text-[10px] font-black uppercase tracking-[0.15em] text-gray-400 group-hover:bg-[#3C0078] group-hover:text-white group-hover:border-[#3C0078] transition-all whitespace-nowrap shadow-sm">
+                  <button className="px-5 py-2 rounded-xl border border-gray-100 dark:border-slate-600 text-[10px] font-black uppercase tracking-[0.15em] text-gray-400 dark:text-slate-400 group-hover:bg-[#3C0078] dark:group-hover:bg-[#9BE9EA] group-hover:text-white dark:group-hover:text-slate-900 group-hover:border-[#3C0078] dark:group-hover:border-[#9BE9EA] transition-all whitespace-nowrap shadow-sm">
                     View Student
                   </button>
                 </td>

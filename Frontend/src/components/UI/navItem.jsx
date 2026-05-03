@@ -9,7 +9,7 @@ export default function NavItem({ label, href = "#", icon, className = "", varia
       {isActive && (
         <motion.div
           layoutId="nav-pill"
-          className="absolute inset-0 bg-gray-200/70 dark:bg-slate-600/70 rounded-full"
+          className="absolute inset-0 bg-gray-200/70 dark:bg-[#9BE9EA]/20 rounded-full"
           transition={{
             layout: {
               type: "spring",
@@ -25,7 +25,7 @@ export default function NavItem({ label, href = "#", icon, className = "", varia
       <Link
         to={href}
         className={`relative z-10 rounded-full px-5 py-3 inline-flex items-center justify-center select-none
-          ${isActive ? "text-black dark:text-slate-100" : "text-gray-400 dark:text-slate-400"}
+          ${isActive ? "text-black dark:text-[#9BE9EA]" : "text-gray-400 dark:text-slate-400"}
           ${className}`.trim()}
         style={{ WebkitTapHighlightColor: "transparent" }}
         aria-label={label}

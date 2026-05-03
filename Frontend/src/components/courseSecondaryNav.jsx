@@ -63,8 +63,8 @@ export default function CourseSecondaryNav({ activeCourseId }) {
                                 className={({ isActive }) => 
                                     `relative flex items-center gap-3 px-4 py-1.5 text-sm font-medium transition-all duration-200 border-l-2 ${
                                         isActive 
-                                        ? "text-[#3C0078] dark:text-purple-300 border-[#3C0078] dark:border-purple-400 font-bold bg-[#3C0078]/5 dark:bg-purple-900/20" 
-                                        : "text-gray-500 dark:text-slate-400 border-transparent hover:text-[#3C0078] dark:hover:text-purple-300 hover:bg-[#3C0078]/5 dark:hover:bg-purple-900/20"
+                                        ? "text-[#3C0078] dark:text-[#9BE9EA] border-[#3C0078] dark:border-[#9BE9EA] font-bold bg-[#3C0078]/5 dark:bg-[#9BE9EA]/10" 
+                                        : "text-gray-500 dark:text-white/80 border-transparent hover:text-[#3C0078] dark:hover:text-[#9BE9EA] hover:bg-[#3C0078]/5 dark:hover:bg-[#9BE9EA]/10"
                                     }`
                                 }
                             >
@@ -79,7 +79,9 @@ export default function CourseSecondaryNav({ activeCourseId }) {
                                                         e.stopPropagation();
                                                         removeItem(item.label);
                                                     }}
-                                                    className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-500 transition-all"
+                                                    className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 
+                                                    dark:text-white-500
+                                                    hover:text-red-500 transition-all"
                                                 >
                                                     <Trash2 size={12} />
                                                 </button>
@@ -87,7 +89,7 @@ export default function CourseSecondaryNav({ activeCourseId }) {
                                             {isActive && (
                                                 <motion.div
                                                     layoutId="activeBall"
-                                                    className="w-1.5 h-1.5 rounded-full bg-[#3C0078]"
+                                                    className="w-1.5 h-1.5 rounded-full bg-[#3C0078] dark:bg-[#9BE9EA]"
                                                     transition={{
                                                         type: "spring",
                                                         stiffness: 300,
