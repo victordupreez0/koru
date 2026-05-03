@@ -12,8 +12,7 @@ export default function ProfileTopBar({
   saveError,
 }) {
   return (
-    <section className="relative overflow-hidden rounded-[30px] bg-white/90 p-7 shadow-[0_24px_60px_rgba(15,23,42,0.12)] backdrop-blur-md dark:border dark:border-slate-700 dark:bg-slate-900/90">
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-r from-teal-100/70 via-cyan-100/30 to-[#9BE9EA]/20 dark:from-[#9BE9EA]/10 dark:via-transparent dark:to-teal-400/10" />
+    <section className="rounded-[30px] bg-white/90 p-7 shadow-[0_24px_60px_rgba(15,23,42,0.12)] backdrop-blur-md dark:border dark:border-slate-700 dark:bg-slate-900/90">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="inline-flex items-center gap-2 rounded-full border border-[#9BE9EA]/30 bg-white/80 px-3 py-1 text-xs font-semibold text-[#0f766e] dark:bg-slate-800 dark:text-[#9BE9EA]">
