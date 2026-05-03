@@ -12,14 +12,14 @@ export default function ProfileHeader({ profile, roleLabel }) {
             className="h-20 w-20 rounded-2xl border border-slate-200 object-cover"
           />
         ) : (
-          <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-[#9BE9EA]/25 to-[#14b8a6]/20 text-[#0f766e] dark:text-[#9BE9EA]">
+          <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-[#3C0078]/15 to-[#5b1ca7]/10 text-[#3C0078] dark:from-[#9BE9EA]/25 dark:to-[#14b8a6]/20 dark:text-[#9BE9EA]">
             <UserRound size={28} />
           </div>
         )}
 
         <div className="flex-1">
           <h2 className="text-3xl font-bold text-slate-900 dark:text-slate-100">{profile.header.fullName}</h2>
-          <p className="mt-1 text-sm font-semibold text-[#0f766e] dark:text-[#9BE9EA]">{profile.header.headline}</p>
+          <p className="mt-1 text-sm font-semibold text-[#3C0078] dark:text-[#9BE9EA]">{profile.header.headline}</p>
           <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
             {profile.header.major} | {profile.header.degree} |{" "}
             {profile.header.expectedGraduation}
@@ -40,7 +40,7 @@ export default function ProfileHeader({ profile, roleLabel }) {
         {profile.badges.map((badge, index) => (
           <span
             key={`badge-${index}`}
-            className="rounded-full border border-[#9BE9EA]/30 bg-white/75 px-3 py-1 text-xs font-semibold text-[#0f766e] shadow-sm dark:bg-slate-800 dark:text-[#9BE9EA]"
+            className="rounded-full border border-[#3C0078]/30 bg-white/75 px-3 py-1 text-xs font-semibold text-[#3C0078] shadow-sm dark:border-[#9BE9EA]/30 dark:bg-slate-800 dark:text-[#9BE9EA]"
           >
             {badge}
           </span>

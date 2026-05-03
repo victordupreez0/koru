@@ -24,7 +24,7 @@ export default function ProfileLinks({ linkEntries }) {
             rel="noreferrer"
             className={`inline-flex min-h-[42px] items-center gap-2 rounded-2xl border px-4 py-2 text-sm font-semibold transition hover:-translate-y-0.5 ${
               isValidUrl(url)
-                ? "border-[#0f766e] bg-[#eafaf8] text-[#0f766e] hover:bg-[#d8f5f0] dark:border-[#9BE9EA] dark:bg-[#9BE9EA]/10 dark:text-[#9BE9EA]"
+                ? "border-[#3C0078] bg-[#f5f0ff] text-[#3C0078] hover:bg-[#ede8ff] dark:border-[#9BE9EA] dark:bg-[#9BE9EA]/10 dark:text-[#9BE9EA]"
                 : "border-slate-300 bg-slate-50 text-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-500"
             }`}
             onClick={(e) => {
