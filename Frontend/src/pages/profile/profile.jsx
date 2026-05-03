@@ -277,8 +277,8 @@ export default function Profile({ publicRoute = false }) {
   return (
     <div data-tts-root="true" className="min-h-screen w-full pb-10 text-slate-900 dark:text-slate-100">
       <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
-        <div className="absolute -top-20 -left-24 h-72 w-72 rounded-full bg-teal-200/35 blur-3xl dark:bg-[#9BE9EA]/10" />
-        <div className="absolute top-1/3 -right-24 h-80 w-80 rounded-full bg-cyan-200/30 blur-3xl dark:bg-teal-400/10" />
+        <div className="absolute -top-20 -left-24 h-72 w-72 rounded-full bg-purple-200/35 blur-3xl dark:bg-[#9BE9EA]/10" />
+        <div className="absolute top-1/3 -right-24 h-80 w-80 rounded-full bg-purple-100/30 blur-3xl dark:bg-teal-400/10" />
       </div>
       <Menu />
       <SideMenu />
