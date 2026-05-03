@@ -275,7 +275,11 @@ export default function Profile({ publicRoute = false }) {
 
   // Render
   return (
-    <div data-tts-root="true" className="relative w-full pb-10 text-slate-900">
+    <div data-tts-root="true" className="min-h-screen w-full pb-10 text-slate-900 dark:text-slate-100">
+      <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+        <div className="absolute -top-20 -left-24 h-72 w-72 rounded-full bg-teal-200/35 blur-3xl dark:bg-[#9BE9EA]/10" />
+        <div className="absolute top-1/3 -right-24 h-80 w-80 rounded-full bg-cyan-200/30 blur-3xl dark:bg-teal-400/10" />
+      </div>
       <Menu />
       <SideMenu />
 
@@ -292,7 +296,7 @@ export default function Profile({ publicRoute = false }) {
         />
 
         {publicRoute ? (
-          <section className="rounded-[24px] border border-sky-200/80 bg-gradient-to-r from-sky-50 to-indigo-50 px-5 py-4 text-sm text-sky-900 shadow-sm">
+          <section className="rounded-[24px] border border-sky-200/80 bg-gradient-to-r from-sky-50 to-indigo-50 px-5 py-4 text-sm text-sky-900 shadow-sm dark:border-sky-800/80 dark:from-slate-900 dark:to-slate-800 dark:text-sky-100">
             Public profile view — editing and private controls are disabled.
           </section>
         ) : null}
@@ -315,7 +319,7 @@ export default function Profile({ publicRoute = false }) {
 
           <main className="flex flex-col gap-6">
             {publicRoute && publicNotFound ? (
-              <section className="rounded-[28px] border border-red-200 bg-red-50 p-6 text-red-800 shadow-sm">
+              <section className="rounded-[28px] border border-red-200 bg-red-50 p-6 text-red-800 shadow-sm dark:border-red-900 dark:bg-red-950/30 dark:text-red-200">
                 <p className="text-sm font-semibold">This shared profile could not be found.</p>
                 <p className="mt-1 text-sm">The link may be invalid, private, or no longer available.</p>
               </section>
@@ -350,7 +354,7 @@ export default function Profile({ publicRoute = false }) {
             {effectivePrivacy.links && <ProfileLinks linkEntries={linkEntries} />}
 
             {!profile.privacy.profilePublic && viewAsPublic ? (
-              <section className="rounded-[28px] border border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 p-6 text-amber-900 shadow-sm">
+              <section className="rounded-[28px] border border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 p-6 text-amber-900 shadow-sm dark:border-amber-900 dark:from-slate-900 dark:to-slate-800 dark:text-amber-200">
                 <p className="text-sm font-semibold">This profile is currently private.</p>
                 <p className="mt-1 text-sm">
                   Recruiters and public viewers will not see this profile until you enable public visibility.
