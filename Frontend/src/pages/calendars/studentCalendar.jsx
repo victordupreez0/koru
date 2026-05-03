@@ -147,9 +147,9 @@ export default function StudentCalendar() {
         <div className="relative flex items-center justify-between mb-5">
 
           {/* Month title — left */}
-          <h1 className="font-['Gabarito'] text-[1.6rem] font-bold text-gray-900 flex items-center gap-1.5">
+          <h1 className="font-['Gabarito'] text-[1.6rem] font-bold text-gray-900 dark:text-slate-100 flex items-center gap-1.5">
             March 2026
-            <span className="text-base text-gray-400">∨</span>
+            <span className="text-base text-gray-400 dark:text-slate-500">∨</span>
           </h1>
 
           {/* View selector — truly centred */}
@@ -161,7 +161,7 @@ export default function StudentCalendar() {
           <button
             id="cal-add-task-btn"
             aria-label="Add Task"
-            className="flex items-center gap-2 bg-gray-100 rounded-full px-5 py-2.5 text-sm font-semibold text-gray-700 border-none cursor-pointer transition-all duration-150 hover:bg-gray-200 hover:-translate-y-px font-[inherit]"
+            className="flex items-center gap-2 bg-gray-100 dark:bg-slate-700 rounded-full px-5 py-2.5 text-sm font-semibold text-gray-700 dark:text-slate-200 border-none cursor-pointer transition-all duration-150 hover:bg-gray-200 dark:hover:bg-slate-600 hover:-translate-y-px font-[inherit]"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="10" />
@@ -186,9 +186,9 @@ export default function StudentCalendar() {
               exit="exit"
             >
               {/* Day-of-week header */}
-              <div className="grid grid-cols-7 border-b border-gray-200">
+              <div className="grid grid-cols-7 border-b border-gray-200 dark:border-slate-700">
                 {WEEK_DAYS.map((label, i) => (
-                  <div key={i} className="text-center text-[11px] font-semibold uppercase tracking-widest text-gray-400 py-2.5">
+                  <div key={i} className="text-center text-[11px] font-semibold uppercase tracking-widest text-gray-400 dark:text-slate-500 py-2.5">
                     {label}
                   </div>
                 ))}
@@ -197,7 +197,7 @@ export default function StudentCalendar() {
               {/* 4 week rows */}
               <div className="flex flex-col">
                 {GRID_WEEKS.map((week, wIdx) => (
-                  <div key={wIdx} className={`grid grid-cols-7 ${wIdx > 0 ? "border-t border-gray-200" : ""}`}>
+                  <div key={wIdx} className={`grid grid-cols-7 ${wIdx > 0 ? "border-t border-gray-200 dark:border-slate-700" : ""}`}>
                     {week.map(({ date, day, isOutside }) => (
                       <CalendarDayBlock
                         key={date}

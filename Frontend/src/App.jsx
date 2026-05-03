@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 
 // Page components – rendered based on the current route
 import Dashboard from "./pages/dashboard";
@@ -10,15 +11,24 @@ import Onboarding from "./pages/onboarding";
 import Login from "./pages/login";
 import SettingsPage from "./pages/settings";
 import ProtectedRoute from "./components/ProtectedRoute";
+import TeacherAssistant from "./pages/Assistant/teacherAssistant";
 import Profile from "./pages/profile/profile";
 
 // Root application component – sets up routing and the shared layout
 function App() {
+  const [isDark, setIsDark] = useState(() => document.body.classList.contains("theme-dark"));
+
+  useEffect(() => {
+    const handler = () => setIsDark(document.body.classList.contains("theme-dark"));
+    window.addEventListener("learnonline-settings-changed", handler);
+    return () => window.removeEventListener("learnonline-settings-changed", handler);
+  }, []);
+
   return (
     <BrowserRouter>
       <RouteSpeechAnnouncer />
       <ClickSpark
-        sparkColor="#3C0078"
+        sparkColor={isDark ? "#9BE9EA" : "#3C0078"}
         sparkSize={10}
         sparkRadius={15}
         sparkCount={8}
@@ -39,6 +49,7 @@ function App() {
             <Route path="/calendar" element={<ProtectedRoute><CalendarPage /></ProtectedRoute>} />
             <Route path="/courses/*" element={<ProtectedRoute><Courses /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
+            <Route path="/teacherassistant" element={<ProtectedRoute><TeacherAssistant /></ProtectedRoute>} />
 
             {/* Profile routes*/}
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
