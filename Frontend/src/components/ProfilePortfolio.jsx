@@ -61,7 +61,7 @@ export default function ProfilePortfolio({
                     )
                   }
                   placeholder="Project title"
-                  className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-[#0f766e] focus:outline-none focus:ring-2 focus:ring-[#14b8a6]/30 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                  className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-[#3C0078] focus:outline-none focus:ring-2 focus:ring-[#3C0078]/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
                 />
                 <textarea
                   value={project.description}
@@ -76,7 +76,7 @@ export default function ProfilePortfolio({
                   }
                   placeholder="Brief project description"
                   rows={3}
-                  className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-[#0f766e] focus:outline-none focus:ring-2 focus:ring-[#14b8a6]/30 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                  className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-[#3C0078] focus:outline-none focus:ring-2 focus:ring-[#3C0078]/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
                 />
                 <input
                   value={project.mediaUrl}
@@ -90,7 +90,7 @@ export default function ProfilePortfolio({
                     )
                   }
                   placeholder="Media URL (image/video preview)"
-                  className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-[#0f766e] focus:outline-none focus:ring-2 focus:ring-[#14b8a6]/30 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                  className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-[#3C0078] focus:outline-none focus:ring-2 focus:ring-[#3C0078]/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
                 />
                 <div
                   onDragOver={(e) => e.preventDefault()}
@@ -127,7 +127,7 @@ export default function ProfilePortfolio({
                     )
                   }
                   placeholder="Project link (PDF / Video / Repo)"
-                  className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-[#0f766e] focus:outline-none focus:ring-2 focus:ring-[#14b8a6]/30 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                  className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-[#3C0078] focus:outline-none focus:ring-2 focus:ring-[#3C0078]/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
                 />
                 <label className="inline-flex w-fit cursor-pointer items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700">
                   <Upload size={14} /> Upload PDF
@@ -169,7 +169,7 @@ export default function ProfilePortfolio({
                     href={project.projectUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-[#0f766e] hover:underline dark:text-[#9BE9EA]"
+                    className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-[#3C0078] hover:underline dark:text-[#9BE9EA]"
                   >
                     Open {project.projectFileName || "project"} <ExternalLink size={14} />
                   </a>

@@ -6,7 +6,7 @@ import { ensureHttps, slugify } from "../pages/profile/profileUtils";
 const PANEL_CLASS =
   "rounded-[28px] border border-white/60 bg-white/85 p-6 shadow-[0_16px_40px_rgba(15,23,42,0.08)] backdrop-blur-md transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_20px_44px_rgba(15,23,42,0.12)] dark:border-slate-700 dark:bg-slate-900/90";
 const INPUT_CLASS =
-  "rounded-2xl border border-slate-300 bg-white/90 px-4 py-2.5 text-slate-900 transition placeholder:text-slate-400 focus:border-[#0f766e] focus:outline-none focus:ring-2 focus:ring-[#14b8a6]/30 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500";
+  "rounded-2xl border border-slate-300 bg-white/90 px-4 py-2.5 text-slate-900 transition placeholder:text-slate-400 focus:border-[#3C0078] focus:outline-none focus:ring-2 focus:ring-[#3C0078]/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500";
 
 export default function ProfileSidebar({
   profile,
@@ -123,7 +123,7 @@ export default function ProfileSidebar({
             type="checkbox"
             checked={profile.privacy.profilePublic}
             onChange={() => toggleVisibility("profilePublic")}
-            className="h-4 w-4 accent-[#0f766e]"
+            className="h-4 w-4 accent-[#3C0078]"
           />
         </label>
 
@@ -138,7 +138,7 @@ export default function ProfileSidebar({
                 type="checkbox"
                 checked={profile.privacy[key]}
                 onChange={() => toggleVisibility(key)}
-                className="h-4 w-4 accent-[#0f766e]"
+                className="h-4 w-4 accent-[#3C0078]"
               />
             </label>
           ))}
@@ -155,7 +155,7 @@ export default function ProfileSidebar({
           </>
         ) : null}
 
-        <div className="mt-4 rounded-2xl border border-slate-200 bg-gradient-to-r from-slate-50 to-cyan-50 p-3 dark:border-slate-700 dark:from-slate-800 dark:to-slate-700">
+        <div className="mt-4 rounded-2xl border border-slate-200 bg-gradient-to-r from-slate-50 to-purple-50/50 p-3 dark:border-slate-700 dark:from-slate-800 dark:to-slate-700">
           <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
             Shareable Link
           </p>

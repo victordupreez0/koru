@@ -80,7 +80,7 @@ export default function CourseSecondaryNav({ activeCourseId }) {
                                                         removeItem(item.label);
                                                     }}
                                                     className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 
-                                                    dark:text-slate-500
+                                                    dark:text-white-500
                                                     hover:text-red-500 transition-all"
                                                 >
                                                     <Trash2 size={12} />
