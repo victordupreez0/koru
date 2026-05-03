@@ -114,7 +114,7 @@ function CourseAnnouncementsView() {
     return (
         <motion.div className="flex-1 p-8 overflow-y-auto" initial="hidden" animate="visible" variants={staggerContainer}>
             <motion.header variants={slideUp} className="mb-12">
-                <h1 className="text-3xl font-semibold tracking-tight">Announcements</h1>
+                <h1 className="text-3xl font-semibold tracking-tight dark:text-slate-100">Announcements</h1>
                 <p className="text-gray-500 dark:text-slate-400 mt-2">Latest updates from your lecturers</p>
             </motion.header>
 
@@ -144,12 +144,12 @@ function CourseAnnouncementsView() {
                         </div>
                         <motion.h2 
                             layoutId={`ann_title_${post.id}`}
-                            className="text-2xl font-bold text-gray-900 dark:text-slate-100 group-hover:text-[#3C0078] transition-colors leading-tight"
+                            className="text-2xl font-bold text-gray-900 dark:text-slate-100 group-hover:text-[#3C0078] dark:group-hover:text-[#9BE9EA] transition-colors leading-tight"
                         >
                             {post.title}
                         </motion.h2>
                         <motion.div layoutId={`ann_author_${post.id}`}>
-                            <p className="text-xs font-bold uppercase tracking-widest text-[#3C0078] mt-2 opacity-60">Posted by {post.lecturer}</p>
+                            <p className="text-xs font-bold uppercase tracking-widest text-[#3C0078] dark:text-[#9BE9EA] mt-2 opacity-60">Posted by {post.lecturer}</p>
                         </motion.div>
                         <motion.p layoutId={`ann_preview_${post.id}`} className="text-gray-500 dark:text-slate-400 mt-4 leading-relaxed line-clamp-2">
                             {post.preview}
@@ -212,12 +212,12 @@ function CourseAnnouncementsView() {
                                     </motion.h2>
 
                                     <motion.div layoutId={`ann_author_${selectedId}`} className="flex items-center gap-3 mb-10 pb-10 border-b border-gray-100 dark:border-slate-700">
-                                        <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-slate-700 flex items-center justify-center text-[#3C0078]">
+                                        <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-slate-700 flex items-center justify-center text-[#3C0078] dark:text-[#9BE9EA]">
                                             <User size={20} />
                                         </div>
                                         <div>
                                             <p className="text-xs font-black uppercase tracking-widest text-gray-400 dark:text-slate-500">Published By</p>
-                                            <p className="font-bold text-[#3C0078]">{selectedAnnouncement.lecturer}</p>
+                                            <p className="font-bold text-[#3C0078] dark:text-[#9BE9EA]">{selectedAnnouncement.lecturer}</p>
                                         </div>
                                     </motion.div>
 
@@ -243,12 +243,12 @@ function CourseAnnouncementsView() {
                                     >
                                         <button 
                                             onClick={() => setSelectedId(null)}
-                                            className="px-8 py-3 rounded-2xl bg-[#3C0078]/5 text-[#3C0078] font-bold text-xs uppercase tracking-widest hover:bg-[#3C0078] hover:text-white transition-all"
+                                            className="px-8 py-3 rounded-2xl bg-[#3C0078]/5 dark:bg-[#9BE9EA]/10 text-[#3C0078] dark:text-[#9BE9EA] font-bold text-xs uppercase tracking-widest hover:bg-[#3C0078] dark:hover:bg-[#9BE9EA] hover:text-white dark:hover:text-slate-900 transition-all"
                                         >
                                             Back to list
                                         </button>
                                         <div className="flex gap-4">
-                                            <button className="flex items-center gap-2 text-gray-400 dark:text-slate-500 hover:text-[#3C0078] transition-colors">
+                                            <button className="flex items-center gap-2 text-gray-400 dark:text-slate-500 hover:text-[#3C0078] dark:hover:text-[#9BE9EA] transition-colors">
                                                 <Letter size={18} />
                                                 <span className="text-xs font-bold uppercase tracking-widest">Share</span>
                                             </button>
@@ -314,7 +314,7 @@ function CourseAssignmentsView({ subject, activeCourseId }) {
         <motion.div className="flex-1 p-8 overflow-y-auto" initial="hidden" animate="visible" variants={staggerContainer}>
             <motion.header variants={slideUp} className="mb-12 flex justify-between items-end">
                 <div>
-                    <h1 className="text-3xl font-semibold tracking-tight">Assignments</h1>
+                    <h1 className="text-3xl font-semibold tracking-tight dark:text-slate-100">Assignments</h1>
                     <p className="text-gray-500 dark:text-slate-400 mt-2 text-lg">{subject?.code || "Pending"} | Assessments & Briefs</p>
                 </div>
                 <div className="flex gap-4">
@@ -337,7 +337,7 @@ function CourseAssignmentsView({ subject, activeCourseId }) {
                         <motion.div key={item.id} variants={slideUp} className={`bg-white dark:bg-slate-800 p-6 rounded-[40px] border border-gray-100 dark:border-slate-700 shadow-sm relative overflow-hidden group hover:shadow-xl transition-all duration-300 flex flex-col justify-between ${item.isClosed || item.isSubmitted ? 'opacity-60 bg-gray-50 dark:bg-slate-800/50' : 'opacity-100'}`}>
                             <div>
                                 <div className="flex justify-between items-start mb-4">
-                                    <h2 className="text-xl font-bold text-gray-900 dark:text-slate-100 group-hover:text-[#3C0078] transition-colors leading-tight pr-4">{item.title}</h2>
+                                    <h2 className="text-xl font-bold text-gray-900 dark:text-slate-100 group-hover:text-[#3C0078] dark:group-hover:text-[#9BE9EA] transition-colors leading-tight pr-4">{item.title}</h2>
                                     <span className={`text-[10px] font-bold uppercase tracking-widest whitespace-nowrap mt-1 ${item.color}`}>{item.status}</span>
                                 </div>
                                 <p className="text-sm text-gray-500 dark:text-slate-400 line-clamp-2 leading-relaxed mb-6">{item.description}</p>
@@ -351,7 +351,7 @@ function CourseAssignmentsView({ subject, activeCourseId }) {
                                     <span className="text-gray-400 dark:text-slate-500 uppercase font-bold tracking-widest">Due Date:</span>
                                     <span className="text-gray-900 dark:text-slate-100 font-bold">{new Date(item.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
                                 </div>
-                                <button className={`w-full mt-2 py-3 rounded-2xl text-xs font-bold uppercase tracking-widest text-white transition-all flex items-center justify-center gap-2 shadow-sm ${item.isClosed || item.isSubmitted ? 'bg-gray-800 hover:bg-black' : 'bg-[#3C0078] hover:bg-[#2A0054]'}`}>
+                                <button className={`w-full mt-2 py-3 rounded-2xl text-xs font-bold uppercase tracking-widest text-white transition-all flex items-center justify-center gap-2 shadow-sm ${item.isClosed || item.isSubmitted ? 'bg-gray-800 hover:bg-black' : 'bg-[#3C0078] hover:bg-[#2A0054] dark:bg-[#0f766e] dark:hover:bg-[#14b8a6]'}`}>
                                     {(!item.isClosed && !item.isSubmitted) && <Upload size={16} />}
                                     {item.isClosed ? "View" : item.isSubmitted ? "View Submission" : "View & Submit"}
                                 </button>
@@ -368,7 +368,7 @@ function CourseAttendanceView() {
     return (
         <motion.div className="flex-1 p-8 overflow-y-auto" initial="hidden" animate="visible" variants={staggerContainer}>
             <motion.header variants={slideUp} className="mb-12">
-                <h1 className="text-3xl font-semibold tracking-tight">Attendance</h1>
+                <h1 className="text-3xl font-semibold tracking-tight dark:text-slate-100">Attendance</h1>
                 <p className="text-gray-500 dark:text-slate-400 mt-2">UX300 | Academic Presence Tracking</p>
             </motion.header>
 
@@ -382,9 +382,9 @@ function CourseAttendanceView() {
             </div>
 
             <motion.div variants={slideUp} className="bg-white dark:bg-slate-800 rounded-[40px] border border-gray-100 dark:border-slate-700 shadow-sm overflow-hidden">
-                <div className="px-8 py-6 border-b border-gray-50 flex justify-between items-center">
-                    <h2 className="text-lg font-bold">Session History</h2>
-                    <button className="text-sm font-semibold text-[#3C0078] hover:underline flex items-center gap-2"><Calendar size={18} /> Download Report</button>
+                <div className="px-8 py-6 border-b border-gray-50 dark:border-slate-700 flex justify-between items-center">
+                    <h2 className="text-lg font-bold dark:text-slate-100">Session History</h2>
+                    <button className="text-sm font-semibold text-[#3C0078] dark:text-[#9BE9EA] hover:underline flex items-center gap-2"><Calendar size={18} /> Download Report</button>
                 </div>
                 <table className="w-full text-left">
                     <thead>
@@ -442,7 +442,7 @@ function CourseGradesView() {
                                 </td>
                                 <td className="px-8 py-6 text-sm text-gray-600 dark:text-slate-400">{item.weight}</td>
                                 <td className="px-8 py-6">
-                                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide ${item.status === "Graded" ? "bg-green-50 text-green-600" : "bg-orange-50 text-orange-600"}`}>{item.status}</span>
+                                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide ${item.status === "Graded" ? "bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400" : "bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400"}`}>{item.status}</span>
                                 </td>
                                 <td className="px-8 py-6 text-right">
                                     <span className="text-lg font-semibold text-gray-900 dark:text-slate-100">{item.grade}</span>
@@ -453,7 +453,7 @@ function CourseGradesView() {
                 </table>
             </motion.div>
             <motion.div variants={slideUp} className="mt-8 flex justify-end">
-                <div className="bg-[#3C0078] text-white px-8 py-6 rounded-3xl shadow-lg shadow-[#3C0078]/20 flex items-center gap-12">
+                <div className="bg-[#3C0078] dark:bg-[#0f766e] text-white px-8 py-6 rounded-3xl shadow-lg shadow-[#3C0078]/20 dark:shadow-[#9BE9EA]/10 flex items-center gap-12">
                     <div className="flex flex-col">
                         <span className="text-[10px] uppercase font-bold tracking-[0.2em] opacity-80">Course Progress</span>
                         <span className="text-sm font-medium">Completed: 60%</span>
@@ -477,7 +477,7 @@ function CourseHomeView({ subject, course, loading }) {
   return (
     <div className="flex-1 flex flex-col p-12 overflow-y-auto">
       <header className="mb-12">
-        <h1 className="text-4xl font-semibold tracking-tight">
+        <h1 className="text-4xl font-semibold tracking-tight dark:text-slate-100">
           {loading ? "Loading course details..." : `${subject?.name || "Unknown"} | ${course?.term || ""}`}
         </h1>
         <p className="text-xl text-gray-500 dark:text-slate-400 mt-3 font-medium">{loading ? "..." : subject?.code}</p>
@@ -499,7 +499,7 @@ function CourseHomeView({ subject, course, loading }) {
             <div className="flex flex-col md:flex-row gap-24 items-stretch">
               <div className="flex-1 flex flex-col justify-between">
                 <div>
-                  <h3 className="font-bold text-xs mb-6 uppercase tracking-[0.2em] text-[#3C0078] border-b-2 border-[#3C0078] inline-block pb-1">
+                  <h3 className="font-bold text-xs mb-6 uppercase tracking-[0.2em] text-[#3C0078] dark:text-[#9BE9EA] border-b-2 border-[#3C0078] dark:border-[#9BE9EA] inline-block pb-1">
                     Term 1
                   </h3>
                   <p className="text-lg leading-relaxed text-gray-600 dark:text-slate-400 min-h-[120px]">
@@ -507,7 +507,7 @@ function CourseHomeView({ subject, course, loading }) {
                   </p>
                 </div>
                 <div className="mt-8">
-                  <Link to="#" className="inline-flex items-center gap-2 text-[#3C0078] font-bold text-sm uppercase tracking-widest hover:translate-x-1 transition-transform">
+                  <Link to="#" className="inline-flex items-center gap-2 text-[#3C0078] dark:text-[#9BE9EA] font-bold text-sm uppercase tracking-widest hover:translate-x-1 transition-transform">
                     Full Term Overview <span>→</span>
                   </Link>
                 </div>
@@ -515,7 +515,7 @@ function CourseHomeView({ subject, course, loading }) {
 
               <div className="flex-1 flex flex-col justify-between border-l border-gray-100 dark:border-slate-700 pl-24">
                 <div>
-                  <h3 className="font-bold text-xs mb-6 uppercase tracking-[0.2em] text-[#3C0078] border-b-2 border-[#3C0078] inline-block pb-1">
+                  <h3 className="font-bold text-xs mb-6 uppercase tracking-[0.2em] text-[#3C0078] dark:text-[#9BE9EA] border-b-2 border-[#3C0078] dark:border-[#9BE9EA] inline-block pb-1">
                     Term 2
                   </h3>
                   <p className="text-lg leading-relaxed text-gray-600 dark:text-slate-400 min-h-[120px]">
@@ -523,7 +523,7 @@ function CourseHomeView({ subject, course, loading }) {
                   </p>
                 </div>
                 <div className="mt-8">
-                  <Link to="#" className="inline-flex items-center gap-2 text-[#3C0078] font-bold text-sm uppercase tracking-widest hover:translate-x-1 transition-transform">
+                  <Link to="#" className="inline-flex items-center gap-2 text-[#3C0078] dark:text-[#9BE9EA] font-bold text-sm uppercase tracking-widest hover:translate-x-1 transition-transform">
                     Full Term Overview <span>→</span>
                   </Link>
                 </div>
@@ -648,7 +648,7 @@ function CourseModulesView() {
     <div className="flex-1 flex h-full overflow-hidden">
       {/* Third-tier Nav: Modules Accordion */}
       <div className="flex flex-col h-full border-r border-gray-200 dark:border-slate-700 p-8">
-        <h2 className="text-2xl font-bold mb-8">Modules</h2>
+        <h2 className="text-2xl font-bold mb-8 dark:text-slate-100">Modules</h2>
         <ModuleAccordion />
       </div>
 
@@ -799,7 +799,7 @@ function CourseNotesView({ activeCourseId }) {
         <div className="flex-1 flex h-full overflow-hidden">
             {/* Notes sidebar — animates width to 0 when expanded */}
             <div
-                className="flex flex-col h-full border-r border-gray-200 shrink-0 overflow-hidden"
+                className="flex flex-col h-full border-r border-gray-200 dark:border-slate-700 shrink-0 overflow-hidden"
                 style={{
                     width: expanded ? 0 : 320,
                     padding: expanded ? '2rem 0' : '2rem',
@@ -809,9 +809,9 @@ function CourseNotesView({ activeCourseId }) {
                 }}
             >
                 <div className="flex justify-between items-center mb-8 min-w-[256px]">
-                    <h2 className="text-2xl font-bold">Notes</h2>
+                    <h2 className="text-2xl font-bold dark:text-slate-100">Notes</h2>
                     <button onClick={handleCreateNote} className="p-2 bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 rounded-full transition-colors">
-                        <Plus size={20} className="text-gray-700" />
+                        <Plus size={20} className="text-gray-700 dark:text-slate-300" />
                     </button>
                 </div>
                 {loading ? (
@@ -821,7 +821,7 @@ function CourseNotesView({ activeCourseId }) {
                         {notes.map(note => (
                             <div
                                 key={note.id}
-                                className={`group w-full text-left p-4 rounded-2xl transition-colors flex items-start justify-between gap-2 cursor-pointer ${activeNote?.id === note.id ? 'bg-[#3C0078] text-white' : 'bg-gray-50 dark:bg-slate-800/50 hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-800 dark:text-slate-100'}`}
+                                className={`group w-full text-left p-4 rounded-2xl transition-colors flex items-start justify-between gap-2 cursor-pointer ${activeNote?.id === note.id ? 'bg-[#3C0078] dark:bg-[#0f766e] text-white' : 'bg-gray-50 dark:bg-slate-800/50 hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-800 dark:text-slate-100'}`}
                                 onClick={() => setActiveNote(note)}
                             >
                                 <div className="min-w-0">
@@ -898,7 +898,7 @@ function CourseNotesView({ activeCourseId }) {
                                     console.error("Failed to update note title", err);
                                 }
                             }}
-                            className="text-4xl font-bold mb-8 outline-none border-b border-transparent focus:border-gray-200 dark:focus:border-slate-700 w-full pb-2 transition-colors text-gray-900 dark:text-slate-100 placeholder:text-gray-300 dark:placeholder:text-slate-600 placeholder:font-bold"
+                            className="text-4xl font-bold mb-8 outline-none border-b border-transparent focus:border-gray-200 dark:focus:border-slate-700 w-full pb-2 transition-colors text-gray-900 dark:text-slate-100 placeholder:text-gray-300 dark:placeholder:text-slate-600 placeholder:font-bold bg-transparent"
                             placeholder="New Note"
                         />
                         <div className="flex-1 relative novel-editor-wrapper" key={activeNote.id}>
@@ -921,7 +921,7 @@ function CourseNotesView({ activeCourseId }) {
                                     onUpdate={({ editor }) => {
                                         if (editor) handleUpdateNote(editor.getJSON());
                                     }}
-                                    className="w-full max-w-none focus:outline-none"
+                                    className="w-full max-w-none focus:outline-none dark:text-slate-100"
                                 >
                                     {/* Bubble menu — appears when you select text */}
                                     <EditorBubble className="flex items-center gap-0.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-1.5 py-1 shadow-xl">

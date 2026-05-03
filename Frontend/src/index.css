@@ -98,9 +98,26 @@ body.orbs-vibrant::before {
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
+
 body.theme-dark {
   background-color: #0f172a;
   color: #f8fafc;
+}
+
+/* Attendance chart SVG track — override inline stroke in dark mode */
+body.theme-dark .attendance-bg-track {
+  stroke: #334155 !important;
+}
+
+/* Novel/ProseMirror editor text in dark mode */
+body.theme-dark .ProseMirror {
+  color: #f1f5f9;
+}
+
+/* DaisyUI menu items in dark mode — override light theme variables */
+body.theme-dark .menu a,
+body.theme-dark .menu button {
+  color: #94a3b8 !important;
 }
 
 /* Dark-mode: swap DaisyUI base colours used in the floating nav bars */

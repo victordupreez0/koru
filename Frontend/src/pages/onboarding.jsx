@@ -20,7 +20,7 @@ export default function Onboarding() {
     >
       {/* Welcome section – displays the platform branding and tagline */}
       <div className="absolute top-[18%] left-[5%] z-10 flex flex-col">
-        <h1>Welcome to </h1>
+        <h1 className="">Welcome to </h1>
         <img
           src={Logo}
           alt="Learn Online logo"

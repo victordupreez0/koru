@@ -31,24 +31,22 @@ const defaultSettings = {
   ttsEnabled: false,
 };
 
-function ToggleRow({ icon, title, description, checked, onChange, darkMode }) {
+function ToggleRow({ icon, title, description, checked, onChange }) {
   return (
-    <label
-      className={`flex min-h-[56px] items-center justify-between gap-4 rounded-2xl border p-4 ${darkMode ? "border-slate-700 bg-slate-800/80" : "border-slate-200 bg-slate-50"}`}
-    >
-      <div className="flex items-center gap-3">
-        <span className="rounded-xl bg-[#3C0078]/10 p-2 text-[#3C0078]">{icon}</span>
-        <div>
-          <p className={`text-base font-semibold ${darkMode ? "text-slate-100" : "text-slate-900"}`}>
+    <label className="flex min-h-[56px] items-center justify-between gap-4 rounded-2xl border p-4 border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/80">
+      <div className="flex min-w-0 flex-1 items-center gap-3">
+        <span className="shrink-0 rounded-xl bg-[#3C0078]/10 p-2 text-[#3C0078]">{icon}</span>
+        <div className="min-w-0">
+          <p className="text-base font-semibold text-slate-900 dark:text-slate-100">
             {title}
           </p>
-          <p className={`text-sm ${darkMode ? "text-slate-300" : "text-slate-600"}`}>
+          <p className="text-sm text-slate-600 dark:text-slate-300">
             {description}
           </p>
         </div>
       </div>
 
-      <span className="relative inline-flex h-7 w-16 items-center">
+      <span className="relative inline-flex h-7 w-12 shrink-0 items-center">
         <input
           type="checkbox"
           checked={checked}
@@ -72,7 +70,11 @@ export default function SettingsPage() {
   const [settings, setSettings] = useState(() => {
     try {
       const saved = JSON.parse(localStorage.getItem(SETTINGS_STORAGE_KEY) || "null");
-      return saved ? { ...defaultSettings, ...saved } : defaultSettings;
+      const auth = JSON.parse(localStorage.getItem("learnonline.auth") || "null");
+      const base = saved ? { ...defaultSettings, ...saved } : { ...defaultSettings };
+      // Auth theme takes priority — it is user-specific
+      if (auth?.theme) base.theme = auth.theme;
+      return base;
     } catch {
       return defaultSettings;
     }
@@ -120,9 +122,21 @@ export default function SettingsPage() {
   // cause the whole page to constantly reflow — they commit 120 ms after the last move.
   useEffect(() => {
     localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
-    window.dispatchEvent(new Event("learnonline-settings-changed"));
+
+    // Persist theme into the auth session so dark mode is user-specific — survives
+    // logout/login cycles. We write directly to localStorage to avoid a React state loop.
+    try {
+      const savedAuth = JSON.parse(localStorage.getItem("learnonline.auth") || "null");
+      if (savedAuth) {
+        localStorage.setItem("learnonline.auth", JSON.stringify({ ...savedAuth, theme: settings.theme }));
+      }
+    } catch (_) {}
+
+    // Apply body classes BEFORE dispatching the event so any listener
+    // that reads body.classList (e.g. ClickSpark color in App.jsx) sees the updated state.
     document.body.classList.toggle("theme-dark", settings.theme === "dark");
     document.body.classList.toggle("dyslexic-font", settings.font === "OpenDyslexic");
+    window.dispatchEvent(new Event("learnonline-settings-changed"));
     document.body.classList.remove("theme-high-contrast", "reduce-motion", "focus-mode");
 
     // Debounce the layout-affecting DOM changes
@@ -341,7 +355,6 @@ export default function SettingsPage() {
                 description="Switch to OpenDyslexic for improved readability and letter distinction."
                 checked={settings.font === "OpenDyslexic"}
                 onChange={(checked) => updateSetting("font", checked ? "OpenDyslexic" : "Poppins")}
-                darkMode={darkMode}
               />
             </div>
 
@@ -358,7 +371,6 @@ export default function SettingsPage() {
                   description="Use a darker palette with strong text contrast for comfortable viewing."
                   checked={settings.theme === "dark"}
                   onChange={(checked) => updateSetting("theme", checked ? "dark" : "light")}
-                  darkMode={darkMode}
                 />
               </div>
             </div>
@@ -376,7 +388,6 @@ export default function SettingsPage() {
                   description="Read page content aloud for easier comprehension and reduced reading strain."
                   checked={settings.ttsEnabled}
                   onChange={(checked) => updateSetting("ttsEnabled", checked)}
-                  darkMode={darkMode}
                 />
               </div>
 

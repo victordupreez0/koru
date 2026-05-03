@@ -52,7 +52,10 @@ export default function TeacherTodoProgress() {
 
   // Fire confetti when a task is completed
   function fireConfetti() {
-    const colors = ["#3C0078", "#FF8731", "#87CEFA"];
+    const isDark = document.body.classList.contains("theme-dark");
+    const colors = isDark
+      ? ["#9BE9EA", "#FF8731", "#c084fc", "#ffffff"]
+      : ["#3C0078", "#FF8731", "#87CEFA"];
     confetti({
       particleCount: 60,
       spread: 55,
@@ -103,13 +106,13 @@ export default function TeacherTodoProgress() {
     <div className="w-full">
       {/* ── To Do Header ── */}
       <div className="flex items-center justify-between mt-5 mb-1">
-        <h2 className="text-2xl font-['Gabarito']">To Do</h2>
+        <h2 className="text-2xl font-['Gabarito'] dark:text-slate-100">To Do</h2>
         <button
           onClick={() => setIsAdding(!isAdding)}
-          className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
+          className="w-8 h-8 rounded-full bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 flex items-center justify-center transition-colors"
           aria-label="Add to-do"
         >
-          <Plus className="w-4 h-4 text-gray-600" />
+          <Plus className="w-4 h-4 text-gray-600 dark:text-slate-400" />
         </button>
       </div>
       <p className="text-sm text-transparent mb-5 font-medium select-none" aria-hidden="true">
@@ -125,14 +128,14 @@ export default function TeacherTodoProgress() {
             exit={{ opacity: 0, height: 0 }}
             className="overflow-hidden mb-4"
           >
-            <div className="bg-white border border-gray-200 rounded-2xl p-4 flex flex-col gap-3">
+            <div className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-2xl p-4 flex flex-col gap-3">
               <input
                 type="text"
                 placeholder="Task title"
                 value={newTitle}
                 onChange={(e) => setNewTitle(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleAdd()}
-                className="text-sm border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-[#3C0078] transition-colors"
+                className="text-sm border border-gray-200 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-500 rounded-lg px-3 py-2 outline-none focus:border-[#3C0078] dark:focus:border-purple-400 transition-colors"
               />
               <div className="flex gap-2">
                 <input
@@ -140,20 +143,20 @@ export default function TeacherTodoProgress() {
                   placeholder="Due date (e.g. Mar 5 at 10:00)"
                   value={newDue}
                   onChange={(e) => setNewDue(e.target.value)}
-                  className="flex-1 text-sm border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-[#3C0078] transition-colors"
+                  className="flex-1 text-sm border border-gray-200 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-500 rounded-lg px-3 py-2 outline-none focus:border-[#3C0078] dark:focus:border-purple-400 transition-colors"
                 />
                 <input
                   type="text"
                   placeholder="Course"
                   value={newCourse}
                   onChange={(e) => setNewCourse(e.target.value)}
-                  className="w-24 text-sm border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-[#3C0078] transition-colors"
+                  className="w-24 text-sm border border-gray-200 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-500 rounded-lg px-3 py-2 outline-none focus:border-[#3C0078] dark:focus:border-purple-400 transition-colors"
                 />
               </div>
               <div className="flex gap-2 justify-end">
                 <button
                   onClick={() => setIsAdding(false)}
-                  className="px-3 py-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 transition-colors"
+                  className="px-3 py-1.5 text-xs font-medium text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200 transition-colors"
                 >
                   Cancel
                 </button>
@@ -182,12 +185,12 @@ export default function TeacherTodoProgress() {
                 exit={{ opacity: 0, x: 20 }}
                 transition={{ duration: 0.3, ease: "easeOut" }}
                 className={`w-full border rounded-2xl px-4 py-3.5 flex items-center gap-3 transition-all duration-300 cursor-pointer
-                  ${todo.completed ? "bg-gray-50 border-gray-100 opacity-50" : "bg-white border-gray-200 hover:shadow-md"}`}
+                  ${todo.completed ? "bg-gray-50 dark:bg-slate-800/50 border-gray-100 dark:border-slate-700 opacity-50" : "bg-white dark:bg-slate-800 border-gray-200 dark:border-slate-700 hover:shadow-md"}`}
               >
                 {/* Icon */}
                 <div
                   className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0
-                    ${todo.completed ? "bg-gray-100" : "bg-[#3C0078]/8"}`}
+                    ${todo.completed ? "bg-gray-100 dark:bg-slate-700" : "bg-[#3C0078]/8 dark:bg-purple-900/30"}`}
                 >
                   <IconComp
                     className={`w-5 h-5 ${todo.completed ? "text-gray-400" : "text-[#3C0078]"}`}
@@ -198,14 +201,14 @@ export default function TeacherTodoProgress() {
                 <div className="flex-1 min-w-0">
                   <h4
                     className={`text-base font-semibold leading-tight font-['Gabarito'] ${
-                      todo.completed ? "text-gray-400 line-through" : "text-black"
+                      todo.completed ? "text-gray-400 dark:text-slate-600 line-through" : "text-black dark:text-slate-100"
                     }`}
                   >
                     {todo.title}
                   </h4>
-                  <p className="text-xs text-gray-400 mt-0.5 flex flex-wrap items-center gap-2">
+                  <p className="text-xs text-gray-400 dark:text-slate-500 mt-0.5 flex flex-wrap items-center gap-2">
                     <span>{todo.dueDate}</span>
-                    <span className="font-bold text-black">{todo.courseCode}</span>
+                    <span className="font-bold text-black dark:text-slate-300">{todo.courseCode}</span>
                   </p>
                 </div>
 
@@ -244,10 +247,10 @@ export default function TeacherTodoProgress() {
       </div>
 
       {/* ── Progress Header ── */}
-      <h2 className="text-2xl font-['Gabarito'] mt-8 mb-2">Progress</h2>
+      <h2 className="text-2xl font-['Gabarito'] mt-8 mb-2 dark:text-slate-100">Progress</h2>
 
       {/* ── Progress Ring ── */}
-      <div className="w-full bg-gray-100 rounded-2xl border border-gray-200 p-4">
+      <div className="w-full bg-gray-100 dark:bg-slate-800 rounded-2xl border border-gray-200 dark:border-slate-700 p-4">
         <ProgressRing percentage={progress} />
       </div>
     </div>

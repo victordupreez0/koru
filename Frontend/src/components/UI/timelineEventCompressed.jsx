@@ -37,7 +37,7 @@ export default function TimelineEventCompressed({
 
         {/* Location badge and duration pill */}
         <div className="flex flex-col items-end gap-2 shrink-0">
-          <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${isPast ? "text-gray-400 bg-gray-100 dark:text-slate-500 dark:bg-slate-700" : "text-[#3C0078] bg-[#3C0078]/8 dark:text-purple-300 dark:bg-purple-900/30"}`}>
+          <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${isPast ? "text-gray-400 bg-gray-100 dark:text-slate-500 dark:bg-slate-700" : "text-[#3C0078] bg-[#3C0078]/8 dark:text-[#9BE9EA] dark:bg-[#9BE9EA]/10"}`}>
             {location}
           </span>
           <div className={`flex items-center gap-1 px-2.5 py-1 rounded-full ${isPast ? "bg-gray-100 dark:bg-slate-700" : "bg-[#FF8731]/10"}`}>

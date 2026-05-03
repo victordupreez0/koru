@@ -4,9 +4,9 @@ import ChipListEditor from "./ChipListEditor";
 import { ensureHttps, slugify } from "../pages/profile/profileUtils";
 
 const PANEL_CLASS =
-  "rounded-[28px] border border-white/60 bg-white/85 dark:bg-slate-800 p-6 shadow-[0_16px_40px_rgba(15,23,42,0.08)] backdrop-blur-md transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_20px_44px_rgba(15,23,42,0.12)]";
+  "rounded-[28px] border border-white/60 bg-white/85 p-6 shadow-[0_16px_40px_rgba(15,23,42,0.08)] backdrop-blur-md transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_20px_44px_rgba(15,23,42,0.12)] dark:border-slate-700 dark:bg-slate-900/90";
 const INPUT_CLASS =
-  "rounded-2xl border border-slate-300 bg-white/90 dark:bg-slate-700 px-4 py-2.5 transition focus:border-[#3C0078] focus:outline-none focus:ring-2 focus:ring-[#3C0078]/20";
+  "rounded-2xl border border-slate-300 bg-white/90 px-4 py-2.5 text-slate-900 transition placeholder:text-slate-400 focus:border-[#0f766e] focus:outline-none focus:ring-2 focus:ring-[#14b8a6]/30 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500";
 
 export default function ProfileSidebar({
   profile,
@@ -26,7 +26,7 @@ export default function ProfileSidebar({
       <section className={PANEL_CLASS}>
         <div className="mb-4 flex items-center gap-2">
           <UserRound size={20} />
-          <h2 className="text-2xl font-bold">Header &amp; Identity</h2>
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Header &amp; Identity</h2>
         </div>
 
         {editMode ? (
@@ -75,7 +75,7 @@ export default function ProfileSidebar({
               placeholder="Profile photo URL (or upload below)"
               className={`w-full ${INPUT_CLASS}`}
             />
-            <label className="inline-flex w-fit cursor-pointer items-center gap-2 rounded-xl border border-slate-300 bg-white dark:bg-slate-700 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50">
+            <label className="inline-flex w-fit cursor-pointer items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700">
               <Upload size={14} /> Upload profile image
               <input
                 type="file"
@@ -89,7 +89,7 @@ export default function ProfileSidebar({
               />
             </label>
             {profile.header.photoName ? (
-              <p className="text-xs text-slate-500">Uploaded: {profile.header.photoName}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Uploaded: {profile.header.photoName}</p>
             ) : null}
             <textarea
               value={profile.header.summary}
@@ -106,7 +106,7 @@ export default function ProfileSidebar({
             />
           </div>
         ) : (
-          <p className="text-sm text-slate-600">Turn on Edit Profile to update identity details.</p>
+          <p className="text-sm text-slate-600 dark:text-slate-300">Turn on Edit Profile to update identity details.</p>
         )}
       </section>
 
@@ -114,16 +114,16 @@ export default function ProfileSidebar({
       <section className={PANEL_CLASS}>
         <div className="mb-4 flex items-center gap-2">
           <LinkIcon size={20} />
-          <h2 className="text-2xl font-bold">Share &amp; Visibility</h2>
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Share &amp; Visibility</h2>
         </div>
 
-        <label className="mb-3 flex cursor-pointer items-center justify-between gap-3 rounded-2xl border border-slate-200/90 bg-slate-50/85 px-4 py-3">
-          <span className="text-sm font-medium">Public Profile Visibility</span>
+        <label className="mb-3 flex cursor-pointer items-center justify-between gap-3 rounded-2xl border border-slate-200/90 bg-slate-50/85 px-4 py-3 dark:border-slate-700 dark:bg-slate-800/70">
+          <span className="text-sm font-medium text-slate-800 dark:text-slate-200">Public Profile Visibility</span>
           <input
             type="checkbox"
             checked={profile.privacy.profilePublic}
             onChange={() => toggleVisibility("profilePublic")}
-            className="h-4 w-4 accent-[#3C0078]"
+            className="h-4 w-4 accent-[#0f766e]"
           />
         </label>
 
@@ -131,14 +131,14 @@ export default function ProfileSidebar({
           {privacySectionConfig.map(([key, label]) => (
             <label
               key={key}
-              className="flex cursor-pointer items-center justify-between rounded-xl border border-slate-200 bg-white/70 dark:bg-slate-800 px-3 py-2 text-sm"
+              className="flex cursor-pointer items-center justify-between rounded-xl border border-slate-200 bg-white/70 px-3 py-2 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
             >
               <span>{label}</span>
               <input
                 type="checkbox"
                 checked={profile.privacy[key]}
                 onChange={() => toggleVisibility(key)}
-                className="h-4 w-4 accent-[#3C0078]"
+                className="h-4 w-4 accent-[#0f766e]"
               />
             </label>
           ))}
@@ -146,7 +146,7 @@ export default function ProfileSidebar({
 
         {editMode ? (
           <>
-            <label className="mt-4 block text-sm font-medium text-slate-700">Vanity URL slug</label>
+            <label className="mt-4 block text-sm font-medium text-slate-700 dark:text-slate-200">Vanity URL slug</label>
             <input
               value={profile.vanityUrlSlug}
               onChange={(e) => updateProfile("vanityUrlSlug", slugify(e.target.value))}
@@ -155,15 +155,15 @@ export default function ProfileSidebar({
           </>
         ) : null}
 
-        <div className="mt-4 rounded-2xl border border-slate-200 bg-gradient-to-r from-slate-50 to-[#f5f0ff] p-3">
-          <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+        <div className="mt-4 rounded-2xl border border-slate-200 bg-gradient-to-r from-slate-50 to-cyan-50 p-3 dark:border-slate-700 dark:from-slate-800 dark:to-slate-700">
+          <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
             Shareable Link
           </p>
-          <p className="mt-1 break-all text-sm text-slate-700">{shareUrl}</p>
+          <p className="mt-1 break-all text-sm text-slate-700 dark:text-slate-100">{shareUrl}</p>
           <button
             type="button"
             onClick={copyShareUrl}
-            className="mt-3 inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white dark:bg-slate-700 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:-translate-y-0.5 hover:bg-slate-100"
+            className="mt-3 inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:-translate-y-0.5 hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
           >
             <Copy size={14} /> {copied ? "Copied!" : "Copy link"}
           </button>
@@ -174,18 +174,18 @@ export default function ProfileSidebar({
       <section className={PANEL_CLASS}>
         <div className="mb-4 flex items-center gap-2">
           <ExternalLink size={20} />
-          <h2 className="text-2xl font-bold">External Portfolios</h2>
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">External Portfolios</h2>
         </div>
         <div className="grid gap-3">
           {linkFieldConfig.map(({ key, label, placeholder }) => (
             <div key={key}>
-              <label className="mb-1 block text-xs font-semibold text-slate-600">{label}</label>
+              <label className="mb-1 block text-xs font-semibold text-slate-600 dark:text-slate-300">{label}</label>
               <input
                 value={profile.links[key]}
                 onChange={(e) => updateProfile(`links.${key}`, ensureHttps(e.target.value))}
                 disabled={!editMode}
                 placeholder={placeholder}
-                className={`w-full ${INPUT_CLASS} disabled:cursor-not-allowed disabled:bg-slate-50`}
+                className={`w-full ${INPUT_CLASS} disabled:cursor-not-allowed disabled:bg-slate-50 dark:disabled:bg-slate-900`}
               />
             </div>
           ))}
