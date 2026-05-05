@@ -7,18 +7,27 @@ namespace LearnOnline.Data
     {
         public static void Seed(AppDbContext context)
         {
-            // Aiven blocks EnsureDeleted() via locked `postgres` access. 
-            // We will manually drop the cascade to rebuild cleanly and delete ghost columns.
-            if (context.Courses.Any()) {
-                context.Assignments.RemoveRange(context.Assignments);
-                context.Enrollments.RemoveRange(context.Enrollments);
-                context.Courses.RemoveRange(context.Courses);
-                context.Subjects.RemoveRange(context.Subjects);
-                context.SaveChanges();
-            }
+
 
             // Ensure the schema is newly created perfectly
             context.Database.EnsureCreated();
+
+            // Manually ensure Announcements table exists (trigger rebuild)
+            context.Database.ExecuteSqlRaw(@"DROP TABLE IF EXISTS ""Announcements"";");
+            context.Database.ExecuteSqlRaw(@"
+                CREATE TABLE ""Announcements"" (
+                    ""Id"" text NOT NULL,
+                    ""Title"" text NOT NULL,
+                    ""LecturerName"" text NOT NULL,
+                    ""DatePosted"" timestamp with time zone NOT NULL,
+                    ""Preview"" text NOT NULL,
+                    ""Label"" text NOT NULL,
+                    ""Color"" text NOT NULL,
+                    ""CourseId"" text NOT NULL,
+                    CONSTRAINT ""PK_Announcements"" PRIMARY KEY (""Id""),
+                    CONSTRAINT ""FK_Announcements_Courses_CourseId"" FOREIGN KEY (""CourseId"") REFERENCES ""Courses"" (""Id"") ON DELETE CASCADE
+                );
+            ");
 
             // 1. Seed Default Developer Accounts
             // We search by email to see if they already exist
@@ -123,6 +132,31 @@ namespace LearnOnline.Data
                         new Assignment { CourseId = vcCourseId, Title = "Essay Draft", Description = "Submit an initial draft analyzing semiotics in digital design.", MaxPoints = 100, DueDate = baseDate.AddDays(-1).AddHours(23).AddMinutes(59) }, // Late, exactly 11:59 PM
                         new Assignment { CourseId = vcCourseId, Title = "Visual Deconstruction Presentation", Description = "Provide recorded feedback on an existing ad campaign.", MaxPoints = 100, DueDate = baseDate.AddDays(30).AddHours(10) }, // Due, exactly 10:00 AM
                         new Assignment { CourseId = vcCourseId, Title = "Literature Review Module", Description = "Compare 3 distinct articles focusing on sensory experiences.", MaxPoints = 50, DueDate = baseDate.AddDays(-20).AddHours(8) } // Closed, exactly 08:00 AM
+                    );
+                }
+
+                context.SaveChanges();
+            }
+
+            // 4. Seed Mock Announcements
+            if (!context.Announcements.Any())
+            {
+                var uxCourseId = context.Courses.FirstOrDefault(c => c.Subject != null && c.Subject.Code == "UX300")?.Id;
+                var dvCourseId = context.Courses.FirstOrDefault(c => c.Subject != null && c.Subject.Code == "DV300")?.Id;
+
+                if (uxCourseId != null)
+                {
+                    context.Announcements.AddRange(
+                        new Announcement { CourseId = uxCourseId, Title = "Project 3 Brief Released", LecturerName = "Dr. Sarah Miller", DatePosted = DateTime.UtcNow.AddHours(-2), Preview = "The brief for Project 3: High-Fidelity Prototyping is now available in the Modules section. Please review the technical requirements before Monday's lecture.", Label = "Notice", Color = "#3C0078" },
+                        new Announcement { CourseId = uxCourseId, Title = "Guest Lecture: Industry UX Trends", LecturerName = "Prof. Mark Chen", DatePosted = DateTime.UtcNow.AddDays(-1), Preview = "We have an exciting guest speaker from a leading fintech startup joining us next week Tuesday. Attendance is mandatory for UX300 students.", Label = "Event", Color = "#FF8731" },
+                        new Announcement { CourseId = uxCourseId, Title = "Lab Room Change - Block D", LecturerName = "Admin", DatePosted = DateTime.UtcNow.AddDays(-5), Preview = "The practical session for Friday will be moved to Lab 402 in Block D due to maintenance in the main studio.", Label = "Update", Color = "#87CEFA" }
+                    );
+                }
+
+                if (dvCourseId != null)
+                {
+                    context.Announcements.AddRange(
+                        new Announcement { CourseId = dvCourseId, Title = "Midterm Results Posted", LecturerName = "Dr. Jane Doe", DatePosted = DateTime.UtcNow.AddDays(-2), Preview = "The results for your midterm examination have been posted. Please check your grades.", Label = "Grades", Color = "#3C0078" }
                     );
                 }
 
