@@ -79,7 +79,11 @@ const TYPE_ICONS = {
 export default function CalendarDayView({ events = [], tasks = [], weeks = [] }) {
   // Flatten all dates in the month into a navigable list
   const allDates = weeks.flat(); // [{ date, day }, ...]
-  const [dateIdx, setDateIdx] = useState(0);
+  const [dateIdx, setDateIdx] = useState(() => {
+    const todayStr = new Date(new Date().getTime() - (new Date().getTimezoneOffset() * 60000)).toISOString().slice(0, 10);
+    const idx = allDates.findIndex(d => d.date === todayStr);
+    return idx >= 0 ? idx : 0;
+  });
 
   const selected = allDates[dateIdx];
   if (!selected) return <p className="text-gray-400 text-sm pt-8">No dates available.</p>;
