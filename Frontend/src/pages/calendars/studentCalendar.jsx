@@ -8,101 +8,77 @@ import CalendarViewSelector    from "./UI/CalendarViewSelector";
 import CalendarTimelineView    from "./UI/CalendarTimelineView";
 import CalendarDayView         from "./UI/CalendarDayView";
 
-// ─────────────────────────────────────────────────────────────
-//  EVENTS DATA
-//  Shape: { id, date, title, startTime, endTime, type, lecturer?, location? }
-//  type: "class" | "meeting" | "task" | "personal"
-// ─────────────────────────────────────────────────────────────
-const EVENTS = [
-  // ── Week 1 (Mar 2 – 8) ──────────────────────────────────
-  { id: 1,  date: "2026-03-02", title: "UX 300",        startTime: "8:30",  endTime: "9:30",  type: "class",    lecturer: "Laudette Sass",   location: "On Campus - C4"  },
-  { id: 2,  date: "2026-03-02", title: "VC 300",        startTime: "9:00",  endTime: "10:00", type: "class",    lecturer: "Matt Williams",   location: "Online"          },
-  { id: 3,  date: "2026-03-02", title: "DV 300",        startTime: "14:00", endTime: "16:00", type: "class",    lecturer: "Tsungai Katsuro", location: "On Campus - B2"  },
-  { id: 4,  date: "2026-03-03", title: "Group Meeting", startTime: "9:00",  endTime: "10:00", type: "meeting",  lecturer: "Study Group",     location: "Online"          },
-  { id: 5,  date: "2026-03-04", title: "UX 300",        startTime: "9:00",  endTime: "13:00", type: "class",    lecturer: "Laudette Sass",   location: "On Campus - C4"  },
-  { id: 6,  date: "2026-03-05", title: "DV 300",        startTime: "13:00", endTime: "17:00", type: "class",    lecturer: "Tsungai Katsuro", location: "On Campus - B2"  },
+import { getAllEvents } from "../../services/eventService";
 
-  // ── Week 2 (Mar 9 – 15) ─────────────────────────────────
-  { id: 7,  date: "2026-03-09", title: "UX 300",        startTime: "8:30",  endTime: "9:30",  type: "class",    lecturer: "Laudette Sass",   location: "On Campus - C4"  },
-  { id: 8,  date: "2026-03-09", title: "VC 300",        startTime: "9:00",  endTime: "10:00", type: "class",    lecturer: "Matt Williams",   location: "Online"          },
-  { id: 9,  date: "2026-03-09", title: "DV 300",        startTime: "14:00", endTime: "16:00", type: "class",    lecturer: "Tsungai Katsuro", location: "On Campus - B2"  },
-  { id: 10, date: "2026-03-11", title: "UX 300",        startTime: "9:00",  endTime: "13:00", type: "class",    lecturer: "Laudette Sass",   location: "On Campus - C4"  },
-  { id: 11, date: "2026-03-12", title: "DV 300",        startTime: "13:00", endTime: "17:00", type: "class",    lecturer: "Tsungai Katsuro", location: "On Campus - B2"  },
-  { id: 12, date: "2026-03-13", title: "Task 1 Due",    startTime: "11:00", endTime: null,     type: "task",                                                              },
-  { id: 13, date: "2026-03-14", title: "Grandma B Day", startTime: "10:00", endTime: "11:00", type: "personal",                                                          },
+// Helper: map backend event to calendar format
+function mapBackendEventToCalendar(evt) {
+  const startDate = new Date(evt.startTime);
+  const endDate = new Date(evt.endTime);
+  
+  let location = "TBA";
+  if (evt.description && evt.description.includes("|")) {
+      location = evt.description.split("|")[1] || "TBA";
+  }
 
-  // ── Week 3 (Mar 16 – 22) ────────────────────────────────
-  { id: 14, date: "2026-03-16", title: "UX 300",        startTime: "8:30",  endTime: "9:30",  type: "class",    lecturer: "Laudette Sass",   location: "On Campus - C4"  },
-  { id: 15, date: "2026-03-16", title: "VC 300",        startTime: "9:00",  endTime: "10:00", type: "class",    lecturer: "Matt Williams",   location: "Online"          },
-  { id: 16, date: "2026-03-16", title: "DV 300",        startTime: "14:00", endTime: "16:00", type: "class",    lecturer: "Tsungai Katsuro", location: "On Campus - B2"  },
-  { id: 17, date: "2026-03-18", title: "Group Meeting", startTime: "7:00",  endTime: "9:00",  type: "meeting",  lecturer: "Study Group",     location: "Online"          },
-  { id: 18, date: "2026-03-18", title: "UX 300",        startTime: "9:00",  endTime: "13:00", type: "class",    lecturer: "Laudette Sass",   location: "On Campus - C4"  },
-  { id: 19, date: "2026-03-19", title: "DV 300",        startTime: "13:00", endTime: "17:00", type: "class",    lecturer: "Tsungai Katsuro", location: "On Campus - B2"  },
-  { id: 20, date: "2026-03-20", title: "Coffee Date",   startTime: "10:00", endTime: "11:00", type: "personal",                                                          },
-
-  // ── Week 4 (Mar 23 – 29) ────────────────────────────────
-  { id: 21, date: "2026-03-23", title: "UX 300",        startTime: "8:30",  endTime: "9:30",  type: "class",    lecturer: "Laudette Sass",   location: "On Campus - C4"  },
-  { id: 22, date: "2026-03-23", title: "VC 300",        startTime: "14:00", endTime: "18:00", type: "class",    lecturer: "Matt Williams",   location: "Online"          },
-  { id: 23, date: "2026-03-23", title: "DV 300",        startTime: "14:00", endTime: "16:00", type: "class",    lecturer: "Tsungai Katsuro", location: "On Campus - B2"  },
-  { id: 24, date: "2026-03-24", title: "Group Meeting", startTime: "9:00",  endTime: "10:00", type: "meeting",  lecturer: "Study Group",     location: "Online"          },
-  { id: 25, date: "2026-03-25", title: "UX 300",        startTime: "9:00",  endTime: "13:00", type: "class",    lecturer: "Laudette Sass",   location: "On Campus - C4"  },
-  { id: 26, date: "2026-03-26", title: "DV 300",        startTime: "13:00", endTime: "17:00", type: "class",    lecturer: "Tsungai Katsuro", location: "On Campus - B2"  },
-  { id: 27, date: "2026-03-29", title: "Work on UX",    startTime: "10:00", endTime: "11:00", type: "personal",                                                          },
-];
+  return {
+    id: evt.id,
+    date: startDate.toISOString().slice(0, 10),
+    title: evt.title,
+    startTime: `${String(startDate.getHours()).padStart(2, '0')}:${String(startDate.getMinutes()).padStart(2, '0')}`,
+    endTime: `${String(endDate.getHours()).padStart(2, '0')}:${String(endDate.getMinutes()).padStart(2, '0')}`,
+    type: evt.eventType || "class",
+    lecturer: evt.createdBy || "Unknown",
+    location: location
+  };
+}
 
 // ─────────────────────────────────────────────────────────────
 //  TASKS DATA  (To-Do panel in Day view)
 //  Shape: { id, title, due, dueTime, course }
 // ─────────────────────────────────────────────────────────────
 const TASKS = [
-  { id: 1, title: "High Fidelity Wireframes", due: "Mar 2",  dueTime: "20:00", course: "UX300" },
-  { id: 2, title: "Essay Draft",              due: "Mar 10", dueTime: "20:00", course: "VC300" },
-  { id: 3, title: "Progress Mark",            due: "Mar 21", dueTime: "10:00", course: "DV300" },
+  { id: 1, title: "High Fidelity Wireframes", due: "Next Mon",  dueTime: "20:00", course: "UX300" },
+  { id: 2, title: "Essay Draft",              due: "Next Tue",  dueTime: "20:00", course: "VC300" },
 ];
 
 // ─────────────────────────────────────────────────────────────
-//  MARCH 2026 GRID — 4 rows × 7 cols (Mon Mar 2 → Sun Mar 29)
+//  DYNAMIC GRID GENERATOR — 5 rows × 7 cols
 // ─────────────────────────────────────────────────────────────
 const WEEK_DAYS = ["M", "T", "W", "T", "F", "S", "S"];
 
-const GRID_WEEKS = [
-  [
-    { date: "2026-03-02", day: 2  },
-    { date: "2026-03-03", day: 3  },
-    { date: "2026-03-04", day: 4  },
-    { date: "2026-03-05", day: 5  },
-    { date: "2026-03-06", day: 6  },
-    { date: "2026-03-07", day: 7  },
-    { date: "2026-03-08", day: 8  },
-  ],
-  [
-    { date: "2026-03-09", day: 9  },
-    { date: "2026-03-10", day: 10 },
-    { date: "2026-03-11", day: 11 },
-    { date: "2026-03-12", day: 12 },
-    { date: "2026-03-13", day: 13 },
-    { date: "2026-03-14", day: 14 },
-    { date: "2026-03-15", day: 15 },
-  ],
-  [
-    { date: "2026-03-16", day: 16 },
-    { date: "2026-03-17", day: 17 },
-    { date: "2026-03-18", day: 18 },
-    { date: "2026-03-19", day: 19 },
-    { date: "2026-03-20", day: 20 },
-    { date: "2026-03-21", day: 21 },
-    { date: "2026-03-22", day: 22 },
-  ],
-  [
-    { date: "2026-03-23", day: 23 },
-    { date: "2026-03-24", day: 24 },
-    { date: "2026-03-25", day: 25 },
-    { date: "2026-03-26", day: 26 },
-    { date: "2026-03-27", day: 27 },
-    { date: "2026-03-28", day: 28 },
-    { date: "2026-03-29", day: 29 },
-  ],
-];
+function generateGridWeeks() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  
+  // Find the first Monday on or before the 1st of the month
+  const firstDayOfMonth = new Date(year, month, 1);
+  let startDay = new Date(firstDayOfMonth);
+  const dayOfWeek = startDay.getDay(); // 0 = Sun, 1 = Mon, ..., 6 = Sat
+  const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+  startDay.setDate(startDay.getDate() + diff);
+
+  const grid = [];
+  for (let w = 0; w < 5; w++) { // 5 weeks
+    const week = [];
+    for (let d = 0; d < 7; d++) {
+      const current = new Date(startDay);
+      // To properly handle local timezone offset
+      const isoDate = new Date(current.getTime() - (current.getTimezoneOffset() * 60000)).toISOString().slice(0, 10);
+      week.push({
+        date: isoDate,
+        day: current.getDate(),
+        isOutside: current.getMonth() !== month
+      });
+      startDay.setDate(startDay.getDate() + 1);
+    }
+    grid.push(week);
+  }
+  return grid;
+}
+
+const GRID_WEEKS = generateGridWeeks();
+const CURRENT_MONTH_NAME = new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
 
 // Build a date → events[] lookup map
 function buildEventMap(events) {
@@ -128,9 +104,23 @@ const viewVariants = {
 // ─────────────────────────────────────────────────────────────
 export default function StudentCalendar() {
   const [activeView, setActiveView] = useState("month");
+  const [events, setEvents] = useState([]);
 
-  const eventMap = buildEventMap(EVENTS);
-  const todayStr = new Date().toISOString().slice(0, 10);
+  React.useEffect(() => {
+    async function fetchCalendarEvents() {
+      try {
+        const backendEvents = await getAllEvents();
+        const mapped = backendEvents.map(mapBackendEventToCalendar);
+        setEvents(mapped);
+      } catch (err) {
+        console.error("Failed to load events for calendar:", err);
+      }
+    }
+    fetchCalendarEvents();
+  }, []);
+
+  const eventMap = buildEventMap(events);
+  const todayStr = new Date(new Date().getTime() - (new Date().getTimezoneOffset() * 60000)).toISOString().slice(0, 10);
 
   return (
     <>
@@ -148,7 +138,7 @@ export default function StudentCalendar() {
 
           {/* Month title — left */}
           <h1 className="font-['Gabarito'] text-[1.6rem] font-bold text-gray-900 dark:text-slate-100 flex items-center gap-1.5">
-            March 2026
+            {CURRENT_MONTH_NAME}
             <span className="text-base text-gray-400 dark:text-slate-500">∨</span>
           </h1>
 
@@ -222,7 +212,7 @@ export default function StudentCalendar() {
               animate="visible"
               exit="exit"
             >
-              <CalendarTimelineView events={EVENTS} weeks={GRID_WEEKS} />
+              <CalendarTimelineView events={events} weeks={GRID_WEEKS} />
             </motion.div>
           )}
 
@@ -236,7 +226,7 @@ export default function StudentCalendar() {
               exit="exit"
             >
               <CalendarDayView
-                events={EVENTS}
+                events={events}
                 tasks={TASKS}
                 weeks={GRID_WEEKS}
               />

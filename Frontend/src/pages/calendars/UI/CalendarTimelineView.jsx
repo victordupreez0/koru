@@ -56,7 +56,11 @@ const DAY_LABELS = ["M", "T", "W", "T", "F", "S", "S"];
  *  - weeks  (array) : GRID_WEEKS array — array of 4 week arrays
  */
 export default function CalendarTimelineView({ events = [], weeks = [] }) {
-  const [weekIdx, setWeekIdx] = useState(0);
+  const [weekIdx, setWeekIdx] = useState(() => {
+    const todayStr = new Date(new Date().getTime() - (new Date().getTimezoneOffset() * 60000)).toISOString().slice(0, 10);
+    const idx = weeks.findIndex(week => week.some(d => d.date === todayStr));
+    return idx >= 0 ? idx : 0;
+  });
   const currentWeek = weeks[weekIdx] ?? [];
 
   // Week label e.g. "Mar 2 – 8"
