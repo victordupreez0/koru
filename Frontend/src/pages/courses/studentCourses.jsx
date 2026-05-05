@@ -11,6 +11,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import AttendanceChart from "../../components/UI/attendanceChart";
 import AttendanceVisualizer from "../../components/UI/attendanceVisualizer";
 import { getCourseAssignments } from "../../services/assignmentService";
+import { getCourseAnnouncements } from "../../services/announcementService";
 import {
     EditorRoot,
     EditorContent,
@@ -46,36 +47,6 @@ const GRADES_DATA = [
     { id: 4, name: "Final Case Study Delivery", weight: "40%", grade: "-", status: "Pending", date: "Expected June" },
 ];
 
-const ANNOUNCEMENTS_DATA = [
-    {
-        id: 1,
-        title: "Project 3 Brief Released",
-        lecturer: "Dr. Sarah Miller",
-        date: "Today, 10:45 AM",
-        preview: "The brief for Project 3: High-Fidelity Prototyping is now available in the Modules section. Please review the technical requirements before Monday's lecture.",
-        label: "Notice",
-        color: "#3C0078"
-    },
-    {
-        id: 2,
-        title: "Guest Lecture: Industry UX Trends",
-        lecturer: "Prof. Mark Chen",
-        date: "Yesterday, 2:15 PM",
-        preview: "We have an exciting guest speaker from a leading fintech startup joining us next week Tuesday. Attendance is mandatory for UX300 students.",
-        label: "Event",
-        color: "#FF8731"
-    },
-    {
-        id: 3,
-        title: "Lab Room Change - Block D",
-        lecturer: "Admin",
-        date: "18 Apr 2026",
-        preview: "The practical session for Friday will be moved to Lab 402 in Block D due to maintenance in the main studio.",
-        label: "Update",
-        color: "#87CEFA"
-    }
-];
-
 // Hardcoded static references preserved for Attendance/Grades until their respective phases
 
 const ATTENDANCE_STATS = [
@@ -107,61 +78,83 @@ const scaleIn = {
     visible: { opacity: 1, scale: 1, transition: { duration: 0.4, ease: "easeOut" } }
 };
 
-function CourseAnnouncementsView() {
+function CourseAnnouncementsView({ activeCourseId }) {
+    const [announcements, setAnnouncements] = useState([]);
+    const [loading, setLoading] = useState(true);
     const [selectedId, setSelectedId] = useState(null);
-    const selectedAnnouncement = ANNOUNCEMENTS_DATA.find(a => a.id === selectedId);
+
+    useEffect(() => {
+        let mounted = true;
+        async function fetchAnnouncements() {
+            if (!activeCourseId) return;
+            try {
+                setLoading(true);
+                const data = await getCourseAnnouncements(activeCourseId);
+                if (mounted) setAnnouncements(data);
+            } catch (err) {
+                console.error("Failed bringing in announcements:", err);
+            } finally {
+                if (mounted) setLoading(false);
+            }
+        }
+        fetchAnnouncements();
+        return () => { mounted = false; };
+    }, [activeCourseId]);
+
+    const selectedAnnouncement = announcements.find(a => a.id === selectedId);
 
     return (
         <motion.div className="flex-1 p-8 overflow-y-auto" initial="hidden" animate="visible" variants={staggerContainer}>
             <motion.header variants={slideUp} className="mb-12">
-                <h1 className="text-3xl font-semibold tracking-tight">Announcements</h1>
-                <p className="text-gray-500 mt-2">Latest updates from your lecturers</p>
+                <h1 className="text-3xl font-semibold tracking-tight dark:text-slate-100">Announcements</h1>
+                <p className="text-gray-500 dark:text-slate-400 mt-2">Latest updates from your lecturers</p>
             </motion.header>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-6xl">
-                {ANNOUNCEMENTS_DATA.map((post) => (
-                    <motion.div 
-                        key={post.id} 
-                        layoutId={`ann_container_${post.id}`}
-                        onClick={() => setSelectedId(post.id)}
-                        variants={slideUp} 
-                        className="bg-white p-8 rounded-[38px] border border-gray-100 shadow-sm hover:shadow-xl transition-all cursor-pointer relative overflow-hidden group"
-                        whileHover={{ y: -5 }}
-                    >
+            {loading ? (
+                <div className="text-gray-500 dark:text-slate-400 text-center py-20 font-medium">Loading remote announcements...</div>
+            ) : announcements.length === 0 ? (
+                <div className="text-gray-500 dark:text-slate-400 text-center py-20 font-medium bg-gray-50 dark:bg-slate-800/50 rounded-[40px] border border-gray-100 dark:border-slate-700">
+                    No active announcements for this course yet.
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-6xl">
+                    {announcements.map((post) => (
                         <motion.div 
-                            layoutId={`ann_stripe_${post.id}`}
-                            className="absolute left-0 top-0 bottom-0 w-1.5" 
-                            style={{ backgroundColor: post.color }} 
-                        />
-                        <div className="flex justify-between items-start mb-6">
-                            <motion.div layoutId={`ann_meta_${post.id}`} className="flex items-center gap-3">
-                                <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider text-white" style={{ backgroundColor: post.color }}>{post.label}</span>
-                                <span className="text-sm text-gray-400">{post.date}</span>
-                            </motion.div>
-                            <motion.div layoutId={`ann_icon_${post.id}`} className="text-gray-200">
-                                <Bell size={24} />
-                            </motion.div>
-                        </div>
-                        <motion.h2 
-                            layoutId={`ann_title_${post.id}`}
-                            className="text-2xl font-bold text-gray-900 group-hover:text-[#3C0078] transition-colors leading-tight"
+                            key={post.id} 
+                            onClick={() => setSelectedId(post.id)}
+                            variants={slideUp} 
+                            className="bg-white dark:bg-slate-800 p-8 rounded-[38px] border border-gray-100 dark:border-slate-700 shadow-sm hover:shadow-xl transition-all cursor-pointer relative overflow-hidden group"
+                            whileHover={{ y: -5 }}
                         >
-                            {post.title}
-                        </motion.h2>
-                        <motion.div layoutId={`ann_author_${post.id}`}>
-                            <p className="text-xs font-bold uppercase tracking-widest text-[#3C0078] mt-2 opacity-60">Posted by {post.lecturer}</p>
+                            <div 
+                                className="absolute left-0 top-0 bottom-0 w-1.5" 
+                                style={{ backgroundColor: post.color }} 
+                            />
+                            <div className="flex justify-between items-start mb-6">
+                                <div className="flex items-center gap-3">
+                                    <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider text-white" style={{ backgroundColor: post.color }}>{post.label}</span>
+                                    <span className="text-sm text-gray-400 dark:text-slate-500">{new Date(post.datePosted).toLocaleString()}</span>
+                                </div>
+                            </div>
+                            <h2 
+                                className="text-2xl font-bold text-gray-900 dark:text-slate-100 group-hover:text-[#3C0078] dark:group-hover:text-[#9BE9EA] transition-colors leading-tight"
+                            >
+                                {post.title}
+                            </h2>
+                            <div>
+                                <p className="text-xs font-bold uppercase tracking-widest text-[#3C0078] dark:text-[#9BE9EA] mt-2 opacity-60">Posted by {post.lecturerName}</p>
+                            </div>
+                            <p className="text-gray-500 dark:text-slate-400 mt-4 leading-relaxed line-clamp-2">
+                                {post.preview}
+                            </p>
                         </motion.div>
-                        <motion.p layoutId={`ann_preview_${post.id}`} className="text-gray-500 mt-4 leading-relaxed line-clamp-2">
-                            {post.preview}
-                        </motion.p>
-                    </motion.div>
-                ))}
-            </div>
+                    ))}
+                </div>
+            )}
 
             <AnimatePresence>
-                {selectedId && (
+                {selectedId && selectedAnnouncement && (
                     <>
-                        {/* Overlay backdrop */}
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
@@ -170,90 +163,52 @@ function CourseAnnouncementsView() {
                             className="fixed inset-0 bg-black/40 backdrop-blur-md z-[100]"
                         />
 
-                        {/* Modal container */}
                         <div className="fixed inset-0 z-[101] flex items-center justify-center p-4 pointer-events-none">
                             <motion.div
-                                layoutId={`ann_container_${selectedId}`}
-                                className="bg-white w-full max-w-2xl rounded-[48px] shadow-2xl relative overflow-hidden pointer-events-auto"
+                                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                                className="bg-white dark:bg-slate-800 w-full max-w-2xl rounded-[48px] shadow-2xl relative overflow-hidden pointer-events-auto"
                                 transition={{ type: "spring", damping: 25, stiffness: 200 }}
                             >
-                                <motion.div 
-                                    layoutId={`ann_stripe_${selectedId}`}
-                                    className="absolute left-0 top-0 bottom-0 w-3" 
-                                    style={{ backgroundColor: selectedAnnouncement.color }} 
-                                />
-                                
+                                <div className="absolute left-0 top-0 bottom-0 w-3" style={{ backgroundColor: selectedAnnouncement.color }} />
                                 <div className="p-12">
                                     <div className="flex justify-between items-start mb-10">
-                                        <motion.div layoutId={`ann_meta_${selectedId}`} className="flex items-center gap-4">
+                                        <div className="flex items-center gap-4">
                                             <span className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest text-white" style={{ backgroundColor: selectedAnnouncement.color }}>
                                                 {selectedAnnouncement.label}
                                             </span>
-                                            <span className="text-sm font-medium text-gray-400">{selectedAnnouncement.date}</span>
-                                        </motion.div>
-                                        <div className="flex gap-2">
-                                            <motion.div layoutId={`ann_icon_${selectedId}`} className="text-gray-100 hidden md:block">
-                                                <Bell size={32} />
-                                            </motion.div>
-                                            <button 
-                                                onClick={(e) => { e.stopPropagation(); setSelectedId(null); }}
-                                                className="w-12 h-12 flex items-center justify-center rounded-full bg-gray-50 text-gray-400 hover:bg-gray-100 hover:text-gray-900 transition-colors"
-                                            >
-                                                <CloseSquare size={24} />
-                                            </button>
+                                            <span className="text-sm font-medium text-gray-400 dark:text-slate-500">{new Date(selectedAnnouncement.datePosted).toLocaleString()}</span>
                                         </div>
+                                        <button onClick={(e) => { e.stopPropagation(); setSelectedId(null); }} className="w-12 h-12 flex items-center justify-center rounded-full bg-gray-50 dark:bg-slate-700 text-gray-400 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-600 hover:text-gray-900 dark:hover:text-white transition-colors">
+                                            <CloseSquare size={24} />
+                                        </button>
                                     </div>
-
-                                    <motion.h2 
-                                        layoutId={`ann_title_${selectedId}`}
-                                        className="text-4xl font-black text-gray-900 leading-tight mb-4"
-                                    >
+                                    <h2 className="text-4xl font-black text-gray-900 dark:text-slate-100 leading-tight mb-4">
                                         {selectedAnnouncement.title}
-                                    </motion.h2>
-
-                                    <motion.div layoutId={`ann_author_${selectedId}`} className="flex items-center gap-3 mb-10 pb-10 border-b border-gray-100">
-                                        <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-[#3C0078]">
+                                    </h2>
+                                    <div className="flex items-center gap-3 mb-10 pb-10 border-b border-gray-100 dark:border-slate-700">
+                                        <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-slate-700 flex items-center justify-center text-[#3C0078] dark:text-[#9BE9EA]">
                                             <User size={20} />
                                         </div>
                                         <div>
-                                            <p className="text-xs font-black uppercase tracking-widest text-gray-400">Published By</p>
-                                            <p className="font-bold text-[#3C0078]">{selectedAnnouncement.lecturer}</p>
+                                            <p className="text-xs font-black uppercase tracking-widest text-gray-400 dark:text-slate-500">Published By</p>
+                                            <p className="font-bold text-[#3C0078] dark:text-[#9BE9EA]">{selectedAnnouncement.lecturerName}</p>
                                         </div>
-                                    </motion.div>
-
-                                    <motion.div
-                                        initial={{ opacity: 0, y: 20 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: 0.2 }}
-                                        className="prose prose-purple max-w-none"
-                                    >
-                                        <motion.p layoutId={`ann_preview_${selectedId}`} className="text-xl leading-relaxed text-gray-600 mb-6 font-medium">
+                                    </div>
+                                    <div className="prose prose-purple max-w-none">
+                                        <p className="text-xl leading-relaxed text-gray-600 dark:text-slate-400 mb-6 font-medium">
                                             {selectedAnnouncement.preview}
-                                        </motion.p>
-                                        <p className="text-gray-500 leading-relaxed text-lg">
+                                        </p>
+                                        <p className="text-gray-500 dark:text-slate-400 leading-relaxed text-lg">
                                             Please make sure to check the attached documents in the resources section if any are mentioned. If you have any follow-up questions regarding this announcement, feel free to reach out to the lecturer during office hours or post in the discussion forum.
                                         </p>
-                                    </motion.div>
-
-                                    <motion.div 
-                                        initial={{ opacity: 0, y: 10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: 0.3 }}
-                                        className="mt-12 flex items-center justify-between"
-                                    >
-                                        <button 
-                                            onClick={() => setSelectedId(null)}
-                                            className="px-8 py-3 rounded-2xl bg-[#3C0078]/5 text-[#3C0078] font-bold text-xs uppercase tracking-widest hover:bg-[#3C0078] hover:text-white transition-all"
-                                        >
+                                    </div>
+                                    <div className="mt-12 flex items-center justify-between">
+                                        <button onClick={() => setSelectedId(null)} className="px-8 py-3 rounded-2xl bg-[#3C0078]/5 text-[#3C0078] font-bold text-xs uppercase tracking-widest hover:bg-[#3C0078] hover:text-white transition-all">
                                             Back to list
                                         </button>
-                                        <div className="flex gap-4">
-                                            <button className="flex items-center gap-2 text-gray-400 hover:text-[#3C0078] transition-colors">
-                                                <Letter size={18} />
-                                                <span className="text-xs font-bold uppercase tracking-widest">Share</span>
-                                            </button>
-                                        </div>
-                                    </motion.div>
+                                    </div>
                                 </div>
                             </motion.div>
                         </div>
@@ -314,11 +269,11 @@ function CourseAssignmentsView({ subject, activeCourseId }) {
         <motion.div className="flex-1 p-8 overflow-y-auto" initial="hidden" animate="visible" variants={staggerContainer}>
             <motion.header variants={slideUp} className="mb-12 flex justify-between items-end">
                 <div>
-                    <h1 className="text-3xl font-semibold tracking-tight">Assignments</h1>
-                    <p className="text-gray-500 mt-2 text-lg">{subject?.code || "Pending"} | Assessments & Briefs</p>
+                    <h1 className="text-3xl font-semibold tracking-tight dark:text-slate-100">Assignments</h1>
+                    <p className="text-gray-500 dark:text-slate-400 mt-2 text-lg">{subject?.code || "Pending"} | Assessments & Briefs</p>
                 </div>
                 <div className="flex gap-4">
-                    <button className="px-6 py-3 rounded-2xl border border-gray-200 text-sm font-semibold hover:bg-gray-50 transition-colors flex items-center gap-2 shadow-sm">
+                    <button className="px-6 py-3 rounded-2xl border border-gray-200 dark:border-slate-700 text-sm font-semibold hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors flex items-center gap-2 shadow-sm dark:text-slate-200">
                         <Folder size={20} /> Briefs Archive
                     </button>
                     {/* The global 'Submit Assignment' button was removed here as per instructions */}
@@ -326,32 +281,32 @@ function CourseAssignmentsView({ subject, activeCourseId }) {
             </motion.header>
             
             {loading ? (
-                <div className="text-gray-500 text-center py-20 font-medium">Loading remote course assignments...</div>
+                <div className="text-gray-500 dark:text-slate-400 text-center py-20 font-medium">Loading remote course assignments...</div>
             ) : assignments.length === 0 ? (
-                <div className="text-gray-500 text-center py-20 font-medium bg-gray-50 rounded-[40px] border border-gray-100">
-                    No active assignments for this module yet.
+                <div className="text-gray-500 dark:text-slate-400 text-center py-20 font-medium bg-gray-50 dark:bg-slate-800/50 rounded-[40px] border border-gray-100 dark:border-slate-700">
+                    No active assignments for this course yet.
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 font-sans">
                     {assignments.map((item, index) => (
-                        <motion.div key={item.id} variants={slideUp} className={`bg-white p-6 rounded-[40px] border border-gray-100 shadow-sm relative overflow-hidden group hover:shadow-xl transition-all duration-300 flex flex-col justify-between ${item.isClosed || item.isSubmitted ? 'opacity-60 bg-gray-50' : 'opacity-100'}`}>
+                        <motion.div key={item.id} variants={slideUp} className={`bg-white dark:bg-slate-800 p-6 rounded-[40px] border border-gray-100 dark:border-slate-700 shadow-sm relative overflow-hidden group hover:shadow-xl transition-all duration-300 flex flex-col justify-between ${item.isClosed || item.isSubmitted ? 'opacity-60 bg-gray-50 dark:bg-slate-800/50' : 'opacity-100'}`}>
                             <div>
                                 <div className="flex justify-between items-start mb-4">
-                                    <h2 className="text-xl font-bold text-gray-900 group-hover:text-[#3C0078] transition-colors leading-tight pr-4">{item.title}</h2>
+                                    <h2 className="text-xl font-bold text-gray-900 dark:text-slate-100 group-hover:text-[#3C0078] dark:group-hover:text-[#9BE9EA] transition-colors leading-tight pr-4">{item.title}</h2>
                                     <span className={`text-[10px] font-bold uppercase tracking-widest whitespace-nowrap mt-1 ${item.color}`}>{item.status}</span>
                                 </div>
-                                <p className="text-sm text-gray-500 line-clamp-2 leading-relaxed mb-6">{item.description}</p>
+                                <p className="text-sm text-gray-500 dark:text-slate-400 line-clamp-2 leading-relaxed mb-6">{item.description}</p>
                             </div>
-                            <div className="space-y-4 pt-6 border-t border-gray-50">
+                            <div className="space-y-4 pt-6 border-t border-gray-50 dark:border-slate-700">
                                 <div className="flex justify-between items-center text-xs">
-                                    <span className="text-gray-400 uppercase font-bold tracking-widest">Weight:</span>
-                                    <span className="text-gray-900 font-bold">{item.maxPoints} pts</span>
+                                    <span className="text-gray-400 dark:text-slate-500 uppercase font-bold tracking-widest">Weight:</span>
+                                    <span className="text-gray-900 dark:text-slate-100 font-bold">{item.maxPoints} pts</span>
                                 </div>
                                 <div className="flex justify-between items-center text-xs">
-                                    <span className="text-gray-400 uppercase font-bold tracking-widest">Due Date:</span>
-                                    <span className="text-gray-900 font-bold">{new Date(item.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
+                                    <span className="text-gray-400 dark:text-slate-500 uppercase font-bold tracking-widest">Due Date:</span>
+                                    <span className="text-gray-900 dark:text-slate-100 font-bold">{new Date(item.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
                                 </div>
-                                <button className={`w-full mt-2 py-3 rounded-2xl text-xs font-bold uppercase tracking-widest text-white transition-all flex items-center justify-center gap-2 shadow-sm ${item.isClosed || item.isSubmitted ? 'bg-gray-800 hover:bg-black' : 'bg-[#3C0078] hover:bg-[#2A0054]'}`}>
+                                <button className={`w-full mt-2 py-3 rounded-2xl text-xs font-bold uppercase tracking-widest text-white transition-all flex items-center justify-center gap-2 shadow-sm ${item.isClosed || item.isSubmitted ? 'bg-gray-800 dark:bg-slate-700 hover:bg-black dark:hover:bg-slate-600' : 'bg-[#3C0078] hover:bg-[#2A0054] dark:bg-[#14B8A6] dark:hover:bg-[#0f766e]'}`}>
                                     {(!item.isClosed && !item.isSubmitted) && <Upload size={16} />}
                                     {item.isClosed ? "View" : item.isSubmitted ? "View Submission" : "View & Submit"}
                                 </button>
@@ -1116,7 +1071,7 @@ export default function StudentCourses() {
             {isGradesPage ? (
                 <CourseGradesView />
             ) : isAnnouncementsPage ? (
-                <CourseAnnouncementsView />
+                <CourseAnnouncementsView activeCourseId={activeCourseId} />
             ) : isAssignmentsPage ? (
                 <CourseAssignmentsView subject={subject} activeCourseId={activeCourseId} />
             ) : isAttendancePage ? (
