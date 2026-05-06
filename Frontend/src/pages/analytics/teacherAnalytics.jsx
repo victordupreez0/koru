@@ -103,9 +103,13 @@ export default function TeacherAnalytics() {
 
   // ── filtered courses ──
   const filteredCourses = useMemo(() => {
-    return visibleCourses.filter(c =>
-      (selectedYearLevel === "All" || c.yearLevel === selectedYearLevel)
-    );
+    return visibleCourses.filter(c => {
+      // Derive yearLevel from the course number (e.g. "300" -> "3rd Year", "200" -> "2nd Year")
+      if (selectedYearLevel === "All") return true;
+      const num = parseInt(c.number, 10);
+      const level = num >= 300 ? "3rd Year" : num >= 200 ? "2nd Year" : "1st Year";
+      return level === selectedYearLevel;
+    });
   }, [visibleCourses, selectedYearLevel]);
 
   const activeCourseIds = useMemo(() =>
@@ -156,7 +160,7 @@ export default function TeacherAnalytics() {
         totalSubmissions: subs.length,
         graded: gs.length,
         avgScore: avgScore,
-        courseCode: filteredCourses.find(c => c.id === a.courseId)?.label || "???"
+        courseCode: filteredCourses.find(c => c.id === a.courseId)?.label || visibleCourses.find(c => c.id === a.courseId)?.label || "???"
       };
     });
   }, [assignments, submissions, grades, activeCourseIds, filteredCourses]);
@@ -229,7 +233,7 @@ export default function TeacherAnalytics() {
             <select value={selectedCourseId} onChange={e => setSelectedCourseId(e.target.value)}
               className="rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 outline-none focus:border-[#3C0078] focus:ring-2 focus:ring-[#3C0078]/20 transition cursor-pointer">
               <option value="all">All Courses</option>
-              {filteredCourses.map(c => <option key={c.id} value={c.id}>{c.code} – {c.name}</option>)}
+              {filteredCourses.map(c => <option key={c.id} value={c.id}>{c.label} – {c.subjectName}</option>)}
             </select>
           </label>
         </motion.div>
@@ -256,6 +260,8 @@ export default function TeacherAnalytics() {
                   const trend = MOCK_COURSE_TRENDS[course.id];
                   const avg = gradedAssignments.filter(a => a.courseId === course.id);
                   const courseAvg = avg.length ? Math.round(avg.reduce((s, a) => s + a.avgScore, 0) / avg.length) : 0;
+                  const yearLevel = parseInt(course.number, 10) >= 300 ? "3rd Year" : parseInt(course.number, 10) >= 200 ? "2nd Year" : "1st Year";
+                  const enrolledCount = studentRoster.filter(s => submissions.some(sub => sub.assignment?.courseId === course.id && sub.studentId === s.id)).length;
                   return (
                     <motion.div key={course.id} whileHover={{ y: -3 }}
                       onClick={() => setSelectedCourseId(selectedCourseId === course.id ? "all" : course.id)}
@@ -266,14 +272,14 @@ export default function TeacherAnalytics() {
                           <span className="absolute inset-0 flex items-center justify-center text-sm font-black italic text-gray-900">{courseAvg}</span>
                         </div>
                         <div className="min-w-0">
-                          <p className="font-bold text-gray-900 truncate">{course.code}</p>
-                          <p className="text-xs text-gray-400 truncate">{course.name}</p>
+                          <p className="font-bold text-gray-900 truncate">{course.label}</p>
+                          <p className="text-xs text-gray-400 truncate">{course.subjectName}</p>
                         </div>
                       </div>
                       <MiniSparkline data={trend} color={course.color} height={36} />
                       <div className="flex justify-between mt-3 text-xs text-gray-400">
-                        <span>{course.enrolled} students</span>
-                        <span>{course.yearLevel}</span>
+                        <span>{enrolledCount} students</span>
+                        <span>{yearLevel}</span>
                       </div>
                     </motion.div>
                   );
@@ -285,7 +291,7 @@ export default function TeacherAnalytics() {
             <motion.div variants={fadeUp} className="bg-white rounded-[28px] border border-gray-100 shadow-sm overflow-hidden">
               <div className="px-7 py-5 border-b border-gray-50 flex justify-between items-center">
                 <h2 className="text-xl font-bold text-gray-900">Grading Progress</h2>
-                <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">{filteredAssignments.length} assignments</span>
+                <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">{assignmentsWithStats.length} assignments</span>
               </div>
               <table className="w-full text-left">
                 <thead>
@@ -337,7 +343,7 @@ export default function TeacherAnalytics() {
             <motion.div variants={fadeUp} className="bg-white rounded-[28px] border border-gray-100 shadow-sm overflow-hidden">
               <div className="px-7 py-5 border-b border-gray-50 flex justify-between items-center">
                 <h2 className="text-xl font-bold text-gray-900">Student Performance</h2>
-                <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">{MOCK_STUDENTS.length} students</span>
+                <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">{studentRoster.length} students</span>
               </div>
               <table className="w-full text-left">
                 <thead>
