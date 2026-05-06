@@ -67,13 +67,13 @@ namespace LearnOnline.Data
             context.SaveChanges(); // Save users so they have IDs to link to below
 
             // 2. Seed Subjects, Courses and Enrollments
-            // Seed UX300 (Tsungai Katsuro)
+            // Seed UX300 (Dev Teacher)
             if (!context.Subjects.Any(s => s.Code == "UX300"))
             {
                 var subject = new Subject { Name = "User Experience Design 300", Code = "UX300", Description = "Inclusive & Neurodiverse UX foundation course.", CreatedBy = admin.Id };
                 context.Subjects.Add(subject);
                 context.SaveChanges();
-                var course = new Course { Term = "Term 1", Year = 2026, Capacity = 150, SubjectId = subject.Id, TeacherId = tsungai.Id };
+                var course = new Course { Term = "Term 1", Year = 2026, Capacity = 150, SubjectId = subject.Id, TeacherId = teacher.Id };
                 context.Courses.Add(course);
                 context.SaveChanges();
                 context.Enrollments.Add(new Enrollment { Status = "Active", CourseId = course.Id, StudentId = student.Id });
@@ -83,7 +83,7 @@ namespace LearnOnline.Data
             {
                 var subject = context.Subjects.First(s => s.Code == "UX300");
                 var course = context.Courses.FirstOrDefault(c => c.SubjectId == subject.Id);
-                if (course != null && course.TeacherId != tsungai.Id) { course.TeacherId = tsungai.Id; context.SaveChanges(); }
+                if (course != null && course.TeacherId != teacher.Id) { course.TeacherId = teacher.Id; context.SaveChanges(); }
             }
 
             // Seed DV300 (William Basson)
@@ -191,9 +191,9 @@ namespace LearnOnline.Data
                         context.Submissions.Add(submission);
                         context.SaveChanges(); 
                         
-                        tsungai = context.Users.FirstOrDefault(u => u.Email == "tsungai@learnonline.co.za");
-                        if (tsungai != null) {
-                            var grade = new Grade { SubmissionId = submission.Id, GradedBy = tsungai.Id, PointsEarned = 45 }; 
+                        var devTeacherGrader = context.Users.FirstOrDefault(u => u.Email == "devteacher@learnonline.co.za");
+                        if (devTeacherGrader != null) {
+                            var grade = new Grade { SubmissionId = submission.Id, GradedBy = devTeacherGrader.Id, PointsEarned = 45 }; 
                             context.Grades.Add(grade);
                         }
                     }
@@ -284,9 +284,9 @@ namespace LearnOnline.Data
 
                     if (uxCourseId != null) {
                         // UX300 - Theory: Mondays 09:00 - 11:00
-                        context.Events.Add(new Event { CourseId = uxCourseId, Title = "UX300 - Theory", Description = "Theory Session|Room 101", EventType = "class", StartTime = weekStart.AddDays(0).AddHours(9), EndTime = weekStart.AddDays(0).AddHours(11), CreatedBy = "Tsungai Katsuro", BgColor = "#3C0078", TextColor = "#ffffff" });
+                        context.Events.Add(new Event { CourseId = uxCourseId, Title = "UX300 - Theory", Description = "Theory Session|Room 101", EventType = "class", StartTime = weekStart.AddDays(0).AddHours(9), EndTime = weekStart.AddDays(0).AddHours(11), CreatedBy = "Dev Teacher", BgColor = "#3C0078", TextColor = "#ffffff" });
                         // UX300 - Practical: Wednesdays 14:00 - 16:00
-                        context.Events.Add(new Event { CourseId = uxCourseId, Title = "UX300 - Practical", Description = "Lab Session|Room 208", EventType = "class", StartTime = weekStart.AddDays(2).AddHours(14), EndTime = weekStart.AddDays(2).AddHours(16), CreatedBy = "Tsungai Katsuro", BgColor = "#3C0078", TextColor = "#ffffff" });
+                        context.Events.Add(new Event { CourseId = uxCourseId, Title = "UX300 - Practical", Description = "Lab Session|Room 208", EventType = "class", StartTime = weekStart.AddDays(2).AddHours(14), EndTime = weekStart.AddDays(2).AddHours(16), CreatedBy = "Dev Teacher", BgColor = "#3C0078", TextColor = "#ffffff" });
                     }
 
                     if (vcCourseId != null) {
