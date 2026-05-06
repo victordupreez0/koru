@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import confetti from "canvas-confetti";
 import AssignmentItem from "./UI/assignmentItem";
 import ProgressRing from "./UI/progressRing";
@@ -12,10 +12,13 @@ import { getStudentSubmissions } from "../services/submissionService";
 // Each assignment needs: id, title, dueDate (display string),
 // courseCode, completed (boolean)
 // ──────────────────────────────────────────────
+const PREVIEW_COUNT = 3;
+
 export default function AssignmentsProgress() {
   const { user } = useAuth();
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [expanded, setExpanded] = useState(false);
 
   const getRankAndState = (dbAssignment, studentSubmission) => {
       // If there is a submission, the state depends on its status
@@ -119,6 +122,13 @@ export default function AssignmentsProgress() {
     return Math.round((done / assignments.length) * 100);
   }, [assignments]);
 
+  // Determine visible assignments
+  const visibleAssignments = expanded
+    ? assignments
+    : assignments.slice(0, PREVIEW_COUNT);
+
+  const hasMore = assignments.length > PREVIEW_COUNT;
+
   return (
     <div className="w-full">
       {/* ── Assignments Header ── */}
@@ -128,14 +138,15 @@ export default function AssignmentsProgress() {
       <p className="text-sm text-transparent mb-5 font-medium select-none" aria-hidden="true">Spacer</p>
 
       {/* ── Assignment Cards ── */}
-      <div className="flex flex-col gap-3 min-h-[160px] max-h-[520px] overflow-y-auto scrollbar-black pr-2">
+      <div className="flex flex-col gap-3 min-h-[160px]">
         {loading ? (
             <div className="text-gray-400 dark:text-slate-500 text-sm font-medium w-full text-center mt-8">Loading assignments...</div>
         ) : assignments.length === 0 ? (
             <div className="text-gray-400 dark:text-slate-500 text-sm font-medium w-full text-center mt-8">You have no upcoming assignments.</div>
         ) : (
-            assignments.map((assignment) => (
-            <AssignmentItem
+          <>
+            {visibleAssignments.map((assignment) => (
+              <AssignmentItem
                 key={assignment.id}
                 title={assignment.title}
                 dueDate={assignment.dueDate}
@@ -143,8 +154,43 @@ export default function AssignmentsProgress() {
                 completed={assignment.completed}
                 uiState={assignment.uiState}
                 onToggle={() => toggleAssignment(assignment.id)}
-            />
-            ))
+              />
+            ))}
+
+            {/* ── Expandable overflow ── */}
+            <AnimatePresence>
+              {expanded && assignments.slice(PREVIEW_COUNT).map((assignment) => (
+                <motion.div
+                  key={assignment.id}
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.25, ease: "easeInOut" }}
+                >
+                  <AssignmentItem
+                    title={assignment.title}
+                    dueDate={assignment.dueDate}
+                    courseCode={assignment.courseCode}
+                    completed={assignment.completed}
+                    uiState={assignment.uiState}
+                    onToggle={() => toggleAssignment(assignment.id)}
+                  />
+                </motion.div>
+              ))}
+            </AnimatePresence>
+
+            {/* ── View All / Show Less button ── */}
+            {hasMore && (
+              <button
+                onClick={() => setExpanded((prev) => !prev)}
+                className="mt-1 w-full py-2 rounded-xl text-sm font-semibold tracking-wide transition-all duration-200
+                  bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-900
+                  border border-gray-200 hover:border-gray-300 cursor-pointer"
+              >
+                {expanded ? "Show Less" : `View All (${assignments.length})`}
+              </button>
+            )}
+          </>
         )}
       </div>
 
