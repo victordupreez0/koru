@@ -23,10 +23,7 @@ const fadeUp = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.45, ease: "easeOut" } },
 };
 
-/* ──────────────────────────── MOCK DATA ──────────────────────────── */
 
-// Monthly grade trend (for the sparkline)
-const MOCK_MONTHLY_TREND = [62, 68, 71, 74, 70, 76, 78, 80, 82, 79, 84, 81];
 
 /* ──────────────────────────── helper components ──────────────────────────── */
 
@@ -142,6 +139,51 @@ export default function StudentAnalytics() {
     return () => { mounted = false; };
   }, [user?.userId, visibleCourses]);
 
+  const monthlyTrendData = useMemo(() => {
+    const today = new Date();
+    const last12Months = Array.from({ length: 12 }, (_, i) => {
+      const d = new Date(today.getFullYear(), today.getMonth() - (11 - i), 1);
+      return {
+        label: d.toLocaleDateString('en-US', { month: 'short' }),
+        year: d.getFullYear(),
+        month: d.getMonth(),
+        totalEarned: 0,
+        totalMax: 0
+      };
+    });
+
+    gradesData.forEach(g => {
+      if (!g.gradedAt || g.pointsEarned == null || !g.submission?.assignment?.maxPoints) return;
+      const date = new Date(g.gradedAt);
+      const m = last12Months.find(lm => lm.year === date.getFullYear() && lm.month === date.getMonth());
+      if (m) {
+        m.totalEarned += g.pointsEarned;
+        m.totalMax += g.submission.assignment.maxPoints;
+      }
+    });
+
+    let lastValue = 0;
+    const data = last12Months.map(m => {
+      if (m.totalMax > 0) {
+        lastValue = Math.round((m.totalEarned / m.totalMax) * 100);
+      }
+      return lastValue;
+    });
+
+    let firstNonZero = data.find(v => v > 0) || 0;
+    for(let i = 0; i < data.length; i++) {
+        if(data[i] === 0) data[i] = firstNonZero;
+        else break;
+    }
+
+    const allZeros = data.every(v => v === 0);
+    return {
+      labels: last12Months.map(m => m.label),
+      data: allZeros ? [0,0,0,0,0,0,0,0,0,0,0,0] : data,
+      overallTrend: allZeros ? 0 : data[11] - data[10]
+    };
+  }, [gradesData]);
+
   // Derive stats
   const stats = useMemo(() => {
     let totalPoints = 0;
@@ -173,10 +215,27 @@ export default function StudentAnalytics() {
                 cEarned += g.pointsEarned;
             }
         });
+
+        const sortedGrades = [...courseGrades]
+            .filter(g => g.pointsEarned != null && g.submission?.assignment?.maxPoints)
+            .sort((a, b) => new Date(a.gradedAt) - new Date(b.gradedAt));
+            
+        let trend = 0;
+        if (sortedGrades.length > 1) {
+            const latest = sortedGrades[sortedGrades.length - 1];
+            const previous = sortedGrades[sortedGrades.length - 2];
+            const latestPct = (latest.pointsEarned / latest.submission.assignment.maxPoints) * 100;
+            const prevPct = (previous.pointsEarned / previous.submission.assignment.maxPoints) * 100;
+            trend = (latestPct - prevPct).toFixed(1);
+        } else if (sortedGrades.length === 1) {
+            const latestPct = (sortedGrades[0].pointsEarned / sortedGrades[0].submission.assignment.maxPoints) * 100;
+            trend = (latestPct - 0).toFixed(1);
+        }
+
         return {
             ...course,
             average: cTotal > 0 ? Math.round((cEarned / cTotal) * 100) : 0,
-            trend: (Math.random() * 5).toFixed(1) // Placeholder trend
+            trend: parseFloat(trend)
         };
     });
   }, [visibleCourses, gradesData]);
@@ -250,9 +309,9 @@ export default function StudentAnalytics() {
 
         {/* ─── Top Stat Cards ─── */}
         <motion.div variants={fadeUp} className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard label="Overall Average" value={stats.overallAverage} suffix="%" icon={Target} trend={2.8} accent />
+          <StatCard label="Overall Average" value={stats.overallAverage} suffix="%" icon={Target} trend={monthlyTrendData.overallTrend} accent />
           <StatCard label="Courses Enrolled" value={visibleCourses.length} icon={BookOpen} />
-          <StatCard label="Assignments Graded" value={stats.totalGraded} icon={CheckCircle} trend={3.5} />
+          <StatCard label="Assignments Graded" value={stats.totalGraded} icon={CheckCircle} />
           <StatCard label="Pending Submissions" value={submissionsSummary.pending} icon={Clock} />
         </motion.div>
 
@@ -269,17 +328,18 @@ export default function StudentAnalytics() {
                   <h2 className="text-xl font-bold text-gray-900">Grade Trend</h2>
                   <p className="text-sm text-gray-400">Monthly average over the past year</p>
                 </div>
-                <div className="bg-green-50 px-4 py-2 rounded-2xl">
-                  <span className="text-green-600 font-bold text-sm flex items-center gap-1">
-                    <TrendingUp size={14} /> +2.8% overall
+                <div className={`px-4 py-2 rounded-2xl ${monthlyTrendData.overallTrend >= 0 ? "bg-green-50" : "bg-red-50"}`}>
+                  <span className={`font-bold text-sm flex items-center gap-1 ${monthlyTrendData.overallTrend >= 0 ? "text-green-600" : "text-red-600"}`}>
+                    {monthlyTrendData.overallTrend >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
+                    {monthlyTrendData.overallTrend >= 0 ? "+" : ""}{monthlyTrendData.overallTrend}% overall
                   </span>
                 </div>
               </div>
               <div className="mt-2">
-                <MiniSparkline data={MOCK_MONTHLY_TREND} color="#3C0078" height={100} />
+                <MiniSparkline data={monthlyTrendData.data} color="#3C0078" height={100} />
                 <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest text-gray-300 mt-2 px-1">
-                  {["Jun","Jul","Aug","Sep","Oct","Nov","Dec","Jan","Feb","Mar","Apr","May"].map(m => (
-                    <span key={m}>{m}</span>
+                  {monthlyTrendData.labels.map((m, i) => (
+                    <span key={i}>{m}</span>
                   ))}
                 </div>
               </div>
@@ -291,8 +351,8 @@ export default function StudentAnalytics() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {coursePerformance.map(course => {
                   const pct = course.average;
-                  const isPositive = true; // course.trend >= 0;
-                  const trend = 2.4; // course.trend;
+                  const isPositive = course.trend >= 0;
+                  const trend = course.trend;
                   return (
                     <motion.div
                       key={course.id}
