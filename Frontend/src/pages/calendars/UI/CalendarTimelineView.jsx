@@ -29,6 +29,14 @@ const ICONS = {
       <circle cx="12" cy="7" r="4" />
     </svg>
   ),
+  assignment: (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+      <polyline points="14 2 14 8 20 8" />
+      <line x1="16" y1="13" x2="8" y2="13" />
+      <line x1="16" y1="17" x2="8" y2="17" />
+    </svg>
+  ),
 };
 
 // ── Time → Y pixel mapping ─────────────────────────────────────
@@ -127,7 +135,7 @@ export default function CalendarTimelineView({ events = [], weeks = [] }) {
                   >
                     {/* Filled dot on axis */}
                     <div
-                      className="shrink-0 rounded-full bg-gray-400 dark:bg-slate-500"
+                      className={`shrink-0 rounded-full ${evt.isAssignment ? 'bg-orange-400' : 'bg-gray-400 dark:bg-slate-500'}`}
                       style={{
                         width: 9,
                         height: 9,
@@ -185,15 +193,14 @@ export default function CalendarTimelineView({ events = [], weeks = [] }) {
                       )}
 
                       {/* ── Event pill ── */}
-                      <div className="flex items-center gap-1.5 bg-white dark:bg-slate-700 rounded-full px-2.5 py-[5px] text-[10px] font-medium text-gray-700 dark:text-slate-200 shadow-sm cursor-pointer transition-all duration-150 hover:-translate-y-px hover:shadow-md">
-                        <span className="shrink-0 text-gray-400 dark:text-slate-500">
+                      <div className={`flex items-center gap-1.5 rounded-full px-2.5 py-[5px] text-[10px] font-medium shadow-sm cursor-pointer transition-all duration-150 hover:-translate-y-px hover:shadow-md ${evt.isAssignment ? 'bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-800/40' : 'bg-white dark:bg-slate-700 text-gray-700 dark:text-slate-200'}`}>
+                        <span className={`shrink-0 ${evt.isAssignment ? 'text-orange-400 dark:text-orange-400' : 'text-gray-400 dark:text-slate-500'}`}>
                           {ICONS[evt.type] ?? ICONS.class}
                         </span>
                         <span className="truncate max-w-[90px]">{evt.title}</span>
                         {(evt.startTime || evt.endTime) && (
-                          <span className="shrink-0 text-[9px] text-gray-400 dark:text-slate-500 leading-tight text-right whitespace-nowrap ml-1">
-                            {evt.startTime && <span className="block">{evt.startTime}</span>}
-                            {evt.endTime   && <span className="block">{evt.endTime}</span>}
+                          <span className={`shrink-0 text-[9px] leading-tight text-right whitespace-nowrap ml-1 ${evt.isAssignment ? 'text-orange-400 dark:text-orange-400' : 'text-gray-400 dark:text-slate-500'}`}>
+                            {evt.isAssignment ? <span className="block">Due {evt.startTime}</span> : <>{evt.startTime && <span className="block">{evt.startTime}</span>}{evt.endTime && <span className="block">{evt.endTime}</span>}</>}
                           </span>
                         )}
                       </div>

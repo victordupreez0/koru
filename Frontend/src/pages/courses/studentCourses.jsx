@@ -12,6 +12,9 @@ import AttendanceChart from "../../components/UI/attendanceChart";
 import AttendanceVisualizer from "../../components/UI/attendanceVisualizer";
 import { getCourseAssignments } from "../../services/assignmentService";
 import { getCourseAnnouncements } from "../../services/announcementService";
+import { getStudentSubmissions } from "../../services/submissionService";
+import { getStudentGrades } from "../../services/gradeService";
+import { useAuth } from "../../contexts/AuthContext";
 import {
     EditorRoot,
     EditorContent,
@@ -32,7 +35,7 @@ import {
     useEditor,
 } from "novel";
 import { getNotes, createNote, updateNote, deleteNote } from "../../services/noteService";
-import { useAuth } from "../../contexts/AuthContext";
+
 import { Plus, Bold, Italic, Underline, Strikethrough, Code, Heading1, Heading2, Heading3, List, ListOrdered, Quote, Minus, Trash2, Maximize2, Minimize2 } from "lucide-react";
 import NovelBlockMenu from "../../components/NovelBlockMenu";
 
@@ -40,12 +43,7 @@ import NovelBlockMenu from "../../components/NovelBlockMenu";
  * CourseContent Components
  */
 
-const GRADES_DATA = [
-    { id: 1, name: "Project 1: Research & Discovery", weight: "20%", grade: "85%", status: "Graded", date: "Mar 12, 2026" },
-    { id: 2, name: "Project 2: Wireframes & Prototyping", weight: "30%", grade: "78%", status: "Graded", date: "Apr 05, 2026" },
-    { id: 3, name: "Mid-Term UI Audit", weight: "10%", grade: "92%", status: "Graded", date: "Apr 15, 2026" },
-    { id: 4, name: "Final Case Study Delivery", weight: "40%", grade: "-", status: "Pending", date: "Expected June" },
-];
+
 
 // Hardcoded static references preserved for Attendance/Grades until their respective phases
 
@@ -220,21 +218,24 @@ function CourseAnnouncementsView({ activeCourseId }) {
 }
 
 function CourseAssignmentsView({ subject, activeCourseId }) {
+    const { user } = useAuth();
     const [assignments, setAssignments] = React.useState([]);
     const [loading, setLoading] = React.useState(true);
 
-    const computeStatusInfo = (item) => {
-        // Hardcode "Usability Testing Report" to be "Submitted" for dev testing
-        if (item.title === "Usability Testing Report" || item.title === "Literature Review Module") {
-            return { status: 'Submitted', color: 'text-green-600', rank: 3, isSubmitted: true };
+    const computeStatusInfo = (item, submission, grade) => {
+        // Priority: Graded > Submitted > date-based heuristics
+        if (grade) {
+            return { status: 'Graded', color: 'text-purple-600', rank: 5, isGraded: true, gradePercent: Math.round((grade.pointsEarned / item.maxPoints) * 100) };
+        }
+        if (submission) {
+            return { status: 'Submitted', color: 'text-green-600', rank: 4, isSubmitted: true };
         }
 
         const now = new Date();
         const due = new Date(item.dueDate);
         const diffDays = (due - now) / (1000 * 60 * 60 * 24);
         
-        // As actual submissions aren't wired, we compute entirely by date heuristic
-        if (diffDays < -7) return { status: 'Closed', color: 'text-gray-400', rank: 4, isClosed: true };
+        if (diffDays < -7) return { status: 'Closed', color: 'text-gray-400', rank: 3, isClosed: true };
         if (diffDays < 0) return { status: 'Late', color: 'text-red-600', rank: 0 };
         if (diffDays <= 5) return { status: 'Due Soon', color: 'text-orange-500', rank: 1 };
         return { status: 'Due', color: 'text-blue-500', rank: 2 };
@@ -242,15 +243,21 @@ function CourseAssignmentsView({ subject, activeCourseId }) {
 
     React.useEffect(() => {
         let mounted = true;
-        async function fetch() {
-            if (!activeCourseId) return;
+        async function fetchData() {
+            if (!activeCourseId || !user?.userId) return;
             try {
                 setLoading(true);
-                const data = await getCourseAssignments(activeCourseId);
+                const [data, submissions, grades] = await Promise.all([
+                    getCourseAssignments(activeCourseId),
+                    getStudentSubmissions(user.userId),
+                    getStudentGrades(user.userId)
+                ]);
                 
-                // Enqueue map & sort logic for the requested importance hierarchy
+                // Cross-reference assignments with real submissions and grades
                 const enriched = data.map(item => {
-                    const info = computeStatusInfo(item);
+                    const sub = submissions.find(s => s.assignmentId === item.id);
+                    const grade = sub ? grades.find(g => g.submissionId === sub.id) : null;
+                    const info = computeStatusInfo(item, sub, grade);
                     return { ...item, ...info };
                 }).sort((a, b) => a.rank - b.rank);
 
@@ -261,9 +268,9 @@ function CourseAssignmentsView({ subject, activeCourseId }) {
                 if (mounted) setLoading(false);
             }
         }
-        fetch();
+        fetchData();
         return () => { mounted = false; };
-    }, [activeCourseId]);
+    }, [activeCourseId, user?.userId]);
 
     return (
         <motion.div className="flex-1 p-8 overflow-y-auto" initial="hidden" animate="visible" variants={staggerContainer}>
@@ -289,7 +296,7 @@ function CourseAssignmentsView({ subject, activeCourseId }) {
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 font-sans">
                     {assignments.map((item, index) => (
-                        <motion.div key={item.id} variants={slideUp} className={`bg-white dark:bg-slate-800 p-6 rounded-[40px] border border-gray-100 dark:border-slate-700 shadow-sm relative overflow-hidden group hover:shadow-xl transition-all duration-300 flex flex-col justify-between ${item.isClosed || item.isSubmitted ? 'opacity-60 bg-gray-50 dark:bg-slate-800/50' : 'opacity-100'}`}>
+                        <motion.div key={item.id} variants={slideUp} className={`bg-white dark:bg-slate-800 p-6 rounded-[40px] border border-gray-100 dark:border-slate-700 shadow-sm relative overflow-hidden group hover:shadow-xl transition-all duration-300 flex flex-col justify-between ${item.isClosed || item.isSubmitted || item.isGraded ? 'opacity-60 bg-gray-50 dark:bg-slate-800/50' : 'opacity-100'}`}>
                             <div>
                                 <div className="flex justify-between items-start mb-4">
                                     <h2 className="text-xl font-bold text-gray-900 dark:text-slate-100 group-hover:text-[#3C0078] dark:group-hover:text-[#9BE9EA] transition-colors leading-tight pr-4">{item.title}</h2>
@@ -306,9 +313,15 @@ function CourseAssignmentsView({ subject, activeCourseId }) {
                                     <span className="text-gray-400 dark:text-slate-500 uppercase font-bold tracking-widest">Due Date:</span>
                                     <span className="text-gray-900 dark:text-slate-100 font-bold">{new Date(item.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
                                 </div>
-                                <button className={`w-full mt-2 py-3 rounded-2xl text-xs font-bold uppercase tracking-widest text-white transition-all flex items-center justify-center gap-2 shadow-sm ${item.isClosed || item.isSubmitted ? 'bg-gray-800 dark:bg-slate-700 hover:bg-black dark:hover:bg-slate-600' : 'bg-[#3C0078] hover:bg-[#2A0054] dark:bg-[#14B8A6] dark:hover:bg-[#0f766e]'}`}>
-                                    {(!item.isClosed && !item.isSubmitted) && <Upload size={16} />}
-                                    {item.isClosed ? "View" : item.isSubmitted ? "View Submission" : "View & Submit"}
+                                {item.isGraded && (
+                                    <div className="flex justify-between items-center text-xs">
+                                        <span className="text-gray-400 dark:text-slate-500 uppercase font-bold tracking-widest">Grade:</span>
+                                        <span className="text-purple-600 dark:text-purple-400 font-bold">{item.gradePercent}%</span>
+                                    </div>
+                                )}
+                                <button className={`w-full mt-2 py-3 rounded-2xl text-xs font-bold uppercase tracking-widest text-white transition-all flex items-center justify-center gap-2 shadow-sm ${item.isClosed || item.isSubmitted || item.isGraded ? 'bg-gray-800 dark:bg-slate-700 hover:bg-black dark:hover:bg-slate-600' : 'bg-[#3C0078] hover:bg-[#2A0054] dark:bg-[#14B8A6] dark:hover:bg-[#0f766e]'}`}>
+                                    {(!item.isClosed && !item.isSubmitted && !item.isGraded) && <Upload size={16} />}
+                                    {item.isGraded ? "View Grade" : item.isClosed ? "View" : item.isSubmitted ? "View Submission" : "View & Submit"}
                                 </button>
                             </div>
                         </motion.div>
@@ -371,52 +384,119 @@ function CourseAttendanceView() {
     );
 }
 
-function CourseGradesView() {
+function CourseGradesView({ activeCourseId }) {
+    const { user } = useAuth();
+    const [gradesData, setGradesData] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [avgGrade, setAvgGrade] = useState("-");
+
+    useEffect(() => {
+        let mounted = true;
+        async function fetchGrades() {
+            if (!activeCourseId || !user?.userId) return;
+            try {
+                setLoading(true);
+                const [assignments, submissions, grades] = await Promise.all([
+                    getCourseAssignments(activeCourseId),
+                    getStudentSubmissions(user.userId),
+                    getStudentGrades(user.userId)
+                ]);
+
+                let totalPoints = 0;
+                let earnedPoints = 0;
+
+                const mapped = assignments.map(a => {
+                    const sub = submissions.find(s => s.assignmentId === a.id);
+                    const grade = sub ? grades.find(g => g.submissionId === sub.id) : null;
+                    
+                    let status = "Pending";
+                    let gradeText = "-";
+                    let weight = a.maxPoints ? `${a.maxPoints} pts` : "N/A";
+
+                    if (grade) {
+                        status = "Graded";
+                        gradeText = `${Math.round((grade.pointsEarned / a.maxPoints) * 100)}%`;
+                        totalPoints += a.maxPoints;
+                        earnedPoints += grade.pointsEarned;
+                    } else if (sub) {
+                        status = "Submitted";
+                    } else if (new Date(a.dueDate) < new Date()) {
+                        status = "Late";
+                        gradeText = "0%";
+                    }
+
+                    return {
+                        id: a.id,
+                        name: a.title,
+                        date: new Date(a.dueDate).toLocaleDateString(),
+                        weight,
+                        status,
+                        grade: gradeText
+                    };
+                });
+
+                if (mounted) {
+                    setGradesData(mapped);
+                    if (totalPoints > 0) {
+                        setAvgGrade(`${((earnedPoints / totalPoints) * 100).toFixed(1)}%`);
+                    }
+                }
+            } catch (err) {
+                console.error("Failed to load grades:", err);
+            } finally {
+                if (mounted) setLoading(false);
+            }
+        }
+        fetchGrades();
+        return () => { mounted = false; };
+    }, [activeCourseId, user?.userId]);
+
     return (
         <motion.div className="flex-1 p-8 overflow-y-auto" initial="hidden" animate="visible" variants={staggerContainer}>
             <motion.header variants={slideUp} className="mb-12">
                 <h1 className="text-3xl font-semibold tracking-tight text-gray-900 dark:text-slate-100">Grades</h1>
-                <p className="text-gray-500 dark:text-slate-400 mt-2">UX300 | Academic Performance Overview</p>
+                <p className="text-gray-500 dark:text-slate-400 mt-2">Academic Performance Overview</p>
             </motion.header>
             <motion.div variants={slideUp} className="bg-white dark:bg-slate-800 rounded-3xl border border-gray-100 dark:border-slate-700 shadow-sm overflow-hidden">
                 <table className="w-full text-left border-collapse">
                     <thead>
                         <tr className="border-b border-gray-50 bg-gray-50/50 dark:bg-slate-800/50">
                             <th className="px-8 py-5 text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-slate-500">Assignment Name</th>
-                            <th className="px-8 py-5 text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-slate-500">Weight</th>
+                            <th className="px-8 py-5 text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-slate-500">Points</th>
                             <th className="px-8 py-5 text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-slate-500">Status</th>
                             <th className="px-8 py-5 text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-slate-500 text-right">Grade</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {GRADES_DATA.map((item) => (
-                            <motion.tr key={item.id} variants={slideUp} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/30 dark:hover:bg-slate-800/30 transition-colors">
-                                <td className="px-8 py-6">
-                                    <div className="font-medium text-gray-900 dark:text-slate-100">{item.name}</div>
-                                    <div className="text-xs text-gray-400 dark:text-slate-500 mt-1">{item.date}</div>
-                                </td>
-                                <td className="px-8 py-6 text-sm text-gray-600 dark:text-slate-400">{item.weight}</td>
-                                <td className="px-8 py-6">
-                                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide ${item.status === "Graded" ? "bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400" : "bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400"}`}>{item.status}</span>
-                                </td>
-                                <td className="px-8 py-6 text-right">
-                                    <span className="text-lg font-semibold text-gray-900 dark:text-slate-100">{item.grade}</span>
-                                </td>
-                            </motion.tr>
-                        ))}
+                        {loading ? (
+                            <tr><td colSpan="4" className="text-center py-6 text-gray-500">Loading...</td></tr>
+                        ) : gradesData.length === 0 ? (
+                            <tr><td colSpan="4" className="text-center py-6 text-gray-500">No grades found.</td></tr>
+                        ) : (
+                            gradesData.map((item) => (
+                                <motion.tr key={item.id} variants={slideUp} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/30 dark:hover:bg-slate-800/30 transition-colors">
+                                    <td className="px-8 py-6">
+                                        <div className="font-medium text-gray-900 dark:text-slate-100">{item.name}</div>
+                                        <div className="text-xs text-gray-400 dark:text-slate-500 mt-1">{item.date}</div>
+                                    </td>
+                                    <td className="px-8 py-6 text-sm text-gray-600 dark:text-slate-400">{item.weight}</td>
+                                    <td className="px-8 py-6">
+                                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide ${item.status === "Graded" ? "bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400" : item.status === "Late" ? "bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400" : "bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400"}`}>{item.status}</span>
+                                    </td>
+                                    <td className="px-8 py-6 text-right">
+                                        <span className="text-lg font-semibold text-gray-900 dark:text-slate-100">{item.grade}</span>
+                                    </td>
+                                </motion.tr>
+                            ))
+                        )}
                     </tbody>
                 </table>
             </motion.div>
             <motion.div variants={slideUp} className="mt-8 flex justify-end">
                 <div className="bg-[#3C0078] dark:bg-[#0f766e] text-white px-8 py-6 rounded-3xl shadow-lg shadow-[#3C0078]/20 dark:shadow-[#9BE9EA]/10 flex items-center gap-12">
                     <div className="flex flex-col">
-                        <span className="text-[10px] uppercase font-bold tracking-[0.2em] opacity-80">Course Progress</span>
-                        <span className="text-sm font-medium">Completed: 60%</span>
-                    </div>
-                    <div className="w-px h-8 bg-white/20"></div>
-                    <div className="flex flex-col">
                         <span className="text-[10px] uppercase font-bold tracking-[0.2em] opacity-80">Current Average</span>
-                        <span className="text-2xl font-bold italic">82.4%</span>
+                        <span className="text-2xl font-bold italic">{avgGrade}</span>
                     </div>
                 </div>
             </motion.div>
@@ -1069,7 +1149,7 @@ export default function StudentCourses() {
 
             {/* Main Content Area */}
             {isGradesPage ? (
-                <CourseGradesView />
+                <CourseGradesView activeCourseId={activeCourseId} />
             ) : isAnnouncementsPage ? (
                 <CourseAnnouncementsView activeCourseId={activeCourseId} />
             ) : isAssignmentsPage ? (

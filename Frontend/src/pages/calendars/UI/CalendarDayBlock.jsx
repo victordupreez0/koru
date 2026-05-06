@@ -46,6 +46,7 @@ export default function CalendarDayBlock({ day, isToday = false, isOutside = fal
           type={evt.type}
           lecturer={evt.lecturer}
           location={evt.location}
+          isAssignment={evt.isAssignment}
         />
       ))}
     </div>

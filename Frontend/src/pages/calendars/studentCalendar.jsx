@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Menu from "../../components/menu";
 import SideMenu from "../../components/sideMenu";
@@ -9,6 +9,9 @@ import CalendarTimelineView    from "./UI/CalendarTimelineView";
 import CalendarDayView         from "./UI/CalendarDayView";
 
 import { getAllEvents } from "../../services/eventService";
+import { getStudentAssignments } from "../../services/assignmentService";
+import { getStudentSubmissions } from "../../services/submissionService";
+import { useAuth } from "../../contexts/AuthContext";
 
 // Helper: map backend event to calendar format
 function mapBackendEventToCalendar(evt) {
@@ -22,7 +25,7 @@ function mapBackendEventToCalendar(evt) {
 
   return {
     id: evt.id,
-    date: startDate.toISOString().slice(0, 10),
+    date: new Date(startDate.getTime() - (startDate.getTimezoneOffset() * 60000)).toISOString().slice(0, 10),
     title: evt.title,
     startTime: `${String(startDate.getHours()).padStart(2, '0')}:${String(startDate.getMinutes()).padStart(2, '0')}`,
     endTime: `${String(endDate.getHours()).padStart(2, '0')}:${String(endDate.getMinutes()).padStart(2, '0')}`,
@@ -32,14 +35,42 @@ function mapBackendEventToCalendar(evt) {
   };
 }
 
-// ─────────────────────────────────────────────────────────────
-//  TASKS DATA  (To-Do panel in Day view)
-//  Shape: { id, title, due, dueTime, course }
-// ─────────────────────────────────────────────────────────────
-const TASKS = [
-  { id: 1, title: "High Fidelity Wireframes", due: "Next Mon",  dueTime: "20:00", course: "UX300" },
-  { id: 2, title: "Essay Draft",              due: "Next Tue",  dueTime: "20:00", course: "VC300" },
-];
+// Helper: map assignment to calendar event format (for timeline/day view)
+function mapAssignmentToCalendarEvent(assignment) {
+  const due = new Date(assignment.dueDate);
+  return {
+    id: `assign-${assignment.id}`,
+    date: new Date(due.getTime() - (due.getTimezoneOffset() * 60000)).toISOString().slice(0, 10),
+    title: assignment.title,
+    startTime: `${String(due.getHours()).padStart(2, '0')}:${String(due.getMinutes()).padStart(2, '0')}`,
+    endTime: `${String(due.getHours()).padStart(2, '0')}:${String(due.getMinutes()).padStart(2, '0')}`,
+    type: "assignment",
+    lecturer: "Submission",
+    location: "Online",
+    isAssignment: true,
+    courseCode: assignment.course?.subject?.code || "N/A",
+    maxPoints: assignment.maxPoints,
+    description: assignment.description
+  };
+}
+
+// Helper: map assignment to a task for the day view to-do panel
+function mapAssignmentToTask(assignment, submission) {
+  const due = new Date(assignment.dueDate);
+  const isSubmitted = !!submission;
+  const isGraded = submission?.status === "Graded";
+  return {
+    id: assignment.id,
+    title: assignment.title,
+    due: due.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+    dueTime: `${String(due.getHours()).padStart(2, '0')}:${String(due.getMinutes()).padStart(2, '0')}`,
+    course: assignment.course?.subject?.code || "N/A",
+    dueDate: assignment.dueDate,
+    isSubmitted,
+    isGraded,
+    maxPoints: assignment.maxPoints,
+  };
+}
 
 // ─────────────────────────────────────────────────────────────
 //  DYNAMIC GRID GENERATOR — 5 rows × 7 cols
@@ -103,21 +134,44 @@ const viewVariants = {
 
 // ─────────────────────────────────────────────────────────────
 export default function StudentCalendar() {
+  const { user } = useAuth();
   const [activeView, setActiveView] = useState("month");
   const [events, setEvents] = useState([]);
+  const [allTasks, setAllTasks] = useState([]);
 
-  React.useEffect(() => {
-    async function fetchCalendarEvents() {
+  useEffect(() => {
+    let mounted = true;
+    async function fetchData() {
       try {
-        const backendEvents = await getAllEvents();
-        const mapped = backendEvents.map(mapBackendEventToCalendar);
-        setEvents(mapped);
+        const [backendEvents, assignmentsData, submissionsData] = await Promise.all([
+          getAllEvents(),
+          user?.userId ? getStudentAssignments(user.userId) : Promise.resolve([]),
+          user?.userId ? getStudentSubmissions(user.userId) : Promise.resolve([])
+        ]);
+
+        // Map class events
+        const classEvents = backendEvents.map(mapBackendEventToCalendar);
+
+        // Map assignments as calendar events (so they show on timeline/day view)
+        const assignmentEvents = assignmentsData.map(mapAssignmentToCalendarEvent);
+
+        // Merge both into a single events array
+        const combined = [...classEvents, ...assignmentEvents];
+        if (mounted) setEvents(combined);
+
+        // Build tasks array for the Day View to-do panel (all assignments with submission state)
+        const tasks = assignmentsData.map(a => {
+          const sub = submissionsData.find(s => s.assignmentId === a.id);
+          return mapAssignmentToTask(a, sub);
+        });
+        if (mounted) setAllTasks(tasks);
       } catch (err) {
-        console.error("Failed to load events for calendar:", err);
+        console.error("Failed to load calendar data:", err);
       }
     }
-    fetchCalendarEvents();
-  }, []);
+    fetchData();
+    return () => { mounted = false; };
+  }, [user?.userId]);
 
   const eventMap = buildEventMap(events);
   const todayStr = new Date(new Date().getTime() - (new Date().getTimezoneOffset() * 60000)).toISOString().slice(0, 10);
@@ -227,7 +281,7 @@ export default function StudentCalendar() {
             >
               <CalendarDayView
                 events={events}
-                tasks={TASKS}
+                allTasks={allTasks}
                 weeks={GRID_WEEKS}
               />
             </motion.div>
