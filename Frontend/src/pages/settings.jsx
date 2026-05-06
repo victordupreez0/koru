@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Moon,
   Eye,
@@ -6,6 +7,7 @@ import {
   Type,
   UserRound,
   KeyRound,
+  LogOut,
   Save,
   RotateCcw,
 } from "lucide-react";
@@ -65,7 +67,8 @@ function ToggleRow({ icon, title, description, checked, onChange, darkMode }) {
 
 // Settings page – lets the user update profile details, password, and accessibility preferences
 export default function SettingsPage() {
-  const { user: session, login: updateSession } = useAuth();
+  const { user: session, login: updateSession, logout } = useAuth();
+  const navigate = useNavigate();
   const [settings, setSettings] = useState(() => {
     try {
       const saved = JSON.parse(localStorage.getItem(SETTINGS_STORAGE_KEY) || "null");
@@ -203,6 +206,11 @@ export default function SettingsPage() {
     setProfileMessage("Accessibility settings have been reset to defaults.");
   }
 
+  function handleLogout() {
+    logout();
+    navigate("/", { replace: true });
+  }
+
   return (
     <div data-tts-root="true" className={`w-full pb-10 ${settings.font === "OpenDyslexic" ? "dyslexic-font" : ""} ${pageClasses.wrapper}`}>
       <Menu />
@@ -274,6 +282,21 @@ export default function SettingsPage() {
                 <span>{savingPassword ? "Updating..." : "Update password"}</span>
               </button>
             </form>
+
+            <div className={`rounded-[28px] border p-6 shadow-sm ${pageClasses.card}`}>
+              <h2 className="text-2xl font-bold">Session</h2>
+              <p className={`mt-2 text-sm ${pageClasses.muted}`}>
+                End your current session and return to onboarding.
+              </p>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="mt-5 inline-flex min-h-[44px] items-center justify-center gap-2 rounded-2xl bg-red-600 px-4 py-3 font-semibold text-white transition hover:bg-red-700"
+              >
+                <LogOut size={18} />
+                <span>Log out</span>
+              </button>
+            </div>
           </div>
 
           <div className="flex flex-col gap-6">
