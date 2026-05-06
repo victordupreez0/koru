@@ -2,6 +2,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { User, Settings } from "@solar-icons/react";
 import SideNavItem from "./UI/sideNavItem";
+import { useAuth } from "../contexts/AuthContext";
 
 // Framer Motion variants – the sidebar slides in from the left on load
 const navbarVariants = {
@@ -24,10 +25,13 @@ const itemVariants = {
 // Side navigation bar – floating pill fixed to the bottom-left corner
 // Houses utility links like Profile and Settings
 export default function SideMenu() {
+  const { role } = useAuth();
 
   // Links shown in the side menu
   const footerItems = [
-    { label: "Profile", href: "/dashboard", icon: <User weight="Outline" size={24} color="currentColor" /> },
+    ...(role === "admin"
+      ? []
+      : [{ label: "Profile", href: "/profile", icon: <User weight="Outline" size={24} color="currentColor" /> }]),
     { label: "Settings", href: "/settings", icon: <Settings weight="Outline" size={24} color="currentColor" /> },
   ];
 
