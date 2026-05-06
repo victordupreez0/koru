@@ -15,3 +15,20 @@ export async function getCourseAnnouncements(courseId) {
   });
   return handleResponse(res);
 }
+
+export async function createAnnouncement(announcement) {
+  const res = await fetch(`${API_BASE}/Announcement`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(announcement)
+  });
+  return handleResponse(res);
+}
+
+export async function deleteAnnouncement(announcementId) {
+  const res = await fetch(`${API_BASE}/Announcement/${encodeURIComponent(announcementId)}`, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" }
+  });
+  return handleResponse(res);
+}
