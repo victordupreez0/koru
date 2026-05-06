@@ -1357,12 +1357,75 @@ function CourseGradesView() {
 }
 
 function CourseHomeView({ subject, course, loading }) {
+  // Lecturer state
+  const [lecturerName, setLecturerName] = React.useState(subject?.lecturerName || "Dr. Sarah Miller");
+  const [lecturerTitle, setLecturerTitle] = React.useState("Senior Design Lead & Principle Researcher");
+  const [lecturerEmail, setLecturerEmail] = React.useState(subject?.lecturerEmail || "natalie@openwindow.co.za");
+  const [lecturerImage, setLecturerImage] = React.useState(subject?.lecturerImage || "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=1976&auto=format&fit=crop");
+  const [bookingLink, setBookingLink] = React.useState("#");
+  const [isEditing, setIsEditing] = React.useState(false);
+
+  // States for expandable text bars
+  const [activeInput, setActiveInput] = React.useState(null); // 'email' or 'booking'
+  const [tempEmail, setTempEmail] = React.useState(lecturerEmail);
+  const [tempBooking, setTempBooking] = React.useState(bookingLink);
+  
+  // Quick Links state
+  const [editingQuickLinkIndex, setEditingQuickLinkIndex] = React.useState(null);
+  const [tempQuickLinkLabel, setTempQuickLinkLabel] = React.useState("");
+  const [tempQuickLinkHref, setTempQuickLinkHref] = React.useState("");
+
+  const [quickLinks, setQuickLinks] = React.useState([
+    { label: "Figma Assets", href: "#" },
+    { label: "Miro Board", href: "#" },
+    { label: "Course Syllabus", href: "#" },
+    { label: "Attendance", href: "#" },
+    { label: "VLE Portal", href: "#" },
+    { label: "Library Search", href: "#" }
+  ]);
+
+  const fileInputRef = React.useRef(null);
+
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setLecturerImage(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const startEditingQuickLink = (index, link) => {
+    setEditingQuickLinkIndex(index);
+    setTempQuickLinkLabel(link.label);
+    setTempQuickLinkHref(link.href);
+  };
+
+  const saveQuickLink = () => {
+    if (editingQuickLinkIndex === "new") {
+      setQuickLinks([...quickLinks, { label: tempQuickLinkLabel, href: tempQuickLinkHref }]);
+    } else {
+      const updated = [...quickLinks];
+      updated[editingQuickLinkIndex] = { label: tempQuickLinkLabel, href: tempQuickLinkHref };
+      setQuickLinks(updated);
+    }
+    setEditingQuickLinkIndex(null);
+  };
+
+  const addQuickLink = () => {
+    setEditingQuickLinkIndex("new");
+    setTempQuickLinkLabel("");
+    setTempQuickLinkHref("");
+  };
+
   // Use subject imageUrl or a placeholder if not present
   var sampleImg = "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=800&q=80";
   const courseImage = subject?.imageUrl || sampleImg;
 
   return (
-    <div className="flex-1 flex flex-col p-12 overflow-y-auto">
+    <div className="flex-1 flex flex-col p-12 overflow-y-auto scrollbar-hide">
       <header className="mb-12">
         <h1 className="text-4xl font-semibold tracking-tight">
           {loading ? "Loading course details..." : `${subject?.name || "Unknown"} | ${course?.term || ""}`}
@@ -1418,109 +1481,178 @@ function CourseHomeView({ subject, course, loading }) {
             </div>
           </section>
 
-          <section className="w-full grid grid-cols-1 lg:grid-cols-2 gap-12 pt-12 border-t border-gray-100">
-            {/* Lecturer Section on the Left */}
-            <div className="bg-gray-50/30 rounded-[60px] p-12 border border-gray-100 flex flex-col items-center md:items-start text-center md:text-left gap-12">
-              <div className="flex flex-col md:flex-row items-center gap-14">
-                <div className="relative group shrink-0">
-                  {/* Enhanced Glowing Pulse Animation - Now Teal */}
-                  <motion.div 
-                    animate={{ 
-                      scale: [1, 1.25, 1],
-                      opacity: [0.2, 0.5, 0.2]
-                    }}
-                    transition={{ 
-                      duration: 3, 
-                      repeat: Infinity, 
-                      ease: "easeInOut" 
-                    }}
-                    className="absolute -inset-10 rounded-full bg-[#14B8A6]/20 blur-3xl z-0"
-                  />
-                  
-                  {/* Enhanced Floating Ring - Now Teal */}
-                  <motion.div 
-                    animate={{ 
-                      rotate: 360,
-                      scale: [1, 1.05, 1]
-                    }}
-                    transition={{ 
-                      duration: 15, 
-                      repeat: Infinity, 
-                      ease: "linear" 
-                    }}
-                    className="absolute -inset-4 rounded-full border-2 border-dashed border-[#14B8A6]/40 z-0"
-                  />
-                  
-                  {/* Lecturer Image MUCH LARGER - No Shadow */}
-                  <div className="w-56 h-56 rounded-full overflow-hidden border-8 border-white relative z-10">
+          <section className="w-full pt-20 pb-20 border-t border-gray-100/50">
+            <div className="flex flex-col lg:flex-row items-center relative">
+              
+              {/* Universal Edit Button - Top Right of the Image/Text block */}
+              <button 
+                onClick={() => setIsEditing(!isEditing)}
+                className="absolute top-0 right-[35%] z-10 w-8 h-8 rounded-full flex items-center justify-center transition-all shadow-sm border border-gray-100 bg-gray-50 text-[#3C0078] hover:bg-[#3C0078] hover:text-white"
+                title={isEditing ? "Save Changes" : "Edit Lecturer Section"}
+              >
+                {isEditing ? <CheckSquare size={16} /> : <Edit2 size={16} />}
+              </button>
+
+              {/* Column 1: Image */}
+              <div className="w-full lg:w-1/4 flex justify-center">
+                <div className={`relative group ${isEditing ? 'cursor-pointer' : ''}`} onClick={() => isEditing && fileInputRef.current?.click()}>
+                  <div className="w-48 h-48 rounded-full overflow-hidden border-4 border-white shadow-2xl relative">
                     <img 
-                      src={subject?.lecturerImage || "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=1976&auto=format&fit=crop"} 
+                      src={lecturerImage} 
                       alt="Lecturer" 
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      className={`w-full h-full object-cover transition-transform duration-700 ${!isEditing ? 'group-hover:scale-110' : ''}`}
                     />
+                    {isEditing && (
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                        <PenLine className="text-white" size={24} />
+                      </div>
+                    )}
+                  </div>
+                  <input 
+                    type="file" 
+                    ref={fileInputRef} 
+                    className="hidden" 
+                    accept="image/*" 
+                    onChange={handleImageUpload} 
+                  />
+                </div>
+              </div>
+
+              {/* Column 2: Lecturer Details & Buttons - Tightened gap with Image */}
+              <div className="w-full lg:w-2/5 flex flex-col items-start text-left lg:border-l border-gray-100 lg:pl-12 ml-[-1%]">
+                <div className="mb-10 w-full">
+                  <span className="text-[12px] font-black uppercase tracking-[0.4em] text-[#3C0078] mb-3 block">Module Head</span>
+                  {isEditing ? (
+                    <input
+                      className="text-5xl font-black text-gray-900 tracking-tighter leading-none mb-4 bg-white border border-[#3C0078]/20 rounded-xl px-3 py-1 outline-none w-full shadow-sm"
+                      value={lecturerName}
+                      onChange={(e) => setLecturerName(e.target.value)}
+                      placeholder="Lecturer Name"
+                    />
+                  ) : (
+                    <h3 className="text-5xl font-black text-gray-900 tracking-tighter leading-none mb-4">{lecturerName}</h3>
+                  )}
+                  
+                  {isEditing ? (
+                    <input
+                      className="text-xl text-gray-700 font-bold bg-white border border-[#3C0078]/20 rounded-xl px-3 py-1 outline-none w-full shadow-sm"
+                      value={lecturerTitle}
+                      onChange={(e) => setLecturerTitle(e.target.value)}
+                      placeholder="Job Title"
+                    />
+                  ) : (
+                    <p className="text-xl text-gray-700 font-bold">{lecturerTitle}</p>
+                  )}
+                </div>
+
+                <div className="flex flex-col gap-4 w-full">
+                  <div className="relative w-full">
+                    <button 
+                      type="button"
+                      className={`h-12 w-full flex items-center justify-center rounded-full bg-[#3C0078] text-white !text-white text-[11px] font-bold uppercase tracking-widest transition-all shadow-md shadow-[#3C0078]/20 cursor-default`}
+                    >
+                      {lecturerEmail}
+                    </button>
+                  </div>
+                  
+                  <div className="relative w-full">
+                    <button 
+                      type="button"
+                      className={`h-12 w-full flex items-center justify-center rounded-full bg-white border border-[#3C0078] text-[#3C0078] text-[11px] font-bold uppercase tracking-widest transition-all shadow-sm cursor-default`}
+                    >
+                      Book a Session
+                    </button>
                   </div>
                 </div>
+              </div>
 
-                <div className="flex flex-col space-y-2">
-                  <span className="text-[10px] font-black text-[#14B8A6] uppercase tracking-[0.4em] block">Module Head</span>
-                  <h3 className="text-3xl font-bold text-gray-900 tracking-tight">{subject?.lecturerName || "Dr. Sarah Miller"}</h3>
-                  <p className="text-gray-600 font-bold text-lg tracking-tight">Design Lead & Senior Researcher</p>
+              {/* Column 3: Quick Links - Increased Spacing */}
+              <div className="w-full lg:flex-1 lg:border-l border-gray-100 lg:pl-16 relative">
+                <div className="flex justify-between items-center mb-8">
+                  <h4 className="text-[12px] font-black uppercase tracking-[0.4em] text-black">Quick Links</h4>
+                  <button 
+                    onClick={addQuickLink}
+                    className="w-8 h-8 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center text-[#3C0078] hover:bg-[#3C0078] hover:text-white transition-all shadow-sm"
+                  >
+                    <Plus size={16} />
+                  </button>
                 </div>
-              </div>
+                
+                <div className="flex flex-wrap gap-4 relative">
+                  {quickLinks.map((link, index) => (
+                    <div key={index} className="relative group">
+                      <button
+                        onClick={() => isEditing ? startEditingQuickLink(index, link) : window.open(link.href)}
+                        className="px-6 py-3 bg-white border border-[#3C0078] rounded-full text-[10px] font-bold uppercase tracking-widest text-[#3C0078] hover:bg-[#87CEFA] hover:border-[#87CEFA] hover:text-[#3C0078] transition-all shadow-sm"
+                      >
+                        {link.label}
+                      </button>
+                    </div>
+                  ))}
 
-              <div className="w-full">
-                <a 
-                  href={`mailto:${subject?.lecturerEmail || "sarah.miller@university.ac.za"}`}
-                  className="w-full md:w-auto inline-flex justify-center items-center gap-4 bg-transparent border-2 border-[#14B8A6] text-[#14B8A6] px-10 py-4 rounded-full font-bold text-base tracking-widest uppercase transition-all duration-300 hover:bg-[#14B8A6] hover:text-white hover:shadow-xl hover:shadow-[#14B8A6]/20"
-                >
-                  <span>Email Lecturer</span>
-                  <span className="text-xl">→</span>
-                </a>
-              </div>
-            </div>
-
-            {/* Quick Links Section on the Right - Asymmetric and Clean */}
-            <div className="flex flex-col p-4">
-              <h3 className="text-2xl font-bold mb-8 tracking-tight pl-4 text-gray-900">Quick Links</h3>
-              
-              <div className="flex flex-wrap gap-4 items-start content-start">
-                <a
-                  href="#"
-                  className="bg-white border-2 border-gray-100 text-gray-700 px-8 py-5 rounded-[28px] font-bold text-sm tracking-widest uppercase transition-all duration-300 hover:border-[#14B8A6] hover:bg-[#14B8A6] hover:text-white flex items-center gap-3"
-                >
-                  <span>Figma Workflow</span>
-                  <span className="opacity-30">/</span>
-                </a>
-
-                <a
-                  href="#"
-                  className="bg-white border-2 border-gray-100 text-gray-700 px-6 py-5 rounded-[28px] font-bold text-xs tracking-widst uppercase transition-all duration-300 hover:border-[#14B8A6] hover:bg-[#14B8A6] hover:text-white"
-                >
-                  <span>Terms</span>
-                </a>
-
-                <a
-                  href="#"
-                  className="bg-white border-2 border-gray-100 text-gray-700 px-8 py-5 rounded-[28px] font-bold text-sm tracking-widest uppercase transition-all duration-300 hover:border-[#14B8A6] hover:bg-[#14B8A6] hover:text-white flex items-center gap-3"
-                >
-                  <span>Miro Board</span>
-                  <span className="opacity-30">#</span>
-                </a>
-
-                <a
-                  href="#"
-                  className="bg-white border-2 border-gray-100 text-gray-700 px-6 py-5 rounded-[28px] font-bold text-xs tracking-widest uppercase transition-all duration-300 hover:border-[#14B8A6] hover:bg-[#14B8A6] hover:text-white"
-                >
-                  <span>Attendance</span>
-                </a>
-
-                <a
-                  href="#"
-                  className="w-full bg-white border-2 border-gray-100 text-gray-700 p-8 rounded-[40px] font-bold text-sm tracking-widest uppercase transition-all duration-300 hover:border-[#14B8A6] hover:bg-[#14B8A6] hover:text-white flex justify-between items-center group"
-                >
-                  <span>Request Contact Session</span>
-                  <span className="text-gray-300 group-hover:text-white group-hover:translate-x-1 transition-all">→</span>
-                </a>
+                  {/* Inline Quick Link Editor Popup */}
+                  <AnimatePresence>
+                    {isEditing && editingQuickLinkIndex !== null && (
+                      <motion.div 
+                        initial={{ opacity: 0, scale: 0.9, y: 10 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.9, y: 10 }}
+                        className="absolute inset-x-0 top-0 z-40 bg-white border border-[#3C0078]/20 rounded-[30px] p-6 shadow-2xl backdrop-blur-sm"
+                      >
+                        <div className="flex justify-between items-center mb-4">
+                          <h5 className="text-[10px] font-black uppercase tracking-widest text-[#3C0078]">
+                            {editingQuickLinkIndex === "new" ? "Add Link" : "Edit Link"}
+                          </h5>
+                          <button onClick={() => setEditingQuickLinkIndex(null)} className="text-gray-400 hover:text-gray-600">
+                            <X size={16} />
+                          </button>
+                        </div>
+                        
+                        <div className="space-y-4">
+                          <div>
+                            <label className="text-[9px] font-bold uppercase tracking-tighter text-gray-400 mb-1 block">Display Name</label>
+                            <input 
+                              className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2 text-xs font-bold outline-none focus:border-[#3C0078]/30"
+                              value={tempQuickLinkLabel}
+                              onChange={(e) => setTempQuickLinkLabel(e.target.value)}
+                              placeholder="e.g. Portfolio"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-[9px] font-bold uppercase tracking-tighter text-gray-400 mb-1 block">URL / Link</label>
+                            <input 
+                              className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2 text-xs font-bold outline-none focus:border-[#3C0078]/30"
+                              value={tempQuickLinkHref}
+                              onChange={(e) => setTempQuickLinkHref(e.target.value)}
+                              placeholder="https://..."
+                            />
+                          </div>
+                          
+                          <div className="flex gap-2 pt-2">
+                            <button 
+                              onClick={saveQuickLink}
+                              className="flex-1 bg-black text-white py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-gray-800 transition-all flex items-center justify-center gap-2"
+                            >
+                              <Check size={14} /> Save Link
+                            </button>
+                            {editingQuickLinkIndex !== "new" && (
+                              <button 
+                                onClick={() => {
+                                  setQuickLinks(quickLinks.filter((_, i) => i !== editingQuickLinkIndex));
+                                  setEditingQuickLinkIndex(null);
+                                }}
+                                className="w-10 bg-red-50 text-red-500 rounded-xl flex items-center justify-center hover:bg-red-500 hover:text-white transition-all border border-red-100"
+                                title="Delete Link"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               </div>
             </div>
           </section>
@@ -1937,7 +2069,12 @@ function CourseNotesView({ activeCourseId }) {
  * 1. Home (/courses)
  * 2. Modules (/courses/modules)
  */
-export default function StudentCourses() {
+/**
+ * TeacherCourses Component
+ * 
+ * Main shell for the teacher's course view.
+ */
+export default function TeacherCourses() {
     const location = useLocation();
     const navigate = useNavigate();
     const { visibleCourses, loading } = useCourses();
@@ -1948,15 +2085,21 @@ export default function StudentCourses() {
     const activeCourseId = pathParts.length > 1 ? pathParts[1] : null;
 
     // React Router Guard: If the user navigates merely to /courses without specifying an ID, 
-    // we drop them smoothly into the first available course.
+    // or if they are on a course but no specific sub-page is active, ensure we default to home.
     useEffect(() => {
         if (!loading && visibleCourses.length > 0) {
             const courseExistsInList = visibleCourses.find(c => c.id === activeCourseId);
+            
             if (!activeCourseId || !courseExistsInList) {
+                // Redirect to the first course's home if no valid course ID is present
                 navigate(`/courses/${visibleCourses[0].id}`, { replace: true });
+            } else if (pathParts.length === 2) {
+                // If we have /courses/:id but nothing else, the UI is already showing CourseHomeView
+                // but we might want to ensure it's explicitly handled if needed.
+                // Currently, isHomePage handles the rendering logic.
             }
         }
-    }, [loading, visibleCourses, activeCourseId, navigate]);
+    }, [loading, visibleCourses, activeCourseId, navigate, pathParts.length]);
 
     // Build the resolved standard course object
     const course = visibleCourses.find(c => c.id === activeCourseId) || visibleCourses[0] || null;
@@ -1977,7 +2120,8 @@ export default function StudentCourses() {
     const isNotesPage = path.endsWith("/notes");
     
     // Home logic: Strictly defined as the base course page
-    const isHomePage = pathParts.length === 2 && path.includes(`/courses/${activeCourseId}`);
+    // We force Home if exactly on the course ID path or if no other specific sub-page is matched below
+    const isHomePage = !isGradesPage && !isAnnouncementsPage && !isAssignmentsPage && !isAttendancePage && !isModulesPage && !isNotesPage;
 
     return (
         <div className="flex h-screen overflow-hidden">
@@ -1999,9 +2143,7 @@ export default function StudentCourses() {
       </div>
 
             {/* Main Content Area */}
-            {isHomePage ? (
-                <CourseHomeView subject={subject} course={course} loading={loading} />
-            ) : isGradesPage ? (
+            {isGradesPage ? (
                 <CourseGradesView />
             ) : isAnnouncementsPage ? (
                 <CourseAnnouncementsView />
@@ -2013,7 +2155,9 @@ export default function StudentCourses() {
                 <CourseModulesView />
             ) : isNotesPage ? (
                 <CourseNotesView activeCourseId={activeCourseId} />
-            ) : null}
+            ) : (
+                <CourseHomeView subject={subject} course={course} loading={loading} />
+            )}
         </div>
     );
 }

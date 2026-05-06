@@ -475,7 +475,7 @@ function CourseHomeView({ subject, course, loading }) {
   const courseImage = subject?.imageUrl || sampleImg;
 
   return (
-    <div className="flex-1 flex flex-col p-12 overflow-y-auto">
+    <div className="flex-1 flex flex-col p-12 overflow-y-auto scrollbar-hide">
       <header className="mb-12">
         <h1 className="text-4xl font-semibold tracking-tight">
           {loading ? "Loading course details..." : `${subject?.name || "Unknown"} | ${course?.term || ""}`}
@@ -531,41 +531,13 @@ function CourseHomeView({ subject, course, loading }) {
             </div>
           </section>
 
-          <section className="w-full grid grid-cols-1 lg:grid-cols-2 gap-12 pt-12 border-t border-gray-100">
-            {/* Lecturer Section on the Left */}
-            <div className="bg-gray-50/30 rounded-[60px] p-12 border border-gray-100 flex flex-col items-center md:items-start text-center md:text-left gap-12">
-              <div className="flex flex-col md:flex-row items-center gap-14">
-                <div className="relative group shrink-0">
-                  {/* Enhanced Glowing Pulse Animation - Now Teal */}
-                  <motion.div 
-                    animate={{ 
-                      scale: [1, 1.25, 1],
-                      opacity: [0.2, 0.5, 0.2]
-                    }}
-                    transition={{ 
-                      duration: 3, 
-                      repeat: Infinity, 
-                      ease: "easeInOut" 
-                    }}
-                    className="absolute -inset-10 rounded-full bg-[#14B8A6]/20 blur-3xl z-0"
-                  />
-                  
-                  {/* Enhanced Floating Ring - Now Teal */}
-                  <motion.div 
-                    animate={{ 
-                      rotate: 360,
-                      scale: [1, 1.05, 1]
-                    }}
-                    transition={{ 
-                      duration: 15, 
-                      repeat: Infinity, 
-                      ease: "linear" 
-                    }}
-                    className="absolute -inset-4 rounded-full border-2 border-dashed border-[#14B8A6]/40 z-0"
-                  />
-                  
-                  {/* Lecturer Image MUCH LARGER - No Shadow */}
-                  <div className="w-56 h-56 rounded-full overflow-hidden border-8 border-white relative z-10">
+          <section className="w-full pt-20 pb-20 border-t border-gray-100/50">
+            <div className="flex flex-col lg:flex-row items-center">
+              
+              {/* Column 1: Image */}
+              <div className="w-full lg:w-1/4 flex justify-center">
+                <div className="relative group">
+                  <div className="w-48 h-48 rounded-full overflow-hidden border-4 border-white shadow-2xl">
                     <img 
                       src={subject?.lecturerImage || "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=1976&auto=format&fit=crop"} 
                       alt="Lecturer" 
@@ -573,68 +545,53 @@ function CourseHomeView({ subject, course, loading }) {
                     />
                   </div>
                 </div>
+              </div>
 
-                <div className="flex flex-col space-y-2">
-                  <span className="text-[10px] font-black text-[#14B8A6] uppercase tracking-[0.4em] block">Module Head</span>
-                  <h3 className="text-3xl font-bold text-gray-900 tracking-tight">{subject?.lecturerName || "Dr. Sarah Miller"}</h3>
-                  <p className="text-gray-600 font-bold text-lg tracking-tight">Design Lead & Senior Researcher</p>
+              {/* Column 2: Lecturer Details & Buttons - Tightened gap with Image */}
+              <div className="w-full lg:w-2/5 flex flex-col items-start text-left lg:border-l border-gray-100 lg:pl-10 ml-[-2%]">
+                <div className="mb-8">
+                  <span className="text-[11px] font-black uppercase tracking-[0.4em] text-[#3C0078] mb-2 block">Module Head</span>
+                  <h3 className="text-4xl font-black text-gray-900 tracking-tighter leading-none mb-3">{subject?.lecturerName || "Dr. Sarah Miller"}</h3>
+                  <p className="text-lg text-gray-700 font-bold">Senior Design Lead & Principle Researcher</p>
+                </div>
+
+                <div className="flex flex-row gap-3 w-full">
+                  <a 
+                    href={`mailto:${subject?.lecturerEmail || "sarah.miller@university.ac.za"}`}
+                    className="h-10 px-8 flex items-center justify-center rounded-full bg-[#3C0078] text-white !text-white text-[10px] font-bold uppercase tracking-widest hover:bg-[#2A0054] transition-all shadow-md shadow-[#3C0078]/20"
+                  >
+                    Email Lecturer
+                  </a>
+                  <button className="h-10 px-8 flex items-center justify-center rounded-full bg-white border border-[#3C0078] text-[#3C0078] text-[10px] font-bold uppercase tracking-widest hover:bg-[#87CEFA] hover:border-[#87CEFA] transition-all shadow-sm">
+                    Book a Session
+                  </button>
                 </div>
               </div>
 
-              <div className="w-full">
-                <a 
-                  href={`mailto:${subject?.lecturerEmail || "sarah.miller@university.ac.za"}`}
-                  className="w-full md:w-auto inline-flex justify-center items-center gap-4 bg-transparent border-2 border-[#14B8A6] text-[#14B8A6] px-10 py-4 rounded-full font-bold text-base tracking-widest uppercase transition-all duration-300 hover:bg-[#14B8A6] hover:text-white hover:shadow-xl hover:shadow-[#14B8A6]/20"
-                >
-                  <span>Email Lecturer</span>
-                  <span className="text-xl">→</span>
-                </a>
+              {/* Column 3: Quick Links - Increased Spacing */}
+              <div className="w-full lg:flex-1 lg:border-l border-gray-100 lg:pl-16">
+                <h4 className="text-[11px] font-black uppercase tracking-[0.4em] text-black mb-8">Quick Links</h4>
+                
+                <div className="flex flex-wrap gap-4">
+                  {[
+                    { label: "Figma Assets", href: "#" },
+                    { label: "Miro Board", href: "#" },
+                    { label: "Course Syllabus", href: "#" },
+                    { label: "Attendance", href: "#" },
+                    { label: "VLE Portal", href: "#" },
+                    { label: "Library Search", href: "#" }
+                  ].map((link) => (
+                    <a
+                      key={link.label}
+                      href={link.href}
+                      className="px-6 py-3 bg-white border border-[#3C0078] rounded-full text-[10px] font-bold uppercase tracking-widest text-[#3C0078] hover:bg-[#87CEFA] hover:border-[#87CEFA] hover:text-[#3C0078] transition-all shadow-sm"
+                    >
+                      {link.label}
+                    </a>
+                  ))}
+                </div>
               </div>
-            </div>
 
-            {/* Quick Links Section on the Right - Asymmetric and Clean */}
-            <div className="flex flex-col p-4">
-              <h3 className="text-2xl font-bold mb-8 tracking-tight pl-4 text-gray-900">Quick Links</h3>
-              
-              <div className="flex flex-wrap gap-4 items-start content-start">
-                <a
-                  href="#"
-                  className="bg-white border-2 border-gray-100 text-gray-700 px-8 py-5 rounded-[28px] font-bold text-sm tracking-widest uppercase transition-all duration-300 hover:border-[#14B8A6] hover:bg-[#14B8A6] hover:text-white flex items-center gap-3"
-                >
-                  <span>Figma Workflow</span>
-                  <span className="opacity-30">/</span>
-                </a>
-
-                <a
-                  href="#"
-                  className="bg-white border-2 border-gray-100 text-gray-700 px-6 py-5 rounded-[28px] font-bold text-xs tracking-widest uppercase transition-all duration-300 hover:border-[#14B8A6] hover:bg-[#14B8A6] hover:text-white"
-                >
-                  <span>Terms</span>
-                </a>
-
-                <a
-                  href="#"
-                  className="bg-white border-2 border-gray-100 text-gray-700 px-8 py-5 rounded-[28px] font-bold text-sm tracking-widest uppercase transition-all duration-300 hover:border-[#14B8A6] hover:bg-[#14B8A6] hover:text-white flex items-center gap-3"
-                >
-                  <span>Miro Board</span>
-                  <span className="opacity-30">#</span>
-                </a>
-
-                <a
-                  href="#"
-                  className="bg-white border-2 border-gray-100 text-gray-700 px-6 py-5 rounded-[28px] font-bold text-xs tracking-widest uppercase transition-all duration-300 hover:border-[#14B8A6] hover:bg-[#14B8A6] hover:text-white"
-                >
-                  <span>Attendance</span>
-                </a>
-
-                <a
-                  href="#"
-                  className="w-full bg-white border-2 border-gray-100 text-gray-700 p-8 rounded-[40px] font-bold text-sm tracking-widest uppercase transition-all duration-300 hover:border-[#14B8A6] hover:bg-[#14B8A6] hover:text-white flex justify-between items-center group"
-                >
-                  <span>Request Contact Session</span>
-                  <span className="text-gray-300 group-hover:text-white group-hover:translate-x-1 transition-all">→</span>
-                </a>
-              </div>
             </div>
           </section>
         </div>
