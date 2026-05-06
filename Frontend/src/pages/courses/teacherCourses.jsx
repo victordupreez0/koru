@@ -1,4 +1,4 @@
-﻿/* Teacher-role course management page.
+/* Teacher-role course management page.
 Contains all sub-view components rendered inside a single-page course layout
 Static placeholder data (GRADES_DATA, ANNOUNCEMENTS_DATA, etc.) is used until the corresponding API endpoints are connected.*/
 import React, { useEffect, useState } from "react";
@@ -25,6 +25,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import AttendanceChart from "../../components/UI/attendanceChart";
 import AttendanceVisualizer from "../../components/UI/attendanceVisualizer";
 import { getCourseAssignments } from "../../services/assignmentService";
+import { getCourseGrades } from "../../services/gradeService";
 import {
   EditorRoot,
   EditorContent,
@@ -1896,7 +1897,63 @@ const STUDENT_GRADES_DATA = [
 // Displays a grade distribution ring chart, a class-average callout, the
 // highest-performing student card, and a per-student table with attendance
 // rate, average grade, and an At-Risk / Excellent status badge.
-function CourseGradesView() {
+function CourseGradesView({ activeCourseId }) {
+  const [students, setStudents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [classAvg, setClassAvg] = useState(0);
+
+  useEffect(() => {
+    let mounted = true;
+    async function fetch() {
+      if (!activeCourseId) return;
+      try {
+        setLoading(true);
+        const grades = await getCourseGrades(activeCourseId);
+        
+        // Group grades by student
+        const studentMap = {};
+        grades.forEach(g => {
+          const student = g.submission?.student;
+          if (!student) return;
+          if (!studentMap[student.id]) {
+            studentMap[student.id] = {
+              id: student.id,
+              name: student.name,
+              email: student.email,
+              avatar: student.name.split(' ').map(n => n[0]).join('').toUpperCase(),
+              totalEarned: 0,
+              totalMax: 0,
+              count: 0
+            };
+          }
+          if (g.pointsEarned != null && g.submission?.assignment?.maxPoints) {
+            studentMap[student.id].totalEarned += g.pointsEarned;
+            studentMap[student.id].totalMax += g.submission.assignment.maxPoints;
+            studentMap[student.id].count++;
+          }
+        });
+
+        const studentList = Object.values(studentMap).map(s => ({
+          ...s,
+          avgGrade: s.totalMax > 0 ? Math.round((s.totalEarned / s.totalMax) * 100) : 0,
+          status: s.totalMax === 0 ? "N/A" : (s.totalEarned / s.totalMax >= 0.85 ? "Excellent" : s.totalEarned / s.totalMax >= 0.7 ? "Good" : "At Risk")
+        }));
+
+        if (mounted) {
+          setStudents(studentList);
+          const totalAvg = studentList.reduce((acc, curr) => acc + curr.avgGrade, 0);
+          setClassAvg(studentList.length > 0 ? (totalAvg / studentList.length).toFixed(1) : 0);
+        }
+      } catch (err) {
+        console.error("Failed to fetch course grades:", err);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    }
+    fetch();
+    return () => { mounted = false; };
+  }, [activeCourseId]);
+
   return (
     <motion.div
       className="flex-1 p-8 overflow-y-auto"
@@ -1913,7 +1970,7 @@ function CourseGradesView() {
             Grades & Performance
           </h1>
           <p className="text-gray-500 dark:text-slate-400 mt-2">
-            UX300 | Class Performance Analytics
+            Class Performance Analytics
           </p>
         </div>
         <div className="flex gap-4">
@@ -1932,8 +1989,6 @@ function CourseGradesView() {
                 <h3 className="text-xl font-bold dark:text-slate-100">
                   Class Average Distribution
                 </h3>
-                <p className="text-sm text-gray-400 dark:text-slate-500">
-                </p>
               </div>
               <div className="bg-[#3C0078]/5 dark:bg-[#9BE9EA]/10 px-4 py-2 rounded-2xl">
                 <span className="text-[#3C0078] dark:text-[#9BE9EA] font-bold text-sm">
@@ -1942,12 +1997,11 @@ function CourseGradesView() {
               </div>
             </div>
             <div className="flex-1 min-h-[250px] relative">
-              {/* Reusing chart logic but focused on grades */}
               <AttendanceChart
-                attended={78}
+                attended={Math.round(classAvg)}
                 total={100}
-                missed={22}
-                label="Grade Distribution"
+                missed={100 - Math.round(classAvg)}
+                label="Class Average"
               />
             </div>
           </div>
@@ -1960,29 +2014,8 @@ function CourseGradesView() {
               Class Average
             </span>
             <div className="flex items-baseline gap-2">
-              <span className="text-5xl font-black italic">78.4%</span>
+              <span className="text-5xl font-black italic">{classAvg}%</span>
               <span className="text-sm opacity-60">Avg</span>
-            </div>
-            <div className="mt-8 flex items-center gap-2 text-sm">
-              <CheckCircle size={16} className="text-green-400" />
-              <span>12 students above target</span>
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-slate-800 rounded-[40px] border border-gray-100 dark:border-slate-700 shadow-sm p-8 flex-1 group hover:border-[#3C0078]/20 dark:hover:border-[#9BE9EA]/20 transition-all">
-            <span className="text-[10px] uppercase font-bold tracking-[0.2em] text-gray-400 dark:text-slate-500 block mb-6">
-            </span>
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-green-50 flex items-center justify-center text-green-600 font-black italic text-xl shadow-inner">
-                A+
-              </div>
-              <div>
-                <h4 className="text-2xl font-black italic text-gray-900 dark:text-slate-100 leading-none">
-                  94.2%
-                </h4>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-slate-500 mt-2">
-                </p>
-              </div>
             </div>
           </div>
         </motion.div>
@@ -1994,20 +2027,12 @@ function CourseGradesView() {
       >
         <div className="px-10 py-8 border-b border-gray-50 flex justify-between items-center">
           <h2 className="text-2xl font-bold dark:text-slate-100">Students List</h2>
-          <div className="flex gap-2">
-            <button className="p-2.5 rounded-xl bg-gray-50 dark:bg-slate-700 text-gray-400 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-600">
-              <InfoCircle size={20} />
-            </button>
-          </div>
         </div>
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="border-b border-gray-50 dark:border-slate-700 bg-gray-50/30 dark:bg-slate-900/30">
               <th className="px-10 py-5 text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-slate-500">
                 Student Info
-              </th>
-              <th className="px-10 py-5 text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-slate-500 text-center">
-                Attendance
               </th>
               <th className="px-10 py-5 text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-slate-500 text-center">
                 Avg Grade
@@ -2021,78 +2046,67 @@ function CourseGradesView() {
             </tr>
           </thead>
           <tbody>
-            {STUDENT_GRADES_DATA.map((student) => (
-              <motion.tr
-                key={student.id}
-                variants={slideUp}
-                className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-all group"
-              >
-                <td className="px-10 py-6">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-full bg-[#3C0078]/5 border-2 border-[#3C0078]/10 flex items-center justify-center font-black text-xs text-[#3C0078] shadow-sm">
-                      {student.avatar}
-                    </div>
-                    <div>
-                      <div className="font-bold text-gray-900 dark:text-slate-100 group-hover:text-[#3C0078] dark:group-hover:text-[#9BE9EA] transition-colors">
-                        {student.name}
+            {loading ? (
+              <tr><td colSpan="4" className="text-center py-10 text-gray-400">Loading students...</td></tr>
+            ) : students.length === 0 ? (
+              <tr><td colSpan="4" className="text-center py-10 text-gray-400">No students found.</td></tr>
+            ) : (
+              students.map((student) => (
+                <motion.tr
+                  key={student.id}
+                  variants={slideUp}
+                  className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-all group"
+                >
+                  <td className="px-10 py-6">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-full bg-[#3C0078]/5 border-2 border-[#3C0078]/10 flex items-center justify-center font-black text-xs text-[#3C0078] shadow-sm">
+                        {student.avatar}
                       </div>
-                      <div className="text-xs text-gray-400 dark:text-slate-500 mt-1">
-                        {student.email}
+                      <div>
+                        <div className="font-bold text-gray-900 dark:text-slate-100 group-hover:text-[#3C0078] dark:group-hover:text-[#9BE9EA] transition-colors">
+                          {student.name}
+                        </div>
+                        <div className="text-xs text-gray-400 dark:text-slate-500 mt-1">
+                          {student.email}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </td>
-                <td className="px-10 py-6 text-center">
-                  <div className="flex flex-col items-center gap-1.5">
-                    <span className="text-base font-bold text-gray-900 dark:text-slate-100">
+                  </td>
+                  <td className="px-10 py-6 text-center">
+                    <span className="text-lg font-black italic text-gray-900 dark:text-slate-100">
+                      {student.avgGrade}%
                     </span>
-                    <div className="w-16 h-1 bg-gray-100 dark:bg-slate-600 rounded-full overflow-hidden">
-                      <div
-                        className={`h-full rounded-full ${
-                          parseInt(student.attendance) > 80
-                            ? "bg-green-500"
-                            : parseInt(student.attendance) > 70
-                              ? "bg-orange-400"
-                              : "bg-red-500"
-                        }`}
-                        style={{ width: student.attendance }}
-                      ></div>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-10 py-6 text-center">
-                  <span className="text-lg font-black italic text-gray-900 dark:text-slate-100">
-                    {student.avgGrade}
-                  </span>
-                </td>
-                <td className="px-10 py-6">
-                  <span
-                    className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm ${
-                      student.status === "Excellent"
-                        ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                        : student.status === "Good"
-                          ? "bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
-                          : student.status === "At Risk"
-                            ? "bg-orange-50 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400"
-                            : "bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-                    }`}
-                  >
-                    {student.status}
-                  </span>
-                </td>
-                <td className="px-10 py-6 text-right">
-                  <button className="px-5 py-2 rounded-xl border border-gray-100 dark:border-slate-600 text-[10px] font-black uppercase tracking-[0.15em] text-gray-400 dark:text-slate-400 group-hover:bg-[#3C0078] dark:group-hover:bg-[#9BE9EA] group-hover:text-white dark:group-hover:text-slate-900 group-hover:border-[#3C0078] dark:group-hover:border-[#9BE9EA] transition-all whitespace-nowrap shadow-sm">
-                    View Student
-                  </button>
-                </td>
-              </motion.tr>
-            ))}
+                  </td>
+                  <td className="px-10 py-6">
+                    <span
+                      className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm ${
+                        student.status === "Excellent"
+                          ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                          : student.status === "Good"
+                            ? "bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                            : student.status === "At Risk"
+                              ? "bg-orange-50 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400"
+                              : "bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                      }`}
+                    >
+                      {student.status}
+                    </span>
+                  </td>
+                  <td className="px-10 py-6 text-right">
+                    <button className="px-5 py-2 rounded-xl border border-gray-100 dark:border-slate-600 text-[10px] font-black uppercase tracking-[0.15em] text-gray-400 dark:text-slate-400 group-hover:bg-[#3C0078] dark:group-hover:bg-[#9BE9EA] group-hover:text-white dark:group-hover:text-slate-900 group-hover:border-[#3C0078] dark:group-hover:border-[#9BE9EA] transition-all whitespace-nowrap shadow-sm">
+                      View Student
+                    </button>
+                  </td>
+                </motion.tr>
+              ))
+            )}
           </tbody>
         </table>
       </motion.div>
     </motion.div>
   );
 }
+
 
 // CourseHomeView – the default landing view for a course.
 // Shows a full-bleed hero image, a two-column term overview, lecturer profile
@@ -2923,7 +2937,7 @@ export default function StudentCourses() {
       {isHomePage ? (
         <CourseHomeView subject={subject} course={course} loading={loading} />
       ) : isGradesPage ? (
-        <CourseGradesView />
+        <CourseGradesView activeCourseId={activeCourseId} />
       ) : isAnnouncementsPage ? (
         <CourseAnnouncementsView />
       ) : isAssignmentsPage ? (

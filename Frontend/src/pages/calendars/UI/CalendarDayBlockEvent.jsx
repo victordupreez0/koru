@@ -29,6 +29,14 @@ const ICONS = {
       <circle cx="12" cy="7" r="4" />
     </svg>
   ),
+  assignment: (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+      <polyline points="14 2 14 8 20 8" />
+      <line x1="16" y1="13" x2="8" y2="13" />
+      <line x1="16" y1="17" x2="8" y2="17" />
+    </svg>
+  ),
 };
 
 // Larger versions for the tooltip header
@@ -58,6 +66,14 @@ const ICONS_LG = {
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
       <circle cx="12" cy="7" r="4" />
+    </svg>
+  ),
+  assignment: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+      <polyline points="14 2 14 8 20 8" />
+      <line x1="16" y1="13" x2="8" y2="13" />
+      <line x1="16" y1="17" x2="8" y2="17" />
     </svg>
   ),
 };
@@ -105,6 +121,7 @@ export default function CalendarDayBlockEvent({
   type = "class",
   lecturer,
   location,
+  isAssignment = false,
 }) {
   const hasTooltipDetails = lecturer || location || startTime;
 
@@ -169,7 +186,7 @@ export default function CalendarDayBlockEvent({
       )}
 
       {/* ── Event pill ─────────────────────────────────────── */}
-      <div className="flex items-center gap-1.5 bg-white dark:bg-slate-700 rounded-full px-3 py-1 text-[11px] font-medium text-black dark:text-slate-200 cursor-pointer transition-all duration-150 hover:-translate-y-px hover:shadow-sm">
+      <div className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-medium cursor-pointer transition-all duration-150 hover:-translate-y-px hover:shadow-sm ${isAssignment ? 'bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-800/40' : 'bg-white dark:bg-slate-700 text-black dark:text-slate-200'}`}>
         {/* Type icon */}
         <span className="shrink-0 text-gray-400 mt-px">
           {ICONS[type] ?? ICONS.class}

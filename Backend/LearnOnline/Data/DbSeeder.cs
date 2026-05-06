@@ -165,6 +165,73 @@ namespace LearnOnline.Data
                 context.SaveChanges();
             }
 
+            // 3.5 Seed Mock Submissions and Grades
+            context.Database.ExecuteSqlRaw(@"DELETE FROM ""Grades"";");
+            context.Database.ExecuteSqlRaw(@"DELETE FROM ""Submissions"";");
+            if (!context.Submissions.Any())
+            {
+                var assignments = context.Assignments.ToList();
+                var devStudent = context.Users.FirstOrDefault(u => u.Email == "devstudent@learnonline.co.za");
+                
+                if (devStudent != null)
+                {
+                    // 1. Usability Testing Report - Submitted, but not graded
+                    var usabilityAssignment = assignments.FirstOrDefault(a => a.Title == "Usability Testing Report");
+                    if (usabilityAssignment != null)
+                    {
+                        var submission = new Submission { AssignmentId = usabilityAssignment.Id, StudentId = devStudent.Id, Status = "Submitted", FileUrl = "https://example.com/usability.pdf" };
+                        context.Submissions.Add(submission);
+                    }
+
+                    // 2. Component Library Delivery - Graded
+                    var compLibAssignment = assignments.FirstOrDefault(a => a.Title == "Component Library Delivery");
+                    if (compLibAssignment != null)
+                    {
+                        var submission = new Submission { AssignmentId = compLibAssignment.Id, StudentId = devStudent.Id, Status = "Graded", FileUrl = "https://example.com/lib.zip" };
+                        context.Submissions.Add(submission);
+                        context.SaveChanges(); 
+                        
+                        tsungai = context.Users.FirstOrDefault(u => u.Email == "tsungai@learnonline.co.za");
+                        if (tsungai != null) {
+                            var grade = new Grade { SubmissionId = submission.Id, GradedBy = tsungai.Id, PointsEarned = 45 }; 
+                            context.Grades.Add(grade);
+                        }
+                    }
+
+                    // 3. React Dashboard Component - Graded
+                    var reactAssignment = assignments.FirstOrDefault(a => a.Title == "React Dashboard Component");
+                    if (reactAssignment != null)
+                    {
+                        var submission = new Submission { AssignmentId = reactAssignment.Id, StudentId = devStudent.Id, Status = "Graded", FileUrl = "https://example.com/react.zip" };
+                        context.Submissions.Add(submission);
+                        context.SaveChanges();
+                        
+                        william = context.Users.FirstOrDefault(u => u.Email == "william@learnonline.co.za");
+                        if (william != null) {
+                            var grade = new Grade { SubmissionId = submission.Id, GradedBy = william.Id, PointsEarned = 92 }; 
+                            context.Grades.Add(grade);
+                        }
+                    }
+
+                    // 4. Literature Review Module - Graded
+                    var litAssignment = assignments.FirstOrDefault(a => a.Title == "Literature Review Module");
+                    if (litAssignment != null)
+                    {
+                        var submission = new Submission { AssignmentId = litAssignment.Id, StudentId = devStudent.Id, Status = "Graded", FileUrl = "https://example.com/lit.docx" };
+                        context.Submissions.Add(submission);
+                        context.SaveChanges();
+
+                        simba = context.Users.FirstOrDefault(u => u.Email == "simba@learnonline.co.za");
+                        if (simba != null) {
+                            var grade = new Grade { SubmissionId = submission.Id, GradedBy = simba.Id, PointsEarned = 40 }; 
+                            context.Grades.Add(grade);
+                        }
+                    }
+
+                    context.SaveChanges();
+                }
+            }
+
             // 4. Seed Mock Announcements
             if (!context.Announcements.Any())
             {

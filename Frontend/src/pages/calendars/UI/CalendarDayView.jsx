@@ -47,6 +47,16 @@ const PersonIcon = () => (
   </svg>
 );
 
+const AssignmentIcon = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+    <polyline points="14 2 14 8 20 8" />
+    <line x1="16" y1="13" x2="8" y2="13" />
+    <line x1="16" y1="17" x2="8" y2="17" />
+    <polyline points="10 9 9 9 8 9" />
+  </svg>
+);
+
 const ClipboardIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
     <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" />
@@ -57,10 +67,11 @@ const ClipboardIcon = () => (
 );
 
 const TYPE_ICONS = {
-  class:    <MonitorIcon />,
-  meeting:  <PeopleIcon />,
-  task:     <CheckIcon />,
-  personal: <PersonIcon />,
+  class:      <MonitorIcon />,
+  meeting:    <PeopleIcon />,
+  task:       <CheckIcon />,
+  personal:   <PersonIcon />,
+  assignment: <AssignmentIcon />,
 };
 
 // ─────────────────────────────────────────────────────────────
@@ -68,15 +79,15 @@ const TYPE_ICONS = {
  * CalendarDayView
  *
  * Two-column layout:
- *  Left  — vertical timeline with large event cards
- *  Right — To-Do list
+ *  Left  — vertical timeline with large event cards (classes + assignments)
+ *  Right — To-Do list showing only assignments due/were due on selected day
  *
  * Props:
- *  - events (array) : Flat EVENTS array (with optional lecturer, location)
- *  - tasks  (array) : Array of { id, title, due, dueTime, course, done }
- *  - weeks  (array) : GRID_WEEKS — used to build the day nav list
+ *  - events   (array) : Flat EVENTS array (with optional lecturer, location, isAssignment)
+ *  - allTasks (array) : Array of assignment tasks with submission state
+ *  - weeks    (array) : GRID_WEEKS — used to build the day nav list
  */
-export default function CalendarDayView({ events = [], tasks = [], weeks = [] }) {
+export default function CalendarDayView({ events = [], allTasks = [], weeks = [] }) {
   // Flatten all dates in the month into a navigable list
   const allDates = weeks.flat(); // [{ date, day }, ...]
   const [dateIdx, setDateIdx] = useState(() => {
@@ -111,12 +122,12 @@ export default function CalendarDayView({ events = [], tasks = [], weeks = [] })
     prevBottom + 20
   );
 
-  // Task toggle state (local — backend will handle persistence later)
-  const [doneTasks, setDoneTasks] = useState([]);
-  const toggleTask = (id) =>
-    setDoneTasks((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    );
+  // Filter tasks to only those due on the selected day
+  const dayTasks = allTasks.filter(task => {
+    const taskDate = new Date(task.dueDate);
+    const taskDateStr = new Date(taskDate.getTime() - (taskDate.getTimezoneOffset() * 60000)).toISOString().slice(0, 10);
+    return taskDateStr === date;
+  });
 
   return (
     <div>
@@ -174,7 +185,7 @@ export default function CalendarDayView({ events = [], tasks = [], weeks = [] })
             >
               {/* Dot on axis */}
               <div
-                className="shrink-0 rounded-full bg-gray-400 dark:bg-slate-500"
+                className={`shrink-0 rounded-full ${evt.isAssignment ? 'bg-orange-400' : 'bg-gray-400 dark:bg-slate-500'}`}
                 style={{
                   width: 9,
                   height: 9,
@@ -185,12 +196,12 @@ export default function CalendarDayView({ events = [], tasks = [], weeks = [] })
 
               {/* Event card */}
               <div
-                className="flex-1 flex items-stretch bg-gray-100 dark:bg-slate-800 rounded-2xl overflow-hidden mr-2"
+                className={`flex-1 flex items-stretch rounded-2xl overflow-hidden mr-2 ${evt.isAssignment ? 'bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800/40' : 'bg-gray-100 dark:bg-slate-800'}`}
                 style={{ minHeight: CARD_H }}
               >
                 {/* Icon box */}
                 <div className="flex items-center justify-center px-4 py-3 shrink-0">
-                  <div className="w-12 h-12 rounded-xl border-2 border-gray-400 dark:border-slate-600 flex items-center justify-center text-gray-500 dark:text-slate-400">
+                  <div className={`w-12 h-12 rounded-xl border-2 flex items-center justify-center ${evt.isAssignment ? 'border-orange-300 dark:border-orange-700 text-orange-500 dark:text-orange-400' : 'border-gray-400 dark:border-slate-600 text-gray-500 dark:text-slate-400'}`}>
                     {TYPE_ICONS[evt.type] ?? <MonitorIcon />}
                   </div>
                 </div>
@@ -200,19 +211,32 @@ export default function CalendarDayView({ events = [], tasks = [], weeks = [] })
                   <p className="font-bold text-gray-900 dark:text-slate-100 text-sm leading-tight truncate">
                     {evt.title}
                   </p>
-                  {evt.lecturer && (
-                    <p className="text-gray-500 dark:text-slate-400 text-xs mt-1 truncate">{evt.lecturer}</p>
-                  )}
-                  {evt.location && (
-                    <p className="text-gray-400 dark:text-slate-500 text-xs mt-0.5 truncate">{evt.location}</p>
+                  {evt.isAssignment ? (
+                    <p className="text-orange-500 dark:text-orange-400 text-xs mt-1 truncate font-semibold">
+                      {evt.courseCode} · Due
+                    </p>
+                  ) : (
+                    <>
+                      {evt.lecturer && (
+                        <p className="text-gray-500 dark:text-slate-400 text-xs mt-1 truncate">{evt.lecturer}</p>
+                      )}
+                      {evt.location && (
+                        <p className="text-gray-400 dark:text-slate-500 text-xs mt-0.5 truncate">{evt.location}</p>
+                      )}
+                    </>
                   )}
                 </div>
 
                 {/* Time column */}
                 <div className="flex flex-col justify-between items-end px-4 py-4 border-l border-gray-200 dark:border-slate-700 shrink-0">
-                  <span className="text-[11px] text-gray-500 dark:text-slate-400 font-medium">{evt.startTime}</span>
-                  {evt.endTime && (
+                  <span className="text-[11px] text-gray-500 dark:text-slate-400 font-medium">
+                    {evt.isAssignment ? 'Due' : evt.startTime}
+                  </span>
+                  {!evt.isAssignment && evt.endTime && (
                     <span className="text-[11px] text-gray-400 dark:text-slate-500">{evt.endTime}</span>
+                  )}
+                  {evt.isAssignment && (
+                    <span className="text-[11px] text-orange-500 dark:text-orange-400 font-semibold">{evt.startTime}</span>
                   )}
                 </div>
               </div>
@@ -220,72 +244,108 @@ export default function CalendarDayView({ events = [], tasks = [], weeks = [] })
           ))}
         </div>
 
-        {/* ── RIGHT: To-Do panel ── */}
+        {/* ── RIGHT: To-Do panel (assignments due this day) ── */}
         <div>
           {/* Header */}
           <div className="flex items-center gap-3 mb-5">
             <h2 className="font-['Gabarito'] text-2xl font-bold text-gray-900 dark:text-slate-100">
               To - Do
             </h2>
-            <button
-              aria-label="Add task"
-              className="w-7 h-7 rounded-full border-2 border-gray-400 dark:border-slate-500 flex items-center justify-center text-gray-500 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-700 transition bg-transparent cursor-pointer font-[inherit]"
-            >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="12" y1="5" x2="12" y2="19" />
-                <line x1="5"  y1="12" x2="19" y2="12" />
-              </svg>
-            </button>
           </div>
 
           {/* Task list */}
           <div className="flex flex-col gap-3">
-            {tasks.map((task) => {
-              const done = doneTasks.includes(task.id);
+            {dayTasks.map((task) => {
+              const now = new Date();
+              const due = new Date(task.dueDate);
+              const diffDays = (due - now) / (1000 * 60 * 60 * 24);
+              
+              // Determine UI state
+              let uiState = "Due";
+              let uiColor = "bg-blue-50 text-blue-600";
+              if (task.isGraded) {
+                uiState = "Graded";
+                uiColor = "bg-green-50 text-green-600";
+              } else if (task.isSubmitted) {
+                uiState = "Submitted";
+                uiColor = "bg-green-50 text-green-600";
+              } else if (diffDays < -7) {
+                uiState = "Closed";
+                uiColor = "bg-gray-100 text-gray-500";
+              } else if (diffDays < 0) {
+                uiState = "Late";
+                uiColor = "bg-red-50 text-red-600";
+              } else if (diffDays <= 5) {
+                uiState = "Due Soon";
+                uiColor = "bg-orange-50 text-orange-600";
+              }
+
+              const isCompleted = task.isSubmitted || task.isGraded;
+
               return (
                 <div
                   key={task.id}
-                  className="flex items-center gap-3 bg-white dark:bg-slate-800 rounded-2xl px-4 py-3"
+                  className={`flex items-center gap-3 rounded-2xl px-4 py-3.5 border transition-all duration-300
+                    ${isCompleted ? 'bg-gray-50 dark:bg-slate-800/50 border-gray-100 dark:border-slate-700 opacity-50' : 'bg-white dark:bg-slate-800 border-gray-200 dark:border-slate-700 hover:shadow-md'}`}
                 >
-                  {/* Clipboard icon */}
-                  <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-slate-700 flex items-center justify-center shrink-0 text-gray-500 dark:text-slate-400">
+                  {/* Assignment icon */}
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0
+                    ${isCompleted ? 'bg-gray-100 dark:bg-slate-700' : 'bg-[#3C0078]/8 dark:bg-[#9BE9EA]/10'}`}>
                     <ClipboardIcon />
                   </div>
 
                   {/* Content */}
                   <div className="flex-1 min-w-0">
-                    <p className={`font-semibold text-sm leading-tight ${done ? "line-through text-gray-400 dark:text-slate-600" : "text-gray-800 dark:text-slate-100"}`}>
+                    <p className={`font-semibold text-sm leading-tight font-['Gabarito'] ${isCompleted ? 'text-gray-400 dark:text-slate-600 line-through' : 'text-gray-800 dark:text-slate-100'}`}>
                       {task.title}
                     </p>
-                    <div className="flex items-center gap-2 mt-1">
+                    <div className="flex items-center gap-2 mt-1 flex-wrap">
                       <span className="text-[10px] text-gray-400 dark:text-slate-500">
-                        DUE {task.due} at {task.dueTime}
+                        <span className="font-bold text-gray-500 dark:text-slate-400">DUE</span> {task.due} at {task.dueTime}
                       </span>
                       {task.course && (
                         <span className="text-[10px] font-semibold text-gray-500 dark:text-slate-400 bg-gray-100 dark:bg-slate-700 rounded px-1.5 py-0.5">
                           {task.course}
                         </span>
                       )}
+                      {uiState && !isCompleted && (
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest ${uiColor}`}>{uiState}</span>
+                      )}
                     </div>
                   </div>
 
-                  {/* Checkbox */}
-                  <button
-                    onClick={() => toggleTask(task.id)}
-                    aria-label="Toggle task"
-                    className={[
-                      "w-6 h-6 rounded-lg border-2 shrink-0 transition-all duration-150 cursor-pointer",
-                      done
-                        ? "bg-gray-700 dark:bg-slate-500 border-gray-700 dark:border-slate-500"
-                        : "bg-transparent border-gray-300 dark:border-slate-600 hover:border-gray-400 dark:hover:border-slate-500",
-                    ].join(" ")}
-                  />
+                  {/* Submit / completed button (same as dashboard) */}
+                  {isCompleted ? (
+                    <div
+                      className="w-7 h-7 rounded-lg border-2 border-[#3C0078] dark:border-[#9BE9EA] bg-[#3C0078] dark:bg-[#0f766e] flex items-center justify-center shrink-0"
+                      aria-label="Completed"
+                    >
+                      <svg
+                        className="w-4 h-4 text-white"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={3}
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                      }}
+                      className="px-4 py-2 bg-[#3C0078] dark:bg-[#0f766e] rounded-xl text-[10px] font-bold uppercase tracking-widest text-white hover:bg-gray-800 dark:hover:bg-[#14b8a6] transition-all shadow-sm shrink-0"
+                    >
+                      {uiState === 'Closed' ? 'View' : 'Submit'}
+                    </button>
+                  )}
                 </div>
               );
             })}
 
-            {tasks.length === 0 && (
-              <p className="text-sm text-gray-400 dark:text-slate-500 pl-1">No tasks this month.</p>
+            {dayTasks.length === 0 && (
+              <p className="text-sm text-gray-400 dark:text-slate-500 pl-1">No assignments due this day.</p>
             )}
           </div>
         </div>
