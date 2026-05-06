@@ -26,6 +26,7 @@ import AttendanceChart from "../../components/UI/attendanceChart";
 import AttendanceVisualizer from "../../components/UI/attendanceVisualizer";
 import { getCourseAssignments } from "../../services/assignmentService";
 import { getCourseGrades } from "../../services/gradeService";
+import { getCourseAnnouncements, createAnnouncement, deleteAnnouncement } from "../../services/announcementService";
 import {
   EditorRoot,
   EditorContent,
@@ -89,6 +90,7 @@ import {
   X,
 } from "lucide-react";
 import NovelBlockMenu from "../../components/NovelBlockMenu";
+import NovelEditor from "../../components/NovelEditor";
 
 /**
  * CourseContent Components
@@ -131,67 +133,6 @@ const GRADES_DATA = [
   },
 ];
 
-// Placeholder announcement cards shown in CourseAnnouncementsView.
-// Shape: { id, title, lecturer, date, preview, label, color }
-const ANNOUNCEMENTS_DATA = [
-  {
-    id: 1,
-    title: "Project 3 Brief Released",
-    lecturer: "Dr. Sarah Miller",
-    date: "Today, 10:45 AM",
-    preview:
-      "The brief for Project 3: High-Fidelity Prototyping is now available in the Modules section. Please review the technical requirements before Monday's lecture.",
-    label: "Notice",
-    color: "#3C0078",
-  },
-  {
-    id: 2,
-    title: "Guest Lecture: Industry UX Trends",
-    lecturer: "Prof. Mark Chen",
-    date: "Yesterday, 2:15 PM",
-    preview:
-      "We have an exciting guest speaker from a leading fintech startup joining us next week Tuesday. Attendance is mandatory for UX300 students.",
-    label: "Event",
-    color: "#FF8731",
-  },
-  {
-    id: 3,
-    title: "Lab Room Change - Block D",
-    lecturer: "Admin",
-    date: "18 Apr 2026",
-    preview:
-      "The practical session for Friday will be moved to Lab 402 in Block D due to maintenance in the main studio.",
-    label: "Update",
-    color: "#87CEFA",
-  },
-];
-
-// Hardcoded static references preserved for Attendance/Grades until their respective phases
-
-const ATTENDANCE_STATS = [
-  { label: "Total Sessions", value: "42", color: "#3C0078" },
-  { label: "Attended", value: "38", color: "#87CEFA" },
-  { label: "Missed", value: "4", color: "#FF8731" },
-  { label: "Percentage", value: "90%", variant: "large" },
-];
-
-const ATTENDANCE_LOGS = [
-  { date: "18 Apr 2026", type: "Lecture", status: "Present", time: "10:00 AM" },
-  {
-    date: "15 Apr 2026",
-    type: "Tutorial",
-    status: "Present",
-    time: "14:00 PM",
-  },
-  { date: "11 Apr 2026", type: "Lecture", status: "Absent", time: "10:00 AM" },
-  {
-    date: "08 Apr 2026",
-    type: "Practical",
-    status: "Present",
-    time: "11:30 AM",
-  },
-];
-
 // Shared Framer Motion animation variants used by every sub-view component.
 // staggerContainer – staggers child animations in sequence
 // slideUp          – fades in while sliding up from below
@@ -219,9 +160,11 @@ const scaleIn = {
 // Renders a masonry-style grid of announcement cards with Framer Motion shared-
 // layout expand animations. Teachers can compose and post new announcements
 // via an inline draft form. Clicking a card opens it in a modal overlay.
-function CourseAnnouncementsView() {
+function CourseAnnouncementsView({ activeCourseId }) {
+  const { user } = useAuth();
   const [selectedId, setSelectedId] = useState(null);
-  const [announcements, setAnnouncements] = useState(ANNOUNCEMENTS_DATA);
+  const [announcements, setAnnouncements] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
 
   const [newAnnouncement, setNewAnnouncement] = useState({
@@ -229,29 +172,65 @@ function CourseAnnouncementsView() {
     preview: "",
     label: "Notice",
     color: "#3C0078",
-    lecturer: "Dr. Sarah Miller", // Hardcoded for teacher view
+    contentJson: { type: "doc", content: [{ type: "paragraph" }] },
   });
+
+  useEffect(() => {
+    let mounted = true;
+    async function fetchAnnouncements() {
+      if (!activeCourseId) return;
+      try {
+        setLoading(true);
+        const data = await getCourseAnnouncements(activeCourseId);
+        if (mounted) setAnnouncements(data);
+      } catch (err) {
+        console.error("Failed to load announcements:", err);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    }
+    fetchAnnouncements();
+    return () => { mounted = false; };
+  }, [activeCourseId]);
 
   const selectedAnnouncement = announcements.find((a) => a.id === selectedId);
 
-  const handlePost = () => {
-    if (!newAnnouncement.title || !newAnnouncement.preview) return;
+  const handlePost = async () => {
+    if (!newAnnouncement.title || !newAnnouncement.preview || !activeCourseId || !user?.userId) return;
 
-    const announcement = {
-      ...newAnnouncement,
-      id: Date.now(),
-      date: "Today, Just Now",
-    };
+    try {
+      const announcement = {
+        courseId: activeCourseId,
+        lecturerId: user.userId,
+        title: newAnnouncement.title,
+        preview: newAnnouncement.preview,
+        label: newAnnouncement.label,
+        color: newAnnouncement.color,
+      };
 
-    setAnnouncements([announcement, ...announcements]);
-    setIsAdding(false);
-    setNewAnnouncement({
-      title: "",
-      preview: "",
-      label: "Notice",
-      color: "#3C0078",
-      lecturer: "Dr. Sarah Miller",
-    });
+      const created = await createAnnouncement(announcement);
+      setAnnouncements([created, ...announcements]);
+      setIsAdding(false);
+      setNewAnnouncement({
+        title: "",
+        preview: "",
+        label: "Notice",
+        color: "#3C0078",
+        contentJson: { type: "doc", content: [{ type: "paragraph" }] },
+      });
+    } catch (err) {
+      console.error("Failed to create announcement:", err);
+    }
+  };
+
+  const handleDelete = async (announcementId) => {
+    try {
+      await deleteAnnouncement(announcementId);
+      setAnnouncements(prev => prev.filter(a => a.id !== announcementId));
+      setSelectedId(null);
+    } catch (err) {
+      console.error("Failed to delete announcement:", err);
+    }
   };
 
   return (
@@ -353,21 +332,99 @@ function CourseAnnouncementsView() {
                   </div>
                 </div>
                 <div className="w-full">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2 block">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-slate-500 mb-2 block">
                     Announcement Message
                   </label>
-                  <textarea
-                    rows={6}
-                    placeholder="Write your announcement details here..."
-                    className="w-full bg-gray-50 dark:bg-slate-800/50 border-none rounded-2xl px-8 py-6 text-gray-900 dark:text-slate-100 text-lg font-medium focus:ring-2 focus:ring-[#3C0078]/20 transition-all resize-none leading-relaxed"
-                    value={newAnnouncement.preview}
-                    onChange={(e) =>
-                      setNewAnnouncement({
-                        ...newAnnouncement,
-                        preview: e.target.value,
-                      })
-                    }
-                  />
+                  <div className="bg-gray-50 dark:bg-slate-800/50 border-none rounded-2xl overflow-hidden focus-within:ring-2 focus-within:ring-[#3C0078]/20 transition-all">
+                    <EditorRoot>
+                      <EditorContent
+                        initialContent={(() => {
+                          try {
+                            return newAnnouncement.contentJson ? JSON.parse(JSON.stringify(newAnnouncement.contentJson)) : { type: "doc", content: [{ type: "paragraph" }] };
+                          } catch {
+                            return { type: "doc", content: [{ type: "paragraph" }] };
+                          }
+                        })()}
+                        extensions={[
+                          StarterKit,
+                          Placeholder.configure({ placeholder: "Write your announcement details here..." }),
+                          TiptapUnderline,
+                          TextStyle,
+                          Color,
+                        ]}
+                        onUpdate={({ editor }) => {
+                          if (editor) {
+                            setNewAnnouncement({
+                              ...newAnnouncement,
+                              preview: editor.getText() || "",
+                              contentJson: editor.getJSON(),
+                            });
+                          }
+                        }}
+                        className="w-full max-w-none focus:outline-none dark:text-slate-100 px-8 py-6 text-gray-900 text-lg font-medium"
+                      >
+                        <EditorBubble className="flex items-center gap-0.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-1.5 py-1 shadow-xl">
+                          <EditorBubbleItem onSelect={(editor) => editor.chain().focus().toggleBold().run()}>
+                            <button className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors" title="Bold">
+                              <Bold size={16} />
+                            </button>
+                          </EditorBubbleItem>
+                          <EditorBubbleItem onSelect={(editor) => editor.chain().focus().toggleItalic().run()}>
+                            <button className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors" title="Italic">
+                              <Italic size={16} />
+                            </button>
+                          </EditorBubbleItem>
+                          <EditorBubbleItem onSelect={(editor) => editor.chain().focus().toggleUnderline().run()}>
+                            <button className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors" title="Underline">
+                              <Underline size={16} />
+                            </button>
+                          </EditorBubbleItem>
+                          <EditorBubbleItem onSelect={(editor) => editor.chain().focus().toggleStrike().run()}>
+                            <button className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors" title="Strikethrough">
+                              <Strikethrough size={16} />
+                            </button>
+                          </EditorBubbleItem>
+                          <EditorBubbleItem onSelect={(editor) => editor.chain().focus().toggleCode().run()}>
+                            <button className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors" title="Inline Code">
+                              <Code size={16} />
+                            </button>
+                          </EditorBubbleItem>
+                          <div className="w-px h-5 bg-gray-200 dark:bg-slate-600 mx-1" />
+                          <EditorBubbleItem onSelect={(editor) => editor.chain().focus().toggleHeading({ level: 1 }).run()}>
+                            <button className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors" title="Heading 1">
+                              <Heading1 size={16} />
+                            </button>
+                          </EditorBubbleItem>
+                          <EditorBubbleItem onSelect={(editor) => editor.chain().focus().toggleHeading({ level: 2 }).run()}>
+                            <button className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors" title="Heading 2">
+                              <Heading2 size={16} />
+                            </button>
+                          </EditorBubbleItem>
+                          <EditorBubbleItem onSelect={(editor) => editor.chain().focus().toggleHeading({ level: 3 }).run()}>
+                            <button className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors" title="Heading 3">
+                              <Heading3 size={16} />
+                            </button>
+                          </EditorBubbleItem>
+                          <div className="w-px h-5 bg-gray-200 dark:bg-slate-600 mx-1" />
+                          <EditorBubbleItem onSelect={(editor) => editor.chain().focus().toggleBulletList().run()}>
+                            <button className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors" title="Bullet List">
+                              <List size={16} />
+                            </button>
+                          </EditorBubbleItem>
+                          <EditorBubbleItem onSelect={(editor) => editor.chain().focus().toggleOrderedList().run()}>
+                            <button className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors" title="Ordered List">
+                              <ListOrdered size={16} />
+                            </button>
+                          </EditorBubbleItem>
+                          <EditorBubbleItem onSelect={(editor) => editor.chain().focus().toggleBlockquote().run()}>
+                            <button className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors" title="Quote">
+                              <Quote size={16} />
+                            </button>
+                          </EditorBubbleItem>
+                        </EditorBubble>
+                      </EditorContent>
+                    </EditorRoot>
+                  </div>
                 </div>
               </div>
 
@@ -383,24 +440,26 @@ function CourseAnnouncementsView() {
           )}
         </AnimatePresence>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {announcements.map((post) => (
+        {loading ? (
+          <div className="text-gray-500 dark:text-slate-400 text-center py-20 font-medium">Loading announcements...</div>
+        ) : announcements.length === 0 ? (
+          <div className="text-gray-500 dark:text-slate-400 text-center py-20 font-medium">No announcements yet.</div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {announcements.map((post) => (
             <motion.div
               key={post.id}
-              layoutId={`ann_container_${post.id}`}
               onClick={() => setSelectedId(post.id)}
               variants={slideUp}
               className="bg-white dark:bg-slate-800 p-8 rounded-[38px] border border-gray-100 dark:border-slate-700 shadow-sm hover:shadow-xl transition-all cursor-pointer relative overflow-hidden group"
               whileHover={{ y: -5 }}
             >
-              <motion.div
-                layoutId={`ann_stripe_${post.id}`}
+              <div
                 className="absolute left-0 top-0 bottom-0 w-1.5"
                 style={{ backgroundColor: post.color }}
               />
               <div className="flex justify-between items-start mb-6">
-                <motion.div
-                  layoutId={`ann_meta_${post.id}`}
+                <div
                   className="flex items-center gap-3"
                 >
                   <span
@@ -409,39 +468,32 @@ function CourseAnnouncementsView() {
                   >
                     {post.label}
                   </span>
-                  <span className="text-sm text-gray-400 dark:text-slate-500">{post.date}</span>
-                </motion.div>
-                <motion.div
-                  layoutId={`ann_icon_${post.id}`}
-                  className="text-gray-200"
-                >
-                  <Bell size={24} />
-                </motion.div>
+                  <span className="text-sm text-gray-400 dark:text-slate-500">{new Date(post.datePosted).toLocaleString()}</span>
+                </div>
               </div>
-              <motion.h2
-                layoutId={`ann_title_${post.id}`}
+              <h2
                 className="text-2xl font-bold text-gray-900 dark:text-slate-100 group-hover:text-[#3C0078] transition-colors leading-tight"
               >
                 {post.title}
-              </motion.h2>
-              <motion.div layoutId={`ann_author_${post.id}`}>
+              </h2>
+              <div>
                 <p className="text-xs font-bold uppercase tracking-widest text-[#3C0078] mt-2 opacity-60">
-                  Posted by {post.lecturer}
+                  Posted by {post.lecturerName}
                 </p>
-              </motion.div>
-              <motion.p
-                layoutId={`ann_preview_${post.id}`}
+              </div>
+              <p
                 className="text-gray-500 dark:text-slate-400 mt-4 leading-relaxed line-clamp-2"
               >
                 {post.preview}
-              </motion.p>
+              </p>
             </motion.div>
           ))}
-        </div>
+          </div>
+        )}
       </div>
 
       <AnimatePresence>
-        {selectedId && (
+        {selectedId && selectedAnnouncement && (
           <>
             {/* Overlay backdrop */}
             <motion.div
@@ -455,20 +507,20 @@ function CourseAnnouncementsView() {
             {/* Modal container */}
             <div className="fixed inset-0 z-[101] flex items-center justify-center p-4 pointer-events-none">
               <motion.div
-                layoutId={`ann_container_${selectedId}`}
                 className="bg-white dark:bg-slate-800 w-full max-w-2xl rounded-[48px] shadow-2xl relative overflow-hidden pointer-events-auto"
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 20 }}
                 transition={{ type: "spring", damping: 25, stiffness: 200 }}
               >
-                <motion.div
-                  layoutId={`ann_stripe_${selectedId}`}
+                <div
                   className="absolute left-0 top-0 bottom-0 w-3"
                   style={{ backgroundColor: selectedAnnouncement.color }}
                 />
 
                 <div className="p-12">
                   <div className="flex justify-between items-start mb-10">
-                    <motion.div
-                      layoutId={`ann_meta_${selectedId}`}
+                    <div
                       className="flex items-center gap-4"
                     >
                       <span
@@ -478,64 +530,53 @@ function CourseAnnouncementsView() {
                         {selectedAnnouncement.label}
                       </span>
                       <span className="text-sm font-medium text-gray-400 dark:text-slate-500">
-                        {selectedAnnouncement.date}
+                        {new Date(selectedAnnouncement.datePosted).toLocaleString()}
                       </span>
-                    </motion.div>
-                    <div className="flex gap-2">
-                      <motion.div
-                        layoutId={`ann_icon_${selectedId}`}
-                        className="text-gray-100 hidden md:block"
-                      >
-                        <Bell size={32} />
-                      </motion.div>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedId(null);
-                        }}
-                        className="w-12 h-12 flex items-center justify-center rounded-full bg-gray-50 dark:bg-slate-800/50 text-gray-400 dark:text-slate-500 hover:bg-gray-100 dark:hover:bg-slate-700 hover:text-gray-900 dark:hover:text-slate-100 transition-colors"
-                      >
-                        <CloseSquare size={24} />
-                      </button>
                     </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedId(null);
+                      }}
+                      className="w-12 h-12 flex items-center justify-center rounded-full bg-gray-50 dark:bg-slate-800/50 text-gray-400 dark:text-slate-500 hover:bg-gray-100 dark:hover:bg-slate-700 hover:text-gray-900 dark:hover:text-slate-100 transition-colors"
+                    >
+                      <CloseSquare size={24} />
+                    </button>
                   </div>
 
-                  <motion.h2
-                    layoutId={`ann_title_${selectedId}`}
+                  <h2
                     className="text-4xl font-black text-gray-900 dark:text-slate-100 leading-tight mb-4"
                   >
                     {selectedAnnouncement.title}
-                  </motion.h2>
+                  </h2>
 
-                  <motion.div
-                    layoutId={`ann_author_${selectedId}`}
+                  <div
                     className="flex items-center gap-3 mb-10 pb-10 border-b border-gray-100 dark:border-slate-700"
                   >
-                    <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-[#3C0078]">
+                    <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-slate-700 flex items-center justify-center text-[#3C0078] dark:text-[#9BE9EA]">
                       <User size={20} />
                     </div>
                     <div>
-                      <p className="text-xs font-black uppercase tracking-widest text-gray-400">
+                      <p className="text-xs font-black uppercase tracking-widest text-gray-400 dark:text-slate-500">
                         Published By
                       </p>
-                      <p className="font-bold text-[#3C0078]">
-                        {selectedAnnouncement.lecturer}
+                      <p className="font-bold text-[#3C0078] dark:text-[#9BE9EA]">
+                        {selectedAnnouncement.lecturerName}
                       </p>
                     </div>
-                  </motion.div>
+                  </div>
 
-                  <motion.div
+                  <div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2 }}
                     className="prose prose-purple max-w-none"
                   >
-                    <motion.p
-                      layoutId={`ann_preview_${selectedId}`}
+                    <p
                       className="text-xl leading-relaxed text-gray-600 dark:text-slate-400 mb-6 font-medium"
                     >
                       {selectedAnnouncement.preview}
-                    </motion.p>
+                    </p>
                     <p className="text-gray-500 dark:text-slate-400 leading-relaxed text-lg">
                       Please make sure to check the attached documents in the
                       resources section if any are mentioned. If you have any
@@ -543,7 +584,7 @@ function CourseAnnouncementsView() {
                       to reach out to the lecturer during office hours or post
                       in the discussion forum.
                     </p>
-                  </motion.div>
+                  </div>
 
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
@@ -557,20 +598,15 @@ function CourseAnnouncementsView() {
                     >
                       Back to list
                     </button>
-                    <div className="flex gap-4">
-                      <button className="flex items-center gap-2 text-gray-400 dark:text-slate-500 hover:text-red-500 transition-colors">
-                        <Trash2 size={18} />
-                        <span className="text-xs font-bold uppercase tracking-widest">
-                          Delete
-                        </span>
-                      </button>
-                      <button className="flex items-center gap-2 text-gray-400 dark:text-slate-500 hover:text-[#3C0078] transition-colors">
-                        <Letter size={18} />
-                        <span className="text-xs font-bold uppercase tracking-widest">
-                          Share
-                        </span>
-                      </button>
-                    </div>
+                    <button
+                      onClick={() => handleDelete(selectedId)}
+                      className="flex items-center gap-2 text-gray-400 dark:text-slate-500 hover:text-red-500 transition-colors"
+                    >
+                      <Trash2 size={18} />
+                      <span className="text-xs font-bold uppercase tracking-widest">
+                        Delete
+                      </span>
+                    </button>
                   </motion.div>
                 </div>
               </motion.div>
@@ -2111,86 +2147,179 @@ function CourseGradesView({ activeCourseId }) {
 // CourseHomeView – the default landing view for a course.
 // Shows a full-bleed hero image, a two-column term overview, lecturer profile
 // with animated pulsing ring, and a set of contextual quick-link buttons.
-function CourseHomeView({ subject, course, loading }) {
-  // Use subject imageUrl or a placeholder if not present
-  var sampleImg =
-    "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=800&q=80";
-  const courseImage = subject?.imageUrl || sampleImg;
+// Editable on the teacher side.
+function CourseHomeView({ subject, course, loading, subjectId, isTeacher }) {
+  const { user } = useAuth();
+  const [isEditing, setIsEditing] = useState(false);
+  const [editData, setEditData] = useState(null);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (subjectId && (isTeacher || isEditing)) {
+      const fetchData = async () => {
+        try {
+          const data = await getSubject(subjectId);
+          const processedData = {
+            ...data,
+            overviewContentJson: data.overviewContentJson || (data.overviewDescription ? { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: data.overviewDescription }] }] } : { type: "doc", content: [{ type: "paragraph" }] }),
+          };
+          setEditData(processedData);
+        } catch (err) {
+          console.error("Failed to fetch subject:", err);
+        }
+      };
+      fetchData();
+    }
+  }, [subjectId, isTeacher, isEditing]);
+
+  const handleSave = async () => {
+    console.log("Save clicked - editData:", editData, "subjectId:", subjectId);
+    if (!editData || !subjectId) {
+      console.error("Missing editData or subjectId", { editData, subjectId });
+      return;
+    }
+    try {
+      setSaving(true);
+      // Merge editData with existing subject to preserve all fields
+      const dataToSave = {
+        ...subject,
+        overviewDescription: editData.overviewDescription,
+        overviewContentJson: editData.overviewContentJson,
+      };
+      const result = await updateSubject(subjectId, dataToSave);
+      console.log("Save result:", result);
+      setIsEditing(false);
+    } catch (err) {
+      console.error("Failed to save course content:", err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const displayData = isEditing && editData ? editData : (subject || {});
+  const sampleImg = "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=800&q=80";
+  const courseImage = displayData?.imageUrl || sampleImg;
+
+  const suggestionItems = createSuggestionItems([
+    {
+      title: "Heading 1",
+      searchTerms: ["title", "heading", "h1"],
+      command: ({ editor, range }) => {
+        editor.chain().focus().deleteRange(range).setNode("heading", { level: 1 }).run();
+      },
+    },
+    {
+      title: "Heading 2",
+      searchTerms: ["subtitle", "heading", "h2"],
+      command: ({ editor, range }) => {
+        editor.chain().focus().deleteRange(range).setNode("heading", { level: 2 }).run();
+      },
+    },
+    {
+      title: "Heading 3",
+      searchTerms: ["heading", "h3"],
+      command: ({ editor, range }) => {
+        editor.chain().focus().deleteRange(range).setNode("heading", { level: 3 }).run();
+      },
+    },
+    {
+      title: "Bullet List",
+      searchTerms: ["unordered", "list", "bullet"],
+      command: ({ editor, range }) => {
+        editor.chain().focus().deleteRange(range).toggleBulletList().run();
+      },
+    },
+    {
+      title: "Numbered List",
+      searchTerms: ["ordered", "list", "number"],
+      command: ({ editor, range }) => {
+        editor.chain().focus().deleteRange(range).toggleOrderedList().run();
+      },
+    },
+    {
+      title: "Quote",
+      searchTerms: ["blockquote", "quote"],
+      command: ({ editor, range }) => {
+        editor.chain().focus().deleteRange(range).toggleBlockquote().run();
+      },
+    },
+    {
+      title: "Code Block",
+      searchTerms: ["code", "codeblock"],
+      command: ({ editor, range }) => {
+        editor.chain().focus().deleteRange(range).toggleCodeBlock().run();
+      },
+    },
+  ]);
 
   return (
     <div className="flex-1 flex flex-col p-12 overflow-y-auto">
-      <header className="mb-12">
-        <h1 className="text-4xl font-semibold tracking-tight">
-          {loading
-            ? "Loading course details..."
-            : `${subject?.name || "Unknown"} | ${course?.term || ""}`}
-        </h1>
-        <p className="text-xl text-gray-500 mt-3 font-medium">
-          {loading ? "..." : subject?.code}
-        </p>
+      <header className="mb-12 flex justify-between items-start">
+        <div>
+          <h1 className="text-4xl font-semibold tracking-tight">
+            {loading
+              ? "Loading course details..."
+              : `${subject?.name || "Unknown"} | ${course?.term || ""}`}
+          </h1>
+        </div>
+        {isTeacher && !isEditing && (
+          <button
+            onClick={() => setIsEditing(true)}
+            className="px-6 py-3 rounded-2xl bg-[#3C0078] text-white font-bold text-xs uppercase tracking-widest hover:bg-[#2A0054] transition-all"
+          >
+            Edit Course
+          </button>
+        )}
+        {isTeacher && isEditing && (
+          <div className="flex gap-3">
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="px-6 py-3 rounded-2xl bg-green-600 text-white font-bold text-xs uppercase tracking-widest hover:bg-green-700 transition-all disabled:opacity-50"
+            >
+              {saving ? "Saving..." : "Save"}
+            </button>
+            <button
+              onClick={() => setIsEditing(false)}
+              className="px-6 py-3 rounded-2xl bg-gray-400 text-white font-bold text-xs uppercase tracking-widest hover:bg-gray-500 transition-all"
+            >
+              Cancel
+            </button>
+          </div>
+        )}
       </header>
 
       {/* Left column – course overview with todo, next class & announcements */}
-      <main className="space-y-24 w-full flex flex-col items-center">
-        <div className="w-full h-[500px] rounded-[60px] shadow-sm overflow-hidden">
-          <img
-            src={courseImage}
-            alt={subject?.name}
-            className="w-full h-full object-cover"
-          />
-        </div>
+      <main className="w-full flex-1 flex flex-col">
+        <div className="w-full flex-1 relative novel-editor-wrapper flex flex-col">
 
-        <div className="w-full max-w-6xl space-y-24">
-          <section>
-            <h2 className="text-3xl font-bold mb-12 tracking-tight">
-              Course Overview
-            </h2>
-            <div className="flex flex-col md:flex-row gap-24 items-stretch">
-              <div className="flex-1 flex flex-col justify-between">
-                <div>
-                  <h3 className="font-bold text-xs mb-6 uppercase tracking-[0.2em] text-[#3C0078] border-b-2 border-[#3C0078] inline-block pb-1">
-                    Term 1
-                  </h3>
-                  <p className="text-lg leading-relaxed text-gray-600 min-h-[120px]">
-                    {loading
-                      ? "Loading..."
-                      : subject?.description ||
-                        "In this term, students will focus on the foundational principles of user experience design, understanding user psychology, and master the basics of research methodologies."}
-                  </p>
-                </div>
-                <div className="mt-8">
-                  <Link
-                    to="#"
-                    className="inline-flex items-center gap-2 text-[#3C0078] font-bold text-sm uppercase tracking-widest hover:translate-x-1 transition-transform"
-                  >
-                    Full Term Overview <span>→</span>
-                  </Link>
-                </div>
-              </div>
-
-              <div className="flex-1 flex flex-col justify-between border-l border-gray-100 pl-24">
-                <div>
-                  <h3 className="font-bold text-xs mb-6 uppercase tracking-[0.2em] text-[#3C0078] border-b-2 border-[#3C0078] inline-block pb-1">
-                    Term 2
-                  </h3>
-                  <p className="text-lg leading-relaxed text-gray-600 min-h-[120px]">
-                    Building on the foundations, Term 2 shifts towards advanced
-                    prototyping, usability testing, and the integration of
-                    professional design hand-off processes for industry-standard
-                    delivery.
-                  </p>
-                </div>
-                <div className="mt-8">
-                  <Link
-                    to="#"
-                    className="inline-flex items-center gap-2 text-[#3C0078] font-bold text-sm uppercase tracking-widest hover:translate-x-1 transition-transform"
-                  >
-                    Full Term Overview <span>→</span>
-                  </Link>
-                </div>
-              </div>
+          {isEditing ? (
+            <NovelEditor
+              initialContent={(() => {
+                try {
+                  return editData?.overviewContentJson ? JSON.parse(JSON.stringify(editData.overviewContentJson)) : { type: "doc", content: [{ type: "paragraph" }] };
+                } catch {
+                  return { type: "doc", content: [{ type: "paragraph" }] };
+                }
+              })()}
+              onUpdate={(editor) => {
+                setEditData({
+                  ...editData,
+                  overviewDescription: editor.getText() || "",
+                  overviewContentJson: editor.getJSON(),
+                });
+              }}
+              placeholder="Write your course overview..."
+              className="w-full max-w-none focus:outline-none dark:text-slate-100 flex-1"
+            />
+          ) : (
+            <div className="prose prose-purple max-w-none flex-1 overflow-y-auto">
+              <p className="text-lg leading-relaxed text-gray-600 dark:text-slate-400">
+                {displayData?.overviewDescription || "No course overview yet. Edit to add content."}
+              </p>
             </div>
-          </section>
+          )}
+        </div>
 
           <section className="w-full grid grid-cols-1 lg:grid-cols-2 gap-12 pt-12 border-t border-gray-100">
             {/* Lecturer Section on the Left */}
@@ -2311,7 +2440,6 @@ function CourseHomeView({ subject, course, loading }) {
               </div>
             </div>
           </section>
-        </div>
       </main>
     </div>
   );
@@ -2892,6 +3020,7 @@ export default function StudentCourses() {
     null;
   const subject = course
     ? {
+        id: course.id,
         name: course.subjectName,
         code: course.label,
         description: course.description,
@@ -2935,11 +3064,11 @@ export default function StudentCourses() {
 
       {/* Main Content Area */}
       {isHomePage ? (
-        <CourseHomeView subject={subject} course={course} loading={loading} />
+        <CourseHomeView subject={subject} course={course} loading={loading} subjectId={subject?.id} isTeacher={true} />
       ) : isGradesPage ? (
         <CourseGradesView activeCourseId={activeCourseId} />
       ) : isAnnouncementsPage ? (
-        <CourseAnnouncementsView />
+        <CourseAnnouncementsView activeCourseId={activeCourseId} />
       ) : isAssignmentsPage ? (
         <CourseAssignmentsView subject={subject} />
       ) : isAttendancePage ? (

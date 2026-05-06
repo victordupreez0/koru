@@ -18,14 +18,15 @@ namespace LearnOnline.Data
                 CREATE TABLE ""Announcements"" (
                     ""Id"" text NOT NULL,
                     ""Title"" text NOT NULL,
-                    ""LecturerName"" text NOT NULL,
                     ""DatePosted"" timestamp with time zone NOT NULL,
                     ""Preview"" text NOT NULL,
                     ""Label"" text NOT NULL,
                     ""Color"" text NOT NULL,
                     ""CourseId"" text NOT NULL,
+                    ""LecturerId"" text NOT NULL,
                     CONSTRAINT ""PK_Announcements"" PRIMARY KEY (""Id""),
-                    CONSTRAINT ""FK_Announcements_Courses_CourseId"" FOREIGN KEY (""CourseId"") REFERENCES ""Courses"" (""Id"") ON DELETE CASCADE
+                    CONSTRAINT ""FK_Announcements_Courses_CourseId"" FOREIGN KEY (""CourseId"") REFERENCES ""Courses"" (""Id"") ON DELETE CASCADE,
+                    CONSTRAINT ""FK_Announcements_Users_LecturerId"" FOREIGN KEY (""LecturerId"") REFERENCES ""Users"" (""Id"") ON DELETE CASCADE
                 );
             ");
 
@@ -241,16 +242,16 @@ namespace LearnOnline.Data
                 if (uxCourseId != null)
                 {
                     context.Announcements.AddRange(
-                        new Announcement { CourseId = uxCourseId, Title = "Project 3 Brief Released", LecturerName = "Dr. Sarah Miller", DatePosted = DateTime.UtcNow.AddHours(-2), Preview = "The brief for Project 3: High-Fidelity Prototyping is now available in the Modules section. Please review the technical requirements before Monday's lecture.", Label = "Notice", Color = "#3C0078" },
-                        new Announcement { CourseId = uxCourseId, Title = "Guest Lecture: Industry UX Trends", LecturerName = "Prof. Mark Chen", DatePosted = DateTime.UtcNow.AddDays(-1), Preview = "We have an exciting guest speaker from a leading fintech startup joining us next week Tuesday. Attendance is mandatory for UX300 students.", Label = "Event", Color = "#FF8731" },
-                        new Announcement { CourseId = uxCourseId, Title = "Lab Room Change - Block D", LecturerName = "Admin", DatePosted = DateTime.UtcNow.AddDays(-5), Preview = "The practical session for Friday will be moved to Lab 402 in Block D due to maintenance in the main studio.", Label = "Update", Color = "#87CEFA" }
+                        new Announcement { CourseId = uxCourseId, LecturerId = teacher.Id, Title = "Project 3 Brief Released", DatePosted = DateTime.UtcNow.AddHours(-2), Preview = "The brief for Project 3: High-Fidelity Prototyping is now available in the Modules section. Please review the technical requirements before Monday's lecture.", Label = "Notice", Color = "#3C0078" },
+                        new Announcement { CourseId = uxCourseId, LecturerId = teacher.Id, Title = "Guest Lecture: Industry UX Trends", DatePosted = DateTime.UtcNow.AddDays(-1), Preview = "We have an exciting guest speaker from a leading fintech startup joining us next week Tuesday. Attendance is mandatory for UX300 students.", Label = "Event", Color = "#FF8731" },
+                        new Announcement { CourseId = uxCourseId, LecturerId = admin.Id, Title = "Lab Room Change - Block D", DatePosted = DateTime.UtcNow.AddDays(-5), Preview = "The practical session for Friday will be moved to Lab 402 in Block D due to maintenance in the main studio.", Label = "Update", Color = "#87CEFA" }
                     );
                 }
 
                 if (dvCourseId != null)
                 {
                     context.Announcements.AddRange(
-                        new Announcement { CourseId = dvCourseId, Title = "Midterm Results Posted", LecturerName = "Dr. Jane Doe", DatePosted = DateTime.UtcNow.AddDays(-2), Preview = "The results for your midterm examination have been posted. Please check your grades.", Label = "Grades", Color = "#3C0078" }
+                        new Announcement { CourseId = dvCourseId, LecturerId = william.Id, Title = "Midterm Results Posted", DatePosted = DateTime.UtcNow.AddDays(-2), Preview = "The results for your midterm examination have been posted. Please check your grades.", Label = "Grades", Color = "#3C0078" }
                     );
                 }
 
