@@ -20,15 +20,12 @@ export default function TimelineEventCompressed({
       className={`flex-1 pb-5 cursor-pointer transition-opacity duration-300 ${isPast ? "opacity-45" : "opacity-100"}`}
     >
       {/* Time range label above the card */}
-      <p className={`text-sm font-medium mb-2.5 ml-0.5 ${isPast ? "text-gray-400 line-through" : "text-gray-500"}`}>{timeRange}</p>
+      <p className={`text-sm font-medium mb-2.5 ml-0.5 ${isPast ? "text-gray-300 " : "text-gray-500"}`}>{timeRange}</p>
 
-      {/* Compact card with a subtle left accent bar */}
-      <div className={`border rounded-2xl px-5 py-4 flex items-center justify-between transition-shadow duration-200 relative overflow-hidden ${isPast ? "bg-gray-50 border-gray-100" : "bg-white border-gray-200 hover:shadow-md"}`}>
-        {/* Thin left accent stripe */}
-        <div className="absolute left-0 top-0 bottom-0 w-1 bg-gray-200 rounded-l-2xl" />
-
+      {/* Compact card with subtle styling */}
+      <div className={`border rounded-2xl px-5 py-4 flex items-center justify-between transition-shadow duration-200 ${isPast ? "bg-gray-20 border-gray-50 hover:shadow-md" : "bg-white border-gray-200 hover:shadow-md"}`}>
         {/* Title and lecturer */}
-        <div className="flex-1 min-w-0 pl-3 pr-3">
+        <div className="flex-1 min-w-0 pr-3">
           <h3 className="text-base font-semibold text-black leading-tight font-['Gabarito']">
             {title}
           </h3>
@@ -40,9 +37,9 @@ export default function TimelineEventCompressed({
           <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${isPast ? "text-gray-400 bg-gray-100" : "text-[#3C0078] bg-[#3C0078]/8"}`}>
             {location}
           </span>
-          <div className={`flex items-center gap-1 px-2.5 py-1 rounded-full ${isPast ? "bg-gray-100" : "bg-[#FF8731]/10"}`}>
-            <MdAccessTime className={`w-3.5 h-3.5 ${isPast ? "text-gray-400" : "text-[#FF8731]"}`} />
-            <span className={`text-xs font-semibold ${isPast ? "text-gray-400" : "text-[#FF8731]"}`}>{duration}</span>
+          <div className={`flex items-center gap-1 px-2.5 py-1 rounded-full ${isPast ? "bg-gray-100" : "bg-blue-100"}`}>
+            <MdAccessTime className={`w-3.5 h-3.5 ${isPast ? "text-gray-400" : "text-blue-800"}`} />
+            <span className={`text-xs font-semibold ${isPast ? "text-gray-400" : "text-blue-800"}`}>{duration}</span>
           </div>
         </div>
       </div>
