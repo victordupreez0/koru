@@ -15,6 +15,8 @@ export default function CourseGlance() {
                 <div className="flex items-center justify-between mt-5 mb-1">
                     <h2 className="text-2xl font-['Gabarito']">Course Glance</h2>
                 </div>
+                {/* Spacer between header and footer */}
+          <div className="h-5" />
                 <div className="flex-1 overflow-y-auto">
                     <CourseGlanceSelect activeCourseId={activeCourseId} setActiveCourseId={setActiveCourseId} visibleCourses={visibleCourses} />
                     <CourseGlanceDisplay activeCourseId={activeCourseId} />

@@ -106,6 +106,8 @@ export default function TodayTimeline() {
         <h2 className="text-2xl font-['Gabarito']">Today</h2>
       </div>
       <p className="text-sm text-gray-400 mb-5 font-medium">{formatDate(now)}</p>
+       {/* Spacer between header and footer */}
+          <div className="h-5" />
 
       {/* ── Scrollable timeline with fade overlays ── */}
       <div className="relative flex-1 overflow-y-auto scrollbar-black pr-1 flex flex-col">

@@ -26,7 +26,7 @@ export default function TimelineEventCompressed({
       <div className={`border rounded-2xl px-5 py-4 flex items-center justify-between transition-shadow duration-200 ${isPast ? "bg-gray-20 border-gray-50 hover:shadow-md" : "bg-white border-gray-200 hover:shadow-md"}`}>
         {/* Title and lecturer */}
         <div className="flex-1 min-w-0 pr-3">
-          <h3 className="text-base font-semibold text-black leading-tight font-['Gabarito']">
+          <h3 className="text-base font-semibold text-black/30 leading-tight font-['Gabarito']">
             {title}
           </h3>
           <p className="text-xs text-gray-400 mt-0.5">Lecturer – {lecturer}</p>
