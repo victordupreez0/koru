@@ -125,33 +125,36 @@ export default function AssignmentsProgress() {
       </div>
       <p className="text-sm text-transparent mb-5 font-medium select-none" aria-hidden="true">Spacer</p>
 
-      {/* ── Assignment Cards (next 3 due) ── */}
-      <div className="flex flex-col gap-3 pr-2">
-        {loading ? (
-            <div className="text-gray-400 text-sm font-medium w-full text-center mt-8">Loading assignments...</div>
-        ) : nextThree.length === 0 ? (
-            <div className="text-gray-400 text-sm font-medium w-full text-center mt-8">You have no upcoming assignments.</div>
-        ) : (
-            nextThree.map((assignment) => (
-            <AssignmentItem
-                key={assignment.id}
-                title={assignment.title}
-                dueDate={assignment.dueDate}
-                courseCode={assignment.courseCode}
-                completed={assignment.completed}
-                uiState={assignment.uiState}
-                onToggle={() => toggleAssignment(assignment.id)}
-            />
-            ))
-        )}
-      </div>
+      {/* ── Scrollable Content ── */}
+      <div className="flex-1 overflow-y-auto pr-2 flex flex-col">
+        {/* ── Assignment Cards (next 3 due) ── */}
+        <div className="flex flex-col gap-3">
+          {loading ? (
+              <div className="text-gray-400 text-sm font-medium w-full text-center mt-8">Loading assignments...</div>
+          ) : nextThree.length === 0 ? (
+              <div className="text-gray-400 text-sm font-medium w-full text-center mt-8">You have no upcoming assignments.</div>
+          ) : (
+              nextThree.map((assignment) => (
+              <AssignmentItem
+                  key={assignment.id}
+                  title={assignment.title}
+                  dueDate={assignment.dueDate}
+                  courseCode={assignment.courseCode}
+                  completed={assignment.completed}
+                  uiState={assignment.uiState}
+                  onToggle={() => toggleAssignment(assignment.id)}
+              />
+              ))
+          )}
+        </div>
 
-      {/* ── Progress Header ── */}
-      <h2 className="text-2xl font-['Gabarito'] mt-8 mb-2">Progress</h2>
+        {/* ── Progress Header ── */}
+        <h2 className="text-2xl font-['Gabarito'] mt-8 mb-2">Progress</h2>
 
-      {/* ── Progress Ring ── */}
-      <div className="w-full bg-gray-100 rounded-2xl border border-gray-200 p-4">
-        <ProgressRing percentage={progress} />
+        {/* ── Progress Ring ── */}
+        <div className="w-full bg-gray-100 rounded-2xl border border-gray-200 p-4">
+          <ProgressRing percentage={progress} />
+        </div>
       </div>
     </div>
   );
