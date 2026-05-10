@@ -61,10 +61,10 @@ export default function ToDoItem({ activeCourseId }) {
             {todos.map((todo, idx) => (
                 <div
                     key={idx}
-                    className="my-2 bg-white rounded-lg w-full h-12 flex flex-row items-center space-x-2 transition-all duration-200 hover:scale-[1.02] hover:shadow-md hover:bg-[#9161C0]/5"
+                    className="my-2 bg-white rounded-xl shadow-sm w-full h-12 flex flex-row items-center space-x-2 transition-all duration-200 hover:shadow-md hover:-translate-y-1"
                 >
                     {/* Purple icon badge */}
-                    <div className="w-9 h-9 bg-[#9161C0] rounded-md ml-2 flex items-center justify-center">
+                    <div className="w-9 h-9 bg-purple-400 rounded-full ml-2 flex items-center justify-center">
                         <MdEditNote className="w-6 h-6 text-white" />
                     </div>
 

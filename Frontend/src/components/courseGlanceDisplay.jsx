@@ -8,7 +8,7 @@ import ToDoItem from "./UI/toDoItem";
 export default function CourseGlanceDisplay({ activeCourseId }) {
     return (
         <>
-            <div className="w-full h-fit bg-purple-100 rounded-2xl p-4 mt-4 ">
+            <div className="w-full h-fit  rounded-2xl mt-4 ">
 
                 <h3 className="font-medium">Todo:</h3>
                 <ToDoItem activeCourseId={activeCourseId} />
