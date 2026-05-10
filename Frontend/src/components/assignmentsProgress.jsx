@@ -111,22 +111,28 @@ export default function AssignmentsProgress() {
     return Math.round((done / assignments.length) * 100);
   }, [assignments]);
 
+  // Next 3 due: highest-priority non-submitted assignments
+  const nextThree = useMemo(
+    () => assignments.filter((a) => !a.completed).slice(0, 3),
+    [assignments]
+  );
+
   return (
-    <div className="w-full">
+    <div className="w-full h-full flex flex-col bg-white border-1 border-gray-200 rounded-3xl drop-shadow-xl p-4">
       {/* ── Assignments Header ── */}
       <div className="flex items-center justify-between mt-5 mb-1">
         <h2 className="text-2xl font-['Gabarito']">Assignments</h2>
       </div>
       <p className="text-sm text-transparent mb-5 font-medium select-none" aria-hidden="true">Spacer</p>
 
-      {/* ── Assignment Cards ── */}
-      <div className="flex flex-col gap-3 min-h-[160px] max-h-[520px] overflow-y-auto scrollbar-black pr-2">
+      {/* ── Assignment Cards (next 3 due) ── */}
+      <div className="flex flex-col gap-3 pr-2">
         {loading ? (
             <div className="text-gray-400 text-sm font-medium w-full text-center mt-8">Loading assignments...</div>
-        ) : assignments.length === 0 ? (
+        ) : nextThree.length === 0 ? (
             <div className="text-gray-400 text-sm font-medium w-full text-center mt-8">You have no upcoming assignments.</div>
         ) : (
-            assignments.map((assignment) => (
+            nextThree.map((assignment) => (
             <AssignmentItem
                 key={assignment.id}
                 title={assignment.title}
