@@ -1,7 +1,12 @@
 @import url("https://fonts.googleapis.com/css2?family=Gabarito:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap");
 @import url("https://fonts.cdnfonts.com/css/open-dyslexic");
+
 @import "tailwindcss";
 @plugin "daisyui";
+
+@theme {
+  --color-white: rgba(255, 255, 255, 0.8);
+}
 
 :root {
   font-family: "Poppins", system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -42,7 +47,17 @@ body {
   min-height: 100vh;
   scrollbar-width: none;
   /* Firefox */
-  background: #f0f0f2;
+  /* background: #f0f0f2; */
+background: hsla(233, 100%, 90%, 1);
+
+background: linear-gradient(90deg, hsla(233, 100%, 90%, 1) 0%, rgb(255, 255, 255) 100%);
+
+background: -moz-linear-gradient(90deg, hsla(233, 100%, 90%, 1) 0%, rgb(255, 255, 255) 100%);
+
+background: -webkit-linear-gradient(90deg, hsla(233, 100%, 90%, 1) 0%, rgb(255, 255, 255) 100%);
+
+filter: progid: DXImageTransform.Microsoft.gradient( startColorstr="#CAD0FF", endColorstr="#E3E3E3", GradientType=1 );
+
   position: relative;
   overflow-x: hidden;
 }

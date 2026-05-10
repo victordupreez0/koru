@@ -100,7 +100,7 @@ export default function TodayTimeline() {
   const nextIdx = getNextEventIndex(events, now);
 
   return (
-    <div className="w-full">
+    <div className="w-full h-full flex flex-col bg-white border-1 border-gray-200 rounded-3xl p-4 drop-shadow-xl">
       {/* ── Header ── */}
       <div className="flex items-center justify-between mt-5 mb-1">
         <h2 className="text-2xl font-['Gabarito']">Today</h2>
@@ -108,11 +108,7 @@ export default function TodayTimeline() {
       <p className="text-sm text-gray-400 mb-5 font-medium">{formatDate(now)}</p>
 
       {/* ── Scrollable timeline with fade overlays ── */}
-      <div className="relative">
-
-
-        {/* Scrollable list */}
-        <div className="max-h-[520px] overflow-y-auto scrollbar-black pr-1 flex flex-col">
+      <div className="relative flex-1 overflow-y-auto scrollbar-black pr-1 flex flex-col">
           {events.map((evt, idx) => {
             const isNext = idx === nextIdx;
             const isPast = isPastEvent(evt, now);
@@ -153,9 +149,6 @@ export default function TodayTimeline() {
             );
           })}
         </div>
-
-
-      </div>
     </div>
   );
 }
