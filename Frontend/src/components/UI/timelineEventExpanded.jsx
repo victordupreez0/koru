@@ -26,9 +26,7 @@ export default function TimelineEventExpanded({
       </p>
 
       {/* Main card container */}
-      <div className={`border rounded-2xl overflow-hidden transition-shadow duration-200 ${isPast ? "bg-gray-50 border-gray-100" : "bg-white border-gray-200 shadow-sm hover:shadow-md"}`}>
-        {/* Top accent bar – purple gradient for active, grey for past */}
-        <div className={`h-1.5 w-full ${isPast ? "bg-gray-200" : "bg-gradient-to-r from-[#3C0078] to-[#7B2FBE]"}`} />
+      <div className={`rounded-2xl overflow-hidden transition-shadow duration-200 ${isPast ? "bg-gray-50" : "bg-purple-100  hover:shadow-md"}`}>
 
         <div className="p-5">
           {/* Header – title, subtitle, and location badge */}
@@ -39,13 +37,13 @@ export default function TimelineEventExpanded({
               </h3>
               <p className="text-sm text-gray-400 mt-1">{subtitle}</p>
             </div>
-            <span className={`text-xs font-semibold px-3 py-1.5 rounded-full shrink-0 ${isPast ? "text-gray-400 bg-gray-100" : "text-[#3C0078] bg-[#3C0078]/8"}`}>
+            <span className={`text-xs font-semibold px-3 py-1.5 rounded-full shrink-0 ${isPast ? "text-white-400 bg-gray-100" : "text-[#3C0078] bg-[#3C0078]/8"}`}>
               {location}
             </span>
           </div>
 
           {/* Spacer between header and footer */}
-          <div className="h-12" />
+          <div className="h-3" />
 
           {/* Footer – lecturer info and duration pill */}
           <div className="flex items-center justify-between pt-3 border-t border-gray-100">
@@ -55,7 +53,7 @@ export default function TimelineEventExpanded({
                 <MdPersonOutline className={`w-5 h-5 ${isPast ? "text-gray-400" : "text-[#3C0078]"}`} />
               </div>
               <div className="flex flex-col">
-                <span className="text-[11px] text-gray-400 leading-tight uppercase tracking-wider font-medium">
+                <span className="text-[11px] text-black leading-tight uppercase tracking-wider font-medium">
                   Lecturer
                 </span>
                 <span className="text-sm font-semibold text-black leading-tight">
@@ -65,9 +63,9 @@ export default function TimelineEventExpanded({
             </div>
 
             {/* Duration pill with clock icon */}
-            <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full ${isPast ? "bg-gray-100" : "bg-[#FF8731]/10"}`}>
-              <MdAccessTime className={`w-4 h-4 ${isPast ? "text-gray-400" : "text-[#FF8731]"}`} />
-              <span className={`text-sm font-semibold ${isPast ? "text-gray-400" : "text-[#FF8731]"}`}>{duration}</span>
+            <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full ${isPast ? "bg-gray-100" : "bg-white"}`}>
+              <MdAccessTime className={`w-4 h-4 ${isPast ? "text-gray-400" : "text-black"}`} />
+              <span className={`text-sm font-semibold ${isPast ? "text-gray-400" : "text-black"}`}>{duration}</span>
             </div>
           </div>
         </div>

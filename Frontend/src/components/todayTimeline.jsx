@@ -18,9 +18,9 @@ const events = [
     lecturer: "Tsungai Katsuro",
     duration: "60min",
     location: "Online",
-    startHour: 11,
+    startHour: 0,
     startMin: 0,
-    endHour: 12,
+    endHour: 0,
     endMin: 0,
   },
   {
