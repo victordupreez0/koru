@@ -20,8 +20,8 @@ export default function CalendarDayBlock({ day, isToday = false, isOutside = fal
         "min-h-[140px] p-2.5 flex flex-col gap-1.5 border-r border-gray-200 last:border-r-0 transition-colors duration-150",
         // Overflow visible so tooltips can escape the cell
         "overflow-visible",
-        isToday   ? "bg-gray-100"  : "bg-transparent",
-        isOutside ? "opacity-40"   : "",
+        isToday ? "bg-purple-100" : "bg-transparent",
+        isOutside ? "opacity-40" : "",
       ].join(" ")}
     >
       {/* Day number badge */}
@@ -29,7 +29,7 @@ export default function CalendarDayBlock({ day, isToday = false, isOutside = fal
         <span
           className={[
             "self-start w-[22px] h-[22px] flex items-center justify-center rounded-full text-[11px] font-semibold leading-none shrink-0 mb-0.5",
-            isToday ? "bg-gray-700 text-white" : "text-gray-600",
+            isToday ? "bg-purple-500 text-white" : "text-gray-600",
           ].join(" ")}
         >
           {day}

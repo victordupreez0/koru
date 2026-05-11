@@ -1,108 +1,126 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import Menu from "../../components/menu";
 import SideMenu from "../../components/sideMenu";
 
-import CalendarDayBlock        from "./UI/CalendarDayBlock";
-import CalendarViewSelector    from "./UI/CalendarViewSelector";
-import CalendarTimelineView    from "./UI/CalendarTimelineView";
-import CalendarDayView         from "./UI/CalendarDayView";
+import CalendarDayBlock from "./UI/CalendarDayBlock";
+import CalendarViewSelector from "./UI/CalendarViewSelector";
+import CalendarTimelineView from "./UI/CalendarTimelineView";
+import CalendarDayView from "./UI/CalendarDayView";
 
 // ─────────────────────────────────────────────────────────────
-//  EVENTS DATA
-//  Shape: { id, date, title, startTime, endTime, type, lecturer?, location? }
-//  type: "class" | "meeting" | "task" | "personal"
+//  WEEKLY EVENT TEMPLATE
+//  dayOfWeek: 0 = Sunday, 1 = Monday, … 6 = Saturday
+//  These repeat every week in every month.
 // ─────────────────────────────────────────────────────────────
-const EVENTS = [
-  // ── Week 1 (Mar 2 – 8) ──────────────────────────────────
-  { id: 1,  date: "2026-03-02", title: "UX 300",        startTime: "8:30",  endTime: "9:30",  type: "class",    lecturer: "Laudette Sass",   location: "On Campus - C4"  },
-  { id: 2,  date: "2026-03-02", title: "VC 300",        startTime: "9:00",  endTime: "10:00", type: "class",    lecturer: "Matt Williams",   location: "Online"          },
-  { id: 3,  date: "2026-03-02", title: "DV 300",        startTime: "14:00", endTime: "16:00", type: "class",    lecturer: "Tsungai Katsuro", location: "On Campus - B2"  },
-  { id: 4,  date: "2026-03-03", title: "Group Meeting", startTime: "9:00",  endTime: "10:00", type: "meeting",  lecturer: "Study Group",     location: "Online"          },
-  { id: 5,  date: "2026-03-04", title: "UX 300",        startTime: "9:00",  endTime: "13:00", type: "class",    lecturer: "Laudette Sass",   location: "On Campus - C4"  },
-  { id: 6,  date: "2026-03-05", title: "DV 300",        startTime: "13:00", endTime: "17:00", type: "class",    lecturer: "Tsungai Katsuro", location: "On Campus - B2"  },
-
-  // ── Week 2 (Mar 9 – 15) ─────────────────────────────────
-  { id: 7,  date: "2026-03-09", title: "UX 300",        startTime: "8:30",  endTime: "9:30",  type: "class",    lecturer: "Laudette Sass",   location: "On Campus - C4"  },
-  { id: 8,  date: "2026-03-09", title: "VC 300",        startTime: "9:00",  endTime: "10:00", type: "class",    lecturer: "Matt Williams",   location: "Online"          },
-  { id: 9,  date: "2026-03-09", title: "DV 300",        startTime: "14:00", endTime: "16:00", type: "class",    lecturer: "Tsungai Katsuro", location: "On Campus - B2"  },
-  { id: 10, date: "2026-03-11", title: "UX 300",        startTime: "9:00",  endTime: "13:00", type: "class",    lecturer: "Laudette Sass",   location: "On Campus - C4"  },
-  { id: 11, date: "2026-03-12", title: "DV 300",        startTime: "13:00", endTime: "17:00", type: "class",    lecturer: "Tsungai Katsuro", location: "On Campus - B2"  },
-  { id: 12, date: "2026-03-13", title: "Task 1 Due",    startTime: "11:00", endTime: null,     type: "task",                                                              },
-  { id: 13, date: "2026-03-14", title: "Grandma B Day", startTime: "10:00", endTime: "11:00", type: "personal",                                                          },
-
-  // ── Week 3 (Mar 16 – 22) ────────────────────────────────
-  { id: 14, date: "2026-03-16", title: "UX 300",        startTime: "8:30",  endTime: "9:30",  type: "class",    lecturer: "Laudette Sass",   location: "On Campus - C4"  },
-  { id: 15, date: "2026-03-16", title: "VC 300",        startTime: "9:00",  endTime: "10:00", type: "class",    lecturer: "Matt Williams",   location: "Online"          },
-  { id: 16, date: "2026-03-16", title: "DV 300",        startTime: "14:00", endTime: "16:00", type: "class",    lecturer: "Tsungai Katsuro", location: "On Campus - B2"  },
-  { id: 17, date: "2026-03-18", title: "Group Meeting", startTime: "7:00",  endTime: "9:00",  type: "meeting",  lecturer: "Study Group",     location: "Online"          },
-  { id: 18, date: "2026-03-18", title: "UX 300",        startTime: "9:00",  endTime: "13:00", type: "class",    lecturer: "Laudette Sass",   location: "On Campus - C4"  },
-  { id: 19, date: "2026-03-19", title: "DV 300",        startTime: "13:00", endTime: "17:00", type: "class",    lecturer: "Tsungai Katsuro", location: "On Campus - B2"  },
-  { id: 20, date: "2026-03-20", title: "Coffee Date",   startTime: "10:00", endTime: "11:00", type: "personal",                                                          },
-
-  // ── Week 4 (Mar 23 – 29) ────────────────────────────────
-  { id: 21, date: "2026-03-23", title: "UX 300",        startTime: "8:30",  endTime: "9:30",  type: "class",    lecturer: "Laudette Sass",   location: "On Campus - C4"  },
-  { id: 22, date: "2026-03-23", title: "VC 300",        startTime: "14:00", endTime: "18:00", type: "class",    lecturer: "Matt Williams",   location: "Online"          },
-  { id: 23, date: "2026-03-23", title: "DV 300",        startTime: "14:00", endTime: "16:00", type: "class",    lecturer: "Tsungai Katsuro", location: "On Campus - B2"  },
-  { id: 24, date: "2026-03-24", title: "Group Meeting", startTime: "9:00",  endTime: "10:00", type: "meeting",  lecturer: "Study Group",     location: "Online"          },
-  { id: 25, date: "2026-03-25", title: "UX 300",        startTime: "9:00",  endTime: "13:00", type: "class",    lecturer: "Laudette Sass",   location: "On Campus - C4"  },
-  { id: 26, date: "2026-03-26", title: "DV 300",        startTime: "13:00", endTime: "17:00", type: "class",    lecturer: "Tsungai Katsuro", location: "On Campus - B2"  },
-  { id: 27, date: "2026-03-29", title: "Work on UX",    startTime: "10:00", endTime: "11:00", type: "personal",                                                          },
+const WEEKLY_TEMPLATE = [
+  // Monday
+  { dayOfWeek: 1, title: "UX 300", startTime: "8:30", endTime: "9:30", type: "class", lecturer: "Laudette Sass", location: "On Campus - C4" },
+  { dayOfWeek: 1, title: "VC 300", startTime: "9:00", endTime: "10:00", type: "class", lecturer: "Matt Williams", location: "Online" },
+  { dayOfWeek: 1, title: "DV 300", startTime: "14:00", endTime: "16:00", type: "class", lecturer: "Tsungai Katsuro", location: "On Campus - B2" },
+  // Tuesday
+  { dayOfWeek: 2, title: "Group Meeting", startTime: "9:00", endTime: "10:00", type: "meeting", lecturer: "Study Group", location: "Online" },
+  // Wednesday
+  { dayOfWeek: 3, title: "UX 300", startTime: "9:00", endTime: "13:00", type: "class", lecturer: "Laudette Sass", location: "On Campus - C4" },
+  // Thursday
+  { dayOfWeek: 4, title: "DV 300", startTime: "13:00", endTime: "17:00", type: "class", lecturer: "Tsungai Katsuro", location: "On Campus - B2" },
 ];
 
 // ─────────────────────────────────────────────────────────────
 //  TASKS DATA  (To-Do panel in Day view)
-//  Shape: { id, title, due, dueTime, course }
 // ─────────────────────────────────────────────────────────────
 const TASKS = [
-  { id: 1, title: "High Fidelity Wireframes", due: "Mar 2",  dueTime: "20:00", course: "UX300" },
-  { id: 2, title: "Essay Draft",              due: "Mar 10", dueTime: "20:00", course: "VC300" },
-  { id: 3, title: "Progress Mark",            due: "Mar 21", dueTime: "10:00", course: "DV300" },
+  { id: 1, title: "High Fidelity Wireframes", due: "Mar 2", dueTime: "20:00", course: "UX300" },
+  { id: 2, title: "Essay Draft", due: "Mar 10", dueTime: "20:00", course: "VC300" },
+  { id: 3, title: "Progress Mark", due: "Mar 21", dueTime: "10:00", course: "DV300" },
 ];
 
 // ─────────────────────────────────────────────────────────────
-//  MARCH 2026 GRID — 4 rows × 7 cols (Mon Mar 2 → Sun Mar 29)
+//  HELPERS — dynamic grid & event generation
 // ─────────────────────────────────────────────────────────────
 const WEEK_DAYS = ["M", "T", "W", "T", "F", "S", "S"];
-
-const GRID_WEEKS = [
-  [
-    { date: "2026-03-02", day: 2  },
-    { date: "2026-03-03", day: 3  },
-    { date: "2026-03-04", day: 4  },
-    { date: "2026-03-05", day: 5  },
-    { date: "2026-03-06", day: 6  },
-    { date: "2026-03-07", day: 7  },
-    { date: "2026-03-08", day: 8  },
-  ],
-  [
-    { date: "2026-03-09", day: 9  },
-    { date: "2026-03-10", day: 10 },
-    { date: "2026-03-11", day: 11 },
-    { date: "2026-03-12", day: 12 },
-    { date: "2026-03-13", day: 13 },
-    { date: "2026-03-14", day: 14 },
-    { date: "2026-03-15", day: 15 },
-  ],
-  [
-    { date: "2026-03-16", day: 16 },
-    { date: "2026-03-17", day: 17 },
-    { date: "2026-03-18", day: 18 },
-    { date: "2026-03-19", day: 19 },
-    { date: "2026-03-20", day: 20 },
-    { date: "2026-03-21", day: 21 },
-    { date: "2026-03-22", day: 22 },
-  ],
-  [
-    { date: "2026-03-23", day: 23 },
-    { date: "2026-03-24", day: 24 },
-    { date: "2026-03-25", day: 25 },
-    { date: "2026-03-26", day: 26 },
-    { date: "2026-03-27", day: 27 },
-    { date: "2026-03-28", day: 28 },
-    { date: "2026-03-29", day: 29 },
-  ],
+const MONTH_NAMES = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
 ];
+
+/**
+ * Build the calendar grid for a given year/month.
+ * Returns an array of week arrays (each week = 7 day objects).
+ * Weeks start on Monday. Days from adjacent months are marked isOutside.
+ */
+function buildGridWeeks(year, month) {
+  // First day of the month
+  const firstDay = new Date(year, month, 1);
+  // Day of week for the 1st (shift so Monday = 0)
+  let startDow = firstDay.getDay() - 1;
+  if (startDow < 0) startDow = 6; // Sunday becomes 6
+
+  // Last day of the month
+  const lastDay = new Date(year, month + 1, 0).getDate();
+
+  // Build flat list starting from Monday of the first week
+  const cells = [];
+  const startDate = new Date(year, month, 1 - startDow);
+
+  // We need enough cells to cover the month (max 6 weeks = 42 cells)
+  for (let i = 0; i < 42; i++) {
+    const d = new Date(startDate);
+    d.setDate(startDate.getDate() + i);
+    cells.push({
+      date: d.toISOString().slice(0, 10),
+      day: d.getDate(),
+      isOutside: d.getMonth() !== month,
+    });
+  }
+
+  // Group into weeks of 7
+  const weeks = [];
+  for (let i = 0; i < cells.length; i += 7) {
+    weeks.push(cells.slice(i, i + 7));
+  }
+
+  // Trim trailing weeks that are entirely outside the month
+  while (weeks.length > 0 && weeks[weeks.length - 1].every(c => c.isOutside)) {
+    weeks.pop();
+  }
+
+  return weeks;
+}
+
+/**
+ * Generate events for a given month from the weekly template.
+ * Each template entry is stamped onto every matching weekday in the month.
+ */
+function generateMonthEvents(year, month) {
+  const lastDay = new Date(year, month + 1, 0).getDate();
+  const events = [];
+  let idCounter = 1;
+
+  for (let day = 1; day <= lastDay; day++) {
+    const d = new Date(year, month, day);
+    const dow = d.getDay(); // 0-6
+    const dateStr = d.toISOString().slice(0, 10);
+
+    WEEKLY_TEMPLATE.forEach((tmpl) => {
+      if (tmpl.dayOfWeek === dow) {
+        events.push({
+          id: idCounter++,
+          date: dateStr,
+          title: tmpl.title,
+          startTime: tmpl.startTime,
+          endTime: tmpl.endTime,
+          type: tmpl.type,
+          lecturer: tmpl.lecturer,
+          location: tmpl.location,
+        });
+      }
+    });
+  }
+
+  return events;
+}
 
 // Build a date → events[] lookup map
 function buildEventMap(events) {
@@ -115,22 +133,53 @@ function buildEventMap(events) {
 
 // Framer Motion variants
 const pageVariants = {
-  hidden:  { opacity: 0, y: 12 },
+  hidden: { opacity: 0, y: 12 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.45, ease: "easeOut" } },
 };
 
 const viewVariants = {
-  hidden:  { opacity: 0, y: 8  },
+  hidden: { opacity: 0, y: 8 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.25, ease: "easeOut" } },
-  exit:    { opacity: 0, y: -6, transition: { duration: 0.15 } },
+  exit: { opacity: 0, y: -6, transition: { duration: 0.15 } },
 };
 
 // ─────────────────────────────────────────────────────────────
 export default function StudentCalendar() {
   const [activeView, setActiveView] = useState("month");
+  // Track current month as { year, month } (month is 0-indexed)
+  const [currentMonth, setCurrentMonth] = useState(() => {
+    const now = new Date();
+    return { year: now.getFullYear(), month: now.getMonth() };
+  });
 
-  const eventMap = buildEventMap(EVENTS);
+  const goToPrevMonth = () => {
+    setCurrentMonth((prev) => {
+      if (prev.month === 0) return { year: prev.year - 1, month: 11 };
+      return { year: prev.year, month: prev.month - 1 };
+    });
+  };
+
+  const goToNextMonth = () => {
+    setCurrentMonth((prev) => {
+      if (prev.month === 11) return { year: prev.year + 1, month: 0 };
+      return { year: prev.year, month: prev.month + 1 };
+    });
+  };
+
+  // Compute grid & events for the active month
+  const gridWeeks = useMemo(
+    () => buildGridWeeks(currentMonth.year, currentMonth.month),
+    [currentMonth.year, currentMonth.month]
+  );
+
+  const events = useMemo(
+    () => generateMonthEvents(currentMonth.year, currentMonth.month),
+    [currentMonth.year, currentMonth.month]
+  );
+
+  const eventMap = useMemo(() => buildEventMap(events), [events]);
   const todayStr = new Date().toISOString().slice(0, 10);
+  const monthLabel = `${MONTH_NAMES[currentMonth.month]} ${currentMonth.year}`;
 
   return (
     <>
@@ -138,7 +187,7 @@ export default function StudentCalendar() {
       <SideMenu />
 
       <motion.div
-        className="max-w-[1400px] mx-auto px-8 pt-3 pb-10"
+        className="max-w-[1400px] mx-auto px-8 pt-5 pb-10"
         variants={pageVariants}
         initial="hidden"
         animate="visible"
@@ -146,11 +195,26 @@ export default function StudentCalendar() {
         {/* ── Top bar ─────────────────────────────────────── */}
         <div className="relative flex items-center justify-between mb-5">
 
-          {/* Month title — left */}
-          <h1 className="font-['Gabarito'] text-[1.6rem] font-bold text-gray-900 flex items-center gap-1.5">
-            March 2026
-            <span className="text-base text-gray-400">∨</span>
-          </h1>
+          {/* Month title + arrows — left */}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={goToPrevMonth}
+              className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors text-gray-500 hover:text-gray-900"
+              aria-label="Previous month"
+            >
+              <ChevronLeft size={20} />
+            </button>
+            <h1 className="font-['Gabarito'] font-regular text-gray-900 select-none min-w-[200px] text-center">
+              {monthLabel}
+            </h1>
+            <button
+              onClick={goToNextMonth}
+              className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors text-gray-500 hover:text-gray-900"
+              aria-label="Next month"
+            >
+              <ChevronRight size={20} />
+            </button>
+          </div>
 
           {/* View selector — truly centred */}
           <div className="absolute left-1/2 -translate-x-1/2">
@@ -161,12 +225,12 @@ export default function StudentCalendar() {
           <button
             id="cal-add-task-btn"
             aria-label="Add Task"
-            className="flex items-center gap-2 bg-gray-100 rounded-full px-5 py-2.5 text-sm font-semibold text-gray-700 border-none cursor-pointer transition-all duration-150 hover:bg-gray-200 hover:-translate-y-px font-[inherit]"
+            className="flex items-center gap-2 bg-white rounded-full px-5 py-2.5 text-sm font-semibold text-gray-700 shadow-sm border-none cursor-pointer transition-all duration-150 hover:shadow-lg hover:-translate-y-px font-[inherit]"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="10" />
-              <line x1="12" y1="8"  x2="12" y2="16" />
-              <line x1="8"  y1="12" x2="16" y2="12" />
+              <line x1="12" y1="8" x2="12" y2="16" />
+              <line x1="8" y1="12" x2="16" y2="12" />
             </svg>
             Add Task
           </button>
@@ -178,8 +242,8 @@ export default function StudentCalendar() {
           {/* MONTH VIEW */}
           {activeView === "month" && (
             <motion.div
-              key="month"
-              className="w-full"
+              key={`month-${currentMonth.year}-${currentMonth.month}`}
+              className="w-full bg-white/70 rounded-3xl shadow-xl border border-1 border-gray-200"
               variants={viewVariants}
               initial="hidden"
               animate="visible"
@@ -194,9 +258,9 @@ export default function StudentCalendar() {
                 ))}
               </div>
 
-              {/* 4 week rows */}
+              {/* Week rows */}
               <div className="flex flex-col">
-                {GRID_WEEKS.map((week, wIdx) => (
+                {gridWeeks.map((week, wIdx) => (
                   <div key={wIdx} className={`grid grid-cols-7 ${wIdx > 0 ? "border-t border-gray-200" : ""}`}>
                     {week.map(({ date, day, isOutside }) => (
                       <CalendarDayBlock
@@ -216,29 +280,29 @@ export default function StudentCalendar() {
           {/* TIMELINE VIEW */}
           {activeView === "timeline" && (
             <motion.div
-              key="timeline"
+              key={`timeline-${currentMonth.year}-${currentMonth.month}`}
               variants={viewVariants}
               initial="hidden"
               animate="visible"
               exit="exit"
             >
-              <CalendarTimelineView events={EVENTS} weeks={GRID_WEEKS} />
+              <CalendarTimelineView events={events} weeks={gridWeeks} />
             </motion.div>
           )}
 
           {/* DAY VIEW */}
           {activeView === "day" && (
             <motion.div
-              key="day"
+              key={`day-${currentMonth.year}-${currentMonth.month}`}
               variants={viewVariants}
               initial="hidden"
               animate="visible"
               exit="exit"
             >
               <CalendarDayView
-                events={EVENTS}
+                events={events}
                 tasks={TASKS}
-                weeks={GRID_WEEKS}
+                weeks={gridWeeks}
               />
             </motion.div>
           )}
@@ -248,3 +312,4 @@ export default function StudentCalendar() {
     </>
   );
 }
+
