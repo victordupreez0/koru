@@ -41,10 +41,10 @@ export default function CourseSecondaryNav({ activeCourseId }) {
     };
 
     return (
-        <motion.div 
+        <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="w-44 py-8 flex flex-col gap-1 overflow-hidden"
+            className=" py-4 flex flex-col gap-1 overflow-hidden bg-white/50 border border-1 border-gray-100  shadow-xl rounded-3xl min-w-[200px]"
         >
             <ul className="flex flex-col">
                 <AnimatePresence>
@@ -60,11 +60,10 @@ export default function CourseSecondaryNav({ activeCourseId }) {
                             <NavLink
                                 to={item.pathSuffix ? `${basePath}${item.pathSuffix}` : basePath}
                                 end={item.end}
-                                className={({ isActive }) => 
-                                    `relative flex items-center gap-3 px-4 py-1.5 text-sm font-medium transition-all duration-200 border-l-2 ${
-                                        isActive 
-                                        ? "text-[#3C0078] border-[#3C0078] font-bold bg-[#3C0078]/5" 
-                                        : "text-gray-500 border-transparent hover:text-[#3C0078] hover:bg-[#3C0078]/5"
+                                className={({ isActive }) =>
+                                    `relative flex items-center gap-3 px-5 py-1.5 text-sm font-medium transition-all duration-200 mx-2  ${isActive
+                                        ? "text-[#3C0078] border-[#3C0078] rounded-full font-bold bg-purple-300"
+                                        : "text-gray-500 border-transparent rounded-full hover:text-[#3C0078] hover:bg-purple-100"
                                     }`
                                 }
                             >
