@@ -35,7 +35,7 @@ export function CoursesProvider({ children }) {
             try {
                 setLoading(true);
                 const data = await getStudentCourses(user.userId);
-                
+
                 // Format the backend enrollment into a clean structure for the frontend UI components
                 const mappedCourses = data.map(enrollment => ({
                     id: enrollment.course.id,
@@ -46,7 +46,7 @@ export function CoursesProvider({ children }) {
                     number: enrollment.course.subject.code.substring(2), // e.g. 300
                     term: enrollment.course.term,
                     description: enrollment.course.subject.description,
-                    color: "#3C0078", // Default brand color for now
+                    color: "#673694ff", // Default brand color for now
                     href: `/courses/${enrollment.course.id}`
                 }));
 
@@ -76,7 +76,7 @@ export function CoursesProvider({ children }) {
                 // If it's visible, add it to the hidden list (make hidden)
                 updatedList = [...prev, courseId];
             }
-            
+
             // Persist locally so it remembers across refreshes
             localStorage.setItem("learnonline_hidden_courses", JSON.stringify(updatedList));
             return updatedList;
