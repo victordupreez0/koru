@@ -100,57 +100,57 @@ export default function TodayTimeline() {
   const nextIdx = getNextEventIndex(events, now);
 
   return (
-    <div className="w-full h-full flex flex-col bg-white border-1 border-gray-200 rounded-3xl p-4 drop-shadow-xl">
+    <div className="w-full h-full flex flex-col bg-white/80 border-1 border-gray-200 rounded-3xl p-4 drop-shadow-xl">
       {/* ── Header ── */}
       <div className="flex items-center justify-between mt-5 mb-1">
         <h2 className="text-2xl font-['Gabarito']">Today</h2>
       </div>
       <p className="text-sm text-gray-400 mb-5 font-medium">{formatDate(now)}</p>
-       {/* Spacer between header and footer */}
-          <div className="h-5" />
+      {/* Spacer between header and footer */}
+      <div className="h-5" />
 
       {/* ── Scrollable timeline with fade overlays ── */}
       <div className="relative flex-1 overflow-y-auto scrollbar-black pr-1 flex flex-col">
-          {events.map((evt, idx) => {
-            const isNext = idx === nextIdx;
-            const isPast = isPastEvent(evt, now);
-            const timeRange = `${fmt(evt.startHour, evt.startMin)} – ${fmt(evt.endHour, evt.endMin)}`;
+        {events.map((evt, idx) => {
+          const isNext = idx === nextIdx;
+          const isPast = isPastEvent(evt, now);
+          const timeRange = `${fmt(evt.startHour, evt.startMin)} – ${fmt(evt.endHour, evt.endMin)}`;
 
-            return (
-              <div key={evt.id} className="flex items-stretch gap-4">
-                {/* Vertical timeline track */}
-                <TimelineNode
-                  isActive={isNext}
+          return (
+            <div key={evt.id} className="flex items-stretch gap-4">
+              {/* Vertical timeline track */}
+              <TimelineNode
+                isActive={isNext}
+                isPast={isPast}
+                isFirst={idx === 0}
+                isLast={idx === events.length - 1}
+              />
+
+              {/* Event card */}
+              {isNext ? (
+                <TimelineEventExpanded
+                  title={evt.title}
+                  subtitle={evt.subtitle}
+                  lecturer={evt.lecturer}
+                  duration={evt.duration}
+                  location={evt.location}
+                  timeRange={timeRange}
                   isPast={isPast}
-                  isFirst={idx === 0}
-                  isLast={idx === events.length - 1}
                 />
-
-                {/* Event card */}
-                {isNext ? (
-                  <TimelineEventExpanded
-                    title={evt.title}
-                    subtitle={evt.subtitle}
-                    lecturer={evt.lecturer}
-                    duration={evt.duration}
-                    location={evt.location}
-                    timeRange={timeRange}
-                    isPast={isPast}
-                  />
-                ) : (
-                  <TimelineEventCompressed
-                    title={evt.title}
-                    lecturer={evt.lecturer}
-                    duration={evt.duration}
-                    location={evt.location}
-                    timeRange={timeRange}
-                    isPast={isPast}
-                  />
-                )}
-              </div>
-            );
-          })}
-        </div>
+              ) : (
+                <TimelineEventCompressed
+                  title={evt.title}
+                  lecturer={evt.lecturer}
+                  duration={evt.duration}
+                  location={evt.location}
+                  timeRange={timeRange}
+                  isPast={isPast}
+                />
+              )}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

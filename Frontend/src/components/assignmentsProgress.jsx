@@ -17,19 +17,19 @@ export default function AssignmentsProgress() {
   const [loading, setLoading] = useState(true);
 
   const getRankAndState = (dbAssignment) => {
-      // Mock submitted ones
-      if (dbAssignment.title === "Usability Testing Report" || dbAssignment.title === "Literature Review Module") {
-          return { rank: 4, uiState: 'Submitted', isCompleted: true };
-      }
+    // Mock submitted ones
+    if (dbAssignment.title === "Usability Testing Report" || dbAssignment.title === "Literature Review Module") {
+      return { rank: 4, uiState: 'Submitted', isCompleted: true };
+    }
 
-      const now = new Date();
-      const due = new Date(dbAssignment.dueDate);
-      const diffDays = (due - now) / (1000 * 60 * 60 * 24);
-      
-      if (diffDays < -7) return { rank: 3, uiState: 'Closed', isCompleted: false };
-      if (diffDays < 0) return { rank: 0, uiState: 'Late', isCompleted: false };
-      if (diffDays <= 5) return { rank: 1, uiState: 'Due Soon', isCompleted: false };
-      return { rank: 2, uiState: 'Due', isCompleted: false };
+    const now = new Date();
+    const due = new Date(dbAssignment.dueDate);
+    const diffDays = (due - now) / (1000 * 60 * 60 * 24);
+
+    if (diffDays < -7) return { rank: 3, uiState: 'Closed', isCompleted: false };
+    if (diffDays < 0) return { rank: 0, uiState: 'Late', isCompleted: false };
+    if (diffDays <= 5) return { rank: 1, uiState: 'Due Soon', isCompleted: false };
+    return { rank: 2, uiState: 'Due', isCompleted: false };
   };
 
   useEffect(() => {
@@ -39,7 +39,7 @@ export default function AssignmentsProgress() {
       try {
         setLoading(true);
         const data = await getStudentAssignments(user.userId);
-        
+
         // Map backend schema to our required UI schema and sort by priority
         const mapped = data.map(dbAssignment => {
           const { rank, uiState, isCompleted } = getRankAndState(dbAssignment);
@@ -119,7 +119,7 @@ export default function AssignmentsProgress() {
   );
 
   return (
-    <div className="w-full h-full flex flex-col bg-white border-1 border-gray-200 rounded-3xl drop-shadow-xl p-4">
+    <div className="w-full h-full flex flex-col bg-white/80 border-1 border-gray-200 rounded-3xl drop-shadow-xl p-4">
       {/* ── Assignments Header ── */}
       <div className="flex items-center justify-between mt-5 mb-1">
         <h2 className="text-2xl font-['Gabarito']">Assignments</h2>
@@ -131,23 +131,23 @@ export default function AssignmentsProgress() {
         {/* ── Assignment Cards (next 3 due) ── */}
         <div className="flex flex-col gap-3">
           {loading ? (
-              <div className="text-gray-400 text-sm font-medium w-full text-center mt-8">Loading assignments...</div>
+            <div className="text-gray-400 text-sm font-medium w-full text-center mt-8">Loading assignments...</div>
           ) : nextThree.length === 0 ? (
-              <div className="text-gray-400 text-sm font-medium w-full text-center mt-8">You have no upcoming assignments.</div>
+            <div className="text-gray-400 text-sm font-medium w-full text-center mt-8">You have no upcoming assignments.</div>
           ) : (
-              nextThree.map((assignment) => (
+            nextThree.map((assignment) => (
               <AssignmentItem
-                  key={assignment.id}
-                  assignmentId={assignment.id}
-                  courseId={assignment.courseId}
-                  title={assignment.title}
-                  dueDate={assignment.dueDate}
-                  courseCode={assignment.courseCode}
-                  completed={assignment.completed}
-                  uiState={assignment.uiState}
-                  onToggle={() => toggleAssignment(assignment.id)}
+                key={assignment.id}
+                assignmentId={assignment.id}
+                courseId={assignment.courseId}
+                title={assignment.title}
+                dueDate={assignment.dueDate}
+                courseCode={assignment.courseCode}
+                completed={assignment.completed}
+                uiState={assignment.uiState}
+                onToggle={() => toggleAssignment(assignment.id)}
               />
-              ))
+            ))
           )}
         </div>
 
