@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import { MdEditNote } from "react-icons/md";
 
 export default function AssignmentItem({
@@ -8,7 +9,10 @@ export default function AssignmentItem({
   completed = false,
   uiState = "",
   onToggle,
+  assignmentId,
+  courseId,
 }) {
+    const navigate = useNavigate();
     // Determine color based on uiState
     const getUiStateColor = (state) => {
         if (state === "Late") return "bg-red-50 text-red-600";
@@ -75,6 +79,9 @@ export default function AssignmentItem({
         <button
             onClick={(e) => {
                 e.stopPropagation();
+                if (courseId && assignmentId) {
+                    navigate(`/courses/${courseId}/assignments/${assignmentId}`);
+                }
             }}
             className="px-4 py-2 bg-[#3C0078] rounded-xl text-[10px] font-bold uppercase tracking-widest text-white hover:bg-gray-800 transition-all shadow-sm shrink-0"
         >
