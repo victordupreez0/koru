@@ -45,6 +45,7 @@ export default function AssignmentsProgress() {
           const { rank, uiState, isCompleted } = getRankAndState(dbAssignment);
           return {
             id: dbAssignment.id,
+            courseId: dbAssignment.courseId,
             title: dbAssignment.title,
             dueDate: new Date(dbAssignment.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }),
             courseCode: dbAssignment.course?.subject?.code || "N/A",
@@ -137,6 +138,8 @@ export default function AssignmentsProgress() {
               nextThree.map((assignment) => (
               <AssignmentItem
                   key={assignment.id}
+                  assignmentId={assignment.id}
+                  courseId={assignment.courseId}
                   title={assignment.title}
                   dueDate={assignment.dueDate}
                   courseCode={assignment.courseCode}

@@ -34,6 +34,7 @@ import { getNotes, createNote, updateNote, deleteNote } from "../../services/not
 import { useAuth } from "../../contexts/AuthContext";
 import { Plus, Bold, Italic, Underline, Strikethrough, Code, Heading1, Heading2, Heading3, List, ListOrdered, Quote, Minus, Trash2, Maximize2, Minimize2 } from "lucide-react";
 import NovelBlockMenu from "../../components/NovelBlockMenu";
+import AssignmentDetail from "./assignmentDetail";
 
 /**
  * CourseContent Components
@@ -265,6 +266,7 @@ function CourseAnnouncementsView() {
 }
 
 function CourseAssignmentsView({ subject, activeCourseId }) {
+    const navigate = useNavigate();
     const [assignments, setAssignments] = React.useState([]);
     const [loading, setLoading] = React.useState(true);
 
@@ -351,7 +353,9 @@ function CourseAssignmentsView({ subject, activeCourseId }) {
                                     <span className="text-gray-400 uppercase font-bold tracking-widest">Due Date:</span>
                                     <span className="text-gray-900 font-bold">{new Date(item.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
                                 </div>
-                                <button className={`w-full mt-2 py-3 rounded-2xl text-xs font-bold uppercase tracking-widest text-white transition-all flex items-center justify-center gap-2 shadow-sm ${item.isClosed || item.isSubmitted ? 'bg-gray-800 hover:bg-black' : 'bg-[#3C0078] hover:bg-[#2A0054]'}`}>
+                                <button
+                                    onClick={() => navigate(`/courses/${activeCourseId}/assignments/${item.id}`)}
+                                    className={`w-full mt-2 py-3 rounded-2xl text-xs font-bold uppercase tracking-widest text-white transition-all flex items-center justify-center gap-2 shadow-sm ${item.isClosed || item.isSubmitted ? 'bg-gray-800 hover:bg-black' : 'bg-[#3C0078] hover:bg-[#2A0054]'}`}>
                                     {(!item.isClosed && !item.isSubmitted) && <Upload size={16} />}
                                     {item.isClosed ? "View" : item.isSubmitted ? "View Submission" : "View & Submit"}
                                 </button>
@@ -1048,7 +1052,11 @@ export default function StudentCourses() {
     
 
     // Home logic: If we are at /courses or /courses/:id NOT ending in a sub-path
-    const isHomePage = !isGradesPage && !isAnnouncementsPage && !isAssignmentsPage && !isAttendancePage && !isModulesPage && !isNotesPage;
+    // Assignment detail: /courses/:courseId/assignments/:assignmentId
+    const isAssignmentDetailPage = pathParts[2] === "assignments" && pathParts.length === 4;
+    const activeAssignmentId = isAssignmentDetailPage ? pathParts[3] : null;
+
+    const isHomePage = !isGradesPage && !isAnnouncementsPage && !isAssignmentsPage && !isAttendancePage && !isModulesPage && !isNotesPage && !isAssignmentDetailPage;
 
     return (
         <div className="flex h-screen overflow-hidden">
@@ -1070,7 +1078,9 @@ export default function StudentCourses() {
       </div>
 
             {/* Main Content Area */}
-            {isGradesPage ? (
+            {isAssignmentDetailPage ? (
+                <AssignmentDetail assignmentId={activeAssignmentId} activeCourseId={activeCourseId} />
+            ) : isGradesPage ? (
                 <CourseGradesView />
             ) : isAnnouncementsPage ? (
                 <CourseAnnouncementsView />
