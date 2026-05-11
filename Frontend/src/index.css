@@ -2,10 +2,13 @@
 @import url("https://fonts.cdnfonts.com/css/open-dyslexic");
 
 @import "tailwindcss";
-@plugin "daisyui";
+
+@plugin "daisyui" {
+  themes: light --only;
+}
 
 @theme {
-  --color-white: rgba(255, 255, 255, 0.8);
+  --color-white: rgba(255, 255, 255, 1);
 }
 
 :root {
@@ -33,12 +36,15 @@ a:hover {
 }
 
 .scrollbar-hide {
-  -ms-overflow-style: none; /* IE and Edge */
-  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
 }
 
 .scrollbar-hide::-webkit-scrollbar {
-  display: none; /* Chrome, Safari and Opera */
+  display: none;
+  /* Chrome, Safari and Opera */
 }
 
 body {
@@ -48,15 +54,15 @@ body {
   scrollbar-width: none;
   /* Firefox */
   /* background: #f0f0f2; */
-background: hsla(233, 100%, 90%, 1);
+  background: hsla(233, 100%, 90%, 1);
 
-background: linear-gradient(90deg, hsla(233, 100%, 90%, 1) 0%, rgb(255, 255, 255) 100%);
+  background: linear-gradient(90deg, hsla(233, 100%, 90%, 1) 0%, rgb(255, 255, 255) 100%);
 
-background: -moz-linear-gradient(90deg, hsla(233, 100%, 90%, 1) 0%, rgb(255, 255, 255) 100%);
+  background: -moz-linear-gradient(90deg, hsla(233, 100%, 90%, 1) 0%, rgb(255, 255, 255) 100%);
 
-background: -webkit-linear-gradient(90deg, hsla(233, 100%, 90%, 1) 0%, rgb(255, 255, 255) 100%);
+  background: -webkit-linear-gradient(90deg, hsla(233, 100%, 90%, 1) 0%, rgb(255, 255, 255) 100%);
 
-filter: progid: DXImageTransform.Microsoft.gradient( startColorstr="#CAD0FF", endColorstr="#E3E3E3", GradientType=1 );
+  filter: progid: DXImageTransform.Microsoft.gradient(startColorstr="#CAD0FF", endColorstr="#E3E3E3", GradientType=1);
 
   position: relative;
   overflow-x: hidden;
@@ -117,10 +123,6 @@ body.orbs-vibrant::before {
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-body.theme-dark {
-  background-color: #0f172a;
-  color: #f8fafc;
-}
 
 body.dyslexic-font,
 body.dyslexic-font input,
@@ -189,7 +191,7 @@ a:hover {
   color: #1a1a1a;
 }
 
-.novel-editor-wrapper .tiptap > * + * {
+.novel-editor-wrapper .tiptap>*+* {
   margin-top: 0.25rem;
 }
 
@@ -370,7 +372,7 @@ a:hover {
   display: none !important;
 }
 
-.novel-editor-wrapper .tiptap > *:first-child {
+.novel-editor-wrapper .tiptap>*:first-child {
   margin-top: 0;
 }
 

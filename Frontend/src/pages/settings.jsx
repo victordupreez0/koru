@@ -1,8 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Moon,
-  Eye,
+
   Volume2,
   Type,
   UserRound,
@@ -24,25 +23,24 @@ import { useAuth } from "../contexts/AuthContext";
 const SETTINGS_STORAGE_KEY = "learnonline.settings";
 
 const defaultSettings = {
-  theme: "light",
   font: "Poppins",
   textSize: 100,
   lineSpacing: 150,
   ttsEnabled: false,
 };
 
-function ToggleRow({ icon, title, description, checked, onChange, darkMode }) {
+function ToggleRow({ icon, title, description, checked, onChange }) {
   return (
     <label
-      className={`flex min-h-[56px] items-center justify-between gap-4 rounded-2xl border p-4 ${darkMode ? "border-slate-700 bg-slate-800/80" : "border-slate-200 bg-slate-50"}`}
+      className="flex min-h-[56px] items-center justify-between gap-4 rounded-2xl border p-4 border-slate-200 bg-slate-50"
     >
       <div className="flex items-center gap-3">
         <span className="rounded-xl bg-[#3C0078]/10 p-2 text-[#3C0078]">{icon}</span>
         <div>
-          <p className={`text-base font-semibold ${darkMode ? "text-slate-100" : "text-slate-900"}`}>
+          <p className="text-base font-semibold text-slate-900">
             {title}
           </p>
-          <p className={`text-sm ${darkMode ? "text-slate-300" : "text-slate-600"}`}>
+          <p className="text-sm text-slate-600">
             {description}
           </p>
         </div>
@@ -96,21 +94,17 @@ export default function SettingsPage() {
   const [savingPassword, setSavingPassword] = useState(false);
   const { speak } = useTextToSpeech(settings.ttsEnabled);
 
-  const darkMode = settings.theme === "dark";
-
   const pageClasses = useMemo(
     () => ({
-      wrapper: darkMode ? "text-slate-100" : "text-slate-900",
-      card: darkMode ? "border-slate-700 bg-slate-900/95 text-slate-100" : "border-slate-200 bg-white/95 text-slate-900",
-      muted: darkMode ? "text-slate-300" : "text-slate-600",
-      secondaryButton: darkMode
-        ? "border-slate-500 bg-slate-800 text-slate-100 hover:bg-slate-700"
-        : "border-[#3C0078] bg-white text-[#3C0078] hover:bg-[#f3edff]",
-      select: darkMode ? "border-slate-700 bg-slate-800 text-slate-100" : "border-slate-300 bg-white text-slate-900",
-      input: darkMode ? "border-slate-700 bg-slate-800 text-slate-100 placeholder:text-slate-400" : "border-slate-300 bg-white text-slate-900",
-      label: darkMode ? "text-slate-200" : "text-slate-700",
+      wrapper: "text-slate-900",
+      card: "border-slate-200 bg-white/95 text-slate-900",
+      muted: "text-slate-600",
+      secondaryButton: "border-[#3C0078] bg-white text-[#3C0078] hover:bg-[#f3edff]",
+      select: "border-slate-300 bg-white text-slate-900",
+      input: "border-slate-300 bg-white text-slate-900",
+      label: "text-slate-700",
     }),
-    [darkMode],
+    [],
   );
 
   // Persist settings and apply their effects across the app without a separate context
@@ -119,7 +113,7 @@ export default function SettingsPage() {
     window.dispatchEvent(new Event("learnonline-settings-changed"));
     document.documentElement.style.fontSize = `${settings.textSize}%`;
     document.body.style.lineHeight = `${settings.lineSpacing / 100}`;
-    document.body.classList.toggle("theme-dark", settings.theme === "dark");
+
     document.body.classList.toggle("dyslexic-font", settings.font === "OpenDyslexic");
     document.body.classList.remove("theme-high-contrast", "reduce-motion", "focus-mode");
   }, [settings]);
@@ -328,27 +322,10 @@ export default function SettingsPage() {
                 description="Switch to OpenDyslexic for improved readability and letter distinction."
                 checked={settings.font === "OpenDyslexic"}
                 onChange={(checked) => updateSetting("font", checked ? "OpenDyslexic" : "Poppins")}
-                darkMode={darkMode}
               />
             </div>
 
-            <div className={`rounded-[28px] border p-6 shadow-sm ${pageClasses.card}`}>
-              <div className="mb-4 flex items-center gap-3">
-                <Eye size={22} />
-                <h2 className="text-2xl font-bold">Display Preferences</h2>
-              </div>
 
-              <div className="flex flex-col gap-3">
-                <ToggleRow
-                  icon={<Moon size={18} />}
-                  title="Dark Mode"
-                  description="Use a darker palette with strong text contrast for comfortable viewing."
-                  checked={settings.theme === "dark"}
-                  onChange={(checked) => updateSetting("theme", checked ? "dark" : "light")}
-                  darkMode={darkMode}
-                />
-              </div>
-            </div>
 
             <div className={`rounded-[28px] border p-6 shadow-sm ${pageClasses.card}`}>
               <div className="mb-4 flex items-center gap-3">
@@ -363,7 +340,6 @@ export default function SettingsPage() {
                   description="Read page content aloud for easier comprehension and reduced reading strain."
                   checked={settings.ttsEnabled}
                   onChange={(checked) => updateSetting("ttsEnabled", checked)}
-                  darkMode={darkMode}
                 />
               </div>
 
