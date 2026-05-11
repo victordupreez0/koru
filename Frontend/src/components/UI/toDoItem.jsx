@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { MdEditNote } from "react-icons/md";
 import { ChevronRight } from "lucide-react";
 import { getCourseAssignments } from "../../services/assignmentService";
@@ -8,6 +9,7 @@ import { getCourseAssignments } from "../../services/assignmentService";
 export default function ToDoItem({ activeCourseId }) {
     const [todos, setTodos] = useState([]);
     const [loading, setLoading] = useState(false);
+    const navigate = useNavigate();
 
     useEffect(() => {
         let mounted = true;
@@ -34,7 +36,7 @@ export default function ToDoItem({ activeCourseId }) {
                         else if (diffDays <= 7) dueLabel = `Due in ${diffDays} days`;
                         else dueLabel = `Due ${due.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`;
                         
-                        return { title: a.title, due: dueLabel };
+                        return { id: a.id, courseId: activeCourseId, title: a.title, due: dueLabel };
                     });
 
                 if (mounted) setTodos(upcoming);
@@ -61,10 +63,11 @@ export default function ToDoItem({ activeCourseId }) {
             {todos.map((todo, idx) => (
                 <div
                     key={idx}
-                    className="my-2 bg-white dark:bg-slate-700 rounded-lg w-full h-12 flex flex-row items-center space-x-2 transition-all duration-200 hover:scale-[1.02] hover:shadow-md hover:bg-[#9161C0]/5 dark:hover:bg-[#9161C0]/20"
+                    className="my-2 bg-white rounded-xl shadow-sm w-full h-12 flex flex-row items-center space-x-2 transition-all duration-200 hover:shadow-md hover:-translate-y-1 cursor-pointer"
+                    onClick={() => navigate(`/courses/${todo.courseId}/assignments/${todo.id}`)}
                 >
                     {/* Purple icon badge */}
-                    <div className="w-9 h-9 bg-[#9161C0] rounded-md ml-2 flex items-center justify-center">
+                    <div className="w-9 h-9 bg-purple-400 rounded-full ml-2 flex items-center justify-center">
                         <MdEditNote className="w-6 h-6 text-white" />
                     </div>
 

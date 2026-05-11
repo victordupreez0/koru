@@ -56,6 +56,7 @@ export default function AssignmentsProgress() {
           const { rank, uiState, isCompleted } = getRankAndState(dbAssignment, submission);
           return {
             id: dbAssignment.id,
+            courseId: dbAssignment.courseId,
             title: dbAssignment.title,
             dueDate: new Date(dbAssignment.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }),
             courseCode: dbAssignment.course?.subject?.code || "N/A",
@@ -129,8 +130,14 @@ export default function AssignmentsProgress() {
 
   const hasMore = assignments.length > PREVIEW_COUNT;
 
+  // Next 3 due: highest-priority non-submitted assignments
+  const nextThree = useMemo(
+    () => assignments.filter((a) => !a.completed).slice(0, 3),
+    [assignments]
+  );
+
   return (
-    <div className="w-full">
+    <div className="w-full h-full flex flex-col bg-white border-1 border-gray-200 rounded-3xl drop-shadow-xl p-4">
       {/* ── Assignments Header ── */}
       <div className="flex items-center justify-between mt-5 mb-1">
         <h2 className="text-2xl font-['Gabarito'] dark:text-slate-100">Assignments</h2>
@@ -138,15 +145,14 @@ export default function AssignmentsProgress() {
       <p className="text-sm text-transparent mb-5 font-medium select-none" aria-hidden="true">Spacer</p>
 
       {/* ── Assignment Cards ── */}
-      <div className="flex flex-col gap-3 min-h-[160px]">
+      <div className="flex flex-col gap-3 min-h-[160px] max-h-[520px] overflow-y-auto scrollbar-black pr-2">
         {loading ? (
-            <div className="text-gray-400 dark:text-slate-500 text-sm font-medium w-full text-center mt-8">Loading assignments...</div>
+            <div className="text-gray-400 text-sm font-medium w-full text-center mt-8">Loading assignments...</div>
         ) : assignments.length === 0 ? (
-            <div className="text-gray-400 dark:text-slate-500 text-sm font-medium w-full text-center mt-8">You have no upcoming assignments.</div>
+            <div className="text-gray-400 text-sm font-medium w-full text-center mt-8">You have no upcoming assignments.</div>
         ) : (
-          <>
-            {visibleAssignments.map((assignment) => (
-              <AssignmentItem
+            assignments.map((assignment) => (
+            <AssignmentItem
                 key={assignment.id}
                 title={assignment.title}
                 dueDate={assignment.dueDate}
@@ -154,51 +160,16 @@ export default function AssignmentsProgress() {
                 completed={assignment.completed}
                 uiState={assignment.uiState}
                 onToggle={() => toggleAssignment(assignment.id)}
-              />
-            ))}
-
-            {/* ── Expandable overflow ── */}
-            <AnimatePresence>
-              {expanded && assignments.slice(PREVIEW_COUNT).map((assignment) => (
-                <motion.div
-                  key={assignment.id}
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.25, ease: "easeInOut" }}
-                >
-                  <AssignmentItem
-                    title={assignment.title}
-                    dueDate={assignment.dueDate}
-                    courseCode={assignment.courseCode}
-                    completed={assignment.completed}
-                    uiState={assignment.uiState}
-                    onToggle={() => toggleAssignment(assignment.id)}
-                  />
-                </motion.div>
-              ))}
-            </AnimatePresence>
-
-            {/* ── View All / Show Less button ── */}
-            {hasMore && (
-              <button
-                onClick={() => setExpanded((prev) => !prev)}
-                className="mt-1 w-full py-2 rounded-xl text-sm font-semibold tracking-wide transition-all duration-200
-                  bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-900
-                  border border-gray-200 hover:border-gray-300 cursor-pointer"
-              >
-                {expanded ? "Show Less" : `View All (${assignments.length})`}
-              </button>
-            )}
-          </>
+            />
+            ))
         )}
       </div>
 
       {/* ── Progress Header ── */}
-      <h2 className="text-2xl font-['Gabarito'] mt-8 mb-2 dark:text-slate-100">Progress</h2>
+      <h2 className="text-2xl font-['Gabarito'] mt-8 mb-2">Progress</h2>
 
       {/* ── Progress Ring ── */}
-      <div className="w-full bg-gray-100 dark:bg-slate-800 rounded-2xl border border-gray-200 dark:border-slate-700 p-4">
+      <div className="w-full bg-gray-100 rounded-2xl border border-gray-200 p-4">
         <ProgressRing percentage={progress} />
       </div>
     </div>

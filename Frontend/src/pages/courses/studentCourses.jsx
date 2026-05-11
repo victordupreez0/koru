@@ -38,6 +38,7 @@ import { getNotes, createNote, updateNote, deleteNote } from "../../services/not
 
 import { Plus, Bold, Italic, Underline, Strikethrough, Code, Heading1, Heading2, Heading3, List, ListOrdered, Quote, Minus, Trash2, Maximize2, Minimize2 } from "lucide-react";
 import NovelBlockMenu from "../../components/NovelBlockMenu";
+import AssignmentDetail from "./assignmentDetail";
 
 /**
  * CourseContent Components
@@ -322,6 +323,11 @@ function CourseAssignmentsView({ subject, activeCourseId }) {
                                 <button className={`w-full mt-2 py-3 rounded-2xl text-xs font-bold uppercase tracking-widest text-white transition-all flex items-center justify-center gap-2 shadow-sm ${item.isClosed || item.isSubmitted || item.isGraded ? 'bg-gray-800 dark:bg-slate-700 hover:bg-black dark:hover:bg-slate-600' : 'bg-[#3C0078] hover:bg-[#2A0054] dark:bg-[#14B8A6] dark:hover:bg-[#0f766e]'}`}>
                                     {(!item.isClosed && !item.isSubmitted && !item.isGraded) && <Upload size={16} />}
                                     {item.isGraded ? "View Grade" : item.isClosed ? "View" : item.isSubmitted ? "View Submission" : "View & Submit"}
+                                <button
+                                    onClick={() => navigate(`/courses/${activeCourseId}/assignments/${item.id}`)}
+                                    className={`w-full mt-2 py-3 rounded-2xl text-xs font-bold uppercase tracking-widest text-white transition-all flex items-center justify-center gap-2 shadow-sm ${item.isClosed || item.isSubmitted ? 'bg-gray-800 hover:bg-black' : 'bg-[#3C0078] hover:bg-[#2A0054]'}`}>
+                                    {(!item.isClosed && !item.isSubmitted) && <Upload size={16} />}
+                                    {item.isClosed ? "View" : item.isSubmitted ? "View Submission" : "View & Submit"}
                                 </button>
                             </div>
                         </motion.div>
@@ -510,7 +516,7 @@ function CourseHomeView({ subject, course, loading }) {
   const courseImage = subject?.imageUrl || sampleImg;
 
   return (
-    <div className="flex-1 flex flex-col p-12 overflow-y-auto">
+    <div className="flex-1 flex flex-col p-12 overflow-y-auto scrollbar-hide">
       <header className="mb-12">
         <h1 className="text-4xl font-semibold tracking-tight dark:text-slate-100">
           {loading ? "Loading course details..." : `${subject?.name || "Unknown"} | ${course?.term || ""}`}
@@ -566,9 +572,9 @@ function CourseHomeView({ subject, course, loading }) {
             </div>
           </section>
 
-          <section className="w-full grid grid-cols-1 lg:grid-cols-2 gap-12 pt-12 border-t border-gray-100 dark:border-slate-700">
+          <section className="w-full grid grid-cols-1 lg:grid-cols-2 gap-12 pt-12 border-t border-gray-100">
             {/* Lecturer Section on the Left */}
-            <div className="bg-gray-50/30 dark:bg-slate-800/30 rounded-[60px] p-12 border border-gray-100 dark:border-slate-700 flex flex-col items-center md:items-start text-center md:text-left gap-12">
+            <div className="bg-gray-50/30 rounded-[60px] p-12 border border-gray-100 flex flex-col items-center md:items-start text-center md:text-left gap-12">
               <div className="flex flex-col md:flex-row items-center gap-14">
                 <div className="relative group shrink-0">
                   {/* Enhanced Glowing Pulse Animation - Now Teal */}
@@ -608,33 +614,36 @@ function CourseHomeView({ subject, course, loading }) {
                     />
                   </div>
                 </div>
+              </div>
 
                 <div className="flex flex-col space-y-2">
                   <span className="text-[10px] font-black text-[#14B8A6] uppercase tracking-[0.4em] block">Module Head</span>
-                  <h3 className="text-3xl font-bold text-gray-900 dark:text-slate-100 tracking-tight">{subject?.lecturerName || "Dr. Sarah Miller"}</h3>
-                  <p className="text-gray-600 dark:text-slate-400 font-bold text-lg tracking-tight">Design Lead & Senior Researcher</p>
+                  <h3 className="text-3xl font-bold text-gray-900 tracking-tight">{subject?.lecturerName || "Dr. Sarah Miller"}</h3>
+                  <p className="text-gray-600 font-bold text-lg tracking-tight">Design Lead & Senior Researcher</p>
                 </div>
               </div>
 
-              <div className="w-full">
-                <a 
-                  href={`mailto:${subject?.lecturerEmail || "sarah.miller@university.ac.za"}`}
-                  className="w-full md:w-auto inline-flex justify-center items-center gap-4 bg-transparent border-2 border-[#14B8A6] text-[#14B8A6] px-10 py-4 rounded-full font-bold text-base tracking-widest uppercase transition-all duration-300 hover:bg-[#14B8A6] hover:text-white hover:shadow-xl hover:shadow-[#14B8A6]/20"
-                >
-                  <span>Email Lecturer</span>
-                  <span className="text-xl">→</span>
-                </a>
+                <div className="flex flex-row gap-3 w-full">
+                  <a 
+                    href={`mailto:${subject?.lecturerEmail || "sarah.miller@university.ac.za"}`}
+                    className="h-10 px-8 flex items-center justify-center rounded-full bg-[#3C0078] text-white !text-white text-[10px] font-bold uppercase tracking-widest hover:bg-[#2A0054] transition-all shadow-md shadow-[#3C0078]/20"
+                  >
+                    Email Lecturer
+                  </a>
+                  <button className="h-10 px-8 flex items-center justify-center rounded-full bg-white border border-[#3C0078] text-[#3C0078] text-[10px] font-bold uppercase tracking-widest hover:bg-[#87CEFA] hover:border-[#87CEFA] transition-all shadow-sm">
+                    Book a Session
+                  </button>
+                </div>
               </div>
-            </div>
 
             {/* Quick Links Section on the Right - Asymmetric and Clean */}
             <div className="flex flex-col p-4">
-              <h3 className="text-2xl font-bold mb-8 tracking-tight pl-4 text-gray-900 dark:text-slate-100">Quick Links</h3>
+              <h3 className="text-2xl font-bold mb-8 tracking-tight pl-4 text-gray-900">Quick Links</h3>
               
               <div className="flex flex-wrap gap-4 items-start content-start">
                 <a
                   href="#"
-                  className="bg-white dark:bg-slate-800 border-2 border-gray-100 dark:border-slate-700 text-gray-700 dark:text-slate-200 px-8 py-5 rounded-[28px] font-bold text-sm tracking-widest uppercase transition-all duration-300 hover:border-[#14B8A6] hover:bg-[#14B8A6] hover:text-white flex items-center gap-3"
+                  className="bg-white border-2 border-gray-100 text-gray-700 px-8 py-5 rounded-[28px] font-bold text-sm tracking-widest uppercase transition-all duration-300 hover:border-[#14B8A6] hover:bg-[#14B8A6] hover:text-white flex items-center gap-3"
                 >
                   <span>Figma Workflow</span>
                   <span className="opacity-30">/</span>
@@ -642,14 +651,14 @@ function CourseHomeView({ subject, course, loading }) {
 
                 <a
                   href="#"
-                  className="bg-white dark:bg-slate-800 border-2 border-gray-100 dark:border-slate-700 text-gray-700 dark:text-slate-200 px-6 py-5 rounded-[28px] font-bold text-xs tracking-widest uppercase transition-all duration-300 hover:border-[#14B8A6] hover:bg-[#14B8A6] hover:text-white"
+                  className="bg-white border-2 border-gray-100 text-gray-700 px-6 py-5 rounded-[28px] font-bold text-xs tracking-widest uppercase transition-all duration-300 hover:border-[#14B8A6] hover:bg-[#14B8A6] hover:text-white"
                 >
                   <span>Terms</span>
                 </a>
 
                 <a
                   href="#"
-                  className="bg-white dark:bg-slate-800 border-2 border-gray-100 dark:border-slate-700 text-gray-700 dark:text-slate-200 px-8 py-5 rounded-[28px] font-bold text-sm tracking-widest uppercase transition-all duration-300 hover:border-[#14B8A6] hover:bg-[#14B8A6] hover:text-white flex items-center gap-3"
+                  className="bg-white border-2 border-gray-100 text-gray-700 px-8 py-5 rounded-[28px] font-bold text-sm tracking-widest uppercase transition-all duration-300 hover:border-[#14B8A6] hover:bg-[#14B8A6] hover:text-white flex items-center gap-3"
                 >
                   <span>Miro Board</span>
                   <span className="opacity-30">#</span>
@@ -657,17 +666,17 @@ function CourseHomeView({ subject, course, loading }) {
 
                 <a
                   href="#"
-                  className="bg-white dark:bg-slate-800 border-2 border-gray-100 dark:border-slate-700 text-gray-700 dark:text-slate-200 px-6 py-5 rounded-[28px] font-bold text-xs tracking-widest uppercase transition-all duration-300 hover:border-[#14B8A6] hover:bg-[#14B8A6] hover:text-white"
+                  className="bg-white border-2 border-gray-100 text-gray-700 px-6 py-5 rounded-[28px] font-bold text-xs tracking-widest uppercase transition-all duration-300 hover:border-[#14B8A6] hover:bg-[#14B8A6] hover:text-white"
                 >
                   <span>Attendance</span>
                 </a>
 
                 <a
                   href="#"
-                  className="w-full bg-white dark:bg-slate-800 border-2 border-gray-100 dark:border-slate-700 text-gray-700 dark:text-slate-200 p-8 rounded-[40px] font-bold text-sm tracking-widest uppercase transition-all duration-300 hover:border-[#14B8A6] hover:bg-[#14B8A6] hover:text-white flex justify-between items-center group"
+                  className="w-full bg-white border-2 border-gray-100 text-gray-700 p-8 rounded-[40px] font-bold text-sm tracking-widest uppercase transition-all duration-300 hover:border-[#14B8A6] hover:bg-[#14B8A6] hover:text-white flex justify-between items-center group"
                 >
                   <span>Request Contact Session</span>
-                  <span className="text-gray-300 dark:text-slate-600 group-hover:text-white group-hover:translate-x-1 transition-all">→</span>
+                  <span className="text-gray-300 group-hover:text-white group-hover:translate-x-1 transition-all">→</span>
                 </a>
               </div>
             </div>
@@ -1126,7 +1135,11 @@ export default function StudentCourses() {
     
 
     // Home logic: If we are at /courses or /courses/:id NOT ending in a sub-path
-    const isHomePage = !isGradesPage && !isAnnouncementsPage && !isAssignmentsPage && !isAttendancePage && !isModulesPage && !isNotesPage;
+    // Assignment detail: /courses/:courseId/assignments/:assignmentId
+    const isAssignmentDetailPage = pathParts[2] === "assignments" && pathParts.length === 4;
+    const activeAssignmentId = isAssignmentDetailPage ? pathParts[3] : null;
+
+    const isHomePage = !isGradesPage && !isAnnouncementsPage && !isAssignmentsPage && !isAttendancePage && !isModulesPage && !isNotesPage && !isAssignmentDetailPage;
 
     return (
         <div className="flex h-screen overflow-hidden">
@@ -1149,7 +1162,7 @@ export default function StudentCourses() {
 
             {/* Main Content Area */}
             {isGradesPage ? (
-                <CourseGradesView activeCourseId={activeCourseId} />
+                <CourseGradesView />
             ) : isAnnouncementsPage ? (
                 <CourseAnnouncementsView activeCourseId={activeCourseId} />
             ) : isAssignmentsPage ? (

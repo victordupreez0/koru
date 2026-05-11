@@ -18,6 +18,15 @@ export async function getStudentAssignments(studentId) {
   return handleResponse(res);
 }
 
+// GET /api/Assignment/{id} – fetch a single assignment by ID
+export async function getAssignmentById(assignmentId) {
+  const res = await fetch(`${API_BASE}/Assignment/${encodeURIComponent(assignmentId)}`, {
+    method: "GET",
+    headers: { "Content-Type": "application/json" }
+  });
+  return handleResponse(res);
+}
+
 // GET /api/Assignment/course/:courseId – fetch assignments strictly for a single course
 export async function getCourseAssignments(courseId) {
   const res = await fetch(`${API_BASE}/Assignment/course/${encodeURIComponent(courseId)}`, {
