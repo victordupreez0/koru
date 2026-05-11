@@ -118,7 +118,7 @@ export default function CalendarDayBlockEvent({
             // Position: above the pill, centred on it
             "absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50",
             // Sizing & appearance
-            "w-52 bg-white rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.12)] p-3",
+            "w-52 bg-purple-800 rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.12)] p-3",
             // Pointer events: don't interfere with mouse
             "pointer-events-none",
             // Fade + lift animation driven by group-hover
@@ -132,17 +132,17 @@ export default function CalendarDayBlockEvent({
             <div className="w-8 h-8 rounded-xl border border-gray-200 bg-gray-50 flex items-center justify-center shrink-0 text-gray-500">
               {ICONS_LG[type] ?? ICONS_LG.class}
             </div>
-            <span className="font-semibold text-[13px] text-gray-900 leading-snug">{title}</span>
+            <span className="font-semibold text-[13px] text-white leading-snug">{title}</span>
           </div>
 
           {/* ── Divider ── */}
-          <div className="h-px bg-gray-100 mb-2" />
+          <div className="h-px bg-white mb-2" />
 
           {/* ── Meta rows ── */}
           <div className="flex flex-col gap-1.5">
             {startTime && (
-              <div className="flex items-center gap-1.5 text-[11px] text-gray-500">
-                <span className="text-gray-400 shrink-0"><ClockIcon /></span>
+              <div className="flex items-center gap-1.5 text-[11px] text-white">
+                <span className="text-white shrink-0"><ClockIcon /></span>
                 <span>
                   {startTime}
                   {endTime ? ` – ${endTime}` : ""}
@@ -150,13 +150,13 @@ export default function CalendarDayBlockEvent({
               </div>
             )}
             {lecturer && (
-              <div className="flex items-center gap-1.5 text-[11px] text-gray-500">
-                <span className="text-gray-400 shrink-0"><PersonIcon /></span>
+              <div className="flex items-center gap-1.5 text-[11px] text-white">
+                <span className="text-white shrink-0"><PersonIcon /></span>
                 <span className="truncate">{lecturer}</span>
               </div>
             )}
             {location && (
-              <div className="flex items-center gap-1.5 text-[11px] text-gray-400">
+              <div className="flex items-center gap-1.5 text-[11px] text-white">
                 <span className="shrink-0"><PinIcon /></span>
                 <span className="truncate">{location}</span>
               </div>
@@ -164,14 +164,14 @@ export default function CalendarDayBlockEvent({
           </div>
 
           {/* ── Caret (pointing down) ── */}
-          <div className="absolute left-1/2 -translate-x-1/2 -bottom-[5px] w-2.5 h-2.5 bg-white rotate-45 shadow-[1px_1px_0px_rgba(0,0,0,0.04)]" />
+          <div className="absolute left-1/2 -translate-x-1/2 -bottom-[5px] w-2.5 h-2.5 bg-purple-800 rotate-45 shadow-[1px_1px_0px_rgba(0,0,0,0.04)]" />
         </div>
       )}
 
       {/* ── Event pill ─────────────────────────────────────── */}
-      <div className="flex items-center gap-1.5 bg-white rounded-full px-3 py-1 text-[11px] font-medium text-black cursor-pointer transition-all duration-150 hover:-translate-y-px hover:shadow-sm">
+      <div className="flex items-center gap-1.5 bg-white rounded-full px-3 py-1 text-[11px] font-medium text-black cursor-pointer transition-all duration-150 shadow-xs hover:-translate-y-px hover:shadow-md hover:bg-purple-100">
         {/* Type icon */}
-        <span className="shrink-0 text-gray-400 mt-px">
+        <span className="shrink-0 text-purple-700 mt-px ">
           {ICONS[type] ?? ICONS.class}
         </span>
 
@@ -182,7 +182,7 @@ export default function CalendarDayBlockEvent({
         {(startTime || endTime) && (
           <span className="shrink-0 text-[10px] text-gray-400 text-right leading-tight whitespace-nowrap">
             {startTime && <span className="block">{startTime}</span>}
-            {endTime   && <span className="block">{endTime}</span>}
+            {endTime && <span className="block">{endTime}</span>}
           </span>
         )}
       </div>
