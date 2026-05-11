@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 
 export default function CourseHomeView({ subject, course, loading }) {
   // Use subject imageUrl or a placeholder if not present
-  var sampleImg = "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=800&q=80";
+  var sampleImg = "https://res.cloudinary.com/dvq3toyi0/image/upload/q_auto/f_auto/v1778533851/AdobeStock_315314252_syaukb.jpg";
   const courseImage = subject?.imageUrl || sampleImg;
 
   return (
@@ -17,14 +17,14 @@ export default function CourseHomeView({ subject, course, loading }) {
 
       {/* Left column – course overview with todo, next class & announcements */}
       <main className="space-y-24 w-full flex flex-col items-center">
-        <div className="w-full h-[500px] rounded-[60px] shadow-sm overflow-hidden">
-          <img 
-            src={courseImage} 
-            alt={subject?.name} 
+        <div className="w-full h-[250px] rounded-xl shadow-sm overflow-hidden">
+          <img
+            src={courseImage}
+            alt={subject?.name}
             className="w-full h-full object-cover"
           />
         </div>
-        
+
         <div className="w-full max-w-6xl space-y-24">
           <section>
             <h2 className="text-3xl font-bold mb-12 tracking-tight">Course Overview</h2>
@@ -65,14 +65,14 @@ export default function CourseHomeView({ subject, course, loading }) {
 
           <section className="w-full pt-20 pb-20 border-t border-gray-100/50">
             <div className="flex flex-col lg:flex-row items-center">
-              
+
               {/* Column 1: Image */}
               <div className="w-full lg:w-1/4 flex justify-center">
                 <div className="relative group">
                   <div className="w-48 h-48 rounded-full overflow-hidden border-4 border-white shadow-2xl">
-                    <img 
-                      src={subject?.lecturerImage || "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=1976&auto=format&fit=crop"} 
-                      alt="Lecturer" 
+                    <img
+                      src={subject?.lecturerImage || "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=1976&auto=format&fit=crop"}
+                      alt="Lecturer"
                       className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                     />
                   </div>
@@ -88,7 +88,7 @@ export default function CourseHomeView({ subject, course, loading }) {
                 </div>
 
                 <div className="flex flex-row gap-3 w-full">
-                  <a 
+                  <a
                     href={`mailto:${subject?.lecturerEmail || "sarah.miller@university.ac.za"}`}
                     className="h-10 px-8 flex items-center justify-center rounded-full bg-[#3C0078] text-white !text-white text-[10px] font-bold uppercase tracking-widest hover:bg-[#2A0054] transition-all shadow-md shadow-[#3C0078]/20"
                   >
@@ -103,7 +103,7 @@ export default function CourseHomeView({ subject, course, loading }) {
               {/* Column 3: Quick Links - Increased Spacing */}
               <div className="w-full lg:flex-1 lg:border-l border-gray-100 lg:pl-16">
                 <h4 className="text-[11px] font-black uppercase tracking-[0.4em] text-black mb-8">Quick Links</h4>
-                
+
                 <div className="flex flex-wrap gap-4">
                   {[
                     { label: "Figma Assets", href: "#" },
