@@ -2143,150 +2143,81 @@ function CourseGradesView({ activeCourseId }) {
   );
 }
 
+function CourseHomeView({ subject, course, loading }) {
+  // Lecturer state
+  const [lecturerName, setLecturerName] = React.useState(subject?.lecturerName || "Dr. Sarah Miller");
+  const [lecturerTitle, setLecturerTitle] = React.useState("Senior Design Lead & Principle Researcher");
+  const [lecturerEmail, setLecturerEmail] = React.useState(subject?.lecturerEmail || "natalie@openwindow.co.za");
+  const [lecturerImage, setLecturerImage] = React.useState(subject?.lecturerImage || "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=1976&auto=format&fit=crop");
+  const [bookingLink, setBookingLink] = React.useState("#");
+  const [isEditing, setIsEditing] = React.useState(false);
 
-// CourseHomeView – the default landing view for a course.
-// Shows a full-bleed hero image, a two-column term overview, lecturer profile
-// with animated pulsing ring, and a set of contextual quick-link buttons.
-// Editable on the teacher side.
-function CourseHomeView({ subject, course, loading, subjectId, isTeacher }) {
-  const { user } = useAuth();
-  const [isEditing, setIsEditing] = useState(false);
-  const [editData, setEditData] = useState(null);
-  const [saving, setSaving] = useState(false);
+  // States for expandable text bars
+  const [activeInput, setActiveInput] = React.useState(null); // 'email' or 'booking'
+  const [tempEmail, setTempEmail] = React.useState(lecturerEmail);
+  const [tempBooking, setTempBooking] = React.useState(bookingLink);
+  
+  // Quick Links state
+  const [editingQuickLinkIndex, setEditingQuickLinkIndex] = React.useState(null);
+  const [tempQuickLinkLabel, setTempQuickLinkLabel] = React.useState("");
+  const [tempQuickLinkHref, setTempQuickLinkHref] = React.useState("");
 
-  useEffect(() => {
-    if (subjectId && (isTeacher || isEditing)) {
-      const fetchData = async () => {
-        try {
-          const data = await getSubject(subjectId);
-          const processedData = {
-            ...data,
-            overviewContentJson: data.overviewContentJson || (data.overviewDescription ? { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: data.overviewDescription }] }] } : { type: "doc", content: [{ type: "paragraph" }] }),
-          };
-          setEditData(processedData);
-        } catch (err) {
-          console.error("Failed to fetch subject:", err);
-        }
+  const [quickLinks, setQuickLinks] = React.useState([
+    { label: "Figma Assets", href: "#" },
+    { label: "Miro Board", href: "#" },
+    { label: "Course Syllabus", href: "#" },
+    { label: "Attendance", href: "#" },
+    { label: "VLE Portal", href: "#" },
+    { label: "Library Search", href: "#" }
+  ]);
+
+  const fileInputRef = React.useRef(null);
+
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setLecturerImage(reader.result);
       };
-      fetchData();
-    }
-  }, [subjectId, isTeacher, isEditing]);
-
-  const handleSave = async () => {
-    console.log("Save clicked - editData:", editData, "subjectId:", subjectId);
-    if (!editData || !subjectId) {
-      console.error("Missing editData or subjectId", { editData, subjectId });
-      return;
-    }
-    try {
-      setSaving(true);
-      // Merge editData with existing subject to preserve all fields
-      const dataToSave = {
-        ...subject,
-        overviewDescription: editData.overviewDescription,
-        overviewContentJson: editData.overviewContentJson,
-      };
-      const result = await updateSubject(subjectId, dataToSave);
-      console.log("Save result:", result);
-      setIsEditing(false);
-    } catch (err) {
-      console.error("Failed to save course content:", err);
-    } finally {
-      setSaving(false);
+      reader.readAsDataURL(file);
     }
   };
 
-  const displayData = isEditing && editData ? editData : (subject || {});
-  const sampleImg = "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=800&q=80";
-  const courseImage = displayData?.imageUrl || sampleImg;
+  const startEditingQuickLink = (index, link) => {
+    setEditingQuickLinkIndex(index);
+    setTempQuickLinkLabel(link.label);
+    setTempQuickLinkHref(link.href);
+  };
 
-  const suggestionItems = createSuggestionItems([
-    {
-      title: "Heading 1",
-      searchTerms: ["title", "heading", "h1"],
-      command: ({ editor, range }) => {
-        editor.chain().focus().deleteRange(range).setNode("heading", { level: 1 }).run();
-      },
-    },
-    {
-      title: "Heading 2",
-      searchTerms: ["subtitle", "heading", "h2"],
-      command: ({ editor, range }) => {
-        editor.chain().focus().deleteRange(range).setNode("heading", { level: 2 }).run();
-      },
-    },
-    {
-      title: "Heading 3",
-      searchTerms: ["heading", "h3"],
-      command: ({ editor, range }) => {
-        editor.chain().focus().deleteRange(range).setNode("heading", { level: 3 }).run();
-      },
-    },
-    {
-      title: "Bullet List",
-      searchTerms: ["unordered", "list", "bullet"],
-      command: ({ editor, range }) => {
-        editor.chain().focus().deleteRange(range).toggleBulletList().run();
-      },
-    },
-    {
-      title: "Numbered List",
-      searchTerms: ["ordered", "list", "number"],
-      command: ({ editor, range }) => {
-        editor.chain().focus().deleteRange(range).toggleOrderedList().run();
-      },
-    },
-    {
-      title: "Quote",
-      searchTerms: ["blockquote", "quote"],
-      command: ({ editor, range }) => {
-        editor.chain().focus().deleteRange(range).toggleBlockquote().run();
-      },
-    },
-    {
-      title: "Code Block",
-      searchTerms: ["code", "codeblock"],
-      command: ({ editor, range }) => {
-        editor.chain().focus().deleteRange(range).toggleCodeBlock().run();
-      },
-    },
-  ]);
+  const saveQuickLink = () => {
+    if (editingQuickLinkIndex === "new") {
+      setQuickLinks([...quickLinks, { label: tempQuickLinkLabel, href: tempQuickLinkHref }]);
+    } else {
+      const updated = [...quickLinks];
+      updated[editingQuickLinkIndex] = { label: tempQuickLinkLabel, href: tempQuickLinkHref };
+      setQuickLinks(updated);
+    }
+    setEditingQuickLinkIndex(null);
+  };
+
+  const addQuickLink = () => {
+    setEditingQuickLinkIndex("new");
+    setTempQuickLinkLabel("");
+    setTempQuickLinkHref("");
+  };
+
+  // Use subject imageUrl or a placeholder if not present
+  var sampleImg = "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=800&q=80";
+  const courseImage = subject?.imageUrl || sampleImg;
 
   return (
-    <div className="flex-1 flex flex-col p-12 overflow-y-auto">
-      <header className="mb-12 flex justify-between items-start">
-        <div>
-          <h1 className="text-4xl font-semibold tracking-tight">
-            {loading
-              ? "Loading course details..."
-              : `${subject?.name || "Unknown"} | ${course?.term || ""}`}
-          </h1>
-        </div>
-        {isTeacher && !isEditing && (
-          <button
-            onClick={() => setIsEditing(true)}
-            className="px-6 py-3 rounded-2xl bg-[#3C0078] text-white font-bold text-xs uppercase tracking-widest hover:bg-[#2A0054] transition-all"
-          >
-            Edit Course
-          </button>
-        )}
-        {isTeacher && isEditing && (
-          <div className="flex gap-3">
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              className="px-6 py-3 rounded-2xl bg-green-600 text-white font-bold text-xs uppercase tracking-widest hover:bg-green-700 transition-all disabled:opacity-50"
-            >
-              {saving ? "Saving..." : "Save"}
-            </button>
-            <button
-              onClick={() => setIsEditing(false)}
-              className="px-6 py-3 rounded-2xl bg-gray-400 text-white font-bold text-xs uppercase tracking-widest hover:bg-gray-500 transition-all"
-            >
-              Cancel
-            </button>
-          </div>
-        )}
+    <div className="flex-1 flex flex-col p-12 overflow-y-auto scrollbar-hide">
+      <header className="mb-12">
+        <h1 className="text-4xl font-semibold tracking-tight">
+          {loading ? "Loading course details..." : `${subject?.name || "Unknown"} | ${course?.term || ""}`}
+        </h1>
+        <p className="text-xl text-gray-500 mt-3 font-medium">{loading ? "..." : subject?.code}</p>
       </header>
 
       {/* Left column – course overview with todo, next class & announcements */}
@@ -2321,67 +2252,52 @@ function CourseHomeView({ subject, course, loading, subjectId, isTeacher }) {
           )}
         </div>
 
-          <section className="w-full grid grid-cols-1 lg:grid-cols-2 gap-12 pt-12 border-t border-gray-100">
-            {/* Lecturer Section on the Left */}
-            <div className="bg-gray-50/30 rounded-[60px] p-12 border border-gray-100 flex flex-col items-center md:items-start text-center md:text-left gap-12">
-              <div className="flex flex-col md:flex-row items-center gap-14">
-                <div className="relative group shrink-0">
-                  {/* Enhanced Glowing Pulse Animation - Now Teal */}
-                  <motion.div
-                    animate={{
-                      scale: [1, 1.25, 1],
-                      opacity: [0.2, 0.5, 0.2],
-                    }}
-                    transition={{
-                      duration: 3,
-                      repeat: Infinity,
-                      ease: "easeInOut",
-                    }}
-                    className="absolute -inset-10 rounded-full bg-[#14B8A6]/20 blur-3xl z-0"
-                  />
+          <section className="w-full pt-20 pb-20 border-t border-gray-100/50">
+            <div className="flex flex-col lg:flex-row items-center relative">
+              
+              {/* Universal Edit Button - Top Right of the Image/Text block */}
+              <button 
+                onClick={() => setIsEditing(!isEditing)}
+                className="absolute top-0 right-[35%] z-10 w-8 h-8 rounded-full flex items-center justify-center transition-all shadow-sm border border-gray-100 bg-gray-50 text-[#3C0078] hover:bg-[#3C0078] hover:text-white"
+                title={isEditing ? "Save Changes" : "Edit Lecturer Section"}
+              >
+                {isEditing ? <CheckSquare size={16} /> : <Edit2 size={16} />}
+              </button>
 
-                  {/* Enhanced Floating Ring - Now Teal */}
-                  <motion.div
-                    animate={{
-                      rotate: 360,
-                      scale: [1, 1.05, 1],
-                    }}
-                    transition={{
-                      duration: 15,
-                      repeat: Infinity,
-                      ease: "linear",
-                    }}
-                    className="absolute -inset-4 rounded-full border-2 border-dashed border-[#14B8A6]/40 z-0"
-                  />
-
-                  {/* Lecturer Image MUCH LARGER - No Shadow */}
-                  <div className="w-56 h-56 rounded-full overflow-hidden border-8 border-white relative z-10">
-                    <img
-                      src={
-                        subject?.lecturerImage ||
-                        "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=1976&auto=format&fit=crop"
-                      }
-                      alt="Lecturer"
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+              {/* Column 1: Image */}
+              <div className="w-full lg:w-1/4 flex justify-center">
+                <div className={`relative group ${isEditing ? 'cursor-pointer' : ''}`} onClick={() => isEditing && fileInputRef.current?.click()}>
+                  <div className="w-48 h-48 rounded-full overflow-hidden border-4 border-white shadow-2xl relative">
+                    <img 
+                      src={lecturerImage} 
+                      alt="Lecturer" 
+                      className={`w-full h-full object-cover transition-transform duration-700 ${!isEditing ? 'group-hover:scale-110' : ''}`}
                     />
+                    {isEditing && (
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                        <PenLine className="text-white" size={24} />
+                      </div>
+                    )}
                   </div>
+                  <input 
+                    type="file" 
+                    ref={fileInputRef} 
+                    className="hidden" 
+                    accept="image/*" 
+                    onChange={handleImageUpload} 
+                  />
                 </div>
+              </div>
 
                 <div className="flex flex-col space-y-2">
-                  <span className="text-[10px] font-black text-[#14B8A6] uppercase tracking-[0.4em] block">
-                    Module Head
-                  </span>
-                  <h3 className="text-3xl font-bold text-gray-900 tracking-tight">
-                    {subject?.lecturerName || "Dr. Sarah Miller"}
-                  </h3>
-                  <p className="text-gray-600 font-bold text-lg tracking-tight">
-                    Design Lead & Senior Researcher
-                  </p>
+                  <span className="text-[10px] font-black text-[#14B8A6] uppercase tracking-[0.4em] block">Module Head</span>
+                  <h3 className="text-3xl font-bold text-gray-900 tracking-tight">{subject?.lecturerName || "Dr. Sarah Miller"}</h3>
+                  <p className="text-gray-600 font-bold text-lg tracking-tight">Design Lead & Senior Researcher</p>
                 </div>
               </div>
 
               <div className="w-full">
-                <a
+                <a 
                   href={`mailto:${subject?.lecturerEmail || "sarah.miller@university.ac.za"}`}
                   className="w-full md:w-auto inline-flex justify-center items-center gap-4 bg-transparent border-2 border-[#14B8A6] text-[#14B8A6] px-10 py-4 rounded-full font-bold text-base tracking-widest uppercase transition-all duration-300 hover:bg-[#14B8A6] hover:text-white hover:shadow-xl hover:shadow-[#14B8A6]/20"
                 >
@@ -2393,10 +2309,8 @@ function CourseHomeView({ subject, course, loading, subjectId, isTeacher }) {
 
             {/* Quick Links Section on the Right - Asymmetric and Clean */}
             <div className="flex flex-col p-4">
-              <h3 className="text-2xl font-bold mb-8 tracking-tight pl-4 text-gray-900">
-                Quick Links
-              </h3>
-
+              <h3 className="text-2xl font-bold mb-8 tracking-tight pl-4 text-gray-900">Quick Links</h3>
+              
               <div className="flex flex-wrap gap-4 items-start content-start">
                 <a
                   href="#"
@@ -2433,9 +2347,7 @@ function CourseHomeView({ subject, course, loading, subjectId, isTeacher }) {
                   className="w-full bg-white border-2 border-gray-100 text-gray-700 p-8 rounded-[40px] font-bold text-sm tracking-widest uppercase transition-all duration-300 hover:border-[#14B8A6] hover:bg-[#14B8A6] hover:text-white flex justify-between items-center group"
                 >
                   <span>Request Contact Session</span>
-                  <span className="text-gray-300 group-hover:text-white group-hover:translate-x-1 transition-all">
-                    →
-                  </span>
+                  <span className="text-gray-300 group-hover:text-white group-hover:translate-x-1 transition-all">→</span>
                 </a>
               </div>
             </div>
@@ -2991,27 +2903,25 @@ function CourseNotesView({ activeCourseId }) {
  * 2. Modules (/courses/modules)
  */
 export default function StudentCourses() {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const { visibleCourses, loading } = useCourses();
+    const location = useLocation();
+    const navigate = useNavigate();
+    const { visibleCourses, loading } = useCourses();
 
   // The route matches /courses/:courseId/:subpage
   // E.g. pathParts = ["courses", "dfg897-...", "grades"]
   const pathParts = location.pathname.split("/").filter(Boolean);
   const activeCourseId = pathParts.length > 1 ? pathParts[1] : null;
 
-  // React Router Guard: If the user navigates merely to /courses without specifying an ID,
-  // we drop them smoothly into the first available course.
-  useEffect(() => {
-    if (!loading && visibleCourses.length > 0) {
-      const courseExistsInList = visibleCourses.find(
-        (c) => c.id === activeCourseId,
-      );
-      if (!activeCourseId || !courseExistsInList) {
-        navigate(`/courses/${visibleCourses[0].id}`, { replace: true });
-      }
-    }
-  }, [loading, visibleCourses, activeCourseId, navigate]);
+    // React Router Guard: If the user navigates merely to /courses without specifying an ID, 
+    // we drop them smoothly into the first available course.
+    useEffect(() => {
+        if (!loading && visibleCourses.length > 0) {
+            const courseExistsInList = visibleCourses.find(c => c.id === activeCourseId);
+            if (!activeCourseId || !courseExistsInList) {
+                navigate(`/courses/${visibleCourses[0].id}`, { replace: true });
+            }
+        }
+    }, [loading, visibleCourses, activeCourseId, navigate]);
 
   // Build the resolved standard course object
   const course =
@@ -3023,23 +2933,21 @@ export default function StudentCourses() {
         id: course.id,
         name: course.subjectName,
         code: course.label,
-        description: course.description,
-      }
-    : null;
-
-  // Normalize sub-path checks based on the end of the URL
-  const path = location.pathname;
-
-  const isGradesPage = path.endsWith("/grades");
-  const isAnnouncementsPage = path.endsWith("/announcements");
-  const isAssignmentsPage = path.endsWith("/assignments");
-  const isAttendancePage = path.endsWith("/attendance");
-  const isModulesPage = path.endsWith("/modules");
-  const isNotesPage = path.endsWith("/notes");
-
-  // Home logic: Strictly defined as the base course page
-  const isHomePage =
-    pathParts.length === 2 && path.includes(`/courses/${activeCourseId}`);
+        description: course.description
+    } : null;
+    
+    // Normalize sub-path checks based on the end of the URL
+    const path = location.pathname;
+    
+    const isGradesPage = path.endsWith("/grades");
+    const isAnnouncementsPage = path.endsWith("/announcements");
+    const isAssignmentsPage = path.endsWith("/assignments");
+    const isAttendancePage = path.endsWith("/attendance");
+    const isModulesPage = path.endsWith("/modules");
+    const isNotesPage = path.endsWith("/notes");
+    
+    // Home logic: Strictly defined as the base course page
+    const isHomePage = pathParts.length === 2 && path.includes(`/courses/${activeCourseId}`);
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -3062,22 +2970,22 @@ export default function StudentCourses() {
         />
       </div>
 
-      {/* Main Content Area */}
-      {isHomePage ? (
-        <CourseHomeView subject={subject} course={course} loading={loading} subjectId={subject?.id} isTeacher={true} />
-      ) : isGradesPage ? (
-        <CourseGradesView activeCourseId={activeCourseId} />
-      ) : isAnnouncementsPage ? (
-        <CourseAnnouncementsView activeCourseId={activeCourseId} />
-      ) : isAssignmentsPage ? (
-        <CourseAssignmentsView subject={subject} />
-      ) : isAttendancePage ? (
-        <CourseAttendanceView />
-      ) : isModulesPage ? (
-        <CourseModulesView />
-      ) : isNotesPage ? (
-        <CourseNotesView activeCourseId={activeCourseId} />
-      ) : null}
-    </div>
-  );
+            {/* Main Content Area */}
+            {isHomePage ? (
+                <CourseHomeView subject={subject} course={course} loading={loading} />
+            ) : isGradesPage ? (
+                <CourseGradesView />
+            ) : isAnnouncementsPage ? (
+                <CourseAnnouncementsView />
+            ) : isAssignmentsPage ? (
+                <CourseAssignmentsView subject={subject} />
+            ) : isAttendancePage ? (
+                <CourseAttendanceView />
+            ) : isModulesPage ? (
+                <CourseModulesView />
+            ) : isNotesPage ? (
+                <CourseNotesView activeCourseId={activeCourseId} />
+            ) : null}
+        </div>
+    );
 }

@@ -47,13 +47,48 @@ function mapAssignmentToTimeline(assignment) {
     lecturer: "Submission",
     duration: "Due",
     location: "Online",
-    startHour: due.getHours(),
-    startMin: due.getMinutes(),
-    endHour: due.getHours(),
-    endMin: due.getMinutes(),
-    isAssignment: true
-  };
-}
+    startHour: 0,
+    startMin: 0,
+    endHour: 0,
+    endMin: 0,
+  },
+  {
+    id: 2,
+    title: "Contact Session",
+    subtitle: "",
+    lecturer: "Laudette Sass",
+    duration: "15min",
+    location: "Online",
+    startHour: 12,
+    startMin: 30,
+    endHour: 12,
+    endMin: 45,
+  },
+  {
+    id: 3,
+    title: "ID300 – Practical",
+    subtitle: "Wireframe Review",
+    lecturer: "Mike Ross",
+    duration: "90min",
+    location: "Room 208",
+    startHour: 14,
+    startMin: 0,
+    endHour: 15,
+    endMin: 30,
+  },
+  {
+    id: 4,
+    title: "UX300 – Workshop",
+    subtitle: "Usability Testing",
+    lecturer: "Anna Pretorius",
+    duration: "45min",
+    location: "Online",
+    startHour: 16,
+    startMin: 0,
+    endHour: 16,
+    endMin: 45,
+  },
+];
 
 // Helper: format hours & minutes into "HH:MM"
 function fmt(h, m) {
@@ -133,12 +168,12 @@ export default function TodayTimeline() {
   const nextIdx = getNextEventIndex(events, now);
 
   return (
-    <div className="w-full">
+    <div className="w-full h-full flex flex-col bg-white border-1 border-gray-200 rounded-3xl p-4 drop-shadow-xl">
       {/* ── Header ── */}
       <div className="flex items-center justify-between mt-5 mb-1">
         <h2 className="text-2xl font-['Gabarito'] dark:text-slate-100">Today</h2>
       </div>
-      <p className="text-sm text-gray-400 dark:text-slate-500 mb-5 font-medium">{formatDate(now)}</p>
+      <p className="text-sm text-gray-400 mb-5 font-medium">{formatDate(now)}</p>
 
       {/* ── Scrollable timeline with fade overlays ── */}
       <div className="relative">
@@ -146,12 +181,7 @@ export default function TodayTimeline() {
 
         {/* Scrollable list */}
         <div className="max-h-[520px] overflow-y-auto scrollbar-black pr-1 flex flex-col">
-          {loading ? (
-            <div className="text-gray-500 dark:text-slate-400 text-center py-10 font-medium">Loading timeline...</div>
-          ) : events.length === 0 ? (
-            <div className="text-gray-500 dark:text-slate-400 text-center py-10 font-medium bg-gray-50 dark:bg-slate-800/50 rounded-[40px] border border-gray-100 dark:border-slate-700">No events scheduled for today.</div>
-          ) : (
-            events.map((evt, idx) => {
+          {events.map((evt, idx) => {
             const isNext = idx === nextIdx;
             const isPast = isPastEvent(evt, now);
             const timeRange = evt.isAssignment 
@@ -191,7 +221,7 @@ export default function TodayTimeline() {
                 )}
               </div>
             );
-          }))}
+          })}
         </div>
 
 

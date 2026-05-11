@@ -1,7 +1,7 @@
 import React from "react";
 import { useLocation } from "react-router-dom";
 import { motion, LayoutGroup } from "framer-motion";
-import { SpeedometerLow, Book, Calendar, Stars, PieChart, PieChart2 } from "@solar-icons/react";
+import { Home, Book, Calendar, Stars, PieChart, PieChart2 } from "@solar-icons/react";
 
 import NavItem from "./UI/navItem";
 
@@ -29,11 +29,11 @@ const itemVariants = {
 export default function Menu() {
   // Each item maps to a route defined in App.jsx
   const navItems = [
-    { label: "Dashboard", href: "/dashboard", icon: <SpeedometerLow weight="Outline" size={24} color="currentColor" /> },
-    { label: "Courses", href: "/courses", icon: <Book weight="Outline" size={24} color="currentColor" /> },
-    { label: "Calendar", href: "/calendar", icon: <Calendar weight="Outline" size={24} color="currentColor" /> },
-    { label: "Analytics", href: "/analytics", icon: <PieChart2 weight="Outline" size={24} color="currentColor" /> },
-    { label: "Assistant", href: "/teacherassistant", icon: <Stars weight="Outline" size={24} color="currentColor" /> },
+    { label: "Dashboard", href: "/dashboard", icon: <Home weight="Outline" size={24} color="currentColor" />, filledIcon: <Home weight="Bold" size={24} color="currentColor" /> },
+    { label: "Courses", href: "/courses", icon: <Book weight="Outline" size={24} color="currentColor" />, filledIcon: <Book weight="Bold" size={24} color="currentColor" /> },
+    { label: "Calendar", href: "/calendar", icon: <Calendar weight="Outline" size={24} color="currentColor" />, filledIcon: <Calendar weight="Bold" size={24} color="currentColor" /> },
+    { label: "Analytics", href: "/analytics", icon: <PieChart2 weight="Outline" size={24} color="currentColor" />, filledIcon: <PieChart2 weight="Bold" size={24} color="currentColor" /> },
+    { label: "Assistant", href: "/teacherassistant", icon: <Stars weight="Outline" size={24} color="currentColor" />, filledIcon: <Stars weight="Bold" size={24} color="currentColor" /> },
 
   ];
 
