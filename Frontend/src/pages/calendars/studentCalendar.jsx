@@ -204,7 +204,7 @@ export default function StudentCalendar() {
             >
               <ChevronLeft size={20} />
             </button>
-            <h1 className="font-['Gabarito'] font-regular text-gray-900 select-none min-w-[200px] text-center">
+            <h1 className="font-['Gabarito'] !text-3xl text-gray-900 select-none text-center">
               {monthLabel}
             </h1>
             <button
