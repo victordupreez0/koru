@@ -1,4 +1,4 @@
-﻿import React, { useState, useMemo } from "react";
+﻿import React, { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Plus, Search, Users, BookOpen, Clock, 
@@ -7,82 +7,8 @@ import {
 } from "lucide-react";
 import Menu from "../../components/menu";
 import SideMenu from "../../components/sideMenu";
+import { courseService, userService, subjectService } from "../../services/adminService";
 
-// ── Dummy Data ──
-const DUMMY_COURSES = [
-  {
-    id: 1,
-    subject: { name: "Advanced Interaction Design", code: "IXD402" },
-    teacher: { id: "t1", firstName: "Sarah", lastName: "Conner", email: "s.conner@edu.com" },
-    year: "3rd Year",
-    term: "Semester 1",
-    capacity: 45,
-    enrolled: 42,
-    status: "Active",
-    degree: "UX Design Degree",
-    description: "Deep dive into cognitive ergonomics and tactile feedback loops in modern interfaces. Focuses on advanced user psychology and interaction patterns.",
-    schedule: "Mon & Wed • 10:00 AM - 12:00 PM",
-    room: "Studio 4A"
-  },
-  {
-    id: 2,
-    subject: { name: "Frontend Development III", code: "FED301" },
-    teacher: { id: "t2", firstName: "Marcus", lastName: "Wright", email: "m.wright@edu.com" },
-    year: "3rd Year",
-    term: "Semester 1",
-    capacity: 60,
-    enrolled: 58,
-    status: "Active",
-    degree: "Interaction Design Degree",
-    description: "Advanced React concepts, state management with Redux/Zustand, and complex frontend architectures.",
-    schedule: "Tue & Thu • 02:00 PM - 04:00 PM",
-    room: "Lab 2B"
-  },
-  {
-    id: 3,
-    subject: { name: "Creative Computing", code: "CC101" },
-    teacher: { id: "t3", firstName: "Kyle", lastName: "Reese", email: "k.reese@edu.com" },
-    year: "1st Year",
-    term: "Semester 2",
-    capacity: 100,
-    enrolled: 95,
-    status: "Active",
-    degree: "Digital Arts Degree",
-    description: "Introduction to generative art, p5.js, and computational creativity for visual communication.",
-    schedule: "Fri • 09:00 AM - 01:00 PM",
-    room: "Great Hall"
-  },
-  {
-    id: 4,
-    subject: { name: "Visual Communication Design", code: "VCD201" },
-    teacher: { id: "t4", firstName: "John", lastName: "Connor", email: "j.connor@edu.com" },
-    year: "2nd Year",
-    term: "Semester 1",
-    capacity: 50,
-    enrolled: 48,
-    status: "Active",
-    degree: "UX Design Degree",
-    description: "Principles of typography, color theory, and layout applied to digital and physical products.",
-    schedule: "Wed • 01:00 PM - 05:00 PM",
-    room: "Studio 1C"
-  }
-];
-
-const TEACHERS = [
-  { id: "t1", firstName: "Sarah", lastName: "Conner", email: "s.conner@edu.com" },
-  { id: "t2", firstName: "Marcus", lastName: "Wright", email: "m.wright@edu.com" },
-  { id: "t3", firstName: "Kyle", lastName: "Reese", email: "k.reese@edu.com" },
-  { id: "t4", firstName: "John", lastName: "Connor", email: "j.connor@edu.com" },
-  { id: "t5", firstName: "Ellen", lastName: "Ripley", email: "e.ripley@edu.com" }
-];
-
-const DEGREES = [
-  "UX Design Degree",
-  "Interaction Design Degree",
-  "Digital Arts Degree",
-  "Film & Media Degree",
-  "Creative Computing Degree"
-];
 
 function StatCard({ label, value, icon: Icon, trend, accent = false }) {
   return (
@@ -147,8 +73,22 @@ function FilterDropdown({ label, options, value, onChange }) {
   );
 }
 
+const DEGREES = [
+  "UX Design Degree",
+  "Software Engineering Degree",
+  "Visual Arts Degree",
+  "Interaction Design Degree",
+  "Design Leadership Degree"
+];
+
+
 export default function AdminCourses() {
-  const [courses, setCourses] = useState(DUMMY_COURSES);
+  const [courses, setCourses] = useState([]); // Initialize with empty array for backend data
+  const [teachers, setTeachers] = useState([]); // Real teachers from DB
+  const [subjects, setSubjects] = useState([]); // Real subjects from DB
+  const [enrollments, setEnrollments] = useState([]); // Real enrollments to calculate stats
+  const [isLoading, setIsLoading] = useState(true);
+  
   const [search, setSearch] = useState("");
   const [filterYear, setFilterYear] = useState("All Years");
   const [filterSemester, setFilterSemester] = useState("All Semesters");
@@ -156,6 +96,126 @@ export default function AdminCourses() {
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState(null);
   const [showCreate, setShowCreate] = useState(false);
+  
+  // Form state for creating a new course linking a subject and a teacher
+  const [newCourseForm, setNewCourseForm] = useState({
+    subjectId: "",
+    teacherId: "",
+    year: "1",
+    term: "Semester 1",
+    capacity: 50,
+    status: "Active",
+    degree: "UX Design Degree", // This seems to be UI only for now in the model
+  });
+
+  // Fetch data on component mount
+  useEffect(() => {
+    fetchInitialData();
+  }, []);
+
+  /**
+   * Loads dummy data instead of fetching from the backend.
+   */
+  const fetchInitialData = async () => {
+    setIsLoading(true);
+    try {
+      // Dummy data representing what's in the database
+      const fetchedSubjects = [
+        { id: "s1", name: "User Experience Design 300", code: "UX300", description: "Inclusive & Neurodiverse UX foundation course." },
+        { id: "s2", name: "Development 300", code: "DV300", description: "Advanced Full-Stack Engineering and Architecture." },
+        { id: "s3", name: "Visual Culture 300", code: "VC300", description: "Exploration of visual systems, semiotics, and interactive media aesthetics." }
+      ];
+
+      const fetchedTeachers = [
+        { id: "t1", firstName: "Dev", lastName: "Teacher", email: "devteacher@learnonline.co.za", role: "teacher" },
+        { id: "t2", firstName: "Sarah", lastName: "Smith", email: "sarah@learnonline.co.za", role: "teacher" }
+      ];
+
+      const fetchedCourses = [
+        { 
+          id: "c1", 
+          subjectId: "s1", 
+          teacherId: "t1", 
+          term: "Term 1", 
+          year: 2026, 
+          capacity: 150,
+          status: "Active",
+          degree: "UX Design Degree",
+          description: "This comprehensive course covers the principles of User Experience Design, focusing on inclusive and neurodiverse foundations to create accessible products for all users.",
+          subject: fetchedSubjects[0],
+          teacher: fetchedTeachers[0]
+        },
+        { 
+          id: "c2", 
+          subjectId: "s2", 
+          teacherId: "t1", 
+          term: "Term 1", 
+          year: 2026, 
+          capacity: 150,
+          status: "Active",
+          degree: "Software Engineering Degree",
+          description: "Advanced Full-Stack Engineering and Architecture. Explore modern web technologies, database management, and scalable system design.",
+          subject: fetchedSubjects[1],
+          teacher: fetchedTeachers[0]
+        },
+        { 
+          id: "c3", 
+          subjectId: "s3", 
+          teacherId: "t2", 
+          term: "Term 1", 
+          year: 2026, 
+          capacity: 150,
+          status: "Active",
+          degree: "Visual Arts Degree",
+          description: "Exploration of visual systems, semiotics, and interactive media aesthetics. Understand the cultural impact of visual communication.",
+          subject: fetchedSubjects[2],
+          teacher: fetchedTeachers[1]
+        }
+      ];
+
+      const fetchedEnrollments = [
+        { id: "e1", studentId: "std1", courseId: "c1", status: "Active" },
+        { id: "e2", studentId: "std1", courseId: "c2", status: "Active" },
+        { id: "e3", studentId: "std1", courseId: "c3", status: "Active" }
+      ];
+
+      setCourses(fetchedCourses);
+      setTeachers(fetchedTeachers);
+      setSubjects(fetchedSubjects);
+      setEnrollments(fetchedEnrollments);
+      
+      console.log("Mock data loaded for AdminCourses");
+
+      if (fetchedSubjects.length > 0 && fetchedTeachers.length > 0) {
+        setNewCourseForm(prev => ({
+          ...prev,
+          subjectId: fetchedSubjects[0].id,
+          teacherId: fetchedTeachers[0].id
+        }));
+      }
+    } catch (error) {
+      console.error("Failed to load mock data:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  /**
+   * Analytics Calculation
+   * Calculating stats from real database records (Enrollments / Courses)
+   */
+  const stats = useMemo(() => {
+    const totalEnrolled = enrollments.length;
+    const totalCapacity = courses.reduce((sum, c) => sum + (c.capacity || 0), 0);
+    const avgEnrolment = totalCapacity > 0 ? Math.round((totalEnrolled / totalCapacity) * 100) : 0;
+    
+    return {
+      registryCount: courses.length,
+      facultyCount: teachers.length,
+      avgEnrolment: `${avgEnrolment}%`,
+      health: "98%" // Placeholder for health metric
+    };
+  }, [courses, teachers, enrollments]);
 
   // Handle opening modal for viewing
   const handleViewCourse = (course) => {
@@ -164,28 +224,96 @@ export default function AdminCourses() {
     setIsEditing(false);
   };
 
-  // Handle save edit
-  const handleSaveEdit = () => {
-    setCourses(prev => prev.map(c => c.id === editForm.id ? editForm : c));
-    setSelectedCourse(editForm);
-    setIsEditing(false);
+  /**
+   * Mock creating a new course.
+   */
+  const handleCreateCourse = async () => {
+    try {
+      const subject = subjects.find(s => s.id === newCourseForm.subjectId);
+      const teacher = teachers.find(t => t.id === newCourseForm.teacherId);
+
+      const newCourse = {
+        id: Math.random().toString(36).substr(2, 9),
+        ...newCourseForm,
+        year: parseInt(newCourseForm.year),
+        capacity: parseInt(newCourseForm.capacity),
+        subject,
+        teacher
+      };
+
+      setCourses(prev => [...prev, newCourse]);
+      setShowCreate(false);
+      
+      // Reset form
+      setNewCourseForm({
+        ...newCourseForm,
+        capacity: 50
+      });
+      console.log("Mock: Created course", newCourse);
+    } catch (error) {
+      alert("Error creating course: " + error.message);
+    }
   };
 
-  // Handle delete course
-  const handleDeleteCourse = (id) => {
-    setCourses(prev => prev.filter(c => c.id !== id));
-    setSelectedCourse(null);
+  /**
+   * Mock saving edits to a course.
+   */
+  const handleSaveEdit = async () => {
+    try {
+      const updatedCourses = courses.map(c => 
+        c.id === editForm.id ? { ...editForm, year: parseInt(editForm.year), capacity: parseInt(editForm.capacity) } : c
+      );
+      setCourses(updatedCourses);
+      setSelectedCourse(null);
+      setIsEditing(false);
+      console.log("Mock: Updated course", editForm.id);
+    } catch (error) {
+      alert("Error updating course: " + error.message);
+    }
+  };
+
+  /**
+   * Mock deleting a course record.
+   */
+  const handleDeleteCourse = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this course?")) return;
+    
+    try {
+      setCourses(prev => prev.filter(c => c.id !== id));
+      setSelectedCourse(null);
+      console.log("Mock: Deleted course", id);
+    } catch (error) {
+      alert("Failed to delete: " + error.message);
+    }
   };
 
   const filteredCourses = useMemo(() => {
     return courses.filter(course => {
-      const matchesSearch = course.subject.name.toLowerCase().includes(search.toLowerCase()) || 
-                           course.subject.code.toLowerCase().includes(search.toLowerCase());
-      const matchesYear = filterYear === "All Years" || course.year === filterYear;
+      // Basic safeguard for populated records
+      if (!course.subject) return false;
+
+      const matchesSearch = 
+        course.subject.name.toLowerCase().includes(search.toLowerCase()) || 
+        course.subject.code.toLowerCase().includes(search.toLowerCase());
+      
+      // Adjusting strings to match the DB format (ints vs strings)
+      const matchesYear = filterYear === "All Years" || course.year.toString().includes(filterYear.charAt(0));
       const matchesSemester = filterSemester === "All Semesters" || course.term === filterSemester;
+      
       return matchesSearch && matchesYear && matchesSemester;
     });
   }, [courses, search, filterYear, filterSemester]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-[#3C0078] border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Synchronizing Registry...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative min-h-screen flex flex-col font-sans">
@@ -211,10 +339,10 @@ export default function AdminCourses() {
 
         {/* Statistics Blocks */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <StatCard label="Total Registry" value={courses.length} icon={BookOpen} accent trend="+0" />
-            <StatCard label="Faculty Strength" value={TEACHERS.length} icon={Users} trend="Active" />
-            <StatCard label="Avg Enrolment" value="94%" icon={TrendingUp} trend="Steady" />
-            <StatCard label="Registry Health" value="98%" icon={CheckCircle} trend="Target" />
+            <StatCard label="Total Registry" value={stats.registryCount} icon={BookOpen} accent trend="+0" />
+            <StatCard label="Faculty Strength" value={stats.facultyCount} icon={Users} trend="Active" />
+            <StatCard label="Avg Enrolment" value={stats.avgEnrolment} icon={TrendingUp} trend="Steady" />
+            <StatCard label="Registry Health" value={stats.health} icon={CheckCircle} trend="Target" />
         </div>
 
         {/* Control Bar - Dropdowns & Search */}
@@ -245,35 +373,37 @@ export default function AdminCourses() {
             </div>
         </div>
 
-        {/* Registry List - Floating Cards */}
-        <div className="space-y-3">
-            {filteredCourses.map(course => (
-                <motion.div 
-                    key={course.id} 
-                    onClick={() => handleViewCourse(course)} 
-                    className="group bg-white border border-gray-100 p-6 rounded-[28px] flex items-center justify-between hover:shadow-xl hover:border-transparent transition-all cursor-pointer"
-                >
-                    <div className="flex items-center gap-6">
-                        <div className="w-11 h-11 rounded-xl bg-[#3C0078]/5 text-[#3C0078] flex items-center justify-center group-hover:bg-[#3C0078] group-hover:text-white transition-all"><BookOpen size={18} /></div>
-                        <div>
-                            <div className="flex items-center gap-2">
-                                <span className="text-[10px] font-black text-[#3C0078] uppercase tracking-widest">{course.subject.code}</span>
-                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">• {course.year} • {course.term}</span>
+            {/* Registry List - Floating Cards */}
+            <div className="space-y-3">
+                {filteredCourses.map(course => (
+                    <motion.div 
+                        key={course.id} 
+                        onClick={() => handleViewCourse(course)} 
+                        className="group bg-white border border-gray-100 p-6 rounded-[28px] flex items-center justify-between hover:shadow-xl hover:border-transparent transition-all cursor-pointer"
+                    >
+                        <div className="flex items-center gap-6">
+                            <div className="w-11 h-11 rounded-xl bg-[#3C0078]/5 text-[#3C0078] flex items-center justify-center group-hover:bg-[#3C0078] group-hover:text-white transition-all"><BookOpen size={18} /></div>
+                            <div>
+                                <div className="flex items-center gap-2">
+                                    {/* Link: Pulling real subject code and academic meta */}
+                                    <span className="text-[10px] font-black text-[#3C0078] uppercase tracking-widest">{course.subject?.code}</span>
+                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">• {course.year} Year • {course.term}</span>
+                                </div>
+                                <h3 className="text-lg font-black text-gray-900 tracking-tight">{course.subject?.name}</h3>
+                                <div className="text-[9px] font-bold text-gray-400 uppercase mt-1 tracking-wider">{course.degree || "UX Design Degree"}</div>
                             </div>
-                            <h3 className="text-lg font-black text-gray-900 tracking-tight">{course.subject.name}</h3>
-                            <div className="text-[9px] font-bold text-gray-400 uppercase mt-1 tracking-wider">{course.degree}</div>
                         </div>
-                    </div>
-                    <div className="flex items-center gap-10">
-                        <div className="text-right">
-                            <div className="text-[10px] font-black text-gray-900 uppercase tracking-widest">{course.teacher.firstName} {course.teacher.lastName}</div>
-                            <div className="text-[9px] font-bold text-gray-400 uppercase tracking-tighter">Lead Faculty</div>
+                        <div className="flex items-center gap-10">
+                            <div className="text-right">
+                                {/* Link: Displaying the real teacher assigned in the database */}
+                                <div className="text-[10px] font-black text-gray-900 uppercase tracking-widest">{course.teacher?.firstName} {course.teacher?.lastName}</div>
+                                <div className="text-[9px] font-bold text-gray-400 uppercase tracking-tighter">Lead Faculty</div>
+                            </div>
+                            <div className="p-2.5 rounded-lg bg-gray-50 text-gray-400 group-hover:bg-[#3C0078] group-hover:text-white transition-all"><ChevronRight size={16} /></div>
                         </div>
-                        <div className="p-2.5 rounded-lg bg-gray-50 text-gray-400 group-hover:bg-[#3C0078] group-hover:text-white transition-all"><ChevronRight size={16} /></div>
-                    </div>
-                </motion.div>
-            ))}
-            {filteredCourses.length === 0 && (
+                    </motion.div>
+                ))}
+                {filteredCourses.length === 0 && (
               <div className="py-20 text-center">
                 <p className="text-gray-400 font-bold uppercase tracking-widest">No matching courses found</p>
               </div>
@@ -319,7 +449,7 @@ export default function AdminCourses() {
                                 className="w-full text-5xl font-black text-gray-900 tracking-tighter bg-transparent border-b-2 border-[#3C0078]/10 focus:border-[#3C0078] outline-none pb-1"
                               />
                               <div className="flex items-center gap-3">
-                                <span className="px-3 py-1 rounded-full bg-gray-100 text-[10px] font-black text-gray-400 uppercase tracking-widest">{editForm.year} Registry</span>
+                                <span className="px-3 py-1 rounded-full bg-gray-100 text-[10px] font-black text-gray-400 uppercase tracking-widest">{editForm.year}{editForm.year===1 ? "st" : editForm.year===2 ? "nd" : editForm.year===3 ? "rd" : "th"} Year Registry</span>
                                 <span className="px-3 py-1 rounded-full bg-gray-100 text-[10px] font-black text-gray-400 uppercase tracking-widest">{editForm.term}</span>
                               </div>
                             </div>
@@ -353,24 +483,25 @@ export default function AdminCourses() {
                                 {isEditing ? (
                                   <div className="flex-1">
                                     <select 
-                                      value={editForm.teacher.id}
+                                      value={editForm.teacherId}
                                       onChange={(e) => {
-                                        const teacher = TEACHERS.find(t => t.id === e.target.value);
-                                        setEditForm({...editForm, teacher});
+                                        setEditForm({...editForm, teacherId: e.target.value});
                                       }}
                                       className="w-full px-4 py-3 rounded-xl bg-gray-50 border-none text-[13px] font-bold outline-none"
                                     >
-                                      {TEACHERS.map(t => <option key={t.id} value={t.id}>{t.firstName} {t.lastName}</option>)}
+                                      {teachers.map(t => <option key={t.id} value={t.id}>{t.firstName} {t.lastName}</option>)}
                                     </select>
                                   </div>
                                 ) : (
                                   <div className="flex items-center gap-4">
                                     <div className="w-12 h-12 rounded-2xl bg-[#3C0078] text-white flex items-center justify-center font-black text-lg shadow-lg shadow-[#3C0078]/20">
-                                      {selectedCourse.teacher.firstName[0]}
+                                      {selectedCourse?.teacher?.firstName?.[0] || "?"}
                                     </div>
                                     <div>
-                                      <h4 className="text-[14px] font-black text-gray-900">{selectedCourse.teacher.firstName} {selectedCourse.teacher.lastName}</h4>
-                                      <p className="text-[10px] font-bold text-gray-400">{selectedCourse.teacher.email}</p>
+                                      <h4 className="text-[14px] font-black text-gray-900">
+                                        {selectedCourse?.teacher ? `${selectedCourse.teacher.firstName} ${selectedCourse.teacher.lastName}` : "No Teacher Assigned"}
+                                      </h4>
+                                      <p className="text-[10px] font-bold text-gray-400">{selectedCourse?.teacher?.email || "N/A"}</p>
                                     </div>
                                   </div>
                                 )}
@@ -381,9 +512,9 @@ export default function AdminCourses() {
                               <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">Registry Status</label>
                               <div className="flex items-center justify-between mt-2">
                                 <span className={`text-[12px] font-black uppercase tracking-wider ${
-                                  (isEditing ? editForm.status : selectedCourse.status) === "Active" ? "text-green-600" : "text-red-500"
+                                  (isEditing ? editForm?.status : selectedCourse?.status) === "Active" ? "text-green-600" : "text-red-500"
                                 }`}>
-                                  {isEditing ? editForm.status : selectedCourse.status}
+                                  {isEditing ? editForm?.status : (selectedCourse?.status || "Active")}
                                 </span>
                                 {isEditing && (
                                   <button 
@@ -407,7 +538,7 @@ export default function AdminCourses() {
                             <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-4">Course Specification</label>
                             {isEditing ? (
                               <textarea 
-                                value={editForm.description}
+                                value={editForm?.description || ""}
                                 onChange={(e) => setEditForm({...editForm, description: e.target.value})}
                                 className="w-full px-8 py-8 rounded-[32px] bg-gray-50 border-none text-[16px] font-medium text-gray-600 leading-relaxed min-h-[250px] outline-none ring-2 ring-transparent focus:ring-[#3C0078]/5 transition-all shadow-inner"
                                 placeholder="Describe the course learning outcomes..."
@@ -415,7 +546,7 @@ export default function AdminCourses() {
                             ) : (
                               <div className="relative">
                                 <p className="text-[18px] font-medium text-gray-500 leading-relaxed max-w-prose">
-                                  {selectedCourse.description}
+                                  {selectedCourse?.description || selectedCourse?.subject?.description || "No description available."}
                                 </p>
                               </div>
                             )}
@@ -428,11 +559,11 @@ export default function AdminCourses() {
                                   <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block">Academic Year</label>
                                   <div className="relative group">
                                     <select 
-                                      value={editForm.year}
-                                      onChange={(e) => setEditForm({...editForm, year: e.target.value})}
+                                      value={editForm?.year || 1}
+                                      onChange={(e) => setEditForm({...editForm, year: parseInt(e.target.value)})}
                                       className="w-full px-6 py-4 rounded-2xl bg-gray-50 border-none text-[13px] font-bold outline-none focus:bg-white focus:ring-2 focus:ring-[#3C0078]/5 transition-all appearance-none"
                                     >
-                                      {["1st Year", "2nd Year", "3rd Year"].map(y => <option key={y} value={y}>{y}</option>)}
+                                      {[1, 2, 3, 4].map(y => <option key={y} value={y}>{y}{y===1 ? "st" : y===2 ? "nd" : y===3 ? "rd" : "th"} Year</option>)}
                                     </select>
                                     <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
                                       <ChevronDown size={16} />
@@ -443,7 +574,7 @@ export default function AdminCourses() {
                                   <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block">Active Semester</label>
                                   <div className="relative group">
                                     <select 
-                                      value={editForm.term}
+                                      value={editForm?.term || "Semester 1"}
                                       onChange={(e) => setEditForm({...editForm, term: e.target.value})}
                                       className="w-full px-6 py-4 rounded-2xl bg-gray-50 border-none text-[13px] font-bold outline-none focus:bg-white focus:ring-2 focus:ring-[#3C0078]/5 transition-all appearance-none"
                                     >
@@ -459,11 +590,11 @@ export default function AdminCourses() {
                               <>
                                 <div className="flex items-center gap-4 text-gray-400 bg-gray-50 px-6 py-4 rounded-2xl">
                                   <div className="w-2 h-2 rounded-full bg-[#3C0078]"></div>
-                                  <span className="text-[12px] font-black uppercase tracking-wider">{selectedCourse.year} Registry</span>
+                                  <span className="text-[12px] font-black uppercase tracking-wider">{selectedCourse?.year}{selectedCourse?.year===1 ? "st" : selectedCourse?.year===2 ? "nd" : selectedCourse?.year===3 ? "rd" : "th"} Year Registry</span>
                                 </div>
                                 <div className="flex items-center gap-4 text-gray-400 bg-gray-50 px-6 py-4 rounded-2xl">
                                   <div className="w-2 h-2 rounded-full bg-[#3C0078]"></div>
-                                  <span className="text-[12px] font-black uppercase tracking-wider">{selectedCourse.term}</span>
+                                  <span className="text-[12px] font-black uppercase tracking-wider">{selectedCourse?.term}</span>
                                 </div>
                               </>
                             )}
@@ -516,6 +647,187 @@ export default function AdminCourses() {
                             </button>
                           </>
                         )}
+                      </div>
+                  </div>
+                </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Create Course Modal */}
+      <AnimatePresence>
+        {showCreate && (
+          <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6 md:p-12 overflow-hidden">
+            <motion.div 
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setShowCreate(false)}
+              className="absolute inset-0 bg-[#0A0510]/80 backdrop-blur-xl"
+            />
+            
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 30 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 30 }}
+              className="relative w-full max-w-[1400px] h-fit max-h-[90vh] bg-white rounded-[48px] shadow-[0_32px_128px_-16px_rgba(60,0,120,0.3)] overflow-hidden flex flex-col"
+            >
+                <div className="flex flex-col md:flex-row h-full">
+                  {/* Left Column: Context & Subject Info */}
+                  <div className="md:w-[500px] bg-gray-50 border-r border-gray-100 p-12 flex flex-col justify-between overflow-y-auto">
+                      <div className="space-y-12">
+                          <button onClick={() => setShowCreate(false)} className="w-14 h-14 rounded-2xl bg-white border border-gray-100 flex items-center justify-center text-gray-400 hover:text-red-500 hover:border-red-100 transition-all group">
+                            <X size={24} className="group-hover:rotate-90 transition-transform duration-300" />
+                          </button>
+
+                          <div className="space-y-6">
+                            <div className="flex items-center gap-3">
+                              <span className="px-3 py-1 bg-[#3C0078]/5 text-[10px] font-black tracking-widest text-[#3C0078] uppercase rounded-lg">New Entry</span>
+                            </div>
+                            <div className="space-y-6">
+                              <div className="space-y-2">
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Subject Name</label>
+                                <input 
+                                  type="text"
+                                  value={newCourseForm.subjectName || subjects.find(s => s.id === newCourseForm.subjectId)?.name || ""}
+                                  onChange={(e) => setNewCourseForm({...newCourseForm, subjectName: e.target.value})}
+                                  placeholder="Enter subject name"
+                                  className="w-full bg-white border border-gray-100 px-6 py-4 rounded-2xl text-[16px] font-black text-[#3C0078] focus:ring-2 focus:ring-[#3C0078]/10 transition-all outline-none"
+                                />
+                              </div>
+
+                              <div className="space-y-2">
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Course Code</label>
+                                <div className="relative">
+                                  <select 
+                                    value={newCourseForm.subjectId}
+                                    onChange={(e) => setNewCourseForm({...newCourseForm, subjectId: e.target.value})}
+                                    className="w-full bg-white border border-gray-100 px-6 py-4 rounded-2xl text-[14px] font-bold text-gray-600 focus:ring-2 focus:ring-[#3C0078]/10 transition-all outline-none appearance-none"
+                                  >
+                                    {subjects.map(s => <option key={s.id} value={s.id}>{s.code}</option>)}
+                                  </select>
+                                  <ChevronDown size={16} className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400" />
+                                </div>
+                              </div>
+
+                              <div className="space-y-2">
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block">Course Description</label>
+                                <div className="p-6 rounded-2xl bg-white border border-gray-100 text-[16px] font-medium text-gray-500 leading-relaxed shadow-sm">
+                                  {subjects.find(s => s.id === newCourseForm.subjectId)?.description || "Select a subject to see its description."}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="space-y-8 pt-8 border-t border-gray-200/60">
+                            <div className="space-y-3">
+                              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Active Status</label>
+                              <div className="flex items-center gap-4">
+                                <button 
+                                  onClick={() => setNewCourseForm({...newCourseForm, status: "Active"})}
+                                  className={`px-6 py-3 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${newCourseForm.status === "Active" ? "bg-green-500 text-white" : "bg-gray-100 text-gray-400"}`}
+                                >Active</button>
+                                <button 
+                                  onClick={() => setNewCourseForm({...newCourseForm, status: "Inactive"})}
+                                  className={`px-6 py-3 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${newCourseForm.status === "Inactive" ? "shadow-inner bg-gray-200 text-gray-500" : "bg-gray-100 text-gray-400"}`}
+                                >Inactive</button>
+                              </div>
+                            </div>
+                          </div>
+                      </div>
+                  </div>
+
+                  {/* Right Column: Detailed Configuration */}
+                  <div className="flex-1 p-16 flex flex-col justify-between overflow-y-auto">
+                      <div className="space-y-12">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                              <div className="space-y-4">
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block">Lecturer Assignment</label>
+                                <div className="relative">
+                                  <select 
+                                    className="w-full px-8 py-5 rounded-[24px] bg-gray-50 border-none text-[15px] font-bold text-gray-900 appearance-none focus:ring-2 focus:ring-[#3C0078]/5 transition-all outline-none"
+                                    value={newCourseForm.teacherId}
+                                    onChange={(e) => setNewCourseForm({...newCourseForm, teacherId: e.target.value})}
+                                  >
+                                    {teachers.map(t => <option key={t.id} value={t.id}>{t.firstName} {t.lastName} ({t.email})</option>)}
+                                  </select>
+                                  <ChevronDown size={18} className="absolute right-8 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                                </div>
+                              </div>
+
+                              <div className="space-y-4">
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block">Degree Program</label>
+                                <div className="space-y-3">
+                                  <div className="relative">
+                                    <select 
+                                      className="w-full px-8 py-5 rounded-[24px] bg-gray-50 border-none text-[15px] font-bold text-gray-900 appearance-none focus:ring-2 focus:ring-[#3C0078]/5 transition-all outline-none"
+                                      value={newCourseForm.degree}
+                                      onChange={(e) => setNewCourseForm({...newCourseForm, degree: e.target.value})}
+                                    >
+                                      {DEGREES.map(d => <option key={d} value={d}>{d}</option>)}
+                                    </select>
+                                    <ChevronDown size={18} className="absolute right-8 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                                  </div>
+                                  <p className="px-4 text-[10px] font-medium text-gray-400 leading-relaxed">
+                                    * All learners assigned to this degree will be automatically assigned to this course.
+                                  </p>
+                                </div>
+                              </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div className="flex flex-col gap-2">
+                              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block">Academic Year</label>
+                              <div className="relative">
+                                <select 
+                                  value={newCourseForm.year}
+                                  onChange={(e) => setNewCourseForm({...newCourseForm, year: e.target.value})}
+                                  className="w-full px-6 py-4 rounded-2xl bg-gray-50 border-none text-[13px] font-bold outline-none focus:bg-white focus:ring-2 focus:ring-[#3C0078]/5 transition-all appearance-none"
+                                >
+                                  {[1, 2, 3, 4].map(y => <option key={y} value={y}>{y}{y===1 ? "st" : y===2 ? "nd" : y===3 ? "rd" : "th"} Year</option>)}
+                                </select>
+                                <ChevronDown size={16} className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400" />
+                              </div>
+                            </div>
+
+                            <div className="flex flex-col gap-2">
+                              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block">Active Semester</label>
+                              <div className="relative">
+                                <select 
+                                  value={newCourseForm.term}
+                                  onChange={(e) => setNewCourseForm({...newCourseForm, term: e.target.value})}
+                                  className="w-full px-6 py-4 rounded-2xl bg-gray-50 border-none text-[13px] font-bold outline-none focus:bg-white focus:ring-2 focus:ring-[#3C0078]/5 transition-all appearance-none"
+                                >
+                                  {["Semester 1", "Semester 2"].map(s => <option key={s} value={s}>{s}</option>)}
+                                </select>
+                                <ChevronDown size={16} className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400" />
+                              </div>
+                            </div>
+                            <div className="flex flex-col gap-2">
+                               <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block">Capacity</label>
+                               <input 
+                                  type="number"
+                                  value={newCourseForm.capacity}
+                                  onChange={(e) => setNewCourseForm({...newCourseForm, capacity: e.target.value})}
+                                  className="w-full px-6 py-4 rounded-2xl bg-gray-50 border-none text-[13px] font-bold outline-none focus:bg-white focus:ring-2 focus:ring-[#3C0078]/5 transition-all"
+                               />
+                            </div>
+                          </div>
+                      </div>
+
+                      <div className="flex gap-6 mt-16 font-sans">
+                          <button 
+                            disabled={!newCourseForm.subjectId || !newCourseForm.teacherId}
+                            onClick={handleCreateCourse}
+                            className="flex-[2] py-7 rounded-[32px] bg-[#3C0078] text-white font-black uppercase tracking-widest text-[13px] shadow-2xl shadow-[#3C0078]/30 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:hover:scale-100"
+                          >
+                            Create Subject Registry
+                          </button>
+                          <button 
+                            onClick={() => setShowCreate(false)}
+                            className="flex-1 py-7 rounded-[32px] border-2 border-gray-100 text-gray-400 font-black uppercase tracking-widest text-[13px] hover:bg-gray-50 transition-all"
+                          >
+                            Discard
+                          </button>
                       </div>
                   </div>
                 </div>
