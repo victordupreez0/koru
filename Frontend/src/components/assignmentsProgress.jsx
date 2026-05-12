@@ -1,25 +1,32 @@
 import { useState, useMemo, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import confetti from "canvas-confetti";
 import AssignmentItem from "./UI/assignmentItem";
 import ProgressRing from "./UI/progressRing";
 import { useAuth } from "../contexts/AuthContext";
 import { getStudentAssignments } from "../services/assignmentService";
+import { getStudentSubmissions } from "../services/submissionService";
 
 // ──────────────────────────────────────────────
 // Assignments data – easy to swap with backend later
 // Each assignment needs: id, title, dueDate (display string),
 // courseCode, completed (boolean)
 // ──────────────────────────────────────────────
+const PREVIEW_COUNT = 3;
+
 export default function AssignmentsProgress() {
   const { user } = useAuth();
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [expanded, setExpanded] = useState(false);
 
-  const getRankAndState = (dbAssignment) => {
-      // Mock submitted ones
-      if (dbAssignment.title === "Usability Testing Report" || dbAssignment.title === "Literature Review Module") {
-          return { rank: 4, uiState: 'Submitted', isCompleted: true };
+  const getRankAndState = (dbAssignment, studentSubmission) => {
+      // If there is a submission, the state depends on its status
+      if (studentSubmission) {
+          if (studentSubmission.status === "Graded") {
+              return { rank: 4, uiState: 'Graded', isCompleted: true };
+          }
+          return { rank: 3, uiState: 'Submitted', isCompleted: true };
       }
 
       const now = new Date();
@@ -38,13 +45,18 @@ export default function AssignmentsProgress() {
       if (!user?.userId) return;
       try {
         setLoading(true);
-        const data = await getStudentAssignments(user.userId);
+        const [assignmentsData, submissionsData] = await Promise.all([
+            getStudentAssignments(user.userId),
+            getStudentSubmissions(user.userId)
+        ]);
         
         // Map backend schema to our required UI schema and sort by priority
-        const mapped = data.map(dbAssignment => {
-          const { rank, uiState, isCompleted } = getRankAndState(dbAssignment);
+        const mapped = assignmentsData.map(dbAssignment => {
+          const submission = submissionsData.find(s => s.assignmentId === dbAssignment.id);
+          const { rank, uiState, isCompleted } = getRankAndState(dbAssignment, submission);
           return {
             id: dbAssignment.id,
+            courseId: dbAssignment.courseId,
             title: dbAssignment.title,
             dueDate: new Date(dbAssignment.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }),
             courseCode: dbAssignment.course?.subject?.code || "N/A",
@@ -111,11 +123,24 @@ export default function AssignmentsProgress() {
     return Math.round((done / assignments.length) * 100);
   }, [assignments]);
 
+  // Determine visible assignments
+  const visibleAssignments = expanded
+    ? assignments
+    : assignments.slice(0, PREVIEW_COUNT);
+
+  const hasMore = assignments.length > PREVIEW_COUNT;
+
+  // Next 3 due: highest-priority non-submitted assignments
+  const nextThree = useMemo(
+    () => assignments.filter((a) => !a.completed).slice(0, 3),
+    [assignments]
+  );
+
   return (
-    <div className="w-full">
+    <div className="w-full h-full flex flex-col bg-white border-1 border-gray-200 rounded-3xl drop-shadow-xl p-4">
       {/* ── Assignments Header ── */}
       <div className="flex items-center justify-between mt-5 mb-1">
-        <h2 className="text-2xl font-['Gabarito']">Assignments</h2>
+        <h2 className="text-2xl font-['Gabarito'] dark:text-slate-100">Assignments</h2>
       </div>
       <p className="text-sm text-transparent mb-5 font-medium select-none" aria-hidden="true">Spacer</p>
 

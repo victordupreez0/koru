@@ -10,7 +10,7 @@ export default function SideNavItem({ label, href = "/", icon, className = "", v
       <NavLink
         to={href}
         className={({ isActive }) =>
-          `inline-flex h-11 w-11 items-center justify-center rounded-full transition-colors hover:bg-base-200 ${isActive ? "bg-base-300 text-white" : ""} ${className}`.trim()
+          `inline-flex h-11 w-11 items-center justify-center rounded-full transition-colors hover:bg-base-200 dark:hover:bg-slate-700 ${isActive ? "bg-base-300 dark:bg-[#9BE9EA]/20 dark:text-[#9BE9EA] text-white" : "dark:text-slate-300"} ${className}`.trim()
         }
         aria-label={label}
       >

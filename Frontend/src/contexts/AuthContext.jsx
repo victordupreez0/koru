@@ -22,12 +22,18 @@ export function AuthProvider({ children }) {
   const login = useCallback((data) => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     setUser(data);
+    // Apply user's stored dark-mode preference immediately on login
+    document.body.classList.toggle("theme-dark", data.theme === "dark");
+    window.dispatchEvent(new Event("learnonline-settings-changed"));
   }, []);
 
   // Clear the session and redirect to the landing page
   const logout = useCallback(() => {
     localStorage.removeItem(STORAGE_KEY);
     setUser(null);
+    // Remove dark mode on logout — it is user-specific
+    document.body.classList.remove("theme-dark");
+    window.dispatchEvent(new Event("learnonline-settings-changed"));
   }, []);
 
   // Convenience booleans so components don't need to inspect role strings
