@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useAuth } from "./AuthContext";
-import { getStudentCourses, getTeacherCourses } from "../services/courseService";
+import { getStudentCourses } from "../services/courseService";
 
 const CoursesContext = createContext();
 
@@ -26,7 +26,7 @@ export function CoursesProvider({ children }) {
     useEffect(() => {
         let mounted = true;
         async function fetchCourses() {
-            if (!user?.userId || (user.role !== "student" && user.role !== "teacher")) {
+            if (!user?.userId || user.role !== "student") {
                 setLoading(false);
                 setAllCourses([]);
                 return;

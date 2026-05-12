@@ -138,8 +138,8 @@ export function exportProfileToPdf(profile, roleLabel, validLinks, fileName) {
   const headerHeight = Math.max(158, 120 + summaryLines.length * 14 + badgeRows.length * 24);
 
   ensureSpace(headerHeight);
-  drawCard(headerHeight, [240, 253, 250]);
-  doc.setFillColor(15, 118, 110);
+  drawCard(headerHeight, [248, 245, 255]);
+  doc.setFillColor(60, 0, 120);
   doc.roundedRect(margin, cursorY, 12, headerHeight, 10, 10, "F");
 
   const headerX = margin + 26;
@@ -153,7 +153,7 @@ export function exportProfileToPdf(profile, roleLabel, validLinks, fileName) {
   doc.text(name, headerX, cursorY + 34);
 
   doc.setFontSize(11);
-  doc.setTextColor(13, 148, 136);
+  doc.setTextColor(60, 0, 120);
   doc.text(headline, headerX, cursorY + 56);
 
   if (meta) {
@@ -171,7 +171,7 @@ export function exportProfileToPdf(profile, roleLabel, validLinks, fileName) {
   if (badgeRows.length) {
     drawChips(badgeRows, headerX, cursorY + 124 + summaryLines.length * 14, {
       fill: [255, 255, 255],
-      text: [15, 118, 110],
+      text: [60, 0, 120],
     });
   }
 
@@ -191,24 +191,24 @@ export function exportProfileToPdf(profile, roleLabel, validLinks, fileName) {
       doc.setDrawColor(226, 232, 240);
       doc.roundedRect(photoX, photoY, photoSize, photoSize, 18, 18, "S");
     } catch {
-      doc.setFillColor(204, 251, 241);
+      doc.setFillColor(232, 242, 255);
       doc.roundedRect(photoX, photoY, photoSize, photoSize, 18, 18, "F");
       doc.setFont("helvetica", "bold");
       doc.setFontSize(18);
-      doc.setTextColor(15, 118, 110);
+      doc.setTextColor(60, 0, 120);
       doc.text(getProfileInitials(name), photoX + 18, photoY + 44);
     }
   } else {
-    doc.setFillColor(204, 251, 241);
+    doc.setFillColor(232, 242, 255);
     doc.roundedRect(photoX, photoY, photoSize, photoSize, 18, 18, "F");
     doc.setFont("helvetica", "bold");
     doc.setFontSize(18);
-    doc.setTextColor(15, 118, 110);
+    doc.setTextColor(60, 0, 120);
     doc.text(getProfileInitials(name), photoX + 18, photoY + 44);
   }
 
-  doc.setFillColor(204, 251, 241);
-  doc.setDrawColor(94, 234, 212);
+  doc.setFillColor(236, 253, 245);
+  doc.setDrawColor(167, 243, 208);
   doc.roundedRect(photoX - 6, photoY + photoSize + 12, 84, 22, 11, 11, "FD");
   doc.setFont("helvetica", "bold");
   doc.setFontSize(9);
@@ -273,8 +273,8 @@ export function exportProfileToPdf(profile, roleLabel, validLinks, fileName) {
     projects.forEach((p) => {
       const descLines = p.description ? doc.splitTextToSize(p.description, width - 24) : [];
       const blockHeight = 30 + descLines.length * 14 + (p.fileName ? 16 : 0) + 10;
-      doc.setFillColor(245, 255, 252);
-      doc.setDrawColor(204, 251, 241);
+      doc.setFillColor(248, 250, 252);
+      doc.setDrawColor(226, 232, 240);
       doc.roundedRect(x, localY - 12, width, blockHeight, 12, 12, "FD");
       doc.setFont("helvetica", "bold");
       doc.setFontSize(11);

@@ -3,7 +3,7 @@ import { ExternalLink, Image, Plus, Presentation, Trash2, Upload } from "lucide-
 import { ensureHttps, isProjectAssetUrl, isProjectImageUrl, updateList } from "../pages/profile/profileUtils";
 
 const PANEL_CLASS =
-  "rounded-[28px] border border-white/60 bg-white/85 p-6 shadow-[0_16px_40px_rgba(15,23,42,0.08)] backdrop-blur-md transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_20px_44px_rgba(15,23,42,0.12)] dark:border-slate-700 dark:bg-slate-900/90";
+  "rounded-[28px] border border-white/60 bg-white/85 p-6 shadow-[0_16px_40px_rgba(15,23,42,0.08)] backdrop-blur-md transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_20px_44px_rgba(15,23,42,0.12)]";
 
 export default function ProfilePortfolio({
   profile,
@@ -18,11 +18,11 @@ export default function ProfilePortfolio({
     <section className={PANEL_CLASS}>
       <div className="mb-4 flex items-center gap-2">
         <Presentation size={20} />
-        <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Showcase Portfolio</h2>
+        <h2 className="text-2xl font-bold">Showcase Portfolio</h2>
       </div>
 
       {uploadError ? (
-        <div className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
+        <div className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
           {uploadError}
         </div>
       ) : null}
@@ -31,12 +31,10 @@ export default function ProfilePortfolio({
         {profile.projects.map((project, index) => (
           <article
             key={`project-${index}`}
-            className="rounded-2xl border border-slate-200/90 bg-gradient-to-b from-white to-slate-50 p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-slate-700 dark:from-slate-800 dark:to-slate-900"
+            className="rounded-2xl border border-slate-200/90 bg-gradient-to-b from-white to-slate-50 p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
           >
             {/* Preview image */}
-            <div
-              className="mb-3 flex h-32 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800"
-            >
+            <div className="mb-3 flex h-32 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-white">
               {project.mediaUrl && isProjectImageUrl(project.mediaUrl) ? (
                 <img
                   src={project.mediaUrl}
@@ -44,7 +42,7 @@ export default function ProfilePortfolio({
                   className="h-full w-full object-cover"
                 />
               ) : (
-                <span className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+                <span className="flex items-center gap-2 text-sm text-slate-500">
                   <Image size={16} /> Add image or media URL
                 </span>
               )}
@@ -61,7 +59,7 @@ export default function ProfilePortfolio({
                     )
                   }
                   placeholder="Project title"
-                  className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-[#3C0078] focus:outline-none focus:ring-2 focus:ring-[#3C0078]/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                  className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-[#3C0078] focus:outline-none focus:ring-2 focus:ring-[#3C0078]/20"
                 />
                 <textarea
                   value={project.description}
@@ -76,7 +74,7 @@ export default function ProfilePortfolio({
                   }
                   placeholder="Brief project description"
                   rows={3}
-                  className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-[#3C0078] focus:outline-none focus:ring-2 focus:ring-[#3C0078]/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                  className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-[#3C0078] focus:outline-none focus:ring-2 focus:ring-[#3C0078]/20"
                 />
                 <input
                   value={project.mediaUrl}
@@ -90,16 +88,16 @@ export default function ProfilePortfolio({
                     )
                   }
                   placeholder="Media URL (image/video preview)"
-                  className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-[#3C0078] focus:outline-none focus:ring-2 focus:ring-[#3C0078]/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                  className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-[#3C0078] focus:outline-none focus:ring-2 focus:ring-[#3C0078]/20"
                 />
                 <div
                   onDragOver={(e) => e.preventDefault()}
                   onDrop={(e) => onProjectImageDrop(index, e)}
-                  className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-3 py-3 text-center text-xs text-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400"
+                  className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-3 py-3 text-center text-xs text-slate-500"
                 >
                   Drag and drop an image here, or use the button below.
                 </div>
-                <label className="inline-flex w-fit cursor-pointer items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700">
+                <label className="inline-flex w-fit cursor-pointer items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50">
                   <Upload size={14} /> Upload image
                   <input
                     type="file"
@@ -113,7 +111,7 @@ export default function ProfilePortfolio({
                   />
                 </label>
                 {project.mediaName ? (
-                  <p className="text-xs text-slate-500 dark:text-slate-400">Image: {project.mediaName}</p>
+                  <p className="text-xs text-slate-500">Image: {project.mediaName}</p>
                 ) : null}
                 <input
                   value={project.projectUrl}
@@ -127,9 +125,9 @@ export default function ProfilePortfolio({
                     )
                   }
                   placeholder="Project link (PDF / Video / Repo)"
-                  className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-[#3C0078] focus:outline-none focus:ring-2 focus:ring-[#3C0078]/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                  className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-[#3C0078] focus:outline-none focus:ring-2 focus:ring-[#3C0078]/20"
                 />
-                <label className="inline-flex w-fit cursor-pointer items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700">
+                <label className="inline-flex w-fit cursor-pointer items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50">
                   <Upload size={14} /> Upload PDF
                   <input
                     type="file"
@@ -143,7 +141,7 @@ export default function ProfilePortfolio({
                   />
                 </label>
                 {project.projectFileName ? (
-                  <p className="text-xs text-slate-500 dark:text-slate-400">Document: {project.projectFileName}</p>
+                  <p className="text-xs text-slate-500">Document: {project.projectFileName}</p>
                 ) : null}
                 <button
                   type="button"
@@ -160,16 +158,16 @@ export default function ProfilePortfolio({
               </div>
             ) : (
               <>
-                <h3 className="text-base font-bold tracking-tight text-slate-900 dark:text-slate-100">
+                <h3 className="text-base font-bold tracking-tight">
                   {project.title || "Untitled project"}
                 </h3>
-                <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{project.description}</p>
+                <p className="mt-2 text-sm text-slate-600">{project.description}</p>
                 {isProjectAssetUrl(project.projectUrl) ? (
                   <a
                     href={project.projectUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-[#3C0078] hover:underline dark:text-[#9BE9EA]"
+                    className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-[#3C0078] hover:underline"
                   >
                     Open {project.projectFileName || "project"} <ExternalLink size={14} />
                   </a>
@@ -196,7 +194,7 @@ export default function ProfilePortfolio({
               },
             ])
           }
-          className="mt-4 inline-flex items-center gap-2 rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:-translate-y-0.5 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
+          className="mt-4 inline-flex items-center gap-2 rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:-translate-y-0.5 hover:bg-slate-50"
         >
           <Plus size={16} /> Add project
         </button>

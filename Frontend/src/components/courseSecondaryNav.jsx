@@ -78,9 +78,7 @@ export default function CourseSecondaryNav({ activeCourseId }) {
                                                         e.stopPropagation();
                                                         removeItem(item.label);
                                                     }}
-                                                    className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 
-                                                    dark:text-white-500
-                                                    hover:text-red-500 transition-all"
+                                                    className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-500 transition-all"
                                                 >
                                                     <Trash2 size={12} />
                                                 </button>
@@ -88,7 +86,7 @@ export default function CourseSecondaryNav({ activeCourseId }) {
                                             {isActive && (
                                                 <motion.div
                                                     layoutId="activeBall"
-                                                    className="w-1.5 h-1.5 rounded-full bg-[#3C0078] dark:bg-[#9BE9EA]"
+                                                    className="w-1.5 h-1.5 rounded-full bg-[#3C0078]"
                                                     transition={{
                                                         type: "spring",
                                                         stiffness: 300,
@@ -113,7 +111,7 @@ export default function CourseSecondaryNav({ activeCourseId }) {
                                 autoFocus
                                 type="text"
                                 placeholder="Link name..."
-                                className="w-full bg-gray-50 dark:bg-slate-700 border border-black/10 dark:border-slate-600 rounded-lg px-3 py-2 text-xs outline-none focus:border-black dark:focus:border-slate-400 transition-colors dark:text-slate-200 dark:placeholder-slate-500"
+                                className="w-full bg-gray-50 border border-black/10 rounded-lg px-3 py-2 text-xs outline-none focus:border-black transition-colors"
                                 value={newItemLabel}
                                 onChange={(e) => setNewItemLabel(e.target.value)}
                                 onKeyDown={(e) => {
@@ -130,7 +128,7 @@ export default function CourseSecondaryNav({ activeCourseId }) {
                                 </button>
                                 <button
                                     onClick={() => setIsAdding(false)}
-                                    className="p-1.5 bg-gray-100 dark:bg-slate-700 text-gray-500 dark:text-slate-400 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-600"
+                                    className="p-1.5 bg-gray-100 text-gray-500 rounded-lg hover:bg-gray-200"
                                 >
                                     <X size={14} />
                                 </button>
@@ -139,7 +137,7 @@ export default function CourseSecondaryNav({ activeCourseId }) {
                     ) : (
                         <button
                             onClick={() => setIsAdding(true)}
-                            className="w-full flex items-center justify-center gap-2 py-3 border-2 border-dashed border-black/10 dark:border-slate-600 rounded-xl text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-slate-500 hover:border-black/30 dark:hover:border-slate-400 hover:text-black dark:hover:text-slate-200 transition-all"
+                            className="w-full flex items-center justify-center gap-2 py-3 border-2 border-dashed border-black/10 rounded-xl text-[10px] font-bold uppercase tracking-widest text-gray-400 hover:border-black/30 hover:text-black transition-all"
                         >
                             <Plus size={14} /> Add Link
                         </button>

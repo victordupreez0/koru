@@ -39,36 +39,6 @@ namespace LearnOnline.Controllers
             return grade;
         }
 
-        // GET /api/Grade/student/{studentId} – return all grades for a specific student
-        [HttpGet("student/{studentId}")]
-        public async Task<ActionResult<IEnumerable<Grade>>> GetByStudentId(string studentId)
-        {
-            var grades = await _context.Grades
-                .Include(g => g.Submission)
-                    .ThenInclude(s => s.Assignment)
-                        .ThenInclude(a => a.Course)
-                            .ThenInclude(c => c.Subject)
-                .Where(g => g.Submission != null && g.Submission.StudentId == studentId)
-                .ToListAsync();
-
-            return grades;
-        }
-
-        // GET /api/Grade/course/{courseId} – return all grades for a specific course
-        [HttpGet("course/{courseId}")]
-        public async Task<ActionResult<IEnumerable<Grade>>> GetByCourseId(string courseId)
-        {
-            var grades = await _context.Grades
-                .Include(g => g.Submission)
-                    .ThenInclude(s => s.Assignment)
-                .Include(g => g.Submission)
-                    .ThenInclude(s => s.Student)
-                .Where(g => g.Submission != null && g.Submission.Assignment != null && g.Submission.Assignment.CourseId == courseId)
-                .ToListAsync();
-
-            return grades;
-        }
-
         // POST /api/Grade – record a new grade for a submission
         [HttpPost]
         public async Task<ActionResult<Grade>> Create(Grade grade)
