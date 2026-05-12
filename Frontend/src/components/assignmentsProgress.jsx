@@ -1,42 +1,35 @@
 import { useState, useMemo, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import confetti from "canvas-confetti";
 import AssignmentItem from "./UI/assignmentItem";
 import ProgressRing from "./UI/progressRing";
 import { useAuth } from "../contexts/AuthContext";
 import { getStudentAssignments } from "../services/assignmentService";
-import { getStudentSubmissions } from "../services/submissionService";
 
 // ──────────────────────────────────────────────
 // Assignments data – easy to swap with backend later
 // Each assignment needs: id, title, dueDate (display string),
 // courseCode, completed (boolean)
 // ──────────────────────────────────────────────
-const PREVIEW_COUNT = 3;
-
 export default function AssignmentsProgress() {
   const { user } = useAuth();
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [expanded, setExpanded] = useState(false);
 
-  const getRankAndState = (dbAssignment, studentSubmission) => {
-      // If there is a submission, the state depends on its status
-      if (studentSubmission) {
-          if (studentSubmission.status === "Graded") {
-              return { rank: 4, uiState: 'Graded', isCompleted: true };
-          }
-          return { rank: 3, uiState: 'Submitted', isCompleted: true };
-      }
+  const getRankAndState = (dbAssignment) => {
+    // Mock submitted ones
+    if (dbAssignment.title === "Usability Testing Report" || dbAssignment.title === "Literature Review Module") {
+      return { rank: 4, uiState: 'Submitted', isCompleted: true };
+    }
 
-      const now = new Date();
-      const due = new Date(dbAssignment.dueDate);
-      const diffDays = (due - now) / (1000 * 60 * 60 * 24);
-      
-      if (diffDays < -7) return { rank: 3, uiState: 'Closed', isCompleted: false };
-      if (diffDays < 0) return { rank: 0, uiState: 'Late', isCompleted: false };
-      if (diffDays <= 5) return { rank: 1, uiState: 'Due Soon', isCompleted: false };
-      return { rank: 2, uiState: 'Due', isCompleted: false };
+    const now = new Date();
+    const due = new Date(dbAssignment.dueDate);
+    const diffDays = (due - now) / (1000 * 60 * 60 * 24);
+
+    if (diffDays < -7) return { rank: 3, uiState: 'Closed', isCompleted: false };
+    if (diffDays < 0) return { rank: 0, uiState: 'Late', isCompleted: false };
+    if (diffDays <= 5) return { rank: 1, uiState: 'Due Soon', isCompleted: false };
+    return { rank: 2, uiState: 'Due', isCompleted: false };
   };
 
   useEffect(() => {
@@ -45,15 +38,11 @@ export default function AssignmentsProgress() {
       if (!user?.userId) return;
       try {
         setLoading(true);
-        const [assignmentsData, submissionsData] = await Promise.all([
-            getStudentAssignments(user.userId),
-            getStudentSubmissions(user.userId)
-        ]);
-        
+        const data = await getStudentAssignments(user.userId);
+
         // Map backend schema to our required UI schema and sort by priority
-        const mapped = assignmentsData.map(dbAssignment => {
-          const submission = submissionsData.find(s => s.assignmentId === dbAssignment.id);
-          const { rank, uiState, isCompleted } = getRankAndState(dbAssignment, submission);
+        const mapped = data.map(dbAssignment => {
+          const { rank, uiState, isCompleted } = getRankAndState(dbAssignment);
           return {
             id: dbAssignment.id,
             courseId: dbAssignment.courseId,
@@ -123,13 +112,6 @@ export default function AssignmentsProgress() {
     return Math.round((done / assignments.length) * 100);
   }, [assignments]);
 
-  // Determine visible assignments
-  const visibleAssignments = expanded
-    ? assignments
-    : assignments.slice(0, PREVIEW_COUNT);
-
-  const hasMore = assignments.length > PREVIEW_COUNT;
-
   // Next 3 due: highest-priority non-submitted assignments
   const nextThree = useMemo(
     () => assignments.filter((a) => !a.completed).slice(0, 3),
@@ -137,40 +119,45 @@ export default function AssignmentsProgress() {
   );
 
   return (
-    <div className="w-full h-full flex flex-col bg-white border-1 border-gray-200 rounded-3xl drop-shadow-xl p-4">
+    <div className="w-full h-full flex flex-col bg-white/80 border-1 border-gray-200 rounded-3xl drop-shadow-xl p-4">
       {/* ── Assignments Header ── */}
       <div className="flex items-center justify-between mt-5 mb-1">
-        <h2 className="text-2xl font-['Gabarito'] dark:text-slate-100">Assignments</h2>
+        <h2 className="text-2xl font-['Gabarito']">Assignments</h2>
       </div>
       <p className="text-sm text-transparent mb-5 font-medium select-none" aria-hidden="true">Spacer</p>
 
-      {/* ── Assignment Cards ── */}
-      <div className="flex flex-col gap-3 min-h-[160px] max-h-[520px] overflow-y-auto scrollbar-black pr-2">
-        {loading ? (
+      {/* ── Scrollable Content ── */}
+      <div className="flex-1 overflow-y-auto pr-2 flex flex-col">
+        {/* ── Assignment Cards (next 3 due) ── */}
+        <div className="flex flex-col gap-3">
+          {loading ? (
             <div className="text-gray-400 text-sm font-medium w-full text-center mt-8">Loading assignments...</div>
-        ) : assignments.length === 0 ? (
+          ) : nextThree.length === 0 ? (
             <div className="text-gray-400 text-sm font-medium w-full text-center mt-8">You have no upcoming assignments.</div>
-        ) : (
-            assignments.map((assignment) => (
-            <AssignmentItem
+          ) : (
+            nextThree.map((assignment) => (
+              <AssignmentItem
                 key={assignment.id}
+                assignmentId={assignment.id}
+                courseId={assignment.courseId}
                 title={assignment.title}
                 dueDate={assignment.dueDate}
                 courseCode={assignment.courseCode}
                 completed={assignment.completed}
                 uiState={assignment.uiState}
                 onToggle={() => toggleAssignment(assignment.id)}
-            />
+              />
             ))
-        )}
-      </div>
+          )}
+        </div>
 
-      {/* ── Progress Header ── */}
-      <h2 className="text-2xl font-['Gabarito'] mt-8 mb-2">Progress</h2>
+        {/* ── Progress Header ── */}
+        <h2 className="text-2xl font-['Gabarito'] mt-8 mb-2">Progress</h2>
 
-      {/* ── Progress Ring ── */}
-      <div className="w-full bg-gray-100 rounded-2xl border border-gray-200 p-4">
-        <ProgressRing percentage={progress} />
+        {/* ── Progress Ring ── */}
+        <div className="w-full bg-gray-100 rounded-2xl border border-gray-200 p-4">
+          <ProgressRing percentage={progress} />
+        </div>
       </div>
     </div>
   );

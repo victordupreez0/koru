@@ -12,8 +12,8 @@ export default function NextClassItem({ subject = "UX300", time = "09:00 - 13:00
 
       {/* Subject code and time/room details */}
       <div className="ml-2 flex flex-col justify-center space-y-1 flex-1">
-        <h3 className="text-sm font-bold dark:text-slate-100">{subject}</h3>
-        <h3 className="text-xs text-gray-500 dark:text-slate-400">{time} | {room}</h3>
+        <h3 className="text-sm font-bold">{subject}</h3>
+        <h3 className="text-xs text-gray-500">{time} | {room}</h3>
       </div>
     </div>
   );

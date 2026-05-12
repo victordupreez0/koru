@@ -44,19 +44,19 @@ export default function AssistantInput({ onSend, hideChips = false }) {
         <div className="flex flex-wrap gap-3 mb-6 justify-center">
           <button 
             onClick={() => onSend("Analyze recent grades")}
-            className="px-5 py-2.5 rounded-full bg-white/60 dark:bg-slate-700/60 hover:bg-white/90 dark:hover:bg-slate-700/90 border border-white/50 dark:border-slate-600/50 shadow-sm backdrop-blur-md text-sm font-medium text-slate-700 dark:text-slate-300 transition-all"
+            className="px-5 py-2.5 rounded-full bg-white/60 hover:bg-white/90 border border-white/50 shadow-sm backdrop-blur-md text-sm font-medium text-slate-700 transition-all"
           >
             📊 Analyze recent grades
           </button>
           <button 
             onClick={() => onSend("Plan next week")}
-            className="px-5 py-2.5 rounded-full bg-white/60 dark:bg-slate-700/60 hover:bg-white/90 dark:hover:bg-slate-700/90 border border-white/50 dark:border-slate-600/50 shadow-sm backdrop-blur-md text-sm font-medium text-slate-700 dark:text-slate-300 transition-all"
+            className="px-5 py-2.5 rounded-full bg-white/60 hover:bg-white/90 border border-white/50 shadow-sm backdrop-blur-md text-sm font-medium text-slate-700 transition-all"
           >
             📅 Plan next week
           </button>
           <button 
             onClick={() => onSend("Draft announcements")}
-            className="px-5 py-2.5 rounded-full bg-white/60 dark:bg-slate-700/60 hover:bg-white/90 dark:hover:bg-slate-700/90 border border-white/50 dark:border-slate-600/50 shadow-sm backdrop-blur-md text-sm font-medium text-slate-700 dark:text-slate-300 transition-all"
+            className="px-5 py-2.5 rounded-full bg-white/60 hover:bg-white/90 border border-white/50 shadow-sm backdrop-blur-md text-sm font-medium text-slate-700 transition-all"
           >
             ✍️ Draft announcements
           </button>
@@ -64,7 +64,7 @@ export default function AssistantInput({ onSend, hideChips = false }) {
       )}
 
       {/* Main Input Container */}
-      <div className="relative w-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-white dark:border-slate-700 shadow-2xl rounded-3xl p-3 flex flex-col transition-all duration-300 focus-within:shadow-[#3C0078]/10 focus-within:ring-2 focus-within:ring-[#3C0078]/20 dark:focus-within:ring-[#9BE9EA]/20">
+      <div className="relative w-full bg-white/80 backdrop-blur-xl border border-white shadow-2xl rounded-3xl p-3 flex flex-col transition-all duration-300 focus-within:shadow-[#3C0078]/10 focus-within:ring-2 focus-within:ring-[#3C0078]/20">
         
         {/* Top Input Area */}
         <div className="flex items-start gap-3 px-3 pt-2 pb-4">
@@ -73,7 +73,7 @@ export default function AssistantInput({ onSend, hideChips = false }) {
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             placeholder="Ask your assistant anything..."
-            className="w-full bg-transparent resize-none outline-none text-slate-800 dark:text-slate-100 placeholder:text-gray-400 dark:placeholder:text-slate-500 min-h-[44px] max-h-[200px] text-lg font-medium"
+            className="w-full bg-transparent resize-none outline-none text-slate-800 placeholder:text-gray-400 min-h-[44px] max-h-[200px] text-lg font-medium"
             rows={1}
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
@@ -92,10 +92,10 @@ export default function AssistantInput({ onSend, hideChips = false }) {
         </div>
 
         {/* Bottom Actions Area */}
-        <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-200/50 dark:border-slate-700/50 relative">
+        <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-200/50 relative">
           
           <div className="flex items-center gap-2">
-            <button className="w-10 h-10 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700 flex items-center justify-center transition-colors text-gray-500 dark:text-slate-400">
+            <button className="w-10 h-10 rounded-full hover:bg-gray-100 flex items-center justify-center transition-colors text-gray-500">
               <Plus className="w-5 h-5" />
             </button>
             
@@ -104,7 +104,7 @@ export default function AssistantInput({ onSend, hideChips = false }) {
               <button 
                 onClick={() => setIsToolsOpen(!isToolsOpen)}
                 className={`flex items-center gap-2 px-4 py-2 rounded-full transition-colors text-sm font-semibold
-                  ${isToolsOpen ? 'bg-gray-200 dark:bg-slate-600 text-gray-800 dark:text-slate-100' : 'hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-600 dark:text-slate-400}'}`}
+                  ${isToolsOpen ? 'bg-gray-200 text-gray-800' : 'hover:bg-gray-100 text-gray-600'}`}
               >
                 <Sparkles className="w-4 h-4" />
                 Tools
@@ -118,19 +118,19 @@ export default function AssistantInput({ onSend, hideChips = false }) {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 10, scale: 0.95 }}
                     transition={{ duration: 0.2, ease: "easeOut" }}
-                    className="absolute bottom-full left-0 mb-3 w-64 bg-white dark:bg-slate-800 rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.12)] border border-gray-100 dark:border-slate-700 overflow-hidden z-50 flex flex-col py-2"
+                    className="absolute bottom-full left-0 mb-3 w-64 bg-white rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.12)] border border-gray-100 overflow-hidden z-50 flex flex-col py-2"
                   >
-                    <div className="px-4 py-2 text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-wider">
+                    <div className="px-4 py-2 text-xs font-bold text-gray-400 uppercase tracking-wider">
                       Tools
                     </div>
                     {tools.map((tool, idx) => {
                       const Icon = tool.icon;
                       return (
-                        <button key={idx} className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-slate-700 text-left transition-colors">
-                          <Icon className="w-5 h-5 text-gray-500 dark:text-slate-400 shrink-0" />
+                        <button key={idx} className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 text-left transition-colors">
+                          <Icon className="w-5 h-5 text-gray-500 shrink-0" />
                           <div className="flex flex-col">
-                            <span className="text-sm font-semibold text-gray-800 dark:text-slate-200">{tool.label}</span>
-                            <span className="text-xs text-gray-400 dark:text-slate-500">{tool.desc}</span>
+                            <span className="text-sm font-semibold text-gray-800">{tool.label}</span>
+                            <span className="text-xs text-gray-400">{tool.desc}</span>
                           </div>
                         </button>
                       );
@@ -142,10 +142,10 @@ export default function AssistantInput({ onSend, hideChips = false }) {
           </div>
 
           <div className="flex items-center gap-2 pr-2">
-            <button className="flex items-center gap-1 px-4 py-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-full transition-colors text-sm font-semibold text-gray-600 dark:text-slate-400">
-              Pro <ChevronDown className="w-4 h-4 text-gray-400 dark:text-slate-500" />
+            <button className="flex items-center gap-1 px-4 py-2 hover:bg-gray-100 rounded-full transition-colors text-sm font-semibold text-gray-600">
+              Pro <ChevronDown className="w-4 h-4 text-gray-400" />
             </button>
-            <button className="w-10 h-10 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700 flex items-center justify-center transition-colors text-gray-500 dark:text-slate-400">
+            <button className="w-10 h-10 rounded-full hover:bg-gray-100 flex items-center justify-center transition-colors text-gray-500">
               <Mic className="w-5 h-5" />
             </button>
             {prompt.trim().length > 0 && (

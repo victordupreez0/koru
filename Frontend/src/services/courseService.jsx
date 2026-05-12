@@ -19,13 +19,3 @@ export async function getStudentCourses(studentId) {
 
   return handleResponse(res);
 }
-
-// GET /api/Course/teacher/:teacherId – fetch all courses assigned to a teacher
-export async function getTeacherCourses(teacherId) {
-  const res = await fetch(`${API_BASE}/Course/teacher/${encodeURIComponent(teacherId)}`, {
-    method: "GET",
-    headers: { "Content-Type": "application/json" }
-  });
-
-  return handleResponse(res);
-}

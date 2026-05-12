@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { GraduationCap, ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { motion } from "framer-motion";
-import Background from "../assets/backgrounds/Background.png";
+import Background from "../assets/backgrounds/background-3.jpeg";
 import Logo from "../assets/Logo.png";
 import AuthInput from "../components/UI/authInput";
 import GoogleAuthButton from "../components/UI/googleAuthButton";
@@ -41,7 +41,7 @@ export default function Login({ role = "student" }) {
   const navigate = useNavigate();
   const { login } = useAuth();
   const config = ROLE_CONFIG[role] || ROLE_CONFIG.student;
-  
+
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -111,11 +111,11 @@ export default function Login({ role = "student" }) {
   return (
     <div
       data-tts-root="true"
-      className="fixed inset-0 flex min-h-screen items-center justify-center bg-cover bg-center px-4 py-8"
+      className="fixed inset-0 flex min-h-screen items-center justify-center bg-cover bg-center px-4 py-8 scale-120"
       style={{ backgroundImage: `url(${Background})` }}
     >
       {/* Overlay for readability */}
-      <div className="fixed inset-0 bg-black/20 backdrop-blur-[2px]" />
+      <div className="fixed inset-0 bg-black/20" />
 
       <motion.div
         initial={{ opacity: 0, y: 24, scale: 0.97 }}

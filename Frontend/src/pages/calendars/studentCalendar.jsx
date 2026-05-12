@@ -1,115 +1,126 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import Menu from "../../components/menu";
 import SideMenu from "../../components/sideMenu";
 
-import CalendarDayBlock        from "./UI/CalendarDayBlock";
-import CalendarViewSelector    from "./UI/CalendarViewSelector";
-import CalendarTimelineView    from "./UI/CalendarTimelineView";
-import CalendarDayView         from "./UI/CalendarDayView";
-
-import { getAllEvents } from "../../services/eventService";
-import { getStudentAssignments } from "../../services/assignmentService";
-import { getStudentSubmissions } from "../../services/submissionService";
-import { useAuth } from "../../contexts/AuthContext";
-
-// Helper: map backend event to calendar format
-function mapBackendEventToCalendar(evt) {
-  const startDate = new Date(evt.startTime);
-  const endDate = new Date(evt.endTime);
-  
-  let location = "TBA";
-  if (evt.description && evt.description.includes("|")) {
-      location = evt.description.split("|")[1] || "TBA";
-  }
-
-  return {
-    id: evt.id,
-    date: new Date(startDate.getTime() - (startDate.getTimezoneOffset() * 60000)).toISOString().slice(0, 10),
-    title: evt.title,
-    startTime: `${String(startDate.getHours()).padStart(2, '0')}:${String(startDate.getMinutes()).padStart(2, '0')}`,
-    endTime: `${String(endDate.getHours()).padStart(2, '0')}:${String(endDate.getMinutes()).padStart(2, '0')}`,
-    type: evt.eventType || "class",
-    lecturer: evt.createdBy || "Unknown",
-    location: location
-  };
-}
-
-// Helper: map assignment to calendar event format (for timeline/day view)
-function mapAssignmentToCalendarEvent(assignment) {
-  const due = new Date(assignment.dueDate);
-  return {
-    id: `assign-${assignment.id}`,
-    date: new Date(due.getTime() - (due.getTimezoneOffset() * 60000)).toISOString().slice(0, 10),
-    title: assignment.title,
-    startTime: `${String(due.getHours()).padStart(2, '0')}:${String(due.getMinutes()).padStart(2, '0')}`,
-    endTime: `${String(due.getHours()).padStart(2, '0')}:${String(due.getMinutes()).padStart(2, '0')}`,
-    type: "assignment",
-    lecturer: "Submission",
-    location: "Online",
-    isAssignment: true,
-    courseCode: assignment.course?.subject?.code || "N/A",
-    maxPoints: assignment.maxPoints,
-    description: assignment.description
-  };
-}
-
-// Helper: map assignment to a task for the day view to-do panel
-function mapAssignmentToTask(assignment, submission) {
-  const due = new Date(assignment.dueDate);
-  const isSubmitted = !!submission;
-  const isGraded = submission?.status === "Graded";
-  return {
-    id: assignment.id,
-    title: assignment.title,
-    due: due.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-    dueTime: `${String(due.getHours()).padStart(2, '0')}:${String(due.getMinutes()).padStart(2, '0')}`,
-    course: assignment.course?.subject?.code || "N/A",
-    dueDate: assignment.dueDate,
-    isSubmitted,
-    isGraded,
-    maxPoints: assignment.maxPoints,
-  };
-}
+import CalendarDayBlock from "./UI/CalendarDayBlock";
+import CalendarViewSelector from "./UI/CalendarViewSelector";
+import CalendarTimelineView from "./UI/CalendarTimelineView";
+import CalendarDayView from "./UI/CalendarDayView";
 
 // ─────────────────────────────────────────────────────────────
-//  DYNAMIC GRID GENERATOR — 5 rows × 7 cols
+//  WEEKLY EVENT TEMPLATE
+//  dayOfWeek: 0 = Sunday, 1 = Monday, … 6 = Saturday
+//  These repeat every week in every month.
+// ─────────────────────────────────────────────────────────────
+const WEEKLY_TEMPLATE = [
+  // Monday
+  { dayOfWeek: 1, title: "UX 300", startTime: "8:30", endTime: "9:30", type: "class", lecturer: "Laudette Sass", location: "On Campus - C4" },
+  { dayOfWeek: 1, title: "VC 300", startTime: "9:00", endTime: "10:00", type: "class", lecturer: "Matt Williams", location: "Online" },
+  { dayOfWeek: 1, title: "DV 300", startTime: "14:00", endTime: "16:00", type: "class", lecturer: "Tsungai Katsuro", location: "On Campus - B2" },
+  // Tuesday
+  { dayOfWeek: 2, title: "Group Meeting", startTime: "9:00", endTime: "10:00", type: "meeting", lecturer: "Study Group", location: "Online" },
+  // Wednesday
+  { dayOfWeek: 3, title: "UX 300", startTime: "9:00", endTime: "13:00", type: "class", lecturer: "Laudette Sass", location: "On Campus - C4" },
+  // Thursday
+  { dayOfWeek: 4, title: "DV 300", startTime: "13:00", endTime: "17:00", type: "class", lecturer: "Tsungai Katsuro", location: "On Campus - B2" },
+];
+
+// ─────────────────────────────────────────────────────────────
+//  TASKS DATA  (To-Do panel in Day view)
+// ─────────────────────────────────────────────────────────────
+const TASKS = [
+  { id: 1, title: "High Fidelity Wireframes", due: "Mar 2", dueTime: "20:00", course: "UX300" },
+  { id: 2, title: "Essay Draft", due: "Mar 10", dueTime: "20:00", course: "VC300" },
+  { id: 3, title: "Progress Mark", due: "Mar 21", dueTime: "10:00", course: "DV300" },
+];
+
+// ─────────────────────────────────────────────────────────────
+//  HELPERS — dynamic grid & event generation
 // ─────────────────────────────────────────────────────────────
 const WEEK_DAYS = ["M", "T", "W", "T", "F", "S", "S"];
+const MONTH_NAMES = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
 
-function generateGridWeeks() {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth();
-  
-  // Find the first Monday on or before the 1st of the month
-  const firstDayOfMonth = new Date(year, month, 1);
-  let startDay = new Date(firstDayOfMonth);
-  const dayOfWeek = startDay.getDay(); // 0 = Sun, 1 = Mon, ..., 6 = Sat
-  const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-  startDay.setDate(startDay.getDate() + diff);
+/**
+ * Build the calendar grid for a given year/month.
+ * Returns an array of week arrays (each week = 7 day objects).
+ * Weeks start on Monday. Days from adjacent months are marked isOutside.
+ */
+function buildGridWeeks(year, month) {
+  // First day of the month
+  const firstDay = new Date(year, month, 1);
+  // Day of week for the 1st (shift so Monday = 0)
+  let startDow = firstDay.getDay() - 1;
+  if (startDow < 0) startDow = 6; // Sunday becomes 6
 
-  const grid = [];
-  for (let w = 0; w < 5; w++) { // 5 weeks
-    const week = [];
-    for (let d = 0; d < 7; d++) {
-      const current = new Date(startDay);
-      // To properly handle local timezone offset
-      const isoDate = new Date(current.getTime() - (current.getTimezoneOffset() * 60000)).toISOString().slice(0, 10);
-      week.push({
-        date: isoDate,
-        day: current.getDate(),
-        isOutside: current.getMonth() !== month
-      });
-      startDay.setDate(startDay.getDate() + 1);
-    }
-    grid.push(week);
+  // Last day of the month
+  const lastDay = new Date(year, month + 1, 0).getDate();
+
+  // Build flat list starting from Monday of the first week
+  const cells = [];
+  const startDate = new Date(year, month, 1 - startDow);
+
+  // We need enough cells to cover the month (max 6 weeks = 42 cells)
+  for (let i = 0; i < 42; i++) {
+    const d = new Date(startDate);
+    d.setDate(startDate.getDate() + i);
+    cells.push({
+      date: d.toISOString().slice(0, 10),
+      day: d.getDate(),
+      isOutside: d.getMonth() !== month,
+    });
   }
-  return grid;
+
+  // Group into weeks of 7
+  const weeks = [];
+  for (let i = 0; i < cells.length; i += 7) {
+    weeks.push(cells.slice(i, i + 7));
+  }
+
+  // Trim trailing weeks that are entirely outside the month
+  while (weeks.length > 0 && weeks[weeks.length - 1].every(c => c.isOutside)) {
+    weeks.pop();
+  }
+
+  return weeks;
 }
 
-const GRID_WEEKS = generateGridWeeks();
-const CURRENT_MONTH_NAME = new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
+/**
+ * Generate events for a given month from the weekly template.
+ * Each template entry is stamped onto every matching weekday in the month.
+ */
+function generateMonthEvents(year, month) {
+  const lastDay = new Date(year, month + 1, 0).getDate();
+  const events = [];
+  let idCounter = 1;
+
+  for (let day = 1; day <= lastDay; day++) {
+    const d = new Date(year, month, day);
+    const dow = d.getDay(); // 0-6
+    const dateStr = d.toISOString().slice(0, 10);
+
+    WEEKLY_TEMPLATE.forEach((tmpl) => {
+      if (tmpl.dayOfWeek === dow) {
+        events.push({
+          id: idCounter++,
+          date: dateStr,
+          title: tmpl.title,
+          startTime: tmpl.startTime,
+          endTime: tmpl.endTime,
+          type: tmpl.type,
+          lecturer: tmpl.lecturer,
+          location: tmpl.location,
+        });
+      }
+    });
+  }
+
+  return events;
+}
 
 // Build a date → events[] lookup map
 function buildEventMap(events) {
@@ -122,59 +133,53 @@ function buildEventMap(events) {
 
 // Framer Motion variants
 const pageVariants = {
-  hidden:  { opacity: 0, y: 12 },
+  hidden: { opacity: 0, y: 12 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.45, ease: "easeOut" } },
 };
 
 const viewVariants = {
-  hidden:  { opacity: 0, y: 8  },
+  hidden: { opacity: 0, y: 8 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.25, ease: "easeOut" } },
-  exit:    { opacity: 0, y: -6, transition: { duration: 0.15 } },
+  exit: { opacity: 0, y: -6, transition: { duration: 0.15 } },
 };
 
 // ─────────────────────────────────────────────────────────────
 export default function StudentCalendar() {
-  const { user } = useAuth();
   const [activeView, setActiveView] = useState("month");
-  const [events, setEvents] = useState([]);
-  const [allTasks, setAllTasks] = useState([]);
+  // Track current month as { year, month } (month is 0-indexed)
+  const [currentMonth, setCurrentMonth] = useState(() => {
+    const now = new Date();
+    return { year: now.getFullYear(), month: now.getMonth() };
+  });
 
-  useEffect(() => {
-    let mounted = true;
-    async function fetchData() {
-      try {
-        const [backendEvents, assignmentsData, submissionsData] = await Promise.all([
-          getAllEvents(),
-          user?.userId ? getStudentAssignments(user.userId) : Promise.resolve([]),
-          user?.userId ? getStudentSubmissions(user.userId) : Promise.resolve([])
-        ]);
+  const goToPrevMonth = () => {
+    setCurrentMonth((prev) => {
+      if (prev.month === 0) return { year: prev.year - 1, month: 11 };
+      return { year: prev.year, month: prev.month - 1 };
+    });
+  };
 
-        // Map class events
-        const classEvents = backendEvents.map(mapBackendEventToCalendar);
+  const goToNextMonth = () => {
+    setCurrentMonth((prev) => {
+      if (prev.month === 11) return { year: prev.year + 1, month: 0 };
+      return { year: prev.year, month: prev.month + 1 };
+    });
+  };
 
-        // Map assignments as calendar events (so they show on timeline/day view)
-        const assignmentEvents = assignmentsData.map(mapAssignmentToCalendarEvent);
+  // Compute grid & events for the active month
+  const gridWeeks = useMemo(
+    () => buildGridWeeks(currentMonth.year, currentMonth.month),
+    [currentMonth.year, currentMonth.month]
+  );
 
-        // Merge both into a single events array
-        const combined = [...classEvents, ...assignmentEvents];
-        if (mounted) setEvents(combined);
+  const events = useMemo(
+    () => generateMonthEvents(currentMonth.year, currentMonth.month),
+    [currentMonth.year, currentMonth.month]
+  );
 
-        // Build tasks array for the Day View to-do panel (all assignments with submission state)
-        const tasks = assignmentsData.map(a => {
-          const sub = submissionsData.find(s => s.assignmentId === a.id);
-          return mapAssignmentToTask(a, sub);
-        });
-        if (mounted) setAllTasks(tasks);
-      } catch (err) {
-        console.error("Failed to load calendar data:", err);
-      }
-    }
-    fetchData();
-    return () => { mounted = false; };
-  }, [user?.userId]);
-
-  const eventMap = buildEventMap(events);
-  const todayStr = new Date(new Date().getTime() - (new Date().getTimezoneOffset() * 60000)).toISOString().slice(0, 10);
+  const eventMap = useMemo(() => buildEventMap(events), [events]);
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const monthLabel = `${MONTH_NAMES[currentMonth.month]} ${currentMonth.year}`;
 
   return (
     <>
@@ -182,7 +187,7 @@ export default function StudentCalendar() {
       <SideMenu />
 
       <motion.div
-        className="max-w-[1400px] mx-auto px-8 pt-3 pb-10"
+        className="max-w-[1400px] mx-auto px-8 pt-5 pb-10"
         variants={pageVariants}
         initial="hidden"
         animate="visible"
@@ -190,11 +195,26 @@ export default function StudentCalendar() {
         {/* ── Top bar ─────────────────────────────────────── */}
         <div className="relative flex items-center justify-between mb-5">
 
-          {/* Month title — left */}
-          <h1 className="font-['Gabarito'] text-[1.6rem] font-bold text-gray-900 dark:text-slate-100 flex items-center gap-1.5">
-            {CURRENT_MONTH_NAME}
-            <span className="text-base text-gray-400 dark:text-slate-500">∨</span>
-          </h1>
+          {/* Month title + arrows — left */}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={goToPrevMonth}
+              className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors text-gray-500 hover:text-gray-900"
+              aria-label="Previous month"
+            >
+              <ChevronLeft size={20} />
+            </button>
+            <h1 className="font-['Gabarito'] !text-3xl text-gray-900 select-none text-center">
+              {monthLabel}
+            </h1>
+            <button
+              onClick={goToNextMonth}
+              className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors text-gray-500 hover:text-gray-900"
+              aria-label="Next month"
+            >
+              <ChevronRight size={20} />
+            </button>
+          </div>
 
           {/* View selector — truly centred */}
           <div className="absolute left-1/2 -translate-x-1/2">
@@ -205,12 +225,12 @@ export default function StudentCalendar() {
           <button
             id="cal-add-task-btn"
             aria-label="Add Task"
-            className="flex items-center gap-2 bg-gray-100 dark:bg-slate-700 rounded-full px-5 py-2.5 text-sm font-semibold text-gray-700 dark:text-slate-200 border-none cursor-pointer transition-all duration-150 hover:bg-gray-200 dark:hover:bg-slate-600 hover:-translate-y-px font-[inherit]"
+            className="flex items-center gap-2 bg-white rounded-full px-5 py-2.5 text-sm font-semibold text-gray-700 shadow-sm border-none cursor-pointer transition-all duration-150 hover:shadow-lg hover:-translate-y-px font-[inherit]"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="10" />
-              <line x1="12" y1="8"  x2="12" y2="16" />
-              <line x1="8"  y1="12" x2="16" y2="12" />
+              <line x1="12" y1="8" x2="12" y2="16" />
+              <line x1="8" y1="12" x2="16" y2="12" />
             </svg>
             Add Task
           </button>
@@ -222,26 +242,26 @@ export default function StudentCalendar() {
           {/* MONTH VIEW */}
           {activeView === "month" && (
             <motion.div
-              key="month"
-              className="w-full"
+              key={`month-${currentMonth.year}-${currentMonth.month}`}
+              className="w-full bg-white/70 rounded-3xl shadow-xl border border-1 border-gray-200"
               variants={viewVariants}
               initial="hidden"
               animate="visible"
               exit="exit"
             >
               {/* Day-of-week header */}
-              <div className="grid grid-cols-7 border-b border-gray-200 dark:border-slate-700">
+              <div className="grid grid-cols-7 border-b border-gray-200">
                 {WEEK_DAYS.map((label, i) => (
-                  <div key={i} className="text-center text-[11px] font-semibold uppercase tracking-widest text-gray-400 dark:text-slate-500 py-2.5">
+                  <div key={i} className="text-center text-[11px] font-semibold uppercase tracking-widest text-gray-400 py-2.5">
                     {label}
                   </div>
                 ))}
               </div>
 
-              {/* 4 week rows */}
+              {/* Week rows */}
               <div className="flex flex-col">
-                {GRID_WEEKS.map((week, wIdx) => (
-                  <div key={wIdx} className={`grid grid-cols-7 ${wIdx > 0 ? "border-t border-gray-200 dark:border-slate-700" : ""}`}>
+                {gridWeeks.map((week, wIdx) => (
+                  <div key={wIdx} className={`grid grid-cols-7 ${wIdx > 0 ? "border-t border-gray-200" : ""}`}>
                     {week.map(({ date, day, isOutside }) => (
                       <CalendarDayBlock
                         key={date}
@@ -260,20 +280,20 @@ export default function StudentCalendar() {
           {/* TIMELINE VIEW */}
           {activeView === "timeline" && (
             <motion.div
-              key="timeline"
+              key={`timeline-${currentMonth.year}-${currentMonth.month}`}
               variants={viewVariants}
               initial="hidden"
               animate="visible"
               exit="exit"
             >
-              <CalendarTimelineView events={events} weeks={GRID_WEEKS} />
+              <CalendarTimelineView events={events} weeks={gridWeeks} />
             </motion.div>
           )}
 
           {/* DAY VIEW */}
           {activeView === "day" && (
             <motion.div
-              key="day"
+              key={`day-${currentMonth.year}-${currentMonth.month}`}
               variants={viewVariants}
               initial="hidden"
               animate="visible"
@@ -281,8 +301,8 @@ export default function StudentCalendar() {
             >
               <CalendarDayView
                 events={events}
-                allTasks={allTasks}
-                weeks={GRID_WEEKS}
+                tasks={TASKS}
+                weeks={gridWeeks}
               />
             </motion.div>
           )}
@@ -292,3 +312,4 @@ export default function StudentCalendar() {
     </>
   );
 }
+
