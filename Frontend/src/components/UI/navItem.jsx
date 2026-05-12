@@ -25,7 +25,7 @@ export default function NavItem({ label, href = "#", icon, filledIcon, className
       <Link
         to={href}
         className={`relative z-10 rounded-full px-5 py-3 inline-flex items-center justify-center select-none
-          ${isActive ? "text-black" : "text-gray-400"}
+          ${isActive ? "text-white" : "text-gray-400"}
           ${className}`.trim()}
         style={{ WebKitTapHighlightColor: "transparent", color: isActive ? "white" : undefined }}
         aria-label={label}

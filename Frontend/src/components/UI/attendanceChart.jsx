@@ -1,6 +1,5 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { useDarkMode } from "../../hooks/useDarkMode";
 
 /**
  * AttendanceChart Component
@@ -9,7 +8,6 @@ import { useDarkMode } from "../../hooks/useDarkMode";
  * to show attendance ratios and small floating indicators for stats.
  */
 export default function AttendanceChart({ attended = 38, total = 42, missed = 4 }) {
-    const isDark = useDarkMode();
     const percentage = Math.round((attended / total) * 100);
     
     // SVG Circle Math
@@ -18,7 +16,7 @@ export default function AttendanceChart({ attended = 38, total = 42, missed = 4 
     const offset = circumference - (percentage / 100) * circumference;
 
     return (
-        <div className="relative flex flex-col items-center justify-center p-8 bg-white dark:bg-slate-800 rounded-[40px] border border-gray-100 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow group">
+        <div className="relative flex flex-col items-center justify-center p-8 bg-white rounded-[40px] border border-gray-100 shadow-sm hover:shadow-md transition-shadow group">
             {/* Main Ring Chart */}
             <div className="relative w-64 h-64 flex items-center justify-center animate-in fade-in zoom-in duration-700">
                 <svg className="w-full h-full -rotate-90 transform">
@@ -30,7 +28,7 @@ export default function AttendanceChart({ attended = 38, total = 42, missed = 4 
                         fill="transparent"
                         stroke="#F3F4F6"
                         strokeWidth="16"
-                        className="attendance-bg-track opacity-50"
+                        className="opacity-50"
                     />
                     {/* Progress Fill */}
                     <motion.circle
@@ -38,7 +36,7 @@ export default function AttendanceChart({ attended = 38, total = 42, missed = 4 
                         cy="128"
                         r={radius}
                         fill="transparent"
-                        stroke={isDark ? "#9BE9EA" : "#3C0078"}
+                        stroke="#3C0078"
                         strokeWidth="16"
                         strokeDasharray={circumference}
                         initial={{ strokeDashoffset: circumference }}
@@ -54,27 +52,27 @@ export default function AttendanceChart({ attended = 38, total = 42, missed = 4 
                         initial={{ scale: 0.5, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         transition={{ delay: 0.5, duration: 0.5 }}
-                        className="text-6xl font-black italic tracking-tighter text-[#3C0078] dark:text-[#9BE9EA]"
+                        className="text-6xl font-black italic tracking-tighter text-[#3C0078]"
                     >
                         {percentage}%
                     </motion.span>
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 dark:text-slate-500 mt-1">Attendance</span>
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mt-1">Attendance</span>
                 </div>
             </div>
 
             {/* Floating Stats Layout */}
-            <div className="grid grid-cols-3 gap-8 w-full mt-8 border-t border-gray-50 dark:border-slate-700 pt-8">
+            <div className="grid grid-cols-3 gap-8 w-full mt-8 border-t border-gray-50 pt-8">
                 <div className="flex flex-col items-center">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-slate-500 mb-1">Total</span>
-                    <span className="text-xl font-bold text-gray-900 dark:text-slate-100">{total}</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Total</span>
+                    <span className="text-xl font-bold text-gray-900">{total}</span>
                 </div>
                 <div className="flex flex-col items-center">
                     <span className="text-[10px] font-black uppercase tracking-widest text-[#87CEFA] mb-1">Attended</span>
-                    <span className="text-xl font-bold text-gray-900 dark:text-slate-100">{attended}</span>
+                    <span className="text-xl font-bold text-gray-900">{attended}</span>
                 </div>
                 <div className="flex flex-col items-center">
                     <span className="text-[10px] font-black uppercase tracking-widest text-[#FF8731] mb-1">Missed</span>
-                    <span className="text-xl font-bold text-gray-900 dark:text-slate-100">{missed}</span>
+                    <span className="text-xl font-bold text-gray-900">{missed}</span>
                 </div>
             </div>
 

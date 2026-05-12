@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useAuth } from "./AuthContext";
-import { getStudentCourses, getTeacherCourses } from "../services/courseService";
+import { getStudentCourses } from "../services/courseService";
 
 const CoursesContext = createContext();
 
@@ -26,7 +26,7 @@ export function CoursesProvider({ children }) {
     useEffect(() => {
         let mounted = true;
         async function fetchCourses() {
-            if (!user?.userId || (user.role !== "student" && user.role !== "teacher")) {
+            if (!user?.userId || user.role !== "student") {
                 setLoading(false);
                 setAllCourses([]);
                 return;
@@ -34,35 +34,21 @@ export function CoursesProvider({ children }) {
 
             try {
                 setLoading(true);
-                let mappedCourses = [];
-                if (user.role === "student") {
-                    const data = await getStudentCourses(user.userId);
-                    mappedCourses = data.map(enrollment => ({
-                        id: enrollment.course.id,
-                        enrollmentId: enrollment.id,
-                        subjectName: enrollment.course.subject.name,
-                        label: enrollment.course.subject.code, // e.g. UX300
-                        code: enrollment.course.subject.code.substring(0, 2), // e.g. UX
-                        number: enrollment.course.subject.code.substring(2), // e.g. 300
-                        term: enrollment.course.term,
-                        description: enrollment.course.subject.description,
-                        color: "#3C0078", // Default brand color for now
-                        href: `/courses/${enrollment.course.id}`
-                    }));
-                } else if (user.role === "teacher") {
-                    const data = await getTeacherCourses(user.userId);
-                    mappedCourses = data.map(course => ({
-                        id: course.id,
-                        subjectName: course.subject.name,
-                        label: course.subject.code, // e.g. UX300
-                        code: course.subject.code.substring(0, 2), // e.g. UX
-                        number: course.subject.code.substring(2), // e.g. 300
-                        term: course.term,
-                        description: course.subject.description,
-                        color: "#FF8731", // Using a different default color or just a standard one
-                        href: `/courses/${course.id}`
-                    }));
-                }
+                const data = await getStudentCourses(user.userId);
+
+                // Format the backend enrollment into a clean structure for the frontend UI components
+                const mappedCourses = data.map(enrollment => ({
+                    id: enrollment.course.id,
+                    enrollmentId: enrollment.id,
+                    subjectName: enrollment.course.subject.name,
+                    label: enrollment.course.subject.code, // e.g. UX300
+                    code: enrollment.course.subject.code.substring(0, 2), // e.g. UX
+                    number: enrollment.course.subject.code.substring(2), // e.g. 300
+                    term: enrollment.course.term,
+                    description: enrollment.course.subject.description,
+                    color: "#673694ff", // Default brand color for now
+                    href: `/courses/${enrollment.course.id}`
+                }));
 
                 if (mounted) setAllCourses(mappedCourses);
             } catch (err) {
@@ -90,7 +76,7 @@ export function CoursesProvider({ children }) {
                 // If it's visible, add it to the hidden list (make hidden)
                 updatedList = [...prev, courseId];
             }
-            
+
             // Persist locally so it remembers across refreshes
             localStorage.setItem("learnonline_hidden_courses", JSON.stringify(updatedList));
             return updatedList;

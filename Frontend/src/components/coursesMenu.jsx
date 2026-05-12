@@ -6,12 +6,11 @@ import { useCourses } from "../contexts/CoursesContext";
 import CourseManagerModal from "./courseManagerModal";
 import { Eye, AddCircle } from "@solar-icons/react";
 import { useAuth } from "../contexts/AuthContext";
-import { useDarkMode } from "../hooks/useDarkMode";
 
 // Framer Motion variants matching SideMenu.jsx
 const navbarVariants = {
     hidden: { opacity: 0, x: -20 },
-    visible: { opacity: 1, x: 0,  transition: { duration: 0.5, ease: "easeOut" } },
+    visible: { opacity: 1, x: 0, transition: { duration: 0.5, ease: "easeOut" } },
 };
 
 const listVariants = {
@@ -24,29 +23,25 @@ const itemVariants = {
     visible: { opacity: 1, x: 0, transition: { duration: 0.25, ease: "easeOut" } },
 };
 
-const CourseItem = ({ course, isActive, isDark }) => {
-    const accentColor = isDark ? "#9BE9EA" : course.color;
-    return (
+const CourseItem = ({ course, isActive }) => (
     <motion.li variants={itemVariants} className="list-none">
         <Link
             to={course.href}
-            style={{ 
-                backgroundColor: isActive ? accentColor : "transparent",
-                borderColor: accentColor,
-                color: isActive ? (isDark ? "#0f172a" : "#FFFFFF") : accentColor
+            style={{
+                backgroundColor: isActive ? course.color : "transparent",
+                borderColor: course.color,
+                color: isActive ? "#FFFFFF" : course.color
             }}
-            className={`flex flex-col items-center justify-center w-14 h-14 rounded-2xl border-2 transition-all duration-300 ${
-                isActive 
-                ? "shadow-md" 
-                : "hover:bg-gray-50 dark:hover:bg-slate-700"
-            }`}
+            className={`flex flex-col items-center justify-center w-14 h-14 rounded-full border-2 transition-all duration-300 ${isActive
+                ? "shadow-md"
+                : "hover:bg-gray-50"
+                }`}
         >
             <span className="text-sm font-bold opacity-100 leading-none">{course.code}</span>
             <span className="text-[10px] font-bold opacity-100 leading-none mt-0.5">{course.number}</span>
         </Link>
     </motion.li>
-    );
-};
+);
 
 /**
  * CourseMenu Component
@@ -59,37 +54,35 @@ export default function CourseMenu() {
     const { visibleCourses } = useCourses();
     const [modalOpen, setModalOpen] = useState(false);
     const { role } = useAuth();
-    const isDark = useDarkMode();
 
     return (
         <>
             <motion.div
-                className="navbar bg-white/80 dark:bg-slate-800/90 backdrop-blur-md w-fit rounded-[40px] shadow-lg fixed left-4 top-1/2 -translate-y-1/2 z-40 p-2 py-4 border border-[#3C0078]/10 dark:border-slate-700"
+                className="navbar bg-white/80 backdrop-blur-md w-fit rounded-[40px] shadow-lg fixed left-4 top-1/2 -translate-y-1/2 z-40 p-2 py-2 border border-[#3C0078]/10"
                 variants={navbarVariants}
                 initial="hidden"
                 animate="visible"
             >
                 <div className="navbar-center flex flex-col items-center gap-4">
-                    <motion.ul className="flex flex-col items-center p-0 m-0 gap-5" variants={listVariants}>
+                    <motion.ul className="flex flex-col items-center p-0 m-0 gap-2" variants={listVariants}>
                         {visibleCourses.length > 0 ? (
                             visibleCourses.map((course) => (
-                                <CourseItem 
-                                    key={course.id} 
-                                    course={course} 
-                                    isActive={location.pathname.startsWith(course.href) || (location.pathname === "/courses" && visibleCourses[0].id === course.id)} 
-                                    isDark={isDark}
+                                <CourseItem
+                                    key={course.id}
+                                    course={course}
+                                    isActive={location.pathname.startsWith(course.href) || (location.pathname === "/courses" && visibleCourses[0].id === course.id)}
                                 />
                             ))
                         ) : (
-                            <li className="text-xs text-gray-400 dark:text-slate-500 font-bold p-2 text-center w-14">No Classes</li>
+                            <li className="text-xs text-gray-400 font-bold p-2 text-center w-14">No Classes</li>
                         )}
                     </motion.ul>
-                    
+
                     {/* View all courses separator and trigger button */}
-                    <div className="w-8 h-px bg-gray-200 dark:bg-slate-600 mt-2 mb-1"></div>
-                    
+                    <div className="w-8 h-px bg-gray-200 mt-2 mb-1"></div>
+
                     {role === "teacher" && (
-                        <button 
+                        <button
                             onClick={() => console.log("Add new course logic here")}
                             className="flex flex-col items-center justify-center w-12 h-12 rounded-xl text-green-500 hover:text-green-600 hover:bg-green-50 transition-all cursor-pointer mb-2"
                             title="Add New Course"
@@ -98,9 +91,9 @@ export default function CourseMenu() {
                         </button>
                     )}
 
-                    <button 
+                    <button
                         onClick={() => setModalOpen(true)}
-                        className={`flex flex-col items-center justify-center w-12 h-12 rounded-xl text-gray-400 dark:text-slate-500 hover:text-[#3C0078] dark:hover:text-[#9BE9EA] hover:bg-gray-100 dark:hover:bg-slate-700 transition-all cursor-pointer`}
+                        className="flex flex-col items-center justify-center w-12 h-12 rounded-xl text-gray-400 hover:text-[#3C0078] hover:bg-gray-100 transition-all cursor-pointer"
                         title="Manage Enrolled Courses"
                     >
                         <Eye size={24} />
