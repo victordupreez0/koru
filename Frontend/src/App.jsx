@@ -13,6 +13,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import TeacherAssistant from "./pages/Assistant/teacherAssistant";
 import Profile from "./pages/profile/profile";
 import AnalyticsPage from "./pages/analytics";
+import AdminCourses from "./pages/courses/adminCourses";
 
 // Root application component – sets up routing and the shared layout
 function App() {
@@ -43,6 +44,7 @@ function App() {
             <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
             <Route path="/teacherassistant" element={<ProtectedRoute><TeacherAssistant /></ProtectedRoute>} />
             <Route path="/analytics" element={<ProtectedRoute><AnalyticsPage /></ProtectedRoute>} />
+            <Route path="/admin/courses" element={<ProtectedRoute><AdminCourses /></ProtectedRoute>} />
 
             {/* Profile routes*/}
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
