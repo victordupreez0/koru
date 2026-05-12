@@ -38,7 +38,7 @@ const DayIcon = () => (
 const VIEWS = [
   { id: "month", label: "Month", Icon: MonthIcon },
   { id: "timeline", label: "Timeline", Icon: TimelineIcon },
-  { id: "day", label: "Day", Icon: DayIcon },
+  // { id: "day", label: "Day", Icon: DayIcon },
 ];
 
 /**

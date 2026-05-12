@@ -88,11 +88,11 @@ function StatCard({ label, value, icon: Icon, trend, suffix = "", accent = false
       className={`rounded-[28px] p-6 flex flex-col justify-between gap-4 group transition-all hover:shadow-lg ${
         accent
           ? "bg-[#3C0078] text-white"
-          : "bg-white border border-gray-100 shadow-sm"
+          : "bg-white/70 border border-gray-100 shadow-sm"
       }`}
     >
       <div className="flex justify-between items-start">
-        <span className={`inline-flex items-center justify-center w-10 h-10 rounded-2xl ${accent ? "bg-white/15" : "bg-[#3C0078]/5"}`}>
+        <span className={`inline-flex items-center justify-center w-10 h-10 rounded-full ${accent ? "bg-white/70/15" : "bg-[#3C0078]/5"}`}>
           <Icon size={20} className={accent ? "text-white" : "text-[#3C0078]"} />
         </span>
         {trend !== undefined && (
@@ -150,15 +150,15 @@ export default function StudentAnalytics() {
         initial="hidden" animate="visible" variants={stagger}
       >
         {/* ─── Page Header ─── */}
-        <motion.div variants={fadeUp} className="rounded-[28px] border border-gray-100 bg-white/95 p-6 shadow-sm">
+        {/* <motion.div variants={fadeUp} className="rounded-[28px] p-6">
           <h1 className="text-4xl font-bold tracking-tight text-gray-900">Analytics</h1>
           <p className="mt-2 max-w-2xl text-sm text-gray-500">
             Track your academic performance, monitor grades across courses, and stay on top of upcoming deadlines.
           </p>
-        </motion.div>
+        </motion.div> */}
 
         {/* ─── Top Stat Cards ─── */}
-        <motion.div variants={fadeUp} className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <motion.div variants={fadeUp} className="grid mt-15 grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard label="Overall Average" value={overallAvg} suffix="%" icon={Target} trend={2.8} accent />
           <StatCard label="Courses Enrolled" value={MOCK_COURSES.length} icon={BookOpen} />
           <StatCard label="Assignments Graded" value={totalAssignmentsGraded} icon={CheckCircle} trend={3.5} />
@@ -172,7 +172,7 @@ export default function StudentAnalytics() {
           <div className="flex flex-col gap-6">
 
             {/* ─── Grade Trend Chart ─── */}
-            <motion.div variants={fadeUp} className="bg-white rounded-[28px] border border-gray-100 shadow-sm p-6">
+            <motion.div variants={fadeUp} className="bg-white/70 rounded-[28px] border border-gray-100 shadow-sm p-6">
               <div className="flex justify-between items-center mb-4">
                 <div>
                   <h2 className="text-xl font-bold text-gray-900">Grade Trend</h2>
@@ -205,7 +205,7 @@ export default function StudentAnalytics() {
                     <motion.div
                       key={course.id}
                       whileHover={{ y: -3 }}
-                      className="bg-white rounded-[28px] border border-gray-100 shadow-sm p-6 flex items-center gap-5 group hover:border-[#3C0078]/20 transition-all cursor-pointer"
+                      className="bg-white/70 rounded-[28px] border border-gray-100 shadow-sm p-6 flex items-center gap-5 group hover:border-[#3C0078]/20 transition-all cursor-pointer"
                     >
                       <div className="relative shrink-0">
                         <ProgressRing percent={pct} color={course.color} />
@@ -232,7 +232,7 @@ export default function StudentAnalytics() {
             </motion.div>
 
             {/* ─── Recent Grades Table ─── */}
-            <motion.div variants={fadeUp} className="bg-white rounded-[28px] border border-gray-100 shadow-sm overflow-hidden">
+            <motion.div variants={fadeUp} className="bg-white/70 rounded-[28px] border border-gray-100 shadow-sm overflow-hidden">
               <div className="px-7 py-5 border-b border-gray-50 flex justify-between items-center">
                 <h2 className="text-xl font-bold text-gray-900">Recent Grades</h2>
                 <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Last {MOCK_GRADES.length} assignments</span>
@@ -290,7 +290,7 @@ export default function StudentAnalytics() {
 
             {/* Best-performing course */}
             <motion.div variants={fadeUp} className="bg-[#3C0078] rounded-[28px] p-6 text-white relative overflow-hidden group">
-              <div className="absolute -right-8 -top-8 w-32 h-32 bg-white/10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700" />
+              <div className="absolute -right-8 -top-8 w-32 h-32 bg-white/70/10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700" />
               <span className="text-[10px] uppercase font-bold tracking-[0.2em] opacity-80 block mb-2">Top Course</span>
               <div className="flex items-baseline gap-2">
                 <span className="text-5xl font-black italic">{highestCourse.average}%</span>
@@ -304,7 +304,7 @@ export default function StudentAnalytics() {
             </motion.div>
 
             {/* Submission Stats */}
-            <motion.div variants={fadeUp} className="bg-white rounded-[28px] border border-gray-100 shadow-sm p-6">
+            <motion.div variants={fadeUp} className="bg-white/70 rounded-[28px] border border-gray-100 shadow-sm p-6">
               <h3 className="text-sm font-black uppercase tracking-widest text-gray-400 mb-4">Submission Breakdown</h3>
               <div className="space-y-3">
                 {[
@@ -326,7 +326,7 @@ export default function StudentAnalytics() {
             </motion.div>
 
             {/* Upcoming Deadlines */}
-            <motion.div variants={fadeUp} className="bg-white rounded-[28px] border border-gray-100 shadow-sm p-6">
+            <motion.div variants={fadeUp} className="bg-white/70 rounded-[28px] border border-gray-100 shadow-sm p-6">
               <h3 className="text-sm font-black uppercase tracking-widest text-gray-400 mb-4">Upcoming Deadlines</h3>
               <div className="space-y-3">
                 {MOCK_UPCOMING.map(a => {
@@ -357,7 +357,7 @@ export default function StudentAnalytics() {
             </motion.div>
 
             {/* Recent Feedback */}
-            <motion.div variants={fadeUp} className="bg-white rounded-[28px] border border-gray-100 shadow-sm p-6">
+            <motion.div variants={fadeUp} className="bg-white/70 rounded-[28px] border border-gray-100 shadow-sm p-6">
               <h3 className="text-sm font-black uppercase tracking-widest text-gray-400 mb-4">Recent Feedback</h3>
               <div className="space-y-3">
                 {MOCK_FEEDBACK.map(fb => (
