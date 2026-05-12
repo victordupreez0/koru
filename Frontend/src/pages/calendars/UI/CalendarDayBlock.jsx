@@ -17,7 +17,7 @@ export default function CalendarDayBlock({ day, isToday = false, isOutside = fal
   return (
     <div
       className={[
-        "min-h-[140px] p-2.5 flex flex-col gap-1.5 border-r border-gray-200 last:border-r-0 transition-colors duration-150",
+        "min-h-[140px] p-2.5 flex flex-col gap-1.5 border-r border-gray-200 dark:border-slate-700 last:border-r-0 transition-colors duration-150",
         // Overflow visible so tooltips can escape the cell
         "overflow-visible",
         isToday ? "bg-purple-100" : "bg-transparent",
@@ -46,6 +46,7 @@ export default function CalendarDayBlock({ day, isToday = false, isOutside = fal
           type={evt.type}
           lecturer={evt.lecturer}
           location={evt.location}
+          isAssignment={evt.isAssignment}
         />
       ))}
     </div>

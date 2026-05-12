@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   TrendingUp, TrendingDown, BookOpen, CheckCircle, Clock, Award,
@@ -7,6 +7,11 @@ import {
 } from "lucide-react";
 import Menu from "../../components/menu";
 import SideMenu from "../../components/sideMenu";
+import { useAuth } from "../../contexts/AuthContext";
+import { useCourses } from "../../contexts/CoursesContext";
+import { getStudentGrades } from "../../services/gradeService";
+import { getStudentSubmissions } from "../../services/submissionService";
+import { getCourseAssignments } from "../../services/assignmentService";
 
 /* ──────────────────────────── animation variants ──────────────────────────── */
 const stagger = {
@@ -18,45 +23,7 @@ const fadeUp = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.45, ease: "easeOut" } },
 };
 
-/* ──────────────────────────── MOCK DATA ──────────────────────────── */
 
-// Enrolled courses with per-course grade data
-const MOCK_COURSES = [
-  { id: "c1", code: "DV300", name: "Development 300", lecturer: "Prof. van der Merwe", average: 78, trend: +4.2, color: "#3C0078" },
-  { id: "c2", code: "UX300", name: "User Experience 300", lecturer: "Dr. Sarah Miller", average: 84, trend: +1.8, color: "#14B8A6" },
-  { id: "c3", code: "ID300", name: "Interactive Development 300", lecturer: "Mr. James Lee", average: 71, trend: -2.1, color: "#F59E0B" },
-  { id: "c4", code: "DV200", name: "Development 200", lecturer: "Mrs. Nkosi", average: 92, trend: +6.5, color: "#6366F1" },
-];
-
-// Recent assignment grades (from Grade + Submission + Assignment endpoints)
-const MOCK_GRADES = [
-  { id: "g1", assignment: "Heuristic Evaluation Report", course: "UX300", pointsEarned: 82, maxPoints: 100, gradedAt: "2026-04-28", status: "Graded" },
-  { id: "g2", assignment: "React Dashboard Prototype", course: "DV300", pointsEarned: 75, maxPoints: 100, gradedAt: "2026-04-25", status: "Graded" },
-  { id: "g3", assignment: "API Integration Task", course: "ID300", pointsEarned: 68, maxPoints: 100, gradedAt: "2026-04-22", status: "Graded" },
-  { id: "g4", assignment: "Component Library", course: "DV200", pointsEarned: 95, maxPoints: 100, gradedAt: "2026-04-20", status: "Graded" },
-  { id: "g5", assignment: "Persona Research Brief", course: "UX300", pointsEarned: 88, maxPoints: 100, gradedAt: "2026-04-15", status: "Graded" },
-  { id: "g6", assignment: "Database Schema Design", course: "DV300", pointsEarned: 80, maxPoints: 100, gradedAt: "2026-04-10", status: "Graded" },
-];
-
-// Upcoming assignments (from Assignment endpoint – not yet submitted)
-const MOCK_UPCOMING = [
-  { id: "a1", title: "Usability Test Report", course: "UX300", dueDate: "2026-05-08", maxPoints: 100 },
-  { id: "a2", title: "Full-Stack Capstone", course: "DV300", dueDate: "2026-05-15", maxPoints: 150 },
-  { id: "a3", title: "Motion Design Sprint", course: "ID300", dueDate: "2026-05-12", maxPoints: 80 },
-];
-
-// Submissions status breakdown
-const MOCK_SUBMISSIONS_SUMMARY = { total: 18, graded: 14, pending: 3, late: 1 };
-
-// Monthly grade trend (for the sparkline)
-const MOCK_MONTHLY_TREND = [62, 68, 71, 74, 70, 76, 78, 80, 82, 79, 84, 81];
-
-// Recent feedback from teachers
-const MOCK_FEEDBACK = [
-  { id: "f1", assignment: "Heuristic Evaluation Report", course: "UX300", teacher: "Dr. Sarah Miller", content: "Excellent analysis of Nielsen's heuristics. Your recommendations were practical and well-supported.", createdAt: "2026-04-29" },
-  { id: "f2", assignment: "React Dashboard Prototype", course: "DV300", teacher: "Prof. van der Merwe", content: "Good component structure but consider adding error boundaries. The UI polish is impressive.", createdAt: "2026-04-26" },
-  { id: "f3", assignment: "Component Library", course: "DV200", teacher: "Mrs. Nkosi", content: "Outstanding work! Your documentation and reusable patterns set a high standard for the class.", createdAt: "2026-04-21" },
-];
 
 /* ──────────────────────────── helper components ──────────────────────────── */
 
@@ -133,12 +100,195 @@ function ProgressRing({ percent, size = 56, stroke = 5, color = "#3C0078" }) {
 /* ──────────────────────────── main page ──────────────────────────── */
 
 export default function StudentAnalytics() {
+  const { user } = useAuth();
+  const { visibleCourses, loading: coursesLoading } = useCourses();
+  const [gradesData, setGradesData] = useState([]);
+  const [submissionsData, setSubmissionsData] = useState([]);
+  const [allAssignments, setAllAssignments] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [expandedFeedback, setExpandedFeedback] = useState(null);
 
-  // Derived stats
-  const overallAvg = Math.round(MOCK_COURSES.reduce((s, c) => s + c.average, 0) / MOCK_COURSES.length);
-  const highestCourse = MOCK_COURSES.reduce((a, b) => a.average > b.average ? a : b);
-  const totalAssignmentsGraded = MOCK_GRADES.length;
+  useEffect(() => {
+    let mounted = true;
+    async function fetchData() {
+      if (!user?.userId || visibleCourses.length === 0) return;
+      try {
+        setLoading(true);
+        const [grades, submissions] = await Promise.all([
+          getStudentGrades(user.userId),
+          getStudentSubmissions(user.userId)
+        ]);
+
+        // Also fetch all assignments for all visible courses to find upcoming ones
+        const assignmentPromises = visibleCourses.map(c => getCourseAssignments(c.id));
+        const assignmentsArrays = await Promise.all(assignmentPromises);
+        const assignments = assignmentsArrays.flat();
+
+        if (mounted) {
+          setGradesData(grades);
+          setSubmissionsData(submissions);
+          setAllAssignments(assignments);
+        }
+      } catch (err) {
+        console.error("Failed to load analytics data", err);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    }
+    fetchData();
+    return () => { mounted = false; };
+  }, [user?.userId, visibleCourses]);
+
+  const monthlyTrendData = useMemo(() => {
+    const today = new Date();
+    const last12Months = Array.from({ length: 12 }, (_, i) => {
+      const d = new Date(today.getFullYear(), today.getMonth() - (11 - i), 1);
+      return {
+        label: d.toLocaleDateString('en-US', { month: 'short' }),
+        year: d.getFullYear(),
+        month: d.getMonth(),
+        totalEarned: 0,
+        totalMax: 0
+      };
+    });
+
+    gradesData.forEach(g => {
+      if (!g.gradedAt || g.pointsEarned == null || !g.submission?.assignment?.maxPoints) return;
+      const date = new Date(g.gradedAt);
+      const m = last12Months.find(lm => lm.year === date.getFullYear() && lm.month === date.getMonth());
+      if (m) {
+        m.totalEarned += g.pointsEarned;
+        m.totalMax += g.submission.assignment.maxPoints;
+      }
+    });
+
+    let lastValue = 0;
+    const data = last12Months.map(m => {
+      if (m.totalMax > 0) {
+        lastValue = Math.round((m.totalEarned / m.totalMax) * 100);
+      }
+      return lastValue;
+    });
+
+    let firstNonZero = data.find(v => v > 0) || 0;
+    for(let i = 0; i < data.length; i++) {
+        if(data[i] === 0) data[i] = firstNonZero;
+        else break;
+    }
+
+    const allZeros = data.every(v => v === 0);
+    return {
+      labels: last12Months.map(m => m.label),
+      data: allZeros ? [0,0,0,0,0,0,0,0,0,0,0,0] : data,
+      overallTrend: allZeros ? 0 : data[11] - data[10]
+    };
+  }, [gradesData]);
+
+  // Derive stats
+  const stats = useMemo(() => {
+    let totalPoints = 0;
+    let earnedPoints = 0;
+    gradesData.forEach(g => {
+      if (g.pointsEarned != null && g.submission?.assignment?.maxPoints) {
+          totalPoints += g.submission.assignment.maxPoints;
+          earnedPoints += g.pointsEarned;
+      }
+    });
+
+    const pending = submissionsData.filter(s => s.status === "Submitted").length;
+    
+    return {
+      overallAverage: totalPoints > 0 ? Math.round((earnedPoints / totalPoints) * 100) : 0,
+      totalGraded: gradesData.length,
+      pending: pending
+    };
+  }, [gradesData, submissionsData]);
+
+  const coursePerformance = useMemo(() => {
+    return visibleCourses.map(course => {
+        const courseGrades = gradesData.filter(g => g.submission?.assignment?.courseId === course.id);
+        let cTotal = 0;
+        let cEarned = 0;
+        courseGrades.forEach(g => {
+            if (g.pointsEarned != null && g.submission?.assignment?.maxPoints) {
+                cTotal += g.submission.assignment.maxPoints;
+                cEarned += g.pointsEarned;
+            }
+        });
+
+        const sortedGrades = [...courseGrades]
+            .filter(g => g.pointsEarned != null && g.submission?.assignment?.maxPoints)
+            .sort((a, b) => new Date(a.gradedAt) - new Date(b.gradedAt));
+            
+        let trend = 0;
+        if (sortedGrades.length > 1) {
+            const latest = sortedGrades[sortedGrades.length - 1];
+            const previous = sortedGrades[sortedGrades.length - 2];
+            const latestPct = (latest.pointsEarned / latest.submission.assignment.maxPoints) * 100;
+            const prevPct = (previous.pointsEarned / previous.submission.assignment.maxPoints) * 100;
+            trend = (latestPct - prevPct).toFixed(1);
+        } else if (sortedGrades.length === 1) {
+            const latestPct = (sortedGrades[0].pointsEarned / sortedGrades[0].submission.assignment.maxPoints) * 100;
+            trend = (latestPct - 0).toFixed(1);
+        }
+
+        return {
+            ...course,
+            average: cTotal > 0 ? Math.round((cEarned / cTotal) * 100) : 0,
+            trend: parseFloat(trend)
+        };
+    });
+  }, [visibleCourses, gradesData]);
+
+  const upcomingAssignments = useMemo(() => {
+    return allAssignments
+      .filter(a => !submissionsData.some(s => s.assignmentId === a.id))
+      .filter(a => new Date(a.dueDate) >= new Date())
+      .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate))
+      .slice(0, 3)
+      .map(a => ({
+        ...a,
+        course: visibleCourses.find(c => c.id === a.courseId)?.label || "Course"
+      }));
+  }, [allAssignments, submissionsData, visibleCourses]);
+
+  const recentGrades = useMemo(() => {
+    return [...gradesData]
+      .sort((a, b) => new Date(b.gradedAt) - new Date(a.gradedAt))
+      .slice(0, 5)
+      .map(g => ({
+          id: g.id,
+          course: g.submission?.assignment?.course?.label || visibleCourses.find(c => c.id === g.submission?.assignment?.courseId)?.label || "N/A",
+          assignment: g.submission?.assignment?.title || "Assignment",
+          grade: g.pointsEarned != null ? Math.round((g.pointsEarned / g.submission.assignment.maxPoints) * 100) : null,
+          date: new Date(g.gradedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+      }));
+  }, [gradesData, visibleCourses]);
+
+  const highestCourse = coursePerformance.length > 0 ? coursePerformance.reduce((a, b) => a.average > b.average ? a : b) : { average: 0, code: "N/A", name: "None" };
+
+  const submissionsSummary = {
+    total: submissionsData.length,
+    graded: gradesData.length,
+    pending: stats.pending,
+    late: submissionsData.filter(s => s.status === "Late").length
+  };
+
+  const feedback = useMemo(() => {
+    return gradesData
+      .filter(g => g.feedback)
+      .sort((a, b) => new Date(b.gradedAt) - new Date(a.gradedAt))
+      .slice(0, 3)
+      .map(g => ({
+          id: g.id,
+          assignment: g.submission?.assignment?.title,
+          course: visibleCourses.find(c => c.id === g.submission?.assignment?.courseId)?.label,
+          teacher: "Teacher", // Backend doesn't store teacher in Grade yet
+          content: g.feedback,
+          createdAt: g.gradedAt
+      }));
+  }, [gradesData, visibleCourses]);
+
 
   return (
     <div className="w-full pb-16">
@@ -159,10 +309,10 @@ export default function StudentAnalytics() {
 
         {/* ─── Top Stat Cards ─── */}
         <motion.div variants={fadeUp} className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard label="Overall Average" value={overallAvg} suffix="%" icon={Target} trend={2.8} accent />
-          <StatCard label="Courses Enrolled" value={MOCK_COURSES.length} icon={BookOpen} />
-          <StatCard label="Assignments Graded" value={totalAssignmentsGraded} icon={CheckCircle} trend={3.5} />
-          <StatCard label="Pending Submissions" value={MOCK_SUBMISSIONS_SUMMARY.pending} icon={Clock} />
+          <StatCard label="Overall Average" value={stats.overallAverage} suffix="%" icon={Target} trend={monthlyTrendData.overallTrend} accent />
+          <StatCard label="Courses Enrolled" value={visibleCourses.length} icon={BookOpen} />
+          <StatCard label="Assignments Graded" value={stats.totalGraded} icon={CheckCircle} />
+          <StatCard label="Pending Submissions" value={submissionsSummary.pending} icon={Clock} />
         </motion.div>
 
         {/* ─── Main Grid: Performance + Upcoming ─── */}
@@ -178,17 +328,18 @@ export default function StudentAnalytics() {
                   <h2 className="text-xl font-bold text-gray-900">Grade Trend</h2>
                   <p className="text-sm text-gray-400">Monthly average over the past year</p>
                 </div>
-                <div className="bg-green-50 px-4 py-2 rounded-2xl">
-                  <span className="text-green-600 font-bold text-sm flex items-center gap-1">
-                    <TrendingUp size={14} /> +2.8% overall
+                <div className={`px-4 py-2 rounded-2xl ${monthlyTrendData.overallTrend >= 0 ? "bg-green-50" : "bg-red-50"}`}>
+                  <span className={`font-bold text-sm flex items-center gap-1 ${monthlyTrendData.overallTrend >= 0 ? "text-green-600" : "text-red-600"}`}>
+                    {monthlyTrendData.overallTrend >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
+                    {monthlyTrendData.overallTrend >= 0 ? "+" : ""}{monthlyTrendData.overallTrend}% overall
                   </span>
                 </div>
               </div>
               <div className="mt-2">
-                <MiniSparkline data={MOCK_MONTHLY_TREND} color="#3C0078" height={100} />
+                <MiniSparkline data={monthlyTrendData.data} color="#3C0078" height={100} />
                 <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest text-gray-300 mt-2 px-1">
-                  {["Jun","Jul","Aug","Sep","Oct","Nov","Dec","Jan","Feb","Mar","Apr","May"].map(m => (
-                    <span key={m}>{m}</span>
+                  {monthlyTrendData.labels.map((m, i) => (
+                    <span key={i}>{m}</span>
                   ))}
                 </div>
               </div>
@@ -198,9 +349,10 @@ export default function StudentAnalytics() {
             <motion.div variants={fadeUp}>
               <h2 className="text-sm font-black uppercase tracking-widest text-gray-400 mb-4">Course Performance</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {MOCK_COURSES.map(course => {
+                {coursePerformance.map(course => {
                   const pct = course.average;
                   const isPositive = course.trend >= 0;
+                  const trend = course.trend;
                   return (
                     <motion.div
                       key={course.id}
@@ -217,13 +369,13 @@ export default function StudentAnalytics() {
                         <div className="flex items-center gap-2">
                           <span className="font-bold text-gray-900 group-hover:text-[#3C0078] transition-colors truncate">{course.name}</span>
                         </div>
-                        <p className="text-xs text-gray-400 mt-1">{course.code} · {course.lecturer}</p>
+                        <p className="text-xs text-gray-400 mt-1">{course.label} · {course.lecturerName || "Lecturer"}</p>
                       </div>
                       <span className={`inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full ${
                         isPositive ? "bg-green-50 text-green-600" : "bg-red-50 text-red-600"
                       }`}>
                         {isPositive ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
-                        {Math.abs(course.trend)}%
+                        {trend}%
                       </span>
                     </motion.div>
                   );
@@ -235,7 +387,6 @@ export default function StudentAnalytics() {
             <motion.div variants={fadeUp} className="bg-white rounded-[28px] border border-gray-100 shadow-sm overflow-hidden">
               <div className="px-7 py-5 border-b border-gray-50 flex justify-between items-center">
                 <h2 className="text-xl font-bold text-gray-900">Recent Grades</h2>
-                <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Last {MOCK_GRADES.length} assignments</span>
               </div>
               <table className="w-full text-left">
                 <thead>
@@ -248,8 +399,8 @@ export default function StudentAnalytics() {
                   </tr>
                 </thead>
                 <tbody>
-                  {MOCK_GRADES.map(g => {
-                    const pct = Math.round((g.pointsEarned / g.maxPoints) * 100);
+                  {recentGrades.map(g => {
+                    const pct = g.grade || 0;
                     return (
                       <tr key={g.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-all group">
                         <td className="px-7 py-4">
@@ -270,11 +421,11 @@ export default function StudentAnalytics() {
                           </div>
                         </td>
                         <td className="px-7 py-4 text-center text-xs text-gray-400">
-                          {new Date(g.gradedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                          {g.date}
                         </td>
                         <td className="px-7 py-4">
                           <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-green-50 text-green-600">
-                            {g.status}
+                            Graded
                           </span>
                         </td>
                       </tr>
@@ -294,9 +445,9 @@ export default function StudentAnalytics() {
               <span className="text-[10px] uppercase font-bold tracking-[0.2em] opacity-80 block mb-2">Top Course</span>
               <div className="flex items-baseline gap-2">
                 <span className="text-5xl font-black italic">{highestCourse.average}%</span>
-                <span className="text-sm opacity-60">{highestCourse.code}</span>
+                <span className="text-sm opacity-60">{highestCourse.label}</span>
               </div>
-              <p className="text-sm text-white/70 mt-1">{highestCourse.name}</p>
+              <p className="text-sm text-white/70 mt-1">{highestCourse.subjectName}</p>
               <div className="mt-6 flex items-center gap-2 text-sm">
                 <Award size={16} className="text-yellow-300" />
                 <span>Your highest performer</span>
@@ -308,9 +459,9 @@ export default function StudentAnalytics() {
               <h3 className="text-sm font-black uppercase tracking-widest text-gray-400 mb-4">Submission Breakdown</h3>
               <div className="space-y-3">
                 {[
-                  { label: "Graded", value: MOCK_SUBMISSIONS_SUMMARY.graded, total: MOCK_SUBMISSIONS_SUMMARY.total, color: "bg-green-500" },
-                  { label: "Pending", value: MOCK_SUBMISSIONS_SUMMARY.pending, total: MOCK_SUBMISSIONS_SUMMARY.total, color: "bg-amber-400" },
-                  { label: "Late", value: MOCK_SUBMISSIONS_SUMMARY.late, total: MOCK_SUBMISSIONS_SUMMARY.total, color: "bg-red-500" },
+                  { label: "Graded", value: submissionsSummary.graded, total: submissionsSummary.total, color: "bg-green-500" },
+                  { label: "Pending", value: submissionsSummary.pending, total: submissionsSummary.total, color: "bg-amber-400" },
+                  { label: "Late", value: submissionsSummary.late, total: submissionsSummary.total, color: "bg-red-500" },
                 ].map(item => (
                   <div key={item.label}>
                     <div className="flex justify-between items-center mb-1">
@@ -318,7 +469,7 @@ export default function StudentAnalytics() {
                       <span className="text-sm font-bold text-gray-900">{item.value}/{item.total}</span>
                     </div>
                     <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                      <div className={`h-full rounded-full ${item.color} transition-all duration-700`} style={{ width: `${(item.value / item.total) * 100}%` }} />
+                      <div className={`h-full rounded-full ${item.color} transition-all duration-700`} style={{ width: `${item.total > 0 ? (item.value / item.total) * 100 : 0}%` }} />
                     </div>
                   </div>
                 ))}
@@ -329,9 +480,9 @@ export default function StudentAnalytics() {
             <motion.div variants={fadeUp} className="bg-white rounded-[28px] border border-gray-100 shadow-sm p-6">
               <h3 className="text-sm font-black uppercase tracking-widest text-gray-400 mb-4">Upcoming Deadlines</h3>
               <div className="space-y-3">
-                {MOCK_UPCOMING.map(a => {
+                {upcomingAssignments.map(a => {
                   const dueDate = new Date(a.dueDate);
-                  const daysLeft = Math.ceil((dueDate - new Date("2026-05-01")) / (1000 * 60 * 60 * 24));
+                  const daysLeft = Math.ceil((dueDate - new Date()) / (1000 * 60 * 60 * 24));
                   const urgent = daysLeft <= 7;
                   return (
                     <div key={a.id} className={`rounded-2xl border p-4 flex items-center gap-4 transition-all hover:shadow-sm ${urgent ? "border-amber-200 bg-amber-50/30" : "border-gray-100"}`}>
@@ -360,7 +511,7 @@ export default function StudentAnalytics() {
             <motion.div variants={fadeUp} className="bg-white rounded-[28px] border border-gray-100 shadow-sm p-6">
               <h3 className="text-sm font-black uppercase tracking-widest text-gray-400 mb-4">Recent Feedback</h3>
               <div className="space-y-3">
-                {MOCK_FEEDBACK.map(fb => (
+                {feedback.map(fb => (
                   <motion.div
                     key={fb.id}
                     layout

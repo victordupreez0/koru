@@ -29,6 +29,14 @@ const ICONS = {
       <circle cx="12" cy="7" r="4" />
     </svg>
   ),
+  assignment: (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+      <polyline points="14 2 14 8 20 8" />
+      <line x1="16" y1="13" x2="8" y2="13" />
+      <line x1="16" y1="17" x2="8" y2="17" />
+    </svg>
+  ),
 };
 
 // Larger versions for the tooltip header
@@ -58,6 +66,14 @@ const ICONS_LG = {
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
       <circle cx="12" cy="7" r="4" />
+    </svg>
+  ),
+  assignment: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+      <polyline points="14 2 14 8 20 8" />
+      <line x1="16" y1="13" x2="8" y2="13" />
+      <line x1="16" y1="17" x2="8" y2="17" />
     </svg>
   ),
 };
@@ -105,6 +121,7 @@ export default function CalendarDayBlockEvent({
   type = "class",
   lecturer,
   location,
+  isAssignment = false,
 }) {
   const hasTooltipDetails = lecturer || location || startTime;
 
@@ -129,7 +146,7 @@ export default function CalendarDayBlockEvent({
         >
           {/* ── Title row with icon ── */}
           <div className="flex items-center gap-2 mb-2.5">
-            <div className="w-8 h-8 rounded-xl border border-gray-200 bg-gray-50 flex items-center justify-center shrink-0 text-gray-500">
+            <div className="w-8 h-8 rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 flex items-center justify-center shrink-0 text-gray-500 dark:text-slate-400">
               {ICONS_LG[type] ?? ICONS_LG.class}
             </div>
             <span className="font-semibold text-[13px] text-white leading-snug">{title}</span>

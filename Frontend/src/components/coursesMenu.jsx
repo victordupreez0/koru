@@ -6,6 +6,7 @@ import { useCourses } from "../contexts/CoursesContext";
 import CourseManagerModal from "./courseManagerModal";
 import { Eye, AddCircle } from "@solar-icons/react";
 import { useAuth } from "../contexts/AuthContext";
+import { useDarkMode } from "../hooks/useDarkMode";
 
 // Framer Motion variants matching SideMenu.jsx
 const navbarVariants = {
@@ -23,7 +24,9 @@ const itemVariants = {
     visible: { opacity: 1, x: 0, transition: { duration: 0.25, ease: "easeOut" } },
 };
 
-const CourseItem = ({ course, isActive }) => (
+const CourseItem = ({ course, isActive, isDark }) => {
+    const accentColor = isDark ? "#9BE9EA" : course.color;
+    return (
     <motion.li variants={itemVariants} className="list-none">
         <Link
             to={course.href}
@@ -41,7 +44,8 @@ const CourseItem = ({ course, isActive }) => (
             <span className="text-[10px] font-bold opacity-100 leading-none mt-0.5">{course.number}</span>
         </Link>
     </motion.li>
-);
+    );
+};
 
 /**
  * CourseMenu Component
@@ -54,6 +58,7 @@ export default function CourseMenu() {
     const { visibleCourses } = useCourses();
     const [modalOpen, setModalOpen] = useState(false);
     const { role } = useAuth();
+    const isDark = useDarkMode();
 
     return (
         <>
@@ -74,7 +79,7 @@ export default function CourseMenu() {
                                 />
                             ))
                         ) : (
-                            <li className="text-xs text-gray-400 font-bold p-2 text-center w-14">No Classes</li>
+                            <li className="text-xs text-gray-400 dark:text-slate-500 font-bold p-2 text-center w-14">No Classes</li>
                         )}
                     </motion.ul>
 
@@ -93,7 +98,7 @@ export default function CourseMenu() {
 
                     <button
                         onClick={() => setModalOpen(true)}
-                        className="flex flex-col items-center justify-center w-12 h-12 rounded-xl text-gray-400 hover:text-[#3C0078] hover:bg-gray-100 transition-all cursor-pointer"
+                        className={`flex flex-col items-center justify-center w-12 h-12 rounded-xl text-gray-400 dark:text-slate-500 hover:text-[#3C0078] dark:hover:text-[#9BE9EA] hover:bg-gray-100 dark:hover:bg-slate-700 transition-all cursor-pointer`}
                         title="Manage Enrolled Courses"
                     >
                         <Eye size={24} />

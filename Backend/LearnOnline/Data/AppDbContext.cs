@@ -35,5 +35,8 @@ namespace LearnOnline.Data
 
         // Notes
         public DbSet<Note> Notes { get; set; }
+
+        // Announcements
+        public DbSet<Announcement> Announcements { get; set; }
     }
 }

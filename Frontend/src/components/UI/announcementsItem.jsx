@@ -18,12 +18,12 @@ export default function AnnouncementsItem({
       {/* Title and message preview */}
       <div className="flex flex-col justify-center flex-1 ml-3 min-w-0">
         <h3 className="text-sm font-semibold leading-tight text-black">{title}</h3>
-        <p className="text-xs text-gray-500 pt-3 line-clamp-4 leading-tight">{message}</p>
+        <p className="text-xs text-gray-500 truncate leading-tight">{message}</p>
       </div>
 
       {/* Timestamp */}
       <div className="ml-3 flex items-start">
-        <span className="text-xs text-gray-400 font-medium whitespace-nowrap">{time}</span>
+        <span className="text-xs text-gray-400 dark:text-slate-500 font-medium whitespace-nowrap">{time}</span>
       </div>
     </div>
   );
