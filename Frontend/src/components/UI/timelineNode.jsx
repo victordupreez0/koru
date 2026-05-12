@@ -3,7 +3,7 @@
 // Visual state changes based on whether the event is active (next up), past, first, or last
 export default function TimelineNode({ isActive = false, isPast = false, isFirst = false, isLast = false }) {
   // Past events get a lighter connecting line
-  const lineColor = isPast ? "bg-gray-200" : "bg-gray-300";
+  const lineColor = isPast ? "bg-gray-200" : "bg-purple-200";
 
   return (
     <div className="flex flex-col items-center w-6 shrink-0">
