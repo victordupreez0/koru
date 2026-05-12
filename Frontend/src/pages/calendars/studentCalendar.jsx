@@ -145,7 +145,6 @@ const viewVariants = {
 
 // ─────────────────────────────────────────────────────────────
 export default function StudentCalendar() {
-  const { user } = useAuth();
   const [activeView, setActiveView] = useState("month");
   // Track current month as { year, month } (month is 0-indexed)
   const [currentMonth, setCurrentMonth] = useState(() => {
@@ -251,9 +250,9 @@ export default function StudentCalendar() {
               exit="exit"
             >
               {/* Day-of-week header */}
-              <div className="grid grid-cols-7 border-b border-gray-200 dark:border-slate-700">
+              <div className="grid grid-cols-7 border-b border-gray-200">
                 {WEEK_DAYS.map((label, i) => (
-                  <div key={i} className="text-center text-[11px] font-semibold uppercase tracking-widest text-gray-400 dark:text-slate-500 py-2.5">
+                  <div key={i} className="text-center text-[11px] font-semibold uppercase tracking-widest text-gray-400 py-2.5">
                     {label}
                   </div>
                 ))}
