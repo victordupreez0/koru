@@ -4,19 +4,48 @@ import TimelineNode from "./UI/timelineNode";
 import TimelineEventExpanded from "./UI/timelineEventExpanded";
 import TimelineEventCompressed from "./UI/timelineEventCompressed";
 
-// ──────────────────────────────────────────────
-// Events data – easy to swap with backend later
-// Each event needs: id, title, subtitle, lecturer,
-// duration (string), location, startHour, startMin,
-// endHour, endMin
-// ──────────────────────────────────────────────
-const events = [
-  {
-    id: 1,
-    title: "DV300 – Theory",
-    subtitle: "Project Proposal Pitch",
-    lecturer: "Tsungai Katsuro",
-    duration: "60min",
+import { getAllEvents } from "../services/eventService";
+import { getStudentAssignments } from "../services/assignmentService";
+import { useAuth } from "../contexts/AuthContext";
+
+// Helper: map backend event to timeline format
+function mapBackendEventToTimeline(evt) {
+  const startDate = new Date(evt.startTime);
+  const endDate = new Date(evt.endTime);
+  const durationMinutes = Math.round((endDate - startDate) / 60000);
+  
+  let subtitle = evt.description || "";
+  let location = "TBA";
+  
+  if (evt.description && evt.description.includes("|")) {
+      const parts = evt.description.split("|");
+      subtitle = parts[0];
+      location = parts[1] || "TBA";
+  }
+
+  return {
+    id: evt.id,
+    title: evt.title,
+    subtitle: subtitle,
+    lecturer: evt.createdBy || "Unknown",
+    duration: `${durationMinutes}min`,
+    location: location,
+    startHour: startDate.getHours(),
+    startMin: startDate.getMinutes(),
+    endHour: endDate.getHours(),
+    endMin: endDate.getMinutes(),
+    isAssignment: false
+  };
+}
+
+function mapAssignmentToTimeline(assignment) {
+  const due = new Date(assignment.dueDate);
+  return {
+    id: `assign-${assignment.id}`,
+    title: assignment.title,
+    subtitle: assignment.course?.subject?.code || "Assignment",
+    lecturer: "Submission",
+    duration: "Due",
     location: "Online",
     startHour: 0,
     startMin: 0,
@@ -89,7 +118,46 @@ function formatDate(d) {
 }
 
 export default function TodayTimeline() {
+  const { user } = useAuth();
   const [now, setNow] = useState(new Date());
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch events & assignments
+  useEffect(() => {
+    let mounted = true;
+    async function fetch() {
+      try {
+        setLoading(true);
+        const [data, assignmentsData] = await Promise.all([
+          getAllEvents(),
+          user?.userId ? getStudentAssignments(user.userId) : Promise.resolve([])
+        ]);
+        
+        // Filter for events and assignments that happen today
+        const todayStr = new Date().toDateString();
+        
+        const todayEvents = data
+            .filter(e => new Date(e.startTime).toDateString() === todayStr)
+            .map(mapBackendEventToTimeline);
+            
+        const todayAssignments = assignmentsData
+            .filter(a => new Date(a.dueDate).toDateString() === todayStr)
+            .map(mapAssignmentToTimeline);
+
+        const combined = [...todayEvents, ...todayAssignments]
+            .sort((a, b) => (a.startHour * 60 + a.startMin) - (b.startHour * 60 + b.startMin));
+
+        if (mounted) setEvents(combined);
+      } catch (err) {
+        console.error("Failed bringing in today's timeline events:", err);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    }
+    fetch();
+    return () => { mounted = false; };
+  }, []);
 
   // Re‑sync every 30 s so the "next" event updates automatically
   useEffect(() => {
@@ -103,7 +171,7 @@ export default function TodayTimeline() {
     <div className="w-full h-full flex flex-col bg-white/80 border-1 border-gray-200 rounded-3xl p-4 drop-shadow-xl">
       {/* ── Header ── */}
       <div className="flex items-center justify-between mt-5 mb-1">
-        <h2 className="text-2xl font-['Gabarito']">Today</h2>
+        <h2 className="text-2xl font-['Gabarito'] dark:text-slate-100">Today</h2>
       </div>
       <p className="text-sm text-gray-400 mb-5 font-medium">{formatDate(now)}</p>
       {/* Spacer between header and footer */}

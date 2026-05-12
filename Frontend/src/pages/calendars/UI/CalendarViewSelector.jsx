@@ -74,7 +74,7 @@ export default function CalendarViewSelector({ activeView, onChange }) {
             {/* Sliding white pill */}
             {isActive && (
               <motion.span
-                className="absolute inset-0 rounded-full bg-white shadow-sm z-[-1]"
+                className="absolute inset-0 rounded-full bg-white dark:bg-slate-600 shadow-sm z-[-1]"
                 layoutId="cal-view-pill"
                 transition={{ type: "spring", stiffness: 380, damping: 32 }}
               />

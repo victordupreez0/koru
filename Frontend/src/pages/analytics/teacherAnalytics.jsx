@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   TrendingUp, TrendingDown, Users, CheckCircle, Clock, Award,
@@ -7,10 +7,14 @@ import {
 } from "lucide-react";
 import Menu from "../../components/menu";
 import SideMenu from "../../components/sideMenu";
+import { useCourses } from "../../contexts/CoursesContext";
+import { getCourseAssignments } from "../../services/assignmentService";
+import { getCourseSubmissions } from "../../services/submissionService";
+import { getCourseGrades } from "../../services/gradeService";
 import {
   YEARS, SEMESTERS, YEAR_LEVELS,
-  MOCK_TEACHER_COURSES, MOCK_ASSIGNMENTS, MOCK_COURSE_TRENDS,
-  MOCK_STUDENTS, MOCK_GRADE_DISTRIBUTION
+  MOCK_COURSE_TRENDS,
+  MOCK_GRADE_DISTRIBUTION
 } from "./teacherMockData";
 
 /* ─── animation variants ─── */
@@ -83,35 +87,123 @@ function FilterSelect({ label, value, options, onChange }) {
 
 /* ═══════════════════════ MAIN COMPONENT ═══════════════════════ */
 export default function TeacherAnalytics() {
+  const { visibleCourses, loading: coursesLoading } = useCourses();
+  
   // ── filter state ──
   const [selectedYear, setSelectedYear] = useState(2026);
   const [selectedSemester, setSelectedSemester] = useState("Semester 1");
   const [selectedYearLevel, setSelectedYearLevel] = useState("All");
   const [selectedCourseId, setSelectedCourseId] = useState("all");
 
-  // ── filtered data ──
+  // ── data state ──
+  const [assignments, setAssignments] = useState([]);
+  const [submissions, setSubmissions] = useState([]);
+  const [grades, setGrades] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // ── filtered courses ──
   const filteredCourses = useMemo(() => {
-    return MOCK_TEACHER_COURSES.filter(c =>
-      c.year === Number(selectedYear) &&
-      c.semester === selectedSemester &&
-      (selectedYearLevel === "All" || c.yearLevel === selectedYearLevel)
-    );
-  }, [selectedYear, selectedSemester, selectedYearLevel]);
+    return visibleCourses.filter(c => {
+      // Derive yearLevel from the course number (e.g. "300" -> "3rd Year", "200" -> "2nd Year")
+      if (selectedYearLevel === "All") return true;
+      const num = parseInt(c.number, 10);
+      const level = num >= 300 ? "3rd Year" : num >= 200 ? "2nd Year" : "1st Year";
+      return level === selectedYearLevel;
+    });
+  }, [visibleCourses, selectedYearLevel]);
 
   const activeCourseIds = useMemo(() =>
     selectedCourseId === "all" ? filteredCourses.map(c => c.id) : [selectedCourseId]
   , [selectedCourseId, filteredCourses]);
 
-  const filteredAssignments = useMemo(() =>
-    MOCK_ASSIGNMENTS.filter(a => activeCourseIds.includes(a.courseId))
-  , [activeCourseIds]);
+  // ── fetch data ──
+  useEffect(() => {
+    let mounted = true;
+    async function fetchData() {
+      if (filteredCourses.length === 0) return;
+      try {
+        setLoading(true);
+        const promises = filteredCourses.map(async (c) => {
+          const [a, s, g] = await Promise.all([
+            getCourseAssignments(c.id),
+            getCourseSubmissions(c.id),
+            getCourseGrades(c.id)
+          ]);
+          return { assignments: a, submissions: s, grades: g };
+        });
+
+        const results = await Promise.all(promises);
+        if (mounted) {
+          setAssignments(results.flatMap(r => r.assignments));
+          setSubmissions(results.flatMap(r => r.submissions));
+          setGrades(results.flatMap(r => r.grades));
+        }
+      } catch (err) {
+        console.error("Failed to fetch analytics data:", err);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    }
+    fetchData();
+    return () => { mounted = false; };
+  }, [filteredCourses]);
+
+  // ── derived assignments with stats ──
+  const assignmentsWithStats = useMemo(() => {
+    return assignments.filter(a => activeCourseIds.includes(a.courseId)).map(a => {
+      const subs = submissions.filter(s => s.assignmentId === a.id);
+      const gs = grades.filter(g => g.submission?.assignmentId === a.id);
+      const avgScore = gs.length > 0 ? Math.round(gs.reduce((acc, curr) => acc + curr.pointsEarned, 0) / gs.reduce((acc, curr) => acc + (curr.submission?.assignment?.maxPoints || 100), 0) * 100) : null;
+      
+      return {
+        ...a,
+        totalSubmissions: subs.length,
+        graded: gs.length,
+        avgScore: avgScore,
+        courseCode: filteredCourses.find(c => c.id === a.courseId)?.label || visibleCourses.find(c => c.id === a.courseId)?.label || "???"
+      };
+    });
+  }, [assignments, submissions, grades, activeCourseIds, filteredCourses]);
+
+  // ── derived student roster ──
+  const studentRoster = useMemo(() => {
+    const studentMap = {};
+    submissions.filter(s => activeCourseIds.includes(s.assignment?.courseId)).forEach(s => {
+      const student = s.student;
+      if (!student) return;
+      if (!studentMap[student.id]) {
+        studentMap[student.id] = {
+          id: student.id,
+          name: student.name,
+          email: student.email,
+          avatar: student.name.split(' ').map(n => n[0]).join('').toUpperCase(),
+          totalEarned: 0,
+          totalMax: 0,
+          submissions: 0,
+          totalAssignments: assignmentsWithStats.filter(a => a.courseId === s.assignment?.courseId).length
+        };
+      }
+      studentMap[student.id].submissions++;
+      const grade = grades.find(g => g.submissionId === s.id);
+      if (grade && s.assignment) {
+        studentMap[student.id].totalEarned += grade.pointsEarned;
+        studentMap[student.id].totalMax += s.assignment.maxPoints;
+      }
+    });
+
+    return Object.values(studentMap).map(s => ({
+      ...s,
+      avgGrade: s.totalMax > 0 ? Math.round((s.totalEarned / s.totalMax) * 100) : 0,
+      status: s.totalMax === 0 ? "Good" : (s.totalEarned / s.totalMax >= 0.85 ? "Excellent" : s.totalEarned / s.totalMax >= 0.7 ? "Good" : "At Risk")
+    }));
+  }, [submissions, grades, activeCourseIds, assignmentsWithStats]);
 
   // ── derived stats ──
-  const totalStudents = filteredCourses.filter(c => activeCourseIds.includes(c.id)).reduce((s, c) => s + c.enrolled, 0);
-  const totalSubs = filteredAssignments.reduce((s, a) => s + a.totalSubmissions, 0);
-  const totalGraded = filteredAssignments.reduce((s, a) => s + a.graded, 0);
+  const totalStudents = filteredCourses.filter(c => activeCourseIds.includes(c.id)).reduce((s, c) => s + (c.enrolled || 0), 0) || studentRoster.length;
+  const totalSubs = assignmentsWithStats.reduce((s, a) => s + a.totalSubmissions, 0);
+  const totalGraded = assignmentsWithStats.reduce((s, a) => s + a.graded, 0);
   const pendingGrading = totalSubs - totalGraded;
-  const gradedAssignments = filteredAssignments.filter(a => a.avgScore !== null);
+  const gradedAssignments = assignmentsWithStats.filter(a => a.avgScore !== null);
   const classAvg = gradedAssignments.length ? Math.round(gradedAssignments.reduce((s, a) => s + a.avgScore, 0) / gradedAssignments.length) : 0;
   const gradingPct = totalSubs > 0 ? Math.round((totalGraded / totalSubs) * 100) : 0;
 
@@ -141,7 +233,7 @@ export default function TeacherAnalytics() {
             <select value={selectedCourseId} onChange={e => setSelectedCourseId(e.target.value)}
               className="rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 outline-none focus:border-[#3C0078] focus:ring-2 focus:ring-[#3C0078]/20 transition cursor-pointer">
               <option value="all">All Courses</option>
-              {filteredCourses.map(c => <option key={c.id} value={c.id}>{c.code} – {c.name}</option>)}
+              {filteredCourses.map(c => <option key={c.id} value={c.id}>{c.label} – {c.subjectName}</option>)}
             </select>
           </label>
         </motion.div>
@@ -168,6 +260,8 @@ export default function TeacherAnalytics() {
                   const trend = MOCK_COURSE_TRENDS[course.id];
                   const avg = gradedAssignments.filter(a => a.courseId === course.id);
                   const courseAvg = avg.length ? Math.round(avg.reduce((s, a) => s + a.avgScore, 0) / avg.length) : 0;
+                  const yearLevel = parseInt(course.number, 10) >= 300 ? "3rd Year" : parseInt(course.number, 10) >= 200 ? "2nd Year" : "1st Year";
+                  const enrolledCount = studentRoster.filter(s => submissions.some(sub => sub.assignment?.courseId === course.id && sub.studentId === s.id)).length;
                   return (
                     <motion.div key={course.id} whileHover={{ y: -3 }}
                       onClick={() => setSelectedCourseId(selectedCourseId === course.id ? "all" : course.id)}
@@ -178,14 +272,14 @@ export default function TeacherAnalytics() {
                           <span className="absolute inset-0 flex items-center justify-center text-sm font-black italic text-gray-900">{courseAvg}</span>
                         </div>
                         <div className="min-w-0">
-                          <p className="font-bold text-gray-900 truncate">{course.code}</p>
-                          <p className="text-xs text-gray-400 truncate">{course.name}</p>
+                          <p className="font-bold text-gray-900 truncate">{course.label}</p>
+                          <p className="text-xs text-gray-400 truncate">{course.subjectName}</p>
                         </div>
                       </div>
                       <MiniSparkline data={trend} color={course.color} height={36} />
                       <div className="flex justify-between mt-3 text-xs text-gray-400">
-                        <span>{course.enrolled} students</span>
-                        <span>{course.yearLevel}</span>
+                        <span>{enrolledCount} students</span>
+                        <span>{yearLevel}</span>
                       </div>
                     </motion.div>
                   );
@@ -197,7 +291,7 @@ export default function TeacherAnalytics() {
             <motion.div variants={fadeUp} className="bg-white rounded-[28px] border border-gray-100 shadow-sm overflow-hidden">
               <div className="px-7 py-5 border-b border-gray-50 flex justify-between items-center">
                 <h2 className="text-xl font-bold text-gray-900">Grading Progress</h2>
-                <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">{filteredAssignments.length} assignments</span>
+                <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">{assignmentsWithStats.length} assignments</span>
               </div>
               <table className="w-full text-left">
                 <thead>
@@ -211,7 +305,7 @@ export default function TeacherAnalytics() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredAssignments.map(a => {
+                  {assignmentsWithStats.map(a => {
                     const pct = a.totalSubmissions > 0 ? Math.round((a.graded / a.totalSubmissions) * 100) : 0;
                     const done = a.graded === a.totalSubmissions && a.totalSubmissions > 0;
                     const noGrades = a.avgScore === null;
@@ -249,7 +343,7 @@ export default function TeacherAnalytics() {
             <motion.div variants={fadeUp} className="bg-white rounded-[28px] border border-gray-100 shadow-sm overflow-hidden">
               <div className="px-7 py-5 border-b border-gray-50 flex justify-between items-center">
                 <h2 className="text-xl font-bold text-gray-900">Student Performance</h2>
-                <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">{MOCK_STUDENTS.length} students</span>
+                <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">{studentRoster.length} students</span>
               </div>
               <table className="w-full text-left">
                 <thead>
@@ -261,7 +355,7 @@ export default function TeacherAnalytics() {
                   </tr>
                 </thead>
                 <tbody>
-                  {MOCK_STUDENTS.map(s => (
+                  {studentRoster.map(s => (
                     <tr key={s.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-all group">
                       <td className="px-7 py-4">
                         <div className="flex items-center gap-3">
@@ -337,7 +431,7 @@ export default function TeacherAnalytics() {
             <motion.div variants={fadeUp} className="bg-white rounded-[28px] border border-gray-100 shadow-sm p-6">
               <h3 className="text-sm font-black uppercase tracking-widest text-gray-400 mb-4">Grading Queue</h3>
               <div className="space-y-3">
-                {filteredAssignments.filter(a => a.graded < a.totalSubmissions).map(a => {
+                {assignmentsWithStats.filter(a => a.graded < a.totalSubmissions).map(a => {
                   const remaining = a.totalSubmissions - a.graded;
                   return (
                     <div key={a.id} className="rounded-2xl border border-gray-100 p-4 flex items-center gap-4 hover:border-[#3C0078]/20 transition-all">
@@ -355,7 +449,7 @@ export default function TeacherAnalytics() {
                     </div>
                   );
                 })}
-                {filteredAssignments.filter(a => a.graded < a.totalSubmissions).length === 0 && (
+                {assignmentsWithStats.filter(a => a.graded < a.totalSubmissions).length === 0 && (
                   <div className="text-center py-6 text-gray-400 text-sm">
                     <CheckCircle size={24} className="mx-auto mb-2 text-green-400" />
                     All caught up!
@@ -368,7 +462,7 @@ export default function TeacherAnalytics() {
             <motion.div variants={fadeUp} className="bg-white rounded-[28px] border border-gray-100 shadow-sm p-6">
               <h3 className="text-sm font-black uppercase tracking-widest text-gray-400 mb-4">At-Risk Students</h3>
               <div className="space-y-3">
-                {MOCK_STUDENTS.filter(s => s.status === "At Risk" || s.status === "Critical").map(s => (
+                {studentRoster.filter(s => s.status === "At Risk" || s.status === "Critical").map(s => (
                   <div key={s.id} className={`rounded-2xl border p-4 flex items-center gap-3 ${s.status === "Critical" ? "border-red-200 bg-red-50/30" : "border-amber-200 bg-amber-50/30"}`}>
                     <div className="w-9 h-9 rounded-full bg-white border-2 border-white flex items-center justify-center font-black text-[10px] text-[#3C0078] shadow-sm">{s.avatar}</div>
                     <div className="flex-1 min-w-0">
@@ -378,7 +472,7 @@ export default function TeacherAnalytics() {
                     <span className={`text-lg font-black italic ${s.avgGrade < 50 ? "text-red-600" : "text-amber-600"}`}>{s.avgGrade}%</span>
                   </div>
                 ))}
-                {MOCK_STUDENTS.filter(s => s.status === "At Risk" || s.status === "Critical").length === 0 && (
+                {studentRoster.filter(s => s.status === "At Risk" || s.status === "Critical").length === 0 && (
                   <p className="text-center py-4 text-sm text-gray-400">No at-risk students 🎉</p>
                 )}
               </div>

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
 
@@ -46,7 +46,7 @@ function ToggleRow({ icon, title, description, checked, onChange }) {
         </div>
       </div>
 
-      <span className="relative inline-flex h-7 w-12 items-center">
+      <span className="relative inline-flex h-7 w-12 shrink-0 items-center">
         <input
           type="checkbox"
           checked={checked}
@@ -70,7 +70,11 @@ export default function SettingsPage() {
   const [settings, setSettings] = useState(() => {
     try {
       const saved = JSON.parse(localStorage.getItem(SETTINGS_STORAGE_KEY) || "null");
-      return saved ? { ...defaultSettings, ...saved } : defaultSettings;
+      const auth = JSON.parse(localStorage.getItem("learnonline.auth") || "null");
+      const base = saved ? { ...defaultSettings, ...saved } : { ...defaultSettings };
+      // Auth theme takes priority — it is user-specific
+      if (auth?.theme) base.theme = auth.theme;
+      return base;
     } catch {
       return defaultSettings;
     }
@@ -107,7 +111,9 @@ export default function SettingsPage() {
     [],
   );
 
-  // Persist settings and apply their effects across the app without a separate context
+  // Persist settings and apply their effects across the app without a separate context.
+  // Font-size and line-height changes are debounced so that dragging a slider does not
+  // cause the whole page to constantly reflow — they commit 120 ms after the last move.
   useEffect(() => {
     localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
     window.dispatchEvent(new Event("learnonline-settings-changed"));
@@ -115,7 +121,19 @@ export default function SettingsPage() {
     document.body.style.lineHeight = `${settings.lineSpacing / 100}`;
 
     document.body.classList.toggle("dyslexic-font", settings.font === "OpenDyslexic");
+    window.dispatchEvent(new Event("learnonline-settings-changed"));
     document.body.classList.remove("theme-high-contrast", "reduce-motion", "focus-mode");
+
+    // Debounce the layout-affecting DOM changes
+    if (domApplyTimer.current) clearTimeout(domApplyTimer.current);
+    domApplyTimer.current = setTimeout(() => {
+      document.documentElement.style.fontSize = `${settings.textSize}%`;
+      document.body.style.lineHeight = `${settings.lineSpacing / 100}`;
+    }, 120);
+
+    return () => {
+      if (domApplyTimer.current) clearTimeout(domApplyTimer.current);
+    };
   }, [settings]);
 
   // Manual preview is available from the text-to-speech section below.
