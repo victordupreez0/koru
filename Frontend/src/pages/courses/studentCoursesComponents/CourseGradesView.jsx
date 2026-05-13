@@ -1,53 +1,126 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { GRADES_DATA, staggerContainer, slideUp } from "./constants";
+import { getCourseAssignments } from "../../../services/assignmentService";
+import { getStudentSubmissions } from "../../../services/submissionService";
+import { getStudentGrades } from "../../../services/gradeService";
+import { useAuth } from "../../../contexts/AuthContext";
+import { staggerContainer, slideUp } from "./constants";
 
-export default function CourseGradesView() {
+export default function CourseGradesView({ subject, activeCourseId }) {
+    const { user } = useAuth();
+    const [gradesData, setGradesData] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [avgGrade, setAvgGrade] = useState("-");
+
+    useEffect(() => {
+        let mounted = true;
+        async function fetchGrades() {
+            if (!activeCourseId || !user?.userId) return;
+            try {
+                setLoading(true);
+                const [assignments, submissions, grades] = await Promise.all([
+                    getCourseAssignments(activeCourseId),
+                    getStudentSubmissions(user.userId),
+                    getStudentGrades(user.userId)
+                ]);
+
+                let totalPoints = 0;
+                let earnedPoints = 0;
+
+                const mapped = assignments.map(a => {
+                    const sub = submissions.find(s => s.assignmentId === a.id);
+                    const grade = sub ? grades.find(g => g.submissionId === sub.id) : null;
+
+                    let status = "Pending";
+                    let gradeText = "-";
+                    const weight = a.maxPoints ? `${a.maxPoints} pts` : "N/A";
+
+                    if (grade) {
+                        status = "Graded";
+                        gradeText = `${Math.round((grade.pointsEarned / a.maxPoints) * 100)}%`;
+                        totalPoints += a.maxPoints;
+                        earnedPoints += grade.pointsEarned;
+                    } else if (sub) {
+                        status = "Submitted";
+                    } else if (new Date(a.dueDate) < new Date()) {
+                        status = "Late";
+                        gradeText = "0%";
+                    }
+
+                    return {
+                        id: a.id,
+                        name: a.title,
+                        date: new Date(a.dueDate).toLocaleDateString(),
+                        weight,
+                        status,
+                        grade: gradeText
+                    };
+                });
+
+                if (mounted) {
+                    setGradesData(mapped);
+                    if (totalPoints > 0) {
+                        setAvgGrade(`${((earnedPoints / totalPoints) * 100).toFixed(1)}%`);
+                    } else {
+                        setAvgGrade("-");
+                    }
+                }
+            } catch (err) {
+                console.error("Failed to load grades:", err);
+            } finally {
+                if (mounted) setLoading(false);
+            }
+        }
+        fetchGrades();
+        return () => { mounted = false; };
+    }, [activeCourseId, user?.userId]);
+
     return (
         <motion.div className="flex-1 p-8 overflow-y-auto" initial="hidden" animate="visible" variants={staggerContainer}>
             <motion.header variants={slideUp} className="mb-12">
                 <h1 className="text-3xl font-semibold tracking-tight text-gray-900">Grades</h1>
-                <p className="text-gray-500 mt-2">UX300 | Academic Performance Overview</p>
+                <p className="text-gray-500 mt-2">{subject?.code || ""} | Academic Performance Overview</p>
             </motion.header>
             <motion.div variants={slideUp} className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
                 <table className="w-full text-left border-collapse">
                     <thead>
                         <tr className="border-b border-gray-50 bg-gray-50/50">
                             <th className="px-8 py-5 text-xs font-bold uppercase tracking-wider text-gray-400">Assignment Name</th>
-                            <th className="px-8 py-5 text-xs font-bold uppercase tracking-wider text-gray-400">Weight</th>
+                            <th className="px-8 py-5 text-xs font-bold uppercase tracking-wider text-gray-400">Points</th>
                             <th className="px-8 py-5 text-xs font-bold uppercase tracking-wider text-gray-400">Status</th>
                             <th className="px-8 py-5 text-xs font-bold uppercase tracking-wider text-gray-400 text-right">Grade</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {GRADES_DATA.map((item) => (
-                            <motion.tr key={item.id} variants={slideUp} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/30 transition-colors">
-                                <td className="px-8 py-6">
-                                    <div className="font-medium text-gray-900">{item.name}</div>
-                                    <div className="text-xs text-gray-400 mt-1">{item.date}</div>
-                                </td>
-                                <td className="px-8 py-6 text-sm text-gray-600">{item.weight}</td>
-                                <td className="px-8 py-6">
-                                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide ${item.status === "Graded" ? "bg-green-50 text-green-600" : "bg-orange-50 text-orange-600"}`}>{item.status}</span>
-                                </td>
-                                <td className="px-8 py-6 text-right">
-                                    <span className="text-lg font-semibold text-gray-900">{item.grade}</span>
-                                </td>
-                            </motion.tr>
-                        ))}
+                        {loading ? (
+                            <tr><td colSpan="4" className="text-center py-6 text-gray-500">Loading remote grades...</td></tr>
+                        ) : gradesData.length === 0 ? (
+                            <tr><td colSpan="4" className="text-center py-6 text-gray-500">No grades found.</td></tr>
+                        ) : (
+                            gradesData.map((item) => (
+                                <motion.tr key={item.id} variants={slideUp} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/30 transition-colors">
+                                    <td className="px-8 py-6">
+                                        <div className="font-medium text-gray-900">{item.name}</div>
+                                        <div className="text-xs text-gray-400 mt-1">{item.date}</div>
+                                    </td>
+                                    <td className="px-8 py-6 text-sm text-gray-600">{item.weight}</td>
+                                    <td className="px-8 py-6">
+                                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide ${item.status === "Graded" ? "bg-green-50 text-green-600" : item.status === "Late" ? "bg-red-50 text-red-600" : "bg-orange-50 text-orange-600"}`}>{item.status}</span>
+                                    </td>
+                                    <td className="px-8 py-6 text-right">
+                                        <span className="text-lg font-semibold text-gray-900">{item.grade}</span>
+                                    </td>
+                                </motion.tr>
+                            ))
+                        )}
                     </tbody>
                 </table>
             </motion.div>
             <motion.div variants={slideUp} className="mt-8 flex justify-end">
                 <div className="bg-[#3C0078] text-white px-8 py-6 rounded-3xl shadow-lg shadow-[#3C0078]/20 flex items-center gap-12">
                     <div className="flex flex-col">
-                        <span className="text-[10px] uppercase font-bold tracking-[0.2em] opacity-80">Course Progress</span>
-                        <span className="text-sm font-medium">Completed: 60%</span>
-                    </div>
-                    <div className="w-px h-8 bg-white/20"></div>
-                    <div className="flex flex-col">
                         <span className="text-[10px] uppercase font-bold tracking-[0.2em] opacity-80">Current Average</span>
-                        <span className="text-2xl font-bold italic">82.4%</span>
+                        <span className="text-2xl font-bold italic">{avgGrade}</span>
                     </div>
                 </div>
             </motion.div>

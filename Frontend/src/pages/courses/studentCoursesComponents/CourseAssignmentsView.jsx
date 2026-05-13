@@ -3,25 +3,37 @@ import { useNavigate } from "react-router-dom";
 import { Folder, Upload } from "@solar-icons/react";
 import { motion } from "framer-motion";
 import { getCourseAssignments } from "../../../services/assignmentService";
+import { getStudentSubmissions } from "../../../services/submissionService";
+import { getStudentGrades } from "../../../services/gradeService";
+import { useAuth } from "../../../contexts/AuthContext";
 import { staggerContainer, slideUp } from "./constants";
 
 export default function CourseAssignmentsView({ subject, activeCourseId }) {
     const navigate = useNavigate();
+    const { user } = useAuth();
     const [assignments, setAssignments] = React.useState([]);
     const [loading, setLoading] = React.useState(true);
 
-    const computeStatusInfo = (item) => {
-        // Hardcode "Usability Testing Report" to be "Submitted" for dev testing
-        if (item.title === "Usability Testing Report" || item.title === "Literature Review Module") {
-            return { status: 'Submitted', color: 'text-green-600', rank: 3, isSubmitted: true };
+    const computeStatusInfo = (item, submission, grade) => {
+        // Priority: Graded > Submitted > date-based heuristics
+        if (grade) {
+            return {
+                status: 'Graded',
+                color: 'text-purple-600',
+                rank: 5,
+                isGraded: true,
+                gradePercent: Math.round((grade.pointsEarned / item.maxPoints) * 100)
+            };
+        }
+        if (submission) {
+            return { status: 'Submitted', color: 'text-green-600', rank: 4, isSubmitted: true };
         }
 
         const now = new Date();
         const due = new Date(item.dueDate);
         const diffDays = (due - now) / (1000 * 60 * 60 * 24);
-        
-        // As actual submissions aren't wired, we compute entirely by date heuristic
-        if (diffDays < -7) return { status: 'Closed', color: 'text-gray-400', rank: 4, isClosed: true };
+
+        if (diffDays < -7) return { status: 'Closed', color: 'text-gray-400', rank: 3, isClosed: true };
         if (diffDays < 0) return { status: 'Late', color: 'text-red-600', rank: 0 };
         if (diffDays <= 5) return { status: 'Due Soon', color: 'text-orange-500', rank: 1 };
         return { status: 'Due', color: 'text-blue-500', rank: 2 };
@@ -29,15 +41,21 @@ export default function CourseAssignmentsView({ subject, activeCourseId }) {
 
     React.useEffect(() => {
         let mounted = true;
-        async function fetch() {
-            if (!activeCourseId) return;
+        async function fetchData() {
+            if (!activeCourseId || !user?.userId) return;
             try {
                 setLoading(true);
-                const data = await getCourseAssignments(activeCourseId);
-                
-                // Enqueue map & sort logic for the requested importance hierarchy
+                const [data, submissions, grades] = await Promise.all([
+                    getCourseAssignments(activeCourseId),
+                    getStudentSubmissions(user.userId),
+                    getStudentGrades(user.userId)
+                ]);
+
+                // Cross-reference assignments with real submissions and grades
                 const enriched = data.map(item => {
-                    const info = computeStatusInfo(item);
+                    const sub = submissions.find(s => s.assignmentId === item.id);
+                    const grade = sub ? grades.find(g => g.submissionId === sub.id) : null;
+                    const info = computeStatusInfo(item, sub, grade);
                     return { ...item, ...info };
                 }).sort((a, b) => a.rank - b.rank);
 
@@ -48,9 +66,9 @@ export default function CourseAssignmentsView({ subject, activeCourseId }) {
                 if (mounted) setLoading(false);
             }
         }
-        fetch();
+        fetchData();
         return () => { mounted = false; };
-    }, [activeCourseId]);
+    }, [activeCourseId, user?.userId]);
 
     return (
         <motion.div className="flex-1 p-8 overflow-y-auto" initial="hidden" animate="visible" variants={staggerContainer}>
@@ -76,7 +94,7 @@ export default function CourseAssignmentsView({ subject, activeCourseId }) {
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 font-sans">
                     {assignments.map((item, index) => (
-                        <motion.div key={item.id} variants={slideUp} className={`bg-white p-6 rounded-[40px] border border-gray-100 shadow-sm relative overflow-hidden group hover:shadow-xl transition-all duration-300 flex flex-col justify-between ${item.isClosed || item.isSubmitted ? 'opacity-60 bg-gray-50' : 'opacity-100'}`}>
+                        <motion.div key={item.id} variants={slideUp} className={`bg-white p-6 rounded-[40px] border border-gray-100 shadow-sm relative overflow-hidden group hover:shadow-xl transition-all duration-300 flex flex-col justify-between ${item.isClosed || item.isSubmitted || item.isGraded ? 'opacity-60 bg-gray-50' : 'opacity-100'}`}>
                             <div>
                                 <div className="flex justify-between items-start mb-4">
                                     <h2 className="text-xl font-bold text-gray-900 group-hover:text-[#3C0078] transition-colors leading-tight pr-4">{item.title}</h2>
@@ -93,11 +111,17 @@ export default function CourseAssignmentsView({ subject, activeCourseId }) {
                                     <span className="text-gray-400 uppercase font-bold tracking-widest">Due Date:</span>
                                     <span className="text-gray-900 font-bold">{new Date(item.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
                                 </div>
+                                {item.isGraded && (
+                                    <div className="flex justify-between items-center text-xs">
+                                        <span className="text-gray-400 uppercase font-bold tracking-widest">Grade:</span>
+                                        <span className="text-purple-600 font-bold">{item.gradePercent}%</span>
+                                    </div>
+                                )}
                                 <button
                                     onClick={() => navigate(`/courses/${activeCourseId}/assignments/${item.id}`)}
-                                    className={`w-full mt-2 py-3 rounded-2xl text-xs font-bold uppercase tracking-widest text-white transition-all flex items-center justify-center gap-2 shadow-sm ${item.isClosed || item.isSubmitted ? 'bg-gray-800 hover:bg-black' : 'bg-[#3C0078] hover:bg-[#2A0054]'}`}>
-                                    {(!item.isClosed && !item.isSubmitted) && <Upload size={16} />}
-                                    {item.isClosed ? "View" : item.isSubmitted ? "View Submission" : "View & Submit"}
+                                    className={`w-full mt-2 py-3 rounded-2xl text-xs font-bold uppercase tracking-widest text-white transition-all flex items-center justify-center gap-2 shadow-sm ${item.isClosed || item.isSubmitted || item.isGraded ? 'bg-gray-800 hover:bg-black' : 'bg-[#3C0078] hover:bg-[#2A0054]'}`}>
+                                    {(!item.isClosed && !item.isSubmitted && !item.isGraded) && <Upload size={16} />}
+                                    {item.isGraded ? "View Grade" : item.isClosed ? "View" : item.isSubmitted ? "View Submission" : "View & Submit"}
                                 </button>
                             </div>
                         </motion.div>
