@@ -1,4 +1,6 @@
+import { useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { useAuth } from "./contexts/AuthContext";
 
 // Page components – rendered based on the current route
 import Dashboard from "./pages/dashboard";
@@ -16,6 +18,17 @@ import AnalyticsPage from "./pages/analytics";
 
 // Root application component – sets up routing and the shared layout
 function App() {
+  const { role } = useAuth();
+
+  // Stamp the user role on <body> so CSS can drive role-specific backgrounds
+  useEffect(() => {
+    if (role) {
+      document.body.setAttribute("data-role", role);
+    } else {
+      document.body.removeAttribute("data-role");
+    }
+  }, [role]);
+
   return (
     <BrowserRouter>
       <RouteSpeechAnnouncer />
