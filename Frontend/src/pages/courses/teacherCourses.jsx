@@ -2138,7 +2138,7 @@ export default function TeacherCourses() {
             </div>
 
       {/* Middle Section: Second Navigation Bar for course-internal links */}
-      <div className="flex flex-col h-full border-r border-gray-200">
+      <div className="flex flex-col h-full py-1 justify-center">
         <CourseSecondaryNav activeCourseId={activeCourseId || (visibleCourses[0]?.id)} />
       </div>
 
