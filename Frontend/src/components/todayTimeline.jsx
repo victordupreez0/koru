@@ -47,17 +47,18 @@ const events = [
     endHour: 15,
     endMin: 30,
   },
-  {
-    id: 4,
-    title: "UX300 – Workshop",
-    subtitle: "Usability Testing",
-    lecturer: "Anna Pretorius",
-    duration: "45min",
+
+   {
+    id: 5,
+    title: "CD 100",
+    subtitle: "Magazine Draft",
+    lecturer: "Carmen Pretorius",
+    duration: "2h",
     location: "Online",
-    startHour: 16,
-    startMin: 0,
-    endHour: 16,
-    endMin: 45,
+    startHour: 17,
+    startMin: 30,
+    endHour: 19,
+    endMin: 30,
   },
 ];
 
