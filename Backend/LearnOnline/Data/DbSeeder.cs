@@ -133,7 +133,11 @@ namespace LearnOnline.Data
                 var dvCourseId = context.Courses.FirstOrDefault(c => c.Subject != null && c.Subject.Code == "DV300")?.Id;
                 var vcCourseId = context.Courses.FirstOrDefault(c => c.Subject != null && c.Subject.Code == "VC300")?.Id;
 
-                var baseDate = DateTime.UtcNow.Date; // Anchors to exactly midnight today so times don't drift on restart
+                // Anchor to South Africa local midnight (UTC+2), stored as UTC.
+                // This ensures AddHours(23).AddMinutes(59) renders as 11:59 PM local SA time on the frontend.
+                var saOffset = TimeSpan.FromHours(2);
+                var localToday = (DateTime.UtcNow + saOffset).Date;
+                var baseDate = DateTime.SpecifyKind(localToday - saOffset, DateTimeKind.Utc);
 
                 // UX Assignments
                 if (uxCourseId != null) {
@@ -267,10 +271,13 @@ namespace LearnOnline.Data
                 var dvCourseId = context.Courses.FirstOrDefault(c => c.Subject != null && c.Subject.Code == "DV300")?.Id;
                 var vcCourseId = context.Courses.FirstOrDefault(c => c.Subject != null && c.Subject.Code == "VC300")?.Id;
 
-                // Find the Monday of the current week to anchor our schedule
-                var today = DateTime.UtcNow.Date;
-                int diff = (7 + (today.DayOfWeek - DayOfWeek.Monday)) % 7;
-                var startOfWeek = today.AddDays(-1 * diff);
+                // Find the Monday of the current SA-local week, stored as UTC.
+                // This ensures weekStart.AddHours(10) renders as 10:00 AM local SA time on the frontend.
+                var saOffset = TimeSpan.FromHours(2);
+                var localToday = (DateTime.UtcNow + saOffset).Date;
+                int diff = (7 + (localToday.DayOfWeek - DayOfWeek.Monday)) % 7;
+                var localMonday = localToday.AddDays(-1 * diff);
+                var startOfWeek = DateTime.SpecifyKind(localMonday - saOffset, DateTimeKind.Utc);
 
                 for (int i = 0; i < 4; i++) // Generate 4 weeks of regular classes
                 {
