@@ -62,7 +62,7 @@ function ColumnCard({ children, isSelected, onClick, className = "" }) {
 // ──────────────────────────────────────────────
 function FilterDropdown({ label, value, options, onChange }) {
   return (
-    <div className="relative mt-20">
+    <div className="relative">
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
@@ -354,13 +354,13 @@ export default function AdminDashboard() {
   const showAddStudent = selectedCourseId && !isAddingCourse && !isAddingLecturer;
 
   return (
-    <div className="flex flex-row gap-8 items-start -mt-4">
+    <div className="relative h-[80vh] overflow-hidden flex items-center justify-center p-6">
       <Menu />
       <SideMenu />
 
-      <div className="w-full">
+      <div className="flex flex-col h-full w-full max-w-[1400px]">
         {/* ── Year / Semester filter bar ── */}
-        <div className="flex items-center justify-start gap-4 mb-8">
+        <div className="flex items-center justify-start gap-4 pt-16 pb-4">
           <FilterDropdown
             label="Year"
             value={year}
@@ -384,10 +384,10 @@ export default function AdminDashboard() {
         </div>
 
         {/* ── Three-column grid ── */}
-        <div className="grid grid-cols-3 gap-6">
+        <div className="grid grid-cols-3 gap-6 flex-1 min-h-0">
 
           {/* ════════════════════ COLUMN 1: LECTURERS ════════════════════ */}
-          <div className="flex flex-col">
+          <div className="flex flex-col bg-white/80 border-1 border-gray-200 rounded-3xl drop-shadow-xl p-4 min-h-0">
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-2xl font-bold font-['Gabarito']">Lecturers</h2>
               <button
@@ -400,7 +400,7 @@ export default function AdminDashboard() {
             </div>
             <SearchInput value={lecturerSearch} onChange={setLecturerSearch} />
 
-            <div className="mt-4 flex flex-col gap-2 max-h-[calc(100vh-320px)] overflow-y-auto pr-1">
+            <div className="mt-4 flex flex-col gap-2 flex-1 min-h-0 overflow-y-auto pr-1">
               <AnimatePresence>
                 {isAddingLecturer && (
                   <AddLecturerForm
@@ -449,7 +449,7 @@ export default function AdminDashboard() {
 
 
           {/* ════════════════════ COLUMN 2: COURSES ════════════════════ */}
-          <div className="flex flex-col">
+          <div className="flex flex-col bg-white/80 border-1 border-gray-200 rounded-3xl drop-shadow-xl p-4 min-h-0">
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-2xl font-bold font-['Gabarito']">Courses</h2>
               {showAddCourse && (
@@ -464,7 +464,7 @@ export default function AdminDashboard() {
             </div>
             <SearchInput value={courseSearch} onChange={setCourseSearch} />
 
-            <div className="mt-4 flex flex-col gap-2 max-h-[calc(100vh-320px)] overflow-y-auto pr-1">
+            <div className="mt-4 flex flex-col gap-2 flex-1 min-h-0 overflow-y-auto pr-1">
               <AnimatePresence>
                 {isAddingCourse && selectedLecturer && (
                   <AddCourseForm
@@ -504,7 +504,7 @@ export default function AdminDashboard() {
 
 
           {/* ════════════════════ COLUMN 3: STUDENTS ════════════════════ */}
-          <div className="flex flex-col">
+          <div className="flex flex-col bg-white/80 border-1 border-gray-200 rounded-3xl drop-shadow-xl p-4 min-h-0">
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-2xl font-bold font-['Gabarito']">Students</h2>
               {showAddStudent && (
@@ -529,7 +529,7 @@ export default function AdminDashboard() {
               </select>
             </div>
 
-            <div className="mt-4 flex flex-col gap-2 max-h-[calc(100vh-320px)] overflow-y-auto pr-1">
+            <div className="mt-4 flex flex-col gap-2 flex-1 min-h-0 overflow-y-auto pr-1">
               {!selectedCourseId ? (
                 <p className="text-sm text-gray-400 text-center py-8">Select a course to view students.</p>
               ) : filteredStudents.length === 0 ? (
