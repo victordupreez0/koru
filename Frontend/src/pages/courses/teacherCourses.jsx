@@ -2079,6 +2079,11 @@ export default function TeacherCourses() {
     const navigate = useNavigate();
     const { visibleCourses, loading } = useCourses();
 
+    // Check for hideNav in URL and persist it
+    const hideNav = React.useMemo(() => {
+        return new URLSearchParams(location.search).get("hideNav") === "true";
+    }, [location.search]);
+
     // The route matches /courses/:courseId/:subpage 
     // E.g. pathParts = ["courses", "dfg897-...", "grades"]
     const pathParts = location.pathname.split('/').filter(Boolean);
@@ -2092,14 +2097,15 @@ export default function TeacherCourses() {
             
             if (!activeCourseId || !courseExistsInList) {
                 // Redirect to the first course's home if no valid course ID is present
-                navigate(`/courses/${visibleCourses[0].id}`, { replace: true });
+                const targetPath = `/courses/${visibleCourses[0].id}${hideNav ? '?hideNav=true' : ''}`;
+                navigate(targetPath, { replace: true });
             } else if (pathParts.length === 2) {
                 // If we have /courses/:id but nothing else, the UI is already showing CourseHomeView
                 // but we might want to ensure it's explicitly handled if needed.
                 // Currently, isHomePage handles the rendering logic.
             }
         }
-    }, [loading, visibleCourses, activeCourseId, navigate, pathParts.length]);
+    }, [loading, visibleCourses, activeCourseId, navigate, pathParts.length, hideNav]);
 
     // Build the resolved standard course object
     const course = visibleCourses.find(c => c.id === activeCourseId) || visibleCourses[0] || null;
@@ -2123,26 +2129,34 @@ export default function TeacherCourses() {
     // We force Home if exactly on the course ID path or if no other specific sub-page is matched below
     const isHomePage = !isGradesPage && !isAnnouncementsPage && !isAssignmentsPage && !isAttendancePage && !isModulesPage && !isNotesPage;
 
-    return (
-        <div className="flex h-screen overflow-hidden">
-            {/* The global top menu that was previously disappearing */}
-            <Menu />
-            
-            {/* Leftmost Course Navigation Bar */}
-            <div className="flex flex-col h-full py-8 px-4 items-center gap-6 ">
-                <CourseMenu />
+    // Check if we are in a preview modal to optimize performance
+    const isPreview = new URLSearchParams(window.location.search).get("viewAs") === "teacher";
 
-                <div className="mt-auto">
-                    <SideMenu />
-                </div>
-            </div>
+    return (
+        <div className={`flex h-screen overflow-hidden ${(isPreview || hideNav) ? 'bg-white' : ''}`}>
+            {!isPreview && !hideNav && (
+                <>
+                    {/* The global top menu that was previously disappearing */}
+                    <Menu />
+                    
+                    {/* Leftmost Course Navigation Bar */}
+                    <div className="flex flex-col h-full py-8 px-4 items-center gap-6 ">
+                        <CourseMenu />
+
+                        <div className="mt-auto">
+                            <SideMenu />
+                        </div>
+                    </div>
+                </>
+            )}
 
       {/* Middle Section: Second Navigation Bar for course-internal links */}
       <div className="flex flex-col h-full border-r border-gray-200">
-        <CourseSecondaryNav activeCourseId={activeCourseId || (visibleCourses[0]?.id)} />
+        <CourseSecondaryNav activeCourseId={activeCourseId || (visibleCourses[0]?.id)} hideNav={hideNav} />
       </div>
 
             {/* Main Content Area */}
+            <div className={`flex-1 flex flex-col ${(isPreview || hideNav) ? 'pt-4' : 'pt-24'} overflow-y-auto`}>
             {isGradesPage ? (
                 <CourseGradesView />
             ) : isAnnouncementsPage ? (
@@ -2158,6 +2172,7 @@ export default function TeacherCourses() {
             ) : (
                 <CourseHomeView subject={subject} course={course} loading={loading} />
             )}
+            </div>
         </div>
     );
 }

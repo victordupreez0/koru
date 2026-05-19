@@ -1,6 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ChevronDown } from "lucide-react";
+import TeacherPerspectiveModal from "./TeacherPerspectiveModal";
+import StudentPerspectiveModal from "./StudentPerspectiveModal";
 
 const DEGREES = [
   "UX Design Degree",
@@ -21,10 +23,14 @@ export default function CourseDetailModal({
   onSave, 
   onDelete 
 }) {
+  const [showTeacherPreview, setShowTeacherPreview] = useState(false);
+  const [showStudentPreview, setShowStudentPreview] = useState(false);
+
   if (!course) return null;
 
   return (
-    <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/40 backdrop-blur-sm p-6" onClick={onClose}>
+    <>
+      <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/40 backdrop-blur-sm p-6" onClick={onClose}>
       <motion.div 
         initial={{ scale: 0.95, opacity: 0 }} 
         animate={{ scale: 1, opacity: 1 }} 
@@ -218,10 +224,16 @@ export default function CourseDetailModal({
                           <p className="text-[11px] font-medium text-gray-400 leading-tight">Preview this course as it appears to different platform roles.</p>
                         </div>
                         <div className="flex gap-3">
-                          <button className="px-6 py-3.5 rounded-2xl bg-white border border-[#3C0078]/10 text-[11px] font-black uppercase text-[#3C0078] tracking-widest hover:bg-[#3C0078] hover:text-white hover:border-transparent transition-all shadow-sm">
+                          <button 
+                            onClick={() => setShowTeacherPreview(true)}
+                            className="px-6 py-3.5 rounded-2xl bg-white border border-[#3C0078]/10 text-[11px] font-black uppercase text-[#3C0078] tracking-widest hover:bg-[#3C0078] hover:text-white hover:border-transparent transition-all shadow-sm"
+                          >
                             Teacher View
                           </button>
-                          <button className="px-6 py-3.5 rounded-2xl bg-white border border-[#3C0078]/10 text-[11px] font-black uppercase text-[#3C0078] tracking-widest hover:bg-[#3C0078] hover:text-white hover:border-transparent transition-all shadow-sm">
+                          <button 
+                            onClick={() => setShowStudentPreview(true)}
+                            className="px-6 py-3.5 rounded-2xl bg-white border border-[#3C0078]/10 text-[11px] font-black uppercase text-[#3C0078] tracking-widest hover:bg-[#3C0078] hover:text-white hover:border-transparent transition-all shadow-sm"
+                          >
                             Student View
                           </button>
                         </div>
@@ -262,6 +274,25 @@ export default function CourseDetailModal({
             </div>
           </div>
       </motion.div>
-    </div>
+      </div>
+
+      <AnimatePresence>
+        {showTeacherPreview && (
+          <TeacherPerspectiveModal 
+            course={course} 
+            onClose={() => setShowTeacherPreview(false)} 
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showStudentPreview && (
+          <StudentPerspectiveModal 
+            course={course} 
+            onClose={() => setShowStudentPreview(false)} 
+          />
+        )}
+      </AnimatePresence>
+    </>
   );
 }
