@@ -45,43 +45,41 @@ const MONTH_NAMES = [
   "July", "August", "September", "October", "November", "December",
 ];
 
+/** Format a Date to YYYY-MM-DD using local timezone (avoids UTC shift from toISOString) */
+function formatLocalDate(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
 /**
  * Build the calendar grid for a given year/month.
  * Returns an array of week arrays (each week = 7 day objects).
  * Weeks start on Monday. Days from adjacent months are marked isOutside.
  */
 function buildGridWeeks(year, month) {
-  // First day of the month
   const firstDay = new Date(year, month, 1);
-  // Day of week for the 1st (shift so Monday = 0)
   let startDow = firstDay.getDay() - 1;
-  if (startDow < 0) startDow = 6; // Sunday becomes 6
+  if (startDow < 0) startDow = 6;
 
-  // Last day of the month
-  const lastDay = new Date(year, month + 1, 0).getDate();
-
-  // Build flat list starting from Monday of the first week
   const cells = [];
   const startDate = new Date(year, month, 1 - startDow);
 
-  // We need enough cells to cover the month (max 6 weeks = 42 cells)
   for (let i = 0; i < 42; i++) {
-    const d = new Date(startDate);
-    d.setDate(startDate.getDate() + i);
+    const d = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + i);
     cells.push({
-      date: d.toISOString().slice(0, 10),
+      date: formatLocalDate(d),
       day: d.getDate(),
       isOutside: d.getMonth() !== month,
     });
   }
 
-  // Group into weeks of 7
   const weeks = [];
   for (let i = 0; i < cells.length; i += 7) {
     weeks.push(cells.slice(i, i + 7));
   }
 
-  // Trim trailing weeks that are entirely outside the month
   while (weeks.length > 0 && weeks[weeks.length - 1].every(c => c.isOutside)) {
     weeks.pop();
   }
@@ -90,24 +88,23 @@ function buildGridWeeks(year, month) {
 }
 
 /**
- * Generate events for a given month from the weekly template.
- * Each template entry is stamped onto every matching weekday in the month.
+ * Generate events for ALL visible dates in the grid from the weekly template.
+ * This ensures overflow days from adjacent months also have events.
  */
-function generateMonthEvents(year, month) {
-  const lastDay = new Date(year, month + 1, 0).getDate();
+function generateEventsForGrid(gridWeeks) {
   const events = [];
   let idCounter = 1;
 
-  for (let day = 1; day <= lastDay; day++) {
-    const d = new Date(year, month, day);
-    const dow = d.getDay(); // 0-6
-    const dateStr = d.toISOString().slice(0, 10);
+  const allDates = gridWeeks.flat();
+  allDates.forEach(({ date }) => {
+    const d = new Date(date + 'T00:00:00'); // parse as local
+    const dow = d.getDay();
 
     WEEKLY_TEMPLATE.forEach((tmpl) => {
       if (tmpl.dayOfWeek === dow) {
         events.push({
           id: idCounter++,
-          date: dateStr,
+          date,
           title: tmpl.title,
           startTime: tmpl.startTime,
           endTime: tmpl.endTime,
@@ -117,7 +114,7 @@ function generateMonthEvents(year, month) {
         });
       }
     });
-  }
+  });
 
   return events;
 }
@@ -173,12 +170,12 @@ export default function StudentCalendar() {
   );
 
   const events = useMemo(
-    () => generateMonthEvents(currentMonth.year, currentMonth.month),
-    [currentMonth.year, currentMonth.month]
+    () => generateEventsForGrid(gridWeeks),
+    [gridWeeks]
   );
 
   const eventMap = useMemo(() => buildEventMap(events), [events]);
-  const todayStr = new Date().toISOString().slice(0, 10);
+  const todayStr = formatLocalDate(new Date());
   const monthLabel = `${MONTH_NAMES[currentMonth.month]} ${currentMonth.year}`;
 
   return (
@@ -290,7 +287,7 @@ export default function StudentCalendar() {
             </motion.div>
           )}
 
-          {/* DAY VIEW */}
+          {/* DAY VIEW — commented out, felt redundant
           {activeView === "day" && (
             <motion.div
               key={`day-${currentMonth.year}-${currentMonth.month}`}
@@ -306,6 +303,7 @@ export default function StudentCalendar() {
               />
             </motion.div>
           )}
+          */}
 
         </AnimatePresence>
       </motion.div>

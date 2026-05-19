@@ -1,4 +1,6 @@
+import { useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { useAuth } from "./contexts/AuthContext";
 
 // Page components – rendered based on the current route
 import Dashboard from "./pages/dashboard";
@@ -17,7 +19,16 @@ import AdminCourses from "./pages/courses/adminCourses";
 
 // Root application component – sets up routing and the shared layout
 function App() {
-  const isIframeMode = window.location.search.includes("hideNav=true");
+  const { role } = useAuth();
+
+  // Stamp the user role on <body> so CSS can drive role-specific backgrounds
+  useEffect(() => {
+    if (role) {
+      document.body.setAttribute("data-role", role);
+    } else {
+      document.body.removeAttribute("data-role");
+    }
+  }, [role]);
 
   return (
     <BrowserRouter>
