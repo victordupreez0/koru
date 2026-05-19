@@ -17,7 +17,7 @@ const INITIAL_NAV_ITEMS = [
 /**
  * CourseSecondaryNav Component
  */
-export default function CourseSecondaryNav({ activeCourseId }) {
+export default function CourseSecondaryNav({ activeCourseId, hideNav }) {
     const { role } = useAuth();
     const isTeacher = role === "teacher";
     const [navItems, setNavItems] = useState(INITIAL_NAV_ITEMS);
@@ -26,6 +26,7 @@ export default function CourseSecondaryNav({ activeCourseId }) {
 
     // Generate the base link using the newly introduced ID
     const basePath = activeCourseId ? `/courses/${activeCourseId}` : "/courses";
+    const queryAppend = hideNav ? "?hideNav=true" : "";
 
     const addItem = () => {
         if (newItemLabel.trim()) {
@@ -58,7 +59,7 @@ export default function CourseSecondaryNav({ activeCourseId }) {
                             className="list-none group relative"
                         >
                             <NavLink
-                                to={item.pathSuffix ? `${basePath}${item.pathSuffix}` : basePath}
+                                to={item.pathSuffix ? `${basePath}${item.pathSuffix}${queryAppend}` : `${basePath}${queryAppend}`}
                                 end={item.end}
                                 className={({ isActive }) =>
                                     `relative flex items-center gap-3 px-5 py-1.5 text-sm font-medium transition-all duration-200 mx-2  ${isActive

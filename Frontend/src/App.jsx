@@ -17,6 +17,8 @@ import AdminCourses from "./pages/courses/adminCourses";
 
 // Root application component – sets up routing and the shared layout
 function App() {
+  const isIframeMode = window.location.search.includes("hideNav=true");
+
   return (
     <BrowserRouter>
       <RouteSpeechAnnouncer />
@@ -29,7 +31,7 @@ function App() {
       >
 
         {/* Main content area – padded to avoid overlapping the fixed menus */}
-        <main className="pt-24 pl-40 pr-40">
+        <main className={isIframeMode ? "" : "pt-24 pl-40 pr-40"}>
           <Routes>
             {/* Public routes – landing & role-specific login portals */}
             <Route path="/" element={<Onboarding />} />
