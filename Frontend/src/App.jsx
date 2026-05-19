@@ -20,6 +20,7 @@ import AdminCourses from "./pages/courses/adminCourses";
 // Root application component – sets up routing and the shared layout
 function App() {
   const { role } = useAuth();
+  const isIframeMode = window.self !== window.top;
 
   // Stamp the user role on <body> so CSS can drive role-specific backgrounds
   useEffect(() => {
