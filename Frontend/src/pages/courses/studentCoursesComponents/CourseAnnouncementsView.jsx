@@ -22,7 +22,6 @@ export default function CourseAnnouncementsView() {
                         onClick={() => setSelectedId(post.id)}
                         variants={slideUp} 
                         className="bg-white p-8 rounded-[38px] border border-gray-100 shadow-sm hover:shadow-xl transition-all cursor-pointer relative overflow-hidden group"
-                        whileHover={{ y: -5 }}
                     >
                         <motion.div 
                             layoutId={`ann_stripe_${post.id}`}
