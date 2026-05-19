@@ -1,18 +1,32 @@
-// Base URL for our backend API
-const API_BASE = "http://localhost:5299/api";
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5299/api";
 
-// GET /api/Event – fetch all events from the backend
-export async function getEvents() {
-  const res = await fetch(`${API_BASE}/Event`);
-  if (!res.ok) throw new Error(`Failed to fetch events (${res.status})`);
-  return res.json();
+async function handleResponse(res) {
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data.message || "Something went wrong.");
+  }
+  return data;
 }
+
+// GET /api/Event – fetch all events
+export async function getAllEvents() {
+  const res = await fetch(`${API_BASE}/Event`, {
+    method: "GET",
+    headers: { "Content-Type": "application/json" },
+  });
+  return handleResponse(res);
+}
+
+// Alias kept for any callers that imported the older name
+export const getEvents = getAllEvents;
 
 // GET /api/Event/:id – fetch a single event by its ID
 export async function getEventById(id) {
-  const res = await fetch(`${API_BASE}/Event/${encodeURIComponent(id)}`);
-  if (!res.ok) throw new Error(`Event not found (${res.status})`);
-  return res.json();
+  const res = await fetch(`${API_BASE}/Event/${encodeURIComponent(id)}`, {
+    method: "GET",
+    headers: { "Content-Type": "application/json" },
+  });
+  return handleResponse(res);
 }
 
 // POST /api/Event – create a new event
@@ -22,8 +36,7 @@ export async function createEvent(event) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(event),
   });
-  if (!res.ok) throw new Error(`Failed to create event (${res.status})`);
-  return res.json();
+  return handleResponse(res);
 }
 
 // PUT /api/Event/:id – update an existing event

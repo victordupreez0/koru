@@ -39,6 +39,17 @@ namespace LearnOnline.Controllers
             return course;
         }
 
+        // GET /api/Course/teacher/{teacherId} – return all courses assigned to a teacher
+        [HttpGet("teacher/{teacherId}")]
+        public async Task<ActionResult<IEnumerable<Course>>> GetByTeacher(string teacherId)
+        {
+            var courses = await _context.Courses
+                .Include(c => c.Subject)
+                .Where(c => c.TeacherId == teacherId)
+                .ToListAsync();
+            return courses;
+        }
+
         // POST /api/Course – create a new course offering
         [HttpPost]
         public async Task<ActionResult<Course>> Create(Course course)
