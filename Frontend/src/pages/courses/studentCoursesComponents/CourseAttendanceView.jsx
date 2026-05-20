@@ -3,6 +3,7 @@ import { Calendar, CheckCircle, CloseCircle } from "@solar-icons/react";
 import { motion } from "framer-motion";
 import AttendanceChart from "../../../components/UI/attendanceChart";
 import AttendanceVisualizer from "../../../components/UI/attendanceVisualizer";
+// TODO: backend endpoint missing — no AttendanceController exists yet. Mock data from constants.
 import { ATTENDANCE_LOGS, staggerContainer, slideUp, scaleIn } from "./constants";
 
 export default function CourseAttendanceView() {
