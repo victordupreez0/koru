@@ -126,18 +126,20 @@ namespace LearnOnline.Data
             }
 
             // 3. Seed Mock Assignments for existing courses
-            // If there are no assignments anywhere in the DB, let's seed them.
-            if (!context.Assignments.Any())
+            // Always wipe and regenerate so date anchors stay current and timezone fixes apply.
+            // Grades and Submissions cascade-delete from Assignments, so one delete is enough.
+            context.Database.ExecuteSqlRaw(@"DELETE FROM ""Assignments"";");
+
             {
                 var uxCourseId = context.Courses.FirstOrDefault(c => c.Subject != null && c.Subject.Code == "UX300")?.Id;
                 var dvCourseId = context.Courses.FirstOrDefault(c => c.Subject != null && c.Subject.Code == "DV300")?.Id;
                 var vcCourseId = context.Courses.FirstOrDefault(c => c.Subject != null && c.Subject.Code == "VC300")?.Id;
 
-                // Anchor to South Africa local midnight (UTC+2), stored as UTC.
-                // This ensures AddHours(23).AddMinutes(59) renders as 11:59 PM local SA time on the frontend.
-                var saOffset = TimeSpan.FromHours(2);
-                var localToday = (DateTime.UtcNow + saOffset).Date;
-                var baseDate = DateTime.SpecifyKind(localToday - saOffset, DateTimeKind.Utc);
+                // Build baseDate as SA local midnight expressed in UTC.
+                // Using DateTimeOffset avoids DateTime.Kind ambiguity that can cause +2h drift.
+                var saZone   = TimeSpan.FromHours(2);
+                var todaySa  = DateTimeOffset.UtcNow.ToOffset(saZone).Date;  // today in SA
+                var baseDate = new DateTimeOffset(todaySa, saZone).UtcDateTime; // SA 00:00 → UTC
 
                 // UX Assignments
                 if (uxCourseId != null) {
@@ -271,13 +273,13 @@ namespace LearnOnline.Data
                 var dvCourseId = context.Courses.FirstOrDefault(c => c.Subject != null && c.Subject.Code == "DV300")?.Id;
                 var vcCourseId = context.Courses.FirstOrDefault(c => c.Subject != null && c.Subject.Code == "VC300")?.Id;
 
-                // Find the Monday of the current SA-local week, stored as UTC.
-                // This ensures weekStart.AddHours(10) renders as 10:00 AM local SA time on the frontend.
-                var saOffset = TimeSpan.FromHours(2);
-                var localToday = (DateTime.UtcNow + saOffset).Date;
-                int diff = (7 + (localToday.DayOfWeek - DayOfWeek.Monday)) % 7;
-                var localMonday = localToday.AddDays(-1 * diff);
-                var startOfWeek = DateTime.SpecifyKind(localMonday - saOffset, DateTimeKind.Utc);
+                // Build startOfWeek as SA Monday midnight expressed in UTC.
+                // Using DateTimeOffset avoids DateTime.Kind ambiguity that can cause +2h drift.
+                var saZone      = TimeSpan.FromHours(2);
+                var localToday  = DateTimeOffset.UtcNow.ToOffset(saZone).Date;
+                int diff        = (7 + (localToday.DayOfWeek - DayOfWeek.Monday)) % 7;
+                var localMonday = localToday.AddDays(-diff);
+                var startOfWeek = new DateTimeOffset(localMonday, saZone).UtcDateTime; // SA Monday 00:00 → UTC
 
                 for (int i = 0; i < 4; i++) // Generate 4 weeks of regular classes
                 {
