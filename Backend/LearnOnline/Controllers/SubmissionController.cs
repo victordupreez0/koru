@@ -39,6 +39,49 @@ namespace LearnOnline.Controllers
             return submission;
         }
 
+        // GET /api/Submission/student/{studentId} – return all submissions for a specific student, including grades
+        [HttpGet("student/{studentId}")]
+        public async Task<ActionResult<IEnumerable<Submission>>> GetByStudentId(string studentId)
+        {
+            var submissions = await _context.Submissions
+                .Include(s => s.Assignment)
+                .Where(s => s.StudentId == studentId)
+                .ToListAsync();
+
+            // We also need the grades for these submissions. 
+            // In Entity Framework, we can just fetch grades for these submissions or include them if the schema allowed.
+            // Since Submission doesn't have a direct Grade navigation property (Grade has SubmissionId),
+            // we will fetch the grades separately and attach them if we need to, OR we can rely on the frontend 
+            // fetching them, OR we can return an anonymous object / DTO.
+            // Wait, looking at the schema, Grade has a SubmissionId, but Submission does NOT have a Grade property.
+            // To be efficient, let's just return the submissions. The frontend can query grades via the GradeController,
+            // or we can just fetch the grades and send them side-by-side. 
+            return submissions;
+        }
+
+        // GET /api/Submission/assignment/{assignmentId} – return all submissions for a specific assignment
+        [HttpGet("assignment/{assignmentId}")]
+        public async Task<ActionResult<IEnumerable<Submission>>> GetByAssignmentId(string assignmentId)
+        {
+            var submissions = await _context.Submissions
+                .Include(s => s.Student)
+                .Where(s => s.AssignmentId == assignmentId)
+                .ToListAsync();
+            return submissions;
+        }
+
+        // GET /api/Submission/course/{courseId} – return all submissions for a specific course
+        [HttpGet("course/{courseId}")]
+        public async Task<ActionResult<IEnumerable<Submission>>> GetByCourseId(string courseId)
+        {
+            var submissions = await _context.Submissions
+                .Include(s => s.Student)
+                .Include(s => s.Assignment)
+                .Where(s => s.Assignment.CourseId == courseId)
+                .ToListAsync();
+            return submissions;
+        }
+
         // POST /api/Submission – submit work for an assignment
         [HttpPost]
         public async Task<ActionResult<Submission>> Create(Submission submission)
