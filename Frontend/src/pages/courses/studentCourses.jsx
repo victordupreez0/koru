@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useCourses } from "../../contexts/CoursesContext";
 import CourseMenu from "../../components/coursesMenu";
@@ -28,6 +28,11 @@ export default function StudentCourses() {
     const location = useLocation();
     const navigate = useNavigate();
     const { visibleCourses, loading } = useCourses();
+    
+    // Check for hideNav in URL and persist it in memory for the duration of the component lifecycle
+    const hideNav = useMemo(() => {
+        return new URLSearchParams(location.search).get("hideNav") === "true";
+    }, [location.search]);
 
     // The route matches /courses/:courseId/:subpage 
     // E.g. pathParts = ["courses", "dfg897-...", "grades"]
@@ -40,10 +45,11 @@ export default function StudentCourses() {
         if (!loading && visibleCourses.length > 0) {
             const courseExistsInList = visibleCourses.find(c => c.id === activeCourseId);
             if (!activeCourseId || !courseExistsInList) {
-                navigate(`/courses/${visibleCourses[0].id}`, { replace: true });
+                const targetPath = `/courses/${visibleCourses[0].id}${hideNav ? '?hideNav=true' : ''}`;
+                navigate(targetPath, { replace: true });
             }
         }
-    }, [loading, visibleCourses, activeCourseId, navigate]);
+    }, [loading, visibleCourses, activeCourseId, navigate, hideNav]);
 
     // Build the resolved standard course object
     const course = visibleCourses.find(c => c.id === activeCourseId) || visibleCourses[0] || null;
@@ -72,23 +78,25 @@ export default function StudentCourses() {
     const isHomePage = !isGradesPage && !isAnnouncementsPage && !isAssignmentsPage && !isAttendancePage && !isModulesPage && !isNotesPage && !isAssignmentDetailPage;
 
     return (
-        <div className="flex overflow-hidden -ml-30 -mr-20 -mt-24" style={{ height: '100vh' }}>
+        <div className={`flex overflow-hidden ${hideNav ? "" : "-ml-30 -mr-20 -mt-24"}`} style={{ height: '100vh' }}>
             {/* The global top menu that was previously disappearing */}
-            <Menu />
+            {!hideNav && <Menu />}
 
             {/* Leftmost Course Navigation Bar — CourseMenu is fixed, so this div is just a spacer */}
-            <div className="w-16 shrink-0 flex flex-col h-full items-center">
-                <CourseMenu />
-                <SideMenu />
-            </div>
+            {!hideNav && (
+                <div className="w-16 shrink-0 flex flex-col h-full items-center">
+                    <CourseMenu />
+                    <SideMenu />
+                </div>
+            )}
 
             {/* Middle Section: Second Navigation Bar for course-internal links */}
             <div className="flex flex-col h-full py-1 justify-center">
-                <CourseSecondaryNav activeCourseId={activeCourseId || (visibleCourses[0]?.id)} />
+                <CourseSecondaryNav activeCourseId={activeCourseId || (visibleCourses[0]?.id)} hideNav={hideNav} />
             </div>
 
             {/* Main Content Area — pt-24 clears the fixed top nav */}
-            <div className="flex-1 flex flex-col pt-24 px-8 overflow-y-auto">
+            <div className={`flex-1 flex flex-col ${hideNav ? "pt-4" : "pt-24"} px-8 overflow-y-auto`}>
                 {isAssignmentDetailPage ? (
                     <AssignmentDetail assignmentId={activeAssignmentId} activeCourseId={activeCourseId} />
                 ) : isGradesPage ? (
