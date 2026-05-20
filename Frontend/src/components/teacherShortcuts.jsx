@@ -47,7 +47,7 @@ export default function TeacherShortcuts() {
   }
 
   return (
-    <div className="w-full">
+    <div className="w-full h-full flex flex-col bg-white/80 border-1 border-gray-200 rounded-3xl drop-shadow-xl p-4">
       {/* ── Header ── */}
       <div className="flex items-center justify-between mt-5 mb-1">
         <h2 className="text-2xl font-['Gabarito']">Shortcuts</h2>
@@ -112,7 +112,8 @@ export default function TeacherShortcuts() {
       </AnimatePresence>
 
       {/* ── Chip Grid ── */}
-      <div className="flex flex-wrap gap-3">
+      <div className="flex-1 min-h-0 overflow-y-auto scrollbar-black pr-1">
+        <div className="flex flex-wrap gap-3">
         <AnimatePresence>
           {shortcuts.map((shortcut, i) => (
             <motion.a
@@ -142,6 +143,7 @@ export default function TeacherShortcuts() {
             </motion.a>
           ))}
         </AnimatePresence>
+        </div>
       </div>
     </div>
   );

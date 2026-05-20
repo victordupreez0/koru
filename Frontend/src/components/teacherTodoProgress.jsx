@@ -100,7 +100,7 @@ export default function TeacherTodoProgress() {
   }, [todos]);
 
   return (
-    <div className="w-full">
+    <div className="w-full h-full flex flex-col bg-white/80 border-1 border-gray-200 rounded-3xl drop-shadow-xl p-4">
       {/* ── To Do Header ── */}
       <div className="flex items-center justify-between mt-5 mb-1">
         <h2 className="text-2xl font-['Gabarito']">To Do</h2>
@@ -170,7 +170,7 @@ export default function TeacherTodoProgress() {
       </AnimatePresence>
 
       {/* ── To-Do Cards ── */}
-      <div className="flex flex-col gap-3 min-h-[120px] max-h-[300px] overflow-y-auto scrollbar-black pr-2">
+      <div className="flex flex-col gap-3 flex-1 min-h-0 overflow-y-auto scrollbar-black pr-2">
         <AnimatePresence>
           {todos.map((todo) => {
             const IconComp = iconMap[todo.icon] || MdEditNote;
@@ -244,10 +244,10 @@ export default function TeacherTodoProgress() {
       </div>
 
       {/* ── Progress Header ── */}
-      <h2 className="text-2xl font-['Gabarito'] mt-8 mb-2">Progress</h2>
+      <h2 className="text-2xl font-['Gabarito'] mt-4 mb-2 shrink-0">Progress</h2>
 
       {/* ── Progress Ring ── */}
-      <div className="w-full bg-gray-100 rounded-2xl border border-gray-200 p-4">
+      <div className="w-full bg-gray-100 rounded-2xl border border-gray-200 p-4 shrink-0">
         <ProgressRing percentage={progress} />
       </div>
     </div>
