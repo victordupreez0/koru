@@ -7,17 +7,37 @@ async function handleResponse(res) {
   return data;
 }
 
-// GET /api/Submission – fetch all submissions, then filter client-side by student + assignment
-// Note: Backend does not yet expose a filtered endpoint, so we filter in memory
-export async function getSubmissionForAssignment(studentId, assignmentId) {
-  const res = await fetch(`${API_BASE}/Submission`, {
+// GET /api/Submission/student/:studentId – fetch all submissions for a student
+export async function getStudentSubmissions(studentId) {
+  const res = await fetch(`${API_BASE}/Submission/student/${encodeURIComponent(studentId)}`, {
     method: "GET",
     headers: { "Content-Type": "application/json" },
   });
-  const all = await handleResponse(res);
-  return all.find(
-    (s) => s.studentId === studentId && s.assignmentId === assignmentId
-  ) || null;
+  return handleResponse(res);
+}
+
+// GET /api/Submission/assignment/:assignmentId – fetch all submissions for an assignment
+export async function getAssignmentSubmissions(assignmentId) {
+  const res = await fetch(`${API_BASE}/Submission/assignment/${encodeURIComponent(assignmentId)}`, {
+    method: "GET",
+    headers: { "Content-Type": "application/json" },
+  });
+  return handleResponse(res);
+}
+
+// GET /api/Submission/course/:courseId – fetch all submissions for a course
+export async function getCourseSubmissions(courseId) {
+  const res = await fetch(`${API_BASE}/Submission/course/${encodeURIComponent(courseId)}`, {
+    method: "GET",
+    headers: { "Content-Type": "application/json" },
+  });
+  return handleResponse(res);
+}
+
+// Convenience: find the current student's submission for a given assignment via the filtered endpoint
+export async function getSubmissionForAssignment(studentId, assignmentId) {
+  const submissions = await getStudentSubmissions(studentId);
+  return submissions.find((s) => s.assignmentId === assignmentId) || null;
 }
 
 // POST /api/Submission – submit work for an assignment

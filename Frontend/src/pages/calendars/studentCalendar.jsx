@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Menu from "../../components/menu";
@@ -9,32 +9,68 @@ import CalendarViewSelector from "./UI/CalendarViewSelector";
 import CalendarTimelineView from "./UI/CalendarTimelineView";
 import CalendarDayView from "./UI/CalendarDayView";
 
-// ─────────────────────────────────────────────────────────────
-//  WEEKLY EVENT TEMPLATE
-//  dayOfWeek: 0 = Sunday, 1 = Monday, … 6 = Saturday
-//  These repeat every week in every month.
-// ─────────────────────────────────────────────────────────────
-const WEEKLY_TEMPLATE = [
-  // Monday
-  { dayOfWeek: 1, title: "UX 300", startTime: "8:30", endTime: "9:30", type: "class", lecturer: "Laudette Sass", location: "On Campus - C4" },
-  { dayOfWeek: 1, title: "VC 300", startTime: "9:00", endTime: "10:00", type: "class", lecturer: "Matt Williams", location: "Online" },
-  { dayOfWeek: 1, title: "DV 300", startTime: "14:00", endTime: "16:00", type: "class", lecturer: "Tsungai Katsuro", location: "On Campus - B2" },
-  // Tuesday
-  { dayOfWeek: 2, title: "Group Meeting", startTime: "9:00", endTime: "10:00", type: "meeting", lecturer: "Study Group", location: "Online" },
-  // Wednesday
-  { dayOfWeek: 3, title: "UX 300", startTime: "9:00", endTime: "13:00", type: "class", lecturer: "Laudette Sass", location: "On Campus - C4" },
-  // Thursday
-  { dayOfWeek: 4, title: "DV 300", startTime: "13:00", endTime: "17:00", type: "class", lecturer: "Tsungai Katsuro", location: "On Campus - B2" },
-];
+import { getAllEvents } from "../../services/eventService";
+import { getStudentAssignments } from "../../services/assignmentService";
+import { getStudentSubmissions } from "../../services/submissionService";
+import { useAuth } from "../../contexts/AuthContext";
 
 // ─────────────────────────────────────────────────────────────
-//  TASKS DATA  (To-Do panel in Day view)
+//  Mappers — convert backend payloads into the shape the calendar
+//  UI components already expect (CalendarDayBlock, CalendarTimelineView, CalendarDayView)
 // ─────────────────────────────────────────────────────────────
-const TASKS = [
-  { id: 1, title: "High Fidelity Wireframes", due: "Mar 2", dueTime: "20:00", course: "UX300" },
-  { id: 2, title: "Essay Draft", due: "Mar 10", dueTime: "20:00", course: "VC300" },
-  { id: 3, title: "Progress Mark", due: "Mar 21", dueTime: "10:00", course: "DV300" },
-];
+function pad2(n) { return String(n).padStart(2, "0"); }
+
+function localDateKey(d) {
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+}
+
+function mapBackendEventToCalendar(evt) {
+  const startDate = new Date(evt.startTime);
+  const endDate = new Date(evt.endTime);
+
+  let location = "TBA";
+  if (evt.description && evt.description.includes("|")) {
+    location = evt.description.split("|")[1] || "TBA";
+  }
+
+  return {
+    id: `evt-${evt.id}`,
+    date: localDateKey(startDate),
+    title: evt.title,
+    startTime: `${pad2(startDate.getHours())}:${pad2(startDate.getMinutes())}`,
+    endTime: `${pad2(endDate.getHours())}:${pad2(endDate.getMinutes())}`,
+    type: evt.eventType?.toLowerCase() === "meeting" ? "meeting" : "class",
+    lecturer: evt.createdBy || "",
+    location
+  };
+}
+
+function mapAssignmentToCalendarEvent(assignment) {
+  const due = new Date(assignment.dueDate);
+  return {
+    id: `assign-${assignment.id}`,
+    date: localDateKey(due),
+    title: assignment.title,
+    startTime: `${pad2(due.getHours())}:${pad2(due.getMinutes())}`,
+    endTime: `${pad2(due.getHours())}:${pad2(due.getMinutes())}`,
+    type: "task",
+    lecturer: "Assignment Due",
+    location: assignment.course?.subject?.code || ""
+  };
+}
+
+function mapAssignmentToTask(assignment, submission) {
+  const due = new Date(assignment.dueDate);
+  return {
+    id: assignment.id,
+    title: assignment.title,
+    due: due.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+    dueTime: `${pad2(due.getHours())}:${pad2(due.getMinutes())}`,
+    course: assignment.course?.subject?.code || "",
+    isSubmitted: !!submission,
+    isGraded: submission?.status === "Graded"
+  };
+}
 
 // ─────────────────────────────────────────────────────────────
 //  HELPERS — dynamic grid & event generation
@@ -45,81 +81,46 @@ const MONTH_NAMES = [
   "July", "August", "September", "October", "November", "December",
 ];
 
+/** Format a Date to YYYY-MM-DD using local timezone (avoids UTC shift from toISOString) */
+function formatLocalDate(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
 /**
  * Build the calendar grid for a given year/month.
  * Returns an array of week arrays (each week = 7 day objects).
  * Weeks start on Monday. Days from adjacent months are marked isOutside.
  */
 function buildGridWeeks(year, month) {
-  // First day of the month
   const firstDay = new Date(year, month, 1);
-  // Day of week for the 1st (shift so Monday = 0)
   let startDow = firstDay.getDay() - 1;
-  if (startDow < 0) startDow = 6; // Sunday becomes 6
+  if (startDow < 0) startDow = 6;
 
-  // Last day of the month
-  const lastDay = new Date(year, month + 1, 0).getDate();
-
-  // Build flat list starting from Monday of the first week
   const cells = [];
   const startDate = new Date(year, month, 1 - startDow);
 
-  // We need enough cells to cover the month (max 6 weeks = 42 cells)
   for (let i = 0; i < 42; i++) {
-    const d = new Date(startDate);
-    d.setDate(startDate.getDate() + i);
+    const d = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + i);
     cells.push({
-      date: d.toISOString().slice(0, 10),
+      date: formatLocalDate(d),
       day: d.getDate(),
       isOutside: d.getMonth() !== month,
     });
   }
 
-  // Group into weeks of 7
   const weeks = [];
   for (let i = 0; i < cells.length; i += 7) {
     weeks.push(cells.slice(i, i + 7));
   }
 
-  // Trim trailing weeks that are entirely outside the month
   while (weeks.length > 0 && weeks[weeks.length - 1].every(c => c.isOutside)) {
     weeks.pop();
   }
 
   return weeks;
-}
-
-/**
- * Generate events for a given month from the weekly template.
- * Each template entry is stamped onto every matching weekday in the month.
- */
-function generateMonthEvents(year, month) {
-  const lastDay = new Date(year, month + 1, 0).getDate();
-  const events = [];
-  let idCounter = 1;
-
-  for (let day = 1; day <= lastDay; day++) {
-    const d = new Date(year, month, day);
-    const dow = d.getDay(); // 0-6
-    const dateStr = d.toISOString().slice(0, 10);
-
-    WEEKLY_TEMPLATE.forEach((tmpl) => {
-      if (tmpl.dayOfWeek === dow) {
-        events.push({
-          id: idCounter++,
-          date: dateStr,
-          title: tmpl.title,
-          startTime: tmpl.startTime,
-          endTime: tmpl.endTime,
-          type: tmpl.type,
-          lecturer: tmpl.lecturer,
-          location: tmpl.location,
-        });
-      }
-    });
-  }
-
-  return events;
 }
 
 // Build a date → events[] lookup map
@@ -145,12 +146,49 @@ const viewVariants = {
 
 // ─────────────────────────────────────────────────────────────
 export default function StudentCalendar() {
+  const { user } = useAuth();
   const [activeView, setActiveView] = useState("month");
   // Track current month as { year, month } (month is 0-indexed)
   const [currentMonth, setCurrentMonth] = useState(() => {
     const now = new Date();
     return { year: now.getFullYear(), month: now.getMonth() };
   });
+
+  // Live data pulled from the backend
+  const [events, setEvents] = useState([]);
+  const [tasks, setTasks] = useState([]);
+
+  useEffect(() => {
+    let mounted = true;
+    async function fetchData() {
+      try {
+        const [backendEvents, assignmentsData, submissionsData] = await Promise.all([
+          getAllEvents(),
+          user?.userId ? getStudentAssignments(user.userId) : Promise.resolve([]),
+          user?.userId ? getStudentSubmissions(user.userId) : Promise.resolve([])
+        ]);
+
+        // Map class/lecture events
+        const classEvents = (Array.isArray(backendEvents) ? backendEvents : []).map(mapBackendEventToCalendar);
+
+        // Map assignment due dates as task-type calendar events so they appear in the grid/timeline
+        const assignmentEvents = (Array.isArray(assignmentsData) ? assignmentsData : []).map(mapAssignmentToCalendarEvent);
+
+        if (mounted) setEvents([...classEvents, ...assignmentEvents]);
+
+        // Day view to-do panel: each assignment, annotated with submission state
+        const taskRows = (Array.isArray(assignmentsData) ? assignmentsData : []).map(a => {
+          const sub = (Array.isArray(submissionsData) ? submissionsData : []).find(s => s.assignmentId === a.id);
+          return mapAssignmentToTask(a, sub);
+        });
+        if (mounted) setTasks(taskRows);
+      } catch (err) {
+        console.error("Failed to load calendar data:", err);
+      }
+    }
+    fetchData();
+    return () => { mounted = false; };
+  }, [user?.userId]);
 
   const goToPrevMonth = () => {
     setCurrentMonth((prev) => {
@@ -166,19 +204,14 @@ export default function StudentCalendar() {
     });
   };
 
-  // Compute grid & events for the active month
+  // Compute grid for the active month
   const gridWeeks = useMemo(
     () => buildGridWeeks(currentMonth.year, currentMonth.month),
     [currentMonth.year, currentMonth.month]
   );
 
-  const events = useMemo(
-    () => generateMonthEvents(currentMonth.year, currentMonth.month),
-    [currentMonth.year, currentMonth.month]
-  );
-
   const eventMap = useMemo(() => buildEventMap(events), [events]);
-  const todayStr = new Date().toISOString().slice(0, 10);
+  const todayStr = formatLocalDate(new Date());
   const monthLabel = `${MONTH_NAMES[currentMonth.month]} ${currentMonth.year}`;
 
   return (
@@ -290,7 +323,7 @@ export default function StudentCalendar() {
             </motion.div>
           )}
 
-          {/* DAY VIEW */}
+          {/* DAY VIEW — commented out, felt redundant
           {activeView === "day" && (
             <motion.div
               key={`day-${currentMonth.year}-${currentMonth.month}`}
@@ -301,11 +334,12 @@ export default function StudentCalendar() {
             >
               <CalendarDayView
                 events={events}
-                tasks={TASKS}
+                tasks={tasks}
                 weeks={gridWeeks}
               />
             </motion.div>
           )}
+          */}
 
         </AnimatePresence>
       </motion.div>

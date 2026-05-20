@@ -15,7 +15,7 @@ builder.Services.AddControllers().AddJsonOptions(options =>
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
-        policy.WithOrigins("http://localhost:5173")
+        policy.WithOrigins("http://localhost:5200")
               .AllowAnyHeader()
               .AllowAnyMethod());
 });
@@ -39,7 +39,7 @@ using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     var context = services.GetRequiredService<AppDbContext>();
-    DbSeeder.Seed(context);
+    RealDataSeeder.Seed(context); // swap to DbSeeder.Seed(context) for mock data
 }
 // ---------------------------------------
 
