@@ -23,3 +23,37 @@ export async function getCourseGrades(courseId) {
   });
   return handleResponse(res);
 }
+
+export async function getAssignmentGrades(assignmentId) {
+  const res = await fetch(`${API_BASE}/Grade/assignment/${encodeURIComponent(assignmentId)}`, {
+    method: "GET",
+    headers: { "Content-Type": "application/json" }
+  });
+  return handleResponse(res);
+}
+
+export async function createGrade({ submissionId, pointsEarned, gradedBy, isReleased = false }) {
+  const res = await fetch(`${API_BASE}/Grade`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ submissionId, pointsEarned, gradedBy, isReleased }),
+  });
+  return handleResponse(res);
+}
+
+export async function releaseAssignmentGrades(assignmentId) {
+  const res = await fetch(`${API_BASE}/Grade/assignment/${encodeURIComponent(assignmentId)}/release`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+  });
+  if (!res.ok) throw new Error("Failed to release grades.");
+}
+
+export async function updateGrade(gradeId, { submissionId, pointsEarned, gradedBy }) {
+  const res = await fetch(`${API_BASE}/Grade/${encodeURIComponent(gradeId)}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ submissionId, pointsEarned, gradedBy }),
+  });
+  if (!res.ok) throw new Error("Failed to update grade.");
+}

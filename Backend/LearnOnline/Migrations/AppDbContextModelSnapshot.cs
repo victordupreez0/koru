@@ -22,10 +22,57 @@ namespace TodoApi.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("LearnOnline.Models.Announcement", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Color")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("CourseId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("DatePosted")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("LecturerId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Preview")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CourseId");
+
+                    b.HasIndex("LecturerId");
+
+                    b.ToTable("Announcements");
+                });
+
             modelBuilder.Entity("LearnOnline.Models.Assignment", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("text");
+
+                    b.Property<bool>("AllowMultipleAttempts")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("CloseDate")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("CourseId")
                         .IsRequired()
@@ -40,10 +87,23 @@ namespace TodoApi.Migrations
                     b.Property<DateTime?>("DueDate")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<bool>("IsClosed")
+                        .HasColumnType("boolean");
+
                     b.Property<int?>("MaxPoints")
                         .HasColumnType("integer");
 
+                    b.Property<DateTime?>("OpenDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("QuizQuestionsJson")
+                        .HasColumnType("text");
+
                     b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Type")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -233,6 +293,9 @@ namespace TodoApi.Migrations
                     b.Property<string>("GradedBy")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<bool>("IsReleased")
+                        .HasColumnType("boolean");
 
                     b.Property<decimal?>("PointsEarned")
                         .HasColumnType("numeric");
@@ -444,6 +507,25 @@ namespace TodoApi.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("LearnOnline.Models.Announcement", b =>
+                {
+                    b.HasOne("LearnOnline.Models.Course", "Course")
+                        .WithMany()
+                        .HasForeignKey("CourseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("LearnOnline.Models.User", "Lecturer")
+                        .WithMany()
+                        .HasForeignKey("LecturerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Course");
+
+                    b.Navigation("Lecturer");
                 });
 
             modelBuilder.Entity("LearnOnline.Models.Assignment", b =>
