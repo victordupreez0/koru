@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+﻿import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -163,6 +163,8 @@ export default function AssignmentDetail({ assignmentId, activeCourseId }) {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
   const [justSubmitted, setJustSubmitted] = useState(false);
+  const [quizStarted, setQuizStarted] = useState(false);
+  const [quizAnswers, setQuizAnswers] = useState({});
 
   // Fetch assignment details
   useEffect(() => {
@@ -205,16 +207,20 @@ export default function AssignmentDetail({ assignmentId, activeCourseId }) {
 
   // Submit handler
   async function handleSubmit() {
-    if (!file) return;
+    const isQuiz = assignment?.type === "quiz";
+    if (!isQuiz && !file) return;
     setSubmitting(true);
     setSubmitError(null);
     try {
-      // Backend stores FileUrl as a string. We store the filename since
-      // there is no file-storage service yet. Replace with cloud URL when available.
-      const fileUrl = file.name;
+      const fileUrl = isQuiz ? JSON.stringify(quizAnswers) : file.name;
 
       if (existingSubmission) {
-        await updateSubmission(existingSubmission.id, { fileUrl, status: "Resubmitted" });
+        await updateSubmission(existingSubmission.id, {
+          fileUrl,
+          status: "Resubmitted",
+          assignmentId,
+          studentId: user.userId,
+        });
         setExistingSubmission((prev) => ({ ...prev, fileUrl, status: "Resubmitted", submittedAt: new Date().toISOString() }));
       } else {
         const created = await createSubmission({
@@ -227,6 +233,7 @@ export default function AssignmentDetail({ assignmentId, activeCourseId }) {
       }
       setJustSubmitted(true);
       setFile(null);
+      setQuizStarted(false);
     } catch (err) {
       setSubmitError(err.message || "Submission failed. Please try again.");
     } finally {
@@ -237,6 +244,13 @@ export default function AssignmentDetail({ assignmentId, activeCourseId }) {
   const daysLeft = assignment ? getDaysLeft(assignment.dueDate) : null;
   const isSubmitted = !!existingSubmission;
   const isPastDue = assignment ? new Date(assignment.dueDate) < new Date() : false;
+  const isClosed = assignment?.isClosed === true;
+  const canResubmit = assignment?.allowMultipleAttempts !== false;
+  const isQuiz = assignment?.type === "quiz";
+  const quizQuestions = React.useMemo(() => {
+    if (!isQuiz || !assignment?.quizQuestionsJson) return [];
+    try { return JSON.parse(assignment.quizQuestionsJson); } catch { return []; }
+  }, [isQuiz, assignment?.quizQuestionsJson]);
 
   return (
     <motion.div
@@ -381,7 +395,86 @@ export default function AssignmentDetail({ assignmentId, activeCourseId }) {
             </AnimatePresence>
 
             {/* ── Submission Upload Area ── */}
-            {!isPastDue || isSubmitted ? (
+            {isClosed ? (
+              <motion.div
+                variants={slideUp}
+                className="bg-red-50 border border-red-100 rounded-[40px] p-10 text-center"
+              >
+                <p className="text-red-500 font-bold text-lg mb-1">Assignment Closed</p>
+                <p className="text-gray-400 text-sm">This assignment has been closed by your lecturer. No more submissions are accepted.</p>
+              </motion.div>
+            ) : isSubmitted && !canResubmit ? (
+              <motion.div
+                variants={slideUp}
+                className="bg-gray-50 border border-gray-100 rounded-[40px] p-10 text-center"
+              >
+                <p className="text-gray-500 font-medium">Only one submission is allowed for this assignment.</p>
+              </motion.div>
+            ) : isQuiz ? (
+              /* Quiz submission area */
+              <motion.div variants={slideUp} className="bg-white rounded-[40px] border border-gray-100 shadow-sm p-10">
+                <h2 className="text-[10px] font-black uppercase tracking-[0.25em] text-[#FF8731] mb-6">
+                  {isSubmitted ? "Retake Quiz" : "Quiz"}
+                </h2>
+                {!quizStarted && !isSubmitted ? (
+                  <div className="flex flex-col items-center gap-6 py-6">
+                    <p className="text-gray-500 text-sm">{quizQuestions.length} question{quizQuestions.length !== 1 ? "s" : ""} — select the correct answer for each</p>
+                    <button
+                      onClick={() => setQuizStarted(true)}
+                      className="px-10 py-4 rounded-2xl bg-[#FF8731] text-white font-bold text-sm uppercase tracking-widest hover:bg-[#e0722a] transition-all shadow-lg shadow-[#FF8731]/20"
+                    >
+                      Start Quiz
+                    </button>
+                  </div>
+                ) : quizStarted || isSubmitted ? (
+                  <div className="space-y-6">
+                    {quizQuestions.map((q, qi) => (
+                      <div key={qi} className="bg-gray-50 rounded-[24px] p-6">
+                        <p className="font-semibold text-gray-900 mb-4">{qi + 1}. {q.question}</p>
+                        <div className="space-y-2">
+                          {q.options.map((opt, oi) => (
+                            <label key={oi} className={`flex items-center gap-3 px-4 py-3 rounded-2xl cursor-pointer transition-all ${
+                              quizAnswers[qi] === oi
+                                ? "bg-[#3C0078]/10 border-2 border-[#3C0078]"
+                                : "bg-white border-2 border-gray-100 hover:border-gray-200"
+                            }`}>
+                              <input
+                                type="radio"
+                                name={`q-${qi}`}
+                                checked={quizAnswers[qi] === oi}
+                                onChange={() => setQuizAnswers(prev => ({ ...prev, [qi]: oi }))}
+                                className="accent-[#3C0078]"
+                                disabled={submitting}
+                              />
+                              <span className="text-sm font-medium text-gray-700">{opt}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                    <AnimatePresence>
+                      {submitError && (
+                        <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                          className="text-sm text-red-500 font-medium">{submitError}</motion.p>
+                      )}
+                    </AnimatePresence>
+                    <div className="flex justify-end">
+                      <button
+                        onClick={handleSubmit}
+                        disabled={submitting || Object.keys(quizAnswers).length < quizQuestions.length}
+                        className={`flex items-center gap-2.5 px-8 py-3.5 rounded-2xl text-sm font-bold uppercase tracking-widest text-white transition-all shadow-sm ${
+                          submitting || Object.keys(quizAnswers).length < quizQuestions.length
+                            ? "bg-gray-200 text-gray-400 cursor-not-allowed shadow-none"
+                            : "bg-[#3C0078] hover:bg-[#2A0054] shadow-[#3C0078]/20"
+                        }`}
+                      >
+                        {submitting ? <><Loader size={16} className="animate-spin" /> Submitting...</> : <><Upload size={16} /> Submit Quiz</>}
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
+              </motion.div>
+            ) : !isPastDue || isSubmitted ? (
               <motion.div
                 variants={slideUp}
                 className="bg-white rounded-[40px] border border-gray-100 shadow-sm p-10"

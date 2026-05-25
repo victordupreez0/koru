@@ -51,11 +51,11 @@ export async function createSubmission({ assignmentId, studentId, fileUrl, statu
 }
 
 // PUT /api/Submission/{id} – resubmit / update an existing submission
-export async function updateSubmission(id, { fileUrl, status }) {
+export async function updateSubmission(id, { fileUrl, status, assignmentId, studentId }) {
   const res = await fetch(`${API_BASE}/Submission/${encodeURIComponent(id)}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ fileUrl, status }),
+    body: JSON.stringify({ fileUrl, status, assignmentId, studentId }),
   });
   if (!res.ok) throw new Error("Failed to update submission.");
 }

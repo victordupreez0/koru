@@ -88,6 +88,18 @@ namespace LearnOnline.Controllers
         {
             submission.Id = Guid.NewGuid().ToString();
             submission.SubmittedAt = DateTime.UtcNow;
+
+            // Auto-detect if the submission is late based on the assignment's due date
+            var assignment = await _context.Assignments.FindAsync(submission.AssignmentId);
+            if (assignment?.DueDate.HasValue == true && submission.SubmittedAt > assignment.DueDate.Value)
+            {
+                submission.Status = "Late";
+            }
+            else if (string.IsNullOrEmpty(submission.Status))
+            {
+                submission.Status = "Submitted";
+            }
+
             _context.Submissions.Add(submission);
             await _context.SaveChangesAsync();
             return CreatedAtAction(nameof(GetById), new { id = submission.Id }, submission);
