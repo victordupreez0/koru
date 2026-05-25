@@ -62,6 +62,11 @@ using (var scope = app.Services.CreateScope())
             ALTER TABLE ""Assignments"" ADD COLUMN IF NOT EXISTS ""Type"" text NOT NULL DEFAULT 'online';
             INSERT INTO ""__EFMigrationsHistory"" (""MigrationId"", ""ProductVersion"")
             VALUES ('20260525083558_AddAssignmentTypeAndClose', '9.0.3')
+            ON CONFLICT DO NOTHING;
+            ALTER TABLE ""Assignments"" ADD COLUMN IF NOT EXISTS ""OpenDate"" timestamp with time zone NULL;
+            ALTER TABLE ""Assignments"" ADD COLUMN IF NOT EXISTS ""CloseDate"" timestamp with time zone NULL;
+            INSERT INTO ""__EFMigrationsHistory"" (""MigrationId"", ""ProductVersion"")
+            VALUES ('20260525120000_AddAssignmentOpenCloseDate', '9.0.3')
             ON CONFLICT DO NOTHING;";
         cmd.ExecuteNonQuery();
     }
