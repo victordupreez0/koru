@@ -14,6 +14,7 @@ import { getCourseAssignments, createAssignment, updateAssignment, deleteAssignm
 import { getCourseGrades } from "../../services/gradeService";
 import { getCourseSubmissions, getAssignmentSubmissions } from "../../services/submissionService";
 import { getCourseStudentCount } from "../../services/enrollmentService";
+import StudentCourseAssignmentsView from "./studentCoursesComponents/CourseAssignmentsView";
 import { getCourseAnnouncements, createAnnouncement, deleteAnnouncement } from "../../services/announcementService";
 import {
     EditorRoot,
@@ -865,7 +866,7 @@ function TeacherSubmissionReview({ assignment, onBack }) {
                                 {/* File link or quiz badge */}
                                 {sub.fileUrl && !isQuizAnswer && (
                                     <a
-                                        href={sub.fileUrl}
+                                        href={`${(import.meta.env.VITE_API_BASE_URL || "http://localhost:5299/api").replace("/api", "")}${sub.fileUrl}`}
                                         target="_blank"
                                         rel="noreferrer"
                                         className="shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl bg-[#3C0078]/5 text-[#3C0078] text-xs font-bold hover:bg-[#3C0078]/10 transition-colors"
@@ -1045,6 +1046,7 @@ function CourseAssignmentsView({ subject, activeCourseId }) {
     const [activeTypeFilter, setActiveTypeFilter] = React.useState("all");
     const [saving, setSaving] = React.useState(false);
     const [reviewingAssignment, setReviewingAssignment] = React.useState(null);
+    const [showStudentPreview, setShowStudentPreview] = React.useState(false);
 
     const loadData = React.useCallback(async () => {
         if (!activeCourseId) return;
@@ -1284,10 +1286,52 @@ function CourseAssignmentsView({ subject, activeCourseId }) {
                     <p className="text-sm font-bold text-[#3C0078]">Student View</p>
                     <p className="text-xs text-gray-500 mt-0.5">Use Student View to see exactly how published assignments appear to students before releasing a new brief.</p>
                 </div>
-                <button className="ml-auto shrink-0 px-6 py-2.5 rounded-2xl bg-[#3C0078] text-white text-xs font-bold uppercase tracking-widest hover:bg-[#2A0054] transition-all whitespace-nowrap">
+                <button
+                    onClick={() => setShowStudentPreview(true)}
+                    className="ml-auto shrink-0 px-6 py-2.5 rounded-2xl bg-[#3C0078] text-white text-xs font-bold uppercase tracking-widest hover:bg-[#2A0054] transition-all whitespace-nowrap"
+                >
                     Preview as Student
                 </button>
             </motion.div>
+
+            {/* Student preview modal */}
+            <AnimatePresence>
+                {showStudentPreview && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 bg-black/40 flex items-stretch justify-end"
+                        onClick={(e) => { if (e.target === e.currentTarget) setShowStudentPreview(false); }}
+                    >
+                        <motion.div
+                            initial={{ x: "100%" }}
+                            animate={{ x: 0 }}
+                            exit={{ x: "100%" }}
+                            transition={{ type: "spring", damping: 30, stiffness: 300 }}
+                            className="w-full max-w-3xl bg-white shadow-2xl flex flex-col overflow-hidden"
+                        >
+                            {/* Modal header */}
+                            <div className="flex items-center justify-between px-8 py-5 border-b border-gray-100">
+                                <div>
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-[#3C0078]">Student Preview</p>
+                                    <p className="text-sm font-bold text-gray-900 mt-0.5">How students see this course’s assignments</p>
+                                </div>
+                                <button
+                                    onClick={() => setShowStudentPreview(false)}
+                                    className="w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
+                                >
+                                    <X size={16} />
+                                </button>
+                            </div>
+                            {/* Student view component */}
+                            <div className="flex-1 overflow-y-auto">
+                                <StudentCourseAssignmentsView subject={subject} activeCourseId={activeCourseId} />
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Create / Edit Assignment Drawer */}
             {showDrawer && (

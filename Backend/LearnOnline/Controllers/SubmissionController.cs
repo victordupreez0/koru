@@ -131,5 +131,28 @@ namespace LearnOnline.Controllers
             await _context.SaveChangesAsync();
             return NoContent();
         }
+
+        // POST /api/Submission/upload – save a submitted file to wwwroot/uploads and return its URL
+        [HttpPost("upload")]
+        public async Task<ActionResult<object>> UploadFile(IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+                return BadRequest(new { message = "No file provided." });
+
+            // Sanitise filename to prevent path traversal
+            var originalName = Path.GetFileName(file.FileName);
+            var safeFileName = $"{Guid.NewGuid()}_{originalName}";
+
+            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
+            Directory.CreateDirectory(uploadsFolder);
+
+            var filePath = Path.Combine(uploadsFolder, safeFileName);
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            return Ok(new { url = $"/uploads/{safeFileName}" });
+        }
     }
 }
