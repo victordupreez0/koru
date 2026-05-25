@@ -12,7 +12,7 @@ import AttendanceChart from "../../components/UI/attendanceChart";
 import AttendanceVisualizer from "../../components/UI/attendanceVisualizer";
 import { getCourseAssignments, createAssignment, updateAssignment, deleteAssignment, closeAssignment } from "../../services/assignmentService";
 import { getCourseGrades } from "../../services/gradeService";
-import { getCourseSubmissions } from "../../services/submissionService";
+import { getCourseSubmissions, getAssignmentSubmissions } from "../../services/submissionService";
 import { getCourseStudentCount } from "../../services/enrollmentService";
 import { getCourseAnnouncements, createAnnouncement, deleteAnnouncement } from "../../services/announcementService";
 import {
@@ -758,7 +758,148 @@ function CreateAssignmentDrawer({ onClose, onSave, initialData }) {
     );
 }
 
-function AssignmentGroupRow({ group, onTogglePublish, onDelete, onEdit, onClose }) {
+// ─────────────────────────────────────────────
+// Teacher: review submissions for a single assignment
+// ─────────────────────────────────────────────
+function TeacherSubmissionReview({ assignment, onBack }) {
+    const [submissions, setSubmissions] = React.useState([]);
+    const [loading, setLoading] = React.useState(true);
+
+    React.useEffect(() => {
+        let mounted = true;
+        async function load() {
+            try {
+                setLoading(true);
+                const data = await getAssignmentSubmissions(assignment.id);
+                if (mounted) setSubmissions(data);
+            } catch (err) {
+                console.error("Failed to load submissions:", err);
+            } finally {
+                if (mounted) setLoading(false);
+            }
+        }
+        load();
+        return () => { mounted = false; };
+    }, [assignment.id]);
+
+    return (
+        <motion.div className="flex-1 p-8 overflow-y-auto" initial="hidden" animate="visible" variants={staggerContainer}>
+            {/* Back */}
+            <motion.div variants={slideUp} className="flex items-center gap-3 mb-10">
+                <button
+                    onClick={onBack}
+                    className="flex items-center gap-2 text-gray-400 hover:text-[#3C0078] transition-colors font-semibold text-sm group"
+                >
+                    <ChevronRight size={18} className="rotate-180 group-hover:-translate-x-1 transition-transform" />
+                    Back to Assignments
+                </button>
+                <span className="text-gray-200">/</span>
+                <span className="text-sm text-gray-700 font-semibold truncate max-w-[320px]">{assignment.title}</span>
+            </motion.div>
+
+            {/* Header */}
+            <motion.div variants={slideUp} className="mb-8">
+                <h1 className="text-3xl font-bold text-gray-900 tracking-tight">{assignment.title}</h1>
+                {!loading && (
+                    <p className="text-gray-400 text-sm mt-1">
+                        {submissions.length} submission{submissions.length !== 1 ? "s" : ""}
+                    </p>
+                )}
+            </motion.div>
+
+            {loading ? (
+                <div className="flex items-center justify-center h-48 text-gray-400 font-medium">Loading submissions…</div>
+            ) : submissions.length === 0 ? (
+                <motion.div variants={slideUp} className="text-center py-20 bg-gray-50 rounded-[40px] border border-gray-100 text-gray-400 font-medium">
+                    No submissions yet for this assignment.
+                </motion.div>
+            ) : (
+                <motion.div variants={staggerContainer} className="space-y-3">
+                    {submissions.map(sub => {
+                        const studentName = sub.student
+                            ? `${sub.student.firstName} ${sub.student.lastName}`
+                            : sub.studentId;
+                        const studentEmail = sub.student?.email || "";
+                        const isQuizAnswer = (() => {
+                            try {
+                                if (!sub.fileUrl) return false;
+                                const parsed = JSON.parse(sub.fileUrl);
+                                return typeof parsed === "object" && !Array.isArray(parsed);
+                            } catch { return false; }
+                        })();
+
+                        return (
+                            <motion.div
+                                key={sub.id}
+                                variants={slideUp}
+                                className="bg-white border border-gray-100 rounded-[28px] px-7 py-5 flex items-center gap-5"
+                            >
+                                {/* Avatar initials */}
+                                <div className="shrink-0 w-11 h-11 rounded-2xl bg-[#3C0078]/10 flex items-center justify-center">
+                                    <span className="text-[#3C0078] font-bold text-sm">
+                                        {(sub.student?.firstName?.[0] || "?").toUpperCase()}
+                                        {(sub.student?.lastName?.[0] || "").toUpperCase()}
+                                    </span>
+                                </div>
+
+                                {/* Student info */}
+                                <div className="flex-1 min-w-0">
+                                    <p className="font-bold text-gray-900">{studentName}</p>
+                                    <p className="text-xs text-gray-400 mt-0.5">{studentEmail}</p>
+                                </div>
+
+                                {/* Submitted at */}
+                                <div className="shrink-0 text-right">
+                                    <p className="text-xs font-semibold text-gray-500">
+                                        {sub.submittedAt
+                                            ? new Date(sub.submittedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+                                            : "—"}
+                                    </p>
+                                    <p className="text-[10px] text-gray-400">
+                                        {sub.submittedAt
+                                            ? new Date(sub.submittedAt).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
+                                            : ""}
+                                    </p>
+                                </div>
+
+                                {/* File link or quiz badge */}
+                                {sub.fileUrl && !isQuizAnswer && (
+                                    <a
+                                        href={sub.fileUrl}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl bg-[#3C0078]/5 text-[#3C0078] text-xs font-bold hover:bg-[#3C0078]/10 transition-colors"
+                                    >
+                                        <FileText size={14} />
+                                        View File
+                                    </a>
+                                )}
+                                {isQuizAnswer && (
+                                    <span className="shrink-0 px-4 py-2 rounded-xl bg-orange-50 text-orange-600 text-xs font-bold">
+                                        Quiz Response
+                                    </span>
+                                )}
+
+                                {/* Status badge */}
+                                <span className={`shrink-0 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                                    sub.status === "Graded"
+                                        ? "bg-green-100 text-green-700"
+                                        : sub.status === "Submitted" || sub.status === "Resubmitted"
+                                        ? "bg-blue-50 text-blue-600"
+                                        : "bg-gray-100 text-gray-500"
+                                }`}>
+                                    {sub.status || "Submitted"}
+                                </span>
+                            </motion.div>
+                        );
+                    })}
+                </motion.div>
+            )}
+        </motion.div>
+    );
+}
+
+function AssignmentGroupRow({ group, onTogglePublish, onDelete, onEdit, onClose, onView }) {
     const [expanded, setExpanded] = React.useState(true);
 
     return (
@@ -844,6 +985,16 @@ function AssignmentGroupRow({ group, onTogglePublish, onDelete, onEdit, onClose 
                                         </div>
                                     </div>
 
+                                    {/* Review Submissions */}
+                                    <button
+                                        onClick={() => onView(item)}
+                                        className="shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl bg-[#3C0078]/5 text-[#3C0078] font-bold text-[10px] uppercase tracking-widest hover:bg-[#3C0078]/10 transition-all"
+                                        title="Review submissions"
+                                    >
+                                        <Users size={14} />
+                                        Review
+                                    </button>
+
                                     {/* Close/Reopen toggle */}
                                     <button
                                         onClick={() => onClose(group.id, item.id)}
@@ -893,6 +1044,7 @@ function CourseAssignmentsView({ subject, activeCourseId }) {
     const [editingAssignment, setEditingAssignment] = React.useState(null);
     const [activeTypeFilter, setActiveTypeFilter] = React.useState("all");
     const [saving, setSaving] = React.useState(false);
+    const [reviewingAssignment, setReviewingAssignment] = React.useState(null);
 
     const loadData = React.useCallback(async () => {
         if (!activeCourseId) return;
@@ -1004,6 +1156,15 @@ function CourseAssignmentsView({ subject, activeCourseId }) {
             assignments: g.assignments.filter(a => a.type === activeTypeFilter)
         })).filter(g => g.assignments.length > 0);
 
+    if (reviewingAssignment) {
+        return (
+            <TeacherSubmissionReview
+                assignment={reviewingAssignment}
+                onBack={() => setReviewingAssignment(null)}
+            />
+        );
+    }
+
     return (
         <motion.div className="flex-1 p-8 overflow-y-auto" initial="hidden" animate="visible" variants={staggerContainer}>
 
@@ -1110,6 +1271,7 @@ function CourseAssignmentsView({ subject, activeCourseId }) {
                             onDelete={handleDelete}
                             onEdit={handleEdit}
                             onClose={handleClose}
+                            onView={(item) => setReviewingAssignment(item)}
                         />
                     ))
                 )}
