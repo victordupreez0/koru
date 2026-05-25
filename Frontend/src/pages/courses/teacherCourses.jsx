@@ -10,7 +10,7 @@ import { Bell, Calendar, Folder, Upload, InfoCircle, CheckCircle, CloseCircle, C
 import { motion, AnimatePresence } from "framer-motion";
 import AttendanceChart from "../../components/UI/attendanceChart";
 import AttendanceVisualizer from "../../components/UI/attendanceVisualizer";
-import { getCourseAssignments } from "../../services/assignmentService";
+import { getCourseAssignments, createAssignment, updateAssignment, deleteAssignment, closeAssignment } from "../../services/assignmentService";
 import { getCourseGrades } from "../../services/gradeService";
 import { getCourseSubmissions } from "../../services/submissionService";
 import { getCourseAnnouncements, createAnnouncement, deleteAnnouncement } from "../../services/announcementService";
@@ -492,26 +492,35 @@ function CreateAssignmentDrawer({ onClose, onSave, initialData }) {
         title: initialData?.title ?? "",
         description: initialData?.description ?? "",
         type: initialData?.type ?? "online",
-        points: initialData?.points ?? 100,
+        points: initialData?.maxPoints ?? initialData?.points ?? 100,
         gradeDisplay: initialData?.gradeDisplay ?? "Percentage",
-        submissionType: initialData?.submissionType ?? "Online",
-        assignedTo: initialData?.assignedTo ?? "Everyone",
-        dueDate: initialData?.dueDate ?? "",
-        availableFrom: initialData?.availableFrom ?? "",
-        availableUntil: initialData?.availableUntil ?? "",
-        published: initialData?.published ?? false,
-        group: initialData?.group ?? "g1",
+        dueDate: initialData?.dueDate ? new Date(initialData.dueDate).toISOString().slice(0,16) : "",
+        allowMultipleAttempts: initialData?.allowMultipleAttempts ?? true,
         id: initialData?.id ?? null,
         submissions: initialData?.submissions ?? 0,
-        totalStudents: initialData?.totalStudents ?? 26,
+        totalStudents: initialData?.totalStudents ?? 0,
     });
+
+    const parseInitialQuestions = () => {
+        if (!initialData?.quizQuestionsJson) return [];
+        try { return JSON.parse(initialData.quizQuestionsJson); } catch { return []; }
+    };
+    const [quizQuestions, setQuizQuestions] = React.useState(parseInitialQuestions);
 
     const handleChange = (field, value) => setForm(prev => ({ ...prev, [field]: value }));
 
-    const handleSubmit = (publish) => {
+    const addQuestion = () => setQuizQuestions(prev => [...prev, { question: "", options: ["", "", "", ""], correctAnswer: 0 }]);
+    const removeQuestion = (qi) => setQuizQuestions(prev => prev.filter((_, i) => i !== qi));
+    const updateQuestion = (qi, field, value) => setQuizQuestions(prev => prev.map((q, i) => i !== qi ? q : { ...q, [field]: value }));
+    const updateOption = (qi, oi, value) => setQuizQuestions(prev => prev.map((q, i) => i !== qi ? q : { ...q, options: q.options.map((o, j) => j !== oi ? o : value) }));
+
+    const handleSubmit = () => {
         if (!form.title.trim()) return;
-        const payload = { ...form, published: publish };
-        if (!isEditing) payload.id = `a_${Date.now()}`;
+        const payload = {
+            ...form,
+            maxPoints: form.points,
+            quizQuestionsJson: form.type === "quiz" && quizQuestions.length > 0 ? JSON.stringify(quizQuestions) : null,
+        };
         onSave(payload);
     };
 
@@ -622,94 +631,103 @@ function CreateAssignmentDrawer({ onClose, onSave, initialData }) {
                         </div>
                     </div>
 
-                    {/* Submission Type & Assignees */}
-                    <div className="grid grid-cols-2 gap-4">
+                    {/* Allow Multiple Attempts */}
+                    <div className="flex items-center justify-between bg-gray-50 rounded-2xl px-5 py-4">
                         <div>
-                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2 block">Submission Type</label>
-                            <select
-                                value={form.submissionType}
-                                onChange={e => handleChange("submissionType", e.target.value)}
-                                className="w-full bg-gray-50 rounded-2xl px-5 py-4 text-gray-900 font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-[#3C0078]/20 border border-transparent transition-all appearance-none"
-                            >
-                                {SUBMISSION_TYPE_OPTIONS.map(o => <option key={o}>{o}</option>)}
-                            </select>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Allow Multiple Attempts</p>
+                            <p className="text-xs text-gray-500 mt-0.5">Students can resubmit until closed</p>
                         </div>
-                        <div>
-                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2 block">Assign To</label>
-                            <select
-                                value={form.assignedTo}
-                                onChange={e => handleChange("assignedTo", e.target.value)}
-                                className="w-full bg-gray-50 rounded-2xl px-5 py-4 text-gray-900 font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-[#3C0078]/20 border border-transparent transition-all appearance-none"
-                            >
-                                {ASSIGN_TO_OPTIONS.map(o => <option key={o}>{o}</option>)}
-                            </select>
-                        </div>
-                    </div>
-
-                    {/* Assignment Group */}
-                    <div>
-                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2 block">Assignment Group</label>
-                        <select
-                            value={form.group}
-                            onChange={e => handleChange("group", e.target.value)}
-                            className="w-full bg-gray-50 rounded-2xl px-5 py-4 text-gray-900 font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-[#3C0078]/20 border border-transparent transition-all appearance-none"
+                        <button
+                            onClick={() => handleChange("allowMultipleAttempts", !form.allowMultipleAttempts)}
+                            className={`w-12 h-6 rounded-full transition-colors flex items-center px-0.5 ${form.allowMultipleAttempts ? "bg-[#3C0078]" : "bg-gray-300"}`}
                         >
-                            {ASSIGNMENT_GROUPS_DATA.map(g => (
-                                <option key={g.id} value={g.id}>{g.name} ({g.weight}%)</option>
-                            ))}
-                        </select>
+                            <span className={`w-5 h-5 bg-white rounded-full shadow transition-transform ${form.allowMultipleAttempts ? "translate-x-6" : "translate-x-0"}`} />
+                        </button>
                     </div>
 
                     {/* Dates */}
                     <div>
                         <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3 block">Dates</label>
-                        <div className="bg-gray-50 rounded-[28px] p-6 space-y-4">
-                            <div>
-                                <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2 block">Due Date</label>
-                                <input
-                                    type="datetime-local"
-                                    value={form.dueDate}
-                                    onChange={e => handleChange("dueDate", e.target.value)}
-                                    className="w-full bg-white rounded-2xl px-5 py-3 text-gray-900 font-medium text-sm focus:outline-none focus:ring-2 focus:ring-[#3C0078]/20 border border-gray-100 transition-all"
-                                />
-                            </div>
-                            <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2 block">Available From</label>
-                                    <input
-                                        type="datetime-local"
-                                        value={form.availableFrom}
-                                        onChange={e => handleChange("availableFrom", e.target.value)}
-                                        className="w-full bg-white rounded-2xl px-4 py-3 text-gray-900 font-medium text-sm focus:outline-none focus:ring-2 focus:ring-[#3C0078]/20 border border-gray-100 transition-all"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2 block">Available Until</label>
-                                    <input
-                                        type="datetime-local"
-                                        value={form.availableUntil}
-                                        onChange={e => handleChange("availableUntil", e.target.value)}
-                                        className="w-full bg-white rounded-2xl px-4 py-3 text-gray-900 font-medium text-sm focus:outline-none focus:ring-2 focus:ring-[#3C0078]/20 border border-gray-100 transition-all"
-                                    />
-                                </div>
-                            </div>
+                        <div className="bg-gray-50 rounded-[28px] p-6">
+                            <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2 block">Due Date</label>
+                            <input
+                                type="datetime-local"
+                                value={form.dueDate}
+                                onChange={e => handleChange("dueDate", e.target.value)}
+                                className="w-full bg-white rounded-2xl px-5 py-3 text-gray-900 font-medium text-sm focus:outline-none focus:ring-2 focus:ring-[#3C0078]/20 border border-gray-100 transition-all"
+                            />
                         </div>
                     </div>
+
+                    {/* Quiz Questions (only for quiz type) */}
+                    {form.type === "quiz" && (
+                        <div>
+                            <div className="flex items-center justify-between mb-3">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Quiz Questions</label>
+                                <button onClick={addQuestion} className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#FF8731]/10 text-[#FF8731] font-bold text-[10px] uppercase tracking-widest hover:bg-[#FF8731]/20 transition-all">
+                                    <Plus size={14} /> Add Question
+                                </button>
+                            </div>
+                            {quizQuestions.length === 0 && (
+                                <p className="text-xs text-gray-400 bg-gray-50 rounded-2xl px-5 py-4">No questions yet. Click "Add Question" to begin.</p>
+                            )}
+                            <div className="space-y-4">
+                                {quizQuestions.map((q, qi) => (
+                                    <div key={qi} className="bg-gray-50 rounded-[24px] p-5 space-y-3">
+                                        <div className="flex items-start gap-3">
+                                            <span className="w-6 h-6 rounded-full bg-[#FF8731]/20 text-[#FF8731] text-[10px] font-black flex items-center justify-center shrink-0 mt-1">{qi + 1}</span>
+                                            <input
+                                                type="text"
+                                                placeholder="Question text..."
+                                                value={q.question}
+                                                onChange={e => updateQuestion(qi, "question", e.target.value)}
+                                                className="flex-1 bg-white rounded-xl px-4 py-2 text-sm text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-[#FF8731]/20 border border-gray-100"
+                                            />
+                                            <button onClick={() => removeQuestion(qi)} className="p-1.5 rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 transition-all">
+                                                <Trash2 size={14} />
+                                            </button>
+                                        </div>
+                                        <div className="space-y-2 pl-9">
+                                            {q.options.map((opt, oi) => (
+                                                <div key={oi} className="flex items-center gap-2">
+                                                    <input
+                                                        type="radio"
+                                                        name={`correct-${qi}`}
+                                                        checked={q.correctAnswer === oi}
+                                                        onChange={() => updateQuestion(qi, "correctAnswer", oi)}
+                                                        className="accent-[#3C0078]"
+                                                    />
+                                                    <input
+                                                        type="text"
+                                                        placeholder={`Option ${oi + 1}...`}
+                                                        value={opt}
+                                                        onChange={e => updateOption(qi, oi, e.target.value)}
+                                                        className="flex-1 bg-white rounded-xl px-4 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#3C0078]/10 border border-gray-100"
+                                                    />
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <p className="text-[10px] text-gray-400 pl-9">Select the radio button next to the correct answer</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Drawer Footer */}
                 <div className="px-10 py-6 border-t border-gray-100 flex gap-3 shrink-0">
                     <button
-                        onClick={() => handleSubmit(false)}
+                        onClick={onClose}
                         className="flex-1 py-4 rounded-2xl border-2 border-gray-200 text-gray-700 font-bold text-xs uppercase tracking-widest hover:bg-gray-50 transition-all"
                     >
-                        {isEditing ? "Save as Draft" : "Save as Draft"}
+                        Cancel
                     </button>
                     <button
-                        onClick={() => handleSubmit(true)}
+                        onClick={handleSubmit}
                         className="flex-1 py-4 rounded-2xl bg-[#3C0078] text-white font-bold text-xs uppercase tracking-widest hover:bg-[#2A0054] transition-all shadow-lg shadow-[#3C0078]/20 flex items-center justify-center gap-2"
                     >
-                        <Eye size={16} /> {isEditing ? "Save & Publish" : "Publish"}
+                        <Eye size={16} /> {isEditing ? "Save Changes" : "Publish"}
                     </button>
                 </div>
             </motion.div>
@@ -717,7 +735,7 @@ function CreateAssignmentDrawer({ onClose, onSave, initialData }) {
     );
 }
 
-function AssignmentGroupRow({ group, onTogglePublish, onDelete, onEdit }) {
+function AssignmentGroupRow({ group, onTogglePublish, onDelete, onEdit, onClose }) {
     const [expanded, setExpanded] = React.useState(true);
 
     return (
@@ -798,18 +816,18 @@ function AssignmentGroupRow({ group, onTogglePublish, onDelete, onEdit }) {
                                         </div>
                                     </div>
 
-                                    {/* Published toggle */}
+                                    {/* Close/Reopen toggle */}
                                     <button
-                                        onClick={() => onTogglePublish(group.id, item.id)}
+                                        onClick={() => onClose(group.id, item.id)}
                                         className={`shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all ${
-                                            item.published
-                                                ? "bg-green-50 text-green-700 hover:bg-red-50 hover:text-red-600"
-                                                : "bg-gray-100 text-gray-400 hover:bg-green-50 hover:text-green-600"
+                                            item.isClosed
+                                                ? "bg-red-50 text-red-600 hover:bg-green-50 hover:text-green-700"
+                                                : "bg-green-50 text-green-700 hover:bg-red-50 hover:text-red-600"
                                         }`}
-                                        title={item.published ? "Click to unpublish" : "Click to publish"}
+                                        title={item.isClosed ? "Click to reopen" : "Click to close"}
                                     >
-                                        {item.published ? <Eye size={14} /> : <EyeOff size={14} />}
-                                        {item.published ? "Published" : "Draft"}
+                                        {item.isClosed ? <EyeOff size={14} /> : <Eye size={14} />}
+                                        {item.isClosed ? "Closed" : "Open"}
                                     </button>
 
                                     {/* Edit */}
@@ -838,66 +856,113 @@ function AssignmentGroupRow({ group, onTogglePublish, onDelete, onEdit }) {
     );
 }
 
-function CourseAssignmentsView({ subject }) {
-    const [groups, setGroups] = React.useState(ASSIGNMENT_GROUPS_DATA);
+function CourseAssignmentsView({ subject, activeCourseId }) {
+    const [assignments, setAssignments] = React.useState([]);
+    const [submissionCounts, setSubmissionCounts] = React.useState({});
+    const [loading, setLoading] = React.useState(true);
     const [showDrawer, setShowDrawer] = React.useState(false);
     const [editingAssignment, setEditingAssignment] = React.useState(null);
     const [activeTypeFilter, setActiveTypeFilter] = React.useState("all");
+    const [saving, setSaving] = React.useState(false);
 
-    const totalWeight = groups.reduce((sum, g) => sum + g.weight, 0);
-    const totalAssignments = groups.reduce((sum, g) => sum + g.assignments.length, 0);
-    const publishedCount = groups.reduce((sum, g) => sum + g.assignments.filter(a => a.published).length, 0);
+    const loadData = React.useCallback(async () => {
+        if (!activeCourseId) return;
+        try {
+            setLoading(true);
+            const [data, subs] = await Promise.all([
+                getCourseAssignments(activeCourseId),
+                getCourseSubmissions(activeCourseId).catch(() => []),
+            ]);
+            const counts = {};
+            (subs || []).forEach(s => {
+                counts[s.assignmentId] = (counts[s.assignmentId] || 0) + 1;
+            });
+            setAssignments(data || []);
+            setSubmissionCounts(counts);
+        } catch (err) {
+            console.error("Failed to load assignments:", err);
+        } finally {
+            setLoading(false);
+        }
+    }, [activeCourseId]);
 
-    const handleTogglePublish = (groupId, assignmentId) => {
-        setGroups(prev => prev.map(g =>
-            g.id !== groupId ? g : {
-                ...g,
-                assignments: g.assignments.map(a =>
-                    a.id !== assignmentId ? a : { ...a, published: !a.published }
-                )
-            }
-        ));
-    };
+    React.useEffect(() => { loadData(); }, [loadData]);
 
-    const handleDelete = (groupId, assignmentId) => {
-        setGroups(prev => prev.map(g =>
-            g.id !== groupId ? g : {
-                ...g,
-                assignments: g.assignments.filter(a => a.id !== assignmentId)
-            }
-        ));
+    // Build one group from real data
+    const groups = React.useMemo(() => [{
+        id: "all",
+        name: "All Assignments",
+        weight: 100,
+        assignments: assignments.map(a => ({
+            ...a,
+            points: a.maxPoints,
+            submissions: submissionCounts[a.id] || 0,
+            totalStudents: 0,
+            published: !a.isClosed,
+        }))
+    }], [assignments, submissionCounts]);
+
+    const handleTogglePublish = () => {}; // handled by handleClose
+
+    const handleDelete = async (groupId, assignmentId) => {
+        try {
+            await deleteAssignment(assignmentId);
+            setAssignments(prev => prev.filter(a => a.id !== assignmentId));
+        } catch (err) {
+            console.error("Delete failed:", err);
+        }
     };
 
     const handleEdit = (groupId, assignmentId) => {
-        const group = groups.find(g => g.id === groupId);
-        const assignment = group?.assignments.find(a => a.id === assignmentId);
+        const assignment = assignments.find(a => a.id === assignmentId);
         if (assignment) {
-            setEditingAssignment({ ...assignment, group: groupId });
+            setEditingAssignment(assignment);
             setShowDrawer(true);
         }
     };
 
-    const handleSave = (savedAssignment) => {
-        if (editingAssignment) {
-            // Update existing
-            setGroups(prev => prev.map(g => ({
-                ...g,
-                assignments: g.assignments.map(a =>
-                    a.id !== savedAssignment.id ? a : { ...a, ...savedAssignment }
-                )
-            })));
-        } else {
-            // Add new
-            setGroups(prev => prev.map(g =>
-                g.id !== savedAssignment.group ? g : {
-                    ...g,
-                    assignments: [...g.assignments, savedAssignment]
-                }
+    const handleClose = async (groupId, assignmentId) => {
+        try {
+            const result = await closeAssignment(assignmentId);
+            setAssignments(prev => prev.map(a =>
+                a.id !== assignmentId ? a : { ...a, isClosed: result.isClosed }
             ));
+        } catch (err) {
+            console.error("Close failed:", err);
         }
-        setEditingAssignment(null);
-        setShowDrawer(false);
     };
+
+    const handleSave = async (formData) => {
+        setSaving(true);
+        try {
+            const payload = {
+                title: formData.title,
+                description: formData.description,
+                dueDate: formData.dueDate ? new Date(formData.dueDate).toISOString() : null,
+                maxPoints: formData.maxPoints || formData.points,
+                courseId: activeCourseId,
+                type: formData.type,
+                isClosed: false,
+                allowMultipleAttempts: formData.allowMultipleAttempts ?? true,
+                quizQuestionsJson: formData.quizQuestionsJson ?? null,
+            };
+            if (editingAssignment) {
+                await updateAssignment(editingAssignment.id, { ...payload, id: editingAssignment.id });
+            } else {
+                await createAssignment(payload);
+            }
+            await loadData();
+            setEditingAssignment(null);
+            setShowDrawer(false);
+        } catch (err) {
+            console.error("Save failed:", err);
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const totalAssignments = assignments.length;
+    const openCount = assignments.filter(a => !a.isClosed).length;
 
     const filteredGroups = activeTypeFilter === "all"
         ? groups
@@ -931,12 +996,11 @@ function CourseAssignmentsView({ subject }) {
             </motion.header>
 
             {/* Summary Stats */}
-            <motion.div variants={slideUp} className="grid grid-cols-4 gap-4 mb-10">
+            <motion.div variants={slideUp} className="grid grid-cols-3 gap-4 mb-10">
                 {[
-                    { label: "Total Assignments", value: totalAssignments, accent: false },
-                    { label: "Published", value: publishedCount, accent: true },
-                    { label: "Drafts", value: totalAssignments - publishedCount, accent: false },
-                    { label: "Total Weight", value: `${totalWeight}%`, accent: false },
+                    { label: "Total Assignments", value: loading ? "…" : totalAssignments, accent: false },
+                    { label: "Open", value: loading ? "…" : openCount, accent: true },
+                    { label: "Closed", value: loading ? "…" : totalAssignments - openCount, accent: false },
                 ].map((stat) => (
                     <div key={stat.label} className={`rounded-[28px] px-7 py-6 flex flex-col gap-1 ${stat.accent ? "bg-[#3C0078] text-white" : "bg-white border border-gray-100 shadow-sm"}`}>
                         <span className={`text-[10px] font-black uppercase tracking-widest ${stat.accent ? "text-white/60" : "text-gray-400"}`}>{stat.label}</span>
@@ -1012,6 +1076,7 @@ function CourseAssignmentsView({ subject }) {
                             onTogglePublish={handleTogglePublish}
                             onDelete={handleDelete}
                             onEdit={handleEdit}
+                            onClose={handleClose}
                         />
                     ))
                 )}
@@ -2210,7 +2275,7 @@ export default function TeacherCourses() {
             ) : isAnnouncementsPage ? (
                 <CourseAnnouncementsView activeCourseId={activeCourseId} />
             ) : isAssignmentsPage ? (
-                <CourseAssignmentsView subject={subject} />
+                <CourseAssignmentsView subject={subject} activeCourseId={activeCourseId} />
             ) : isAttendancePage ? (
                 <CourseAttendanceView />
             ) : isModulesPage ? (

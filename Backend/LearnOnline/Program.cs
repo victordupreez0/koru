@@ -34,6 +34,41 @@ builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(builder
 
 var app = builder.Build();
 
+// ----- Ensure migration history and apply pending migrations -----
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    var conn = context.Database.GetDbConnection();
+    conn.Open();
+    using (var cmd = conn.CreateCommand())
+    {
+        // Mark the two original migrations as applied if they aren't yet
+        // (the tables already exist from a prior deployment without EF history)
+        cmd.CommandText = @"
+            CREATE TABLE IF NOT EXISTS ""__EFMigrationsHistory"" (
+                ""MigrationId"" character varying(150) NOT NULL,
+                ""ProductVersion"" character varying(32) NOT NULL,
+                CONSTRAINT ""PK___EFMigrationsHistory"" PRIMARY KEY (""MigrationId"")
+            );
+            INSERT INTO ""__EFMigrationsHistory"" (""MigrationId"", ""ProductVersion"")
+            VALUES ('20260324193947_InitLearnOnline', '9.0.3')
+            ON CONFLICT DO NOTHING;
+            INSERT INTO ""__EFMigrationsHistory"" (""MigrationId"", ""ProductVersion"")
+            VALUES ('20260422151017_AddNoteTitle', '9.0.3')
+            ON CONFLICT DO NOTHING;
+            ALTER TABLE ""Assignments"" ADD COLUMN IF NOT EXISTS ""AllowMultipleAttempts"" boolean NOT NULL DEFAULT FALSE;
+            ALTER TABLE ""Assignments"" ADD COLUMN IF NOT EXISTS ""IsClosed"" boolean NOT NULL DEFAULT FALSE;
+            ALTER TABLE ""Assignments"" ADD COLUMN IF NOT EXISTS ""QuizQuestionsJson"" text NULL;
+            ALTER TABLE ""Assignments"" ADD COLUMN IF NOT EXISTS ""Type"" text NOT NULL DEFAULT 'online';
+            INSERT INTO ""__EFMigrationsHistory"" (""MigrationId"", ""ProductVersion"")
+            VALUES ('20260525083558_AddAssignmentTypeAndClose', '9.0.3')
+            ON CONFLICT DO NOTHING;";
+        cmd.ExecuteNonQuery();
+    }
+    conn.Close();
+    context.Database.Migrate();
+}
+
 // ----- Execute the Database Seeder -----
 using (var scope = app.Services.CreateScope())
 {

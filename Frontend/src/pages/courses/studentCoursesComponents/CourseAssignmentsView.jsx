@@ -28,12 +28,12 @@ export default function CourseAssignmentsView({ subject, activeCourseId }) {
         if (submission) {
             return { status: 'Submitted', color: 'text-green-600', rank: 4, isSubmitted: true };
         }
+        if (item.isClosed) return { status: 'Closed', color: 'text-gray-400', rank: 3, isClosed: true };
 
         const now = new Date();
         const due = new Date(item.dueDate);
         const diffDays = (due - now) / (1000 * 60 * 60 * 24);
 
-        if (diffDays < -7) return { status: 'Closed', color: 'text-gray-400', rank: 3, isClosed: true };
         if (diffDays < 0) return { status: 'Late', color: 'text-red-600', rank: 0 };
         if (diffDays <= 5) return { status: 'Due Soon', color: 'text-orange-500', rank: 1 };
         return { status: 'Due', color: 'text-blue-500', rank: 2 };

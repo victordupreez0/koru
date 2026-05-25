@@ -5,6 +5,7 @@ import AssignmentItem from "./UI/assignmentItem";
 import ProgressRing from "./UI/progressRing";
 import { useAuth } from "../contexts/AuthContext";
 import { getStudentAssignments } from "../services/assignmentService";
+import { getStudentSubmissions } from "../services/submissionService";
 
 // ──────────────────────────────────────────────
 // Assignments data – easy to swap with backend later
@@ -16,11 +17,11 @@ export default function AssignmentsProgress() {
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const getRankAndState = (dbAssignment) => {
-    // Mock submitted ones
-    if (dbAssignment.title === "Usability Testing Report" || dbAssignment.title === "Literature Review Module") {
-      return { rank: 4, uiState: 'Submitted', isCompleted: true };
-    }
+  const getRankAndState = (dbAssignment, submissions) => {
+    if (dbAssignment.isClosed) return { rank: 3, uiState: 'Closed', isCompleted: false };
+
+    const submitted = submissions.some(s => s.assignmentId === dbAssignment.id);
+    if (submitted) return { rank: 4, uiState: 'Submitted', isCompleted: true };
 
     const now = new Date();
     const due = new Date(dbAssignment.dueDate);
@@ -38,11 +39,14 @@ export default function AssignmentsProgress() {
       if (!user?.userId) return;
       try {
         setLoading(true);
-        const data = await getStudentAssignments(user.userId);
+        const [data, subs] = await Promise.all([
+            getStudentAssignments(user.userId),
+            getStudentSubmissions(user.userId).catch(() => []),
+        ]);
 
         // Map backend schema to our required UI schema and sort by priority
         const mapped = data.map(dbAssignment => {
-          const { rank, uiState, isCompleted } = getRankAndState(dbAssignment);
+          const { rank, uiState, isCompleted } = getRankAndState(dbAssignment, subs || []);
           return {
             id: dbAssignment.id,
             courseId: dbAssignment.courseId,
