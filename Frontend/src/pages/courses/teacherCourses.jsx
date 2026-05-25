@@ -11,8 +11,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import AttendanceChart from "../../components/UI/attendanceChart";
 import AttendanceVisualizer from "../../components/UI/attendanceVisualizer";
 import { getCourseAssignments, createAssignment, updateAssignment, deleteAssignment, closeAssignment } from "../../services/assignmentService";
-import { getCourseGrades } from "../../services/gradeService";
-import { getCourseSubmissions, getAssignmentSubmissions } from "../../services/submissionService";
+import { getCourseGrades, getAssignmentGrades, createGrade, updateGrade } from "../../services/gradeService";
+import { getCourseSubmissions, getAssignmentSubmissions, updateSubmission } from "../../services/submissionService";
 import { getCourseStudentCount } from "../../services/enrollmentService";
 import StudentCourseAssignmentsView from "./studentCoursesComponents/CourseAssignmentsView";
 import { getCourseAnnouncements, createAnnouncement, deleteAnnouncement } from "../../services/announcementService";
@@ -37,7 +37,7 @@ import {
 } from "novel";
 import { getNotes, createNote, updateNote, deleteNote } from "../../services/noteService";
 import { useAuth } from "../../contexts/AuthContext";
-import { Plus, Bold, Italic, Underline, Strikethrough, Code, Heading1, Heading2, Heading3, List, ListOrdered, Quote, Minus, Trash2, Maximize2, Minimize2, FileText, HelpCircle, MessageSquare, Users, ExternalLink, ClipboardList, Eye, EyeOff, Edit2, ChevronDown, ChevronRight, CheckSquare, GripVertical, ToggleLeft, ToggleRight, PenLine, BookOpen, X } from "lucide-react";
+import { Plus, Bold, Italic, Underline, Strikethrough, Code, Heading1, Heading2, Heading3, List, ListOrdered, Quote, Minus, Trash2, Maximize2, Minimize2, FileText, HelpCircle, MessageSquare, Users, ExternalLink, ClipboardList, Eye, EyeOff, Edit2, ChevronDown, ChevronRight, CheckSquare, GripVertical, ToggleLeft, ToggleRight, PenLine, BookOpen, X, Loader, Check } from "lucide-react";
 import NovelBlockMenu from "../../components/NovelBlockMenu";
 
 /**
@@ -763,16 +763,35 @@ function CreateAssignmentDrawer({ onClose, onSave, initialData }) {
 // Teacher: review submissions for a single assignment
 // ─────────────────────────────────────────────
 function TeacherSubmissionReview({ assignment, onBack }) {
+    const { user } = useAuth();
     const [submissions, setSubmissions] = React.useState([]);
+    const [grades, setGrades] = React.useState({}); // keyed by submissionId
     const [loading, setLoading] = React.useState(true);
+    // Per-submission grading state: { [submissionId]: { points: string, saving: bool, error: string|null, editing: bool } }
+    const [gradingState, setGradingState] = React.useState({});
 
     React.useEffect(() => {
         let mounted = true;
         async function load() {
             try {
                 setLoading(true);
-                const data = await getAssignmentSubmissions(assignment.id);
-                if (mounted) setSubmissions(data);
+                const [subs, gradeList] = await Promise.all([
+                    getAssignmentSubmissions(assignment.id),
+                    getAssignmentGrades(assignment.id).catch(() => []),
+                ]);
+                if (!mounted) return;
+                setSubmissions(subs);
+                // Build a map: submissionId -> grade object
+                const gradeMap = {};
+                gradeList.forEach(g => { gradeMap[g.submissionId] = g; });
+                setGrades(gradeMap);
+                // Pre-fill grading inputs for already-graded submissions
+                const initial = {};
+                subs.forEach(s => {
+                    const existing = gradeMap[s.id];
+                    initial[s.id] = { points: existing ? String(existing.pointsEarned) : "", saving: false, error: null, editing: false };
+                });
+                setGradingState(initial);
             } catch (err) {
                 console.error("Failed to load submissions:", err);
             } finally {
@@ -782,6 +801,43 @@ function TeacherSubmissionReview({ assignment, onBack }) {
         load();
         return () => { mounted = false; };
     }, [assignment.id]);
+
+    function setField(subId, field, value) {
+        setGradingState(prev => ({ ...prev, [subId]: { ...prev[subId], [field]: value } }));
+    }
+
+    async function handleGrade(sub) {
+        const gs = gradingState[sub.id];
+        const pts = parseFloat(gs?.points);
+        if (isNaN(pts) || pts < 0 || pts > (assignment.points || Infinity)) {
+            setField(sub.id, "error", `Enter a value between 0 and ${assignment.points ?? "max"}.`);
+            return;
+        }
+        setField(sub.id, "saving", true);
+        setField(sub.id, "error", null);
+        try {
+            const existing = grades[sub.id];
+            let saved;
+            if (existing) {
+                await updateGrade(existing.id, { submissionId: sub.id, pointsEarned: pts, gradedBy: user.userId });
+                saved = { ...existing, pointsEarned: pts };
+            } else {
+                saved = await createGrade({ submissionId: sub.id, pointsEarned: pts, gradedBy: user.userId });
+            }
+            // Mark submission as Graded on the backend
+            await updateSubmission(sub.id, { assignmentId: sub.assignmentId, studentId: sub.studentId, fileUrl: sub.fileUrl, status: "Graded" }).catch(() => {});
+            setGrades(prev => ({ ...prev, [sub.id]: saved }));
+            setField(sub.id, "editing", false);
+            setField(sub.id, "saving", false);
+            // Reflect "Graded" status in the local submissions list
+            setSubmissions(prev => prev.map(s => s.id === sub.id ? { ...s, status: "Graded" } : s));
+        } catch (err) {
+            setField(sub.id, "error", err.message || "Failed to save grade.");
+            setField(sub.id, "saving", false);
+        }
+    }
+
+    const maxPts = assignment.points ?? null;
 
     return (
         <motion.div className="flex-1 p-8 overflow-y-auto" initial="hidden" animate="visible" variants={staggerContainer}>
@@ -799,12 +855,27 @@ function TeacherSubmissionReview({ assignment, onBack }) {
             </motion.div>
 
             {/* Header */}
-            <motion.div variants={slideUp} className="mb-8">
-                <h1 className="text-3xl font-bold text-gray-900 tracking-tight">{assignment.title}</h1>
-                {!loading && (
-                    <p className="text-gray-400 text-sm mt-1">
-                        {submissions.length} submission{submissions.length !== 1 ? "s" : ""}
-                    </p>
+            <motion.div variants={slideUp} className="mb-8 flex items-end justify-between">
+                <div>
+                    <h1 className="text-3xl font-bold text-gray-900 tracking-tight">{assignment.title}</h1>
+                    {!loading && (
+                        <p className="text-gray-400 text-sm mt-1">
+                            {submissions.length} submission{submissions.length !== 1 ? "s" : ""}
+                            {maxPts != null && <span className="ml-3 text-gray-300">|</span>}
+                            {maxPts != null && <span className="ml-3">Max: <strong>{maxPts} pts</strong></span>}
+                        </p>
+                    )}
+                </div>
+                {/* Quick stats */}
+                {!loading && submissions.length > 0 && (
+                    <div className="flex gap-3">
+                        <div className="px-5 py-3 bg-green-50 rounded-2xl text-center">
+                            <p className="text-[10px] font-black uppercase tracking-widest text-green-600">Graded</p>
+                            <p className="text-xl font-black italic text-green-700">
+                                {Object.keys(grades).length}/{submissions.length}
+                            </p>
+                        </div>
+                    </div>
                 )}
             </motion.div>
 
@@ -815,7 +886,7 @@ function TeacherSubmissionReview({ assignment, onBack }) {
                     No submissions yet for this assignment.
                 </motion.div>
             ) : (
-                <motion.div variants={staggerContainer} className="space-y-3">
+                <motion.div variants={staggerContainer} className="space-y-4">
                     {submissions.map(sub => {
                         const studentName = sub.student
                             ? `${sub.student.firstName} ${sub.student.lastName}`
@@ -828,69 +899,150 @@ function TeacherSubmissionReview({ assignment, onBack }) {
                                 return typeof parsed === "object" && !Array.isArray(parsed);
                             } catch { return false; }
                         })();
+                        const existingGrade = grades[sub.id];
+                        const gs = gradingState[sub.id] || { points: "", saving: false, error: null, editing: false };
+                        const ptsVal = parseFloat(gs.points);
+                        const pct = maxPts && !isNaN(ptsVal) ? Math.round((ptsVal / maxPts) * 100) : null;
+                        const isEditing = gs.editing || !existingGrade;
 
                         return (
                             <motion.div
                                 key={sub.id}
                                 variants={slideUp}
-                                className="bg-white border border-gray-100 rounded-[28px] px-7 py-5 flex items-center gap-5"
+                                className="bg-white border border-gray-100 rounded-[28px] p-6 space-y-4"
                             >
-                                {/* Avatar initials */}
-                                <div className="shrink-0 w-11 h-11 rounded-2xl bg-[#3C0078]/10 flex items-center justify-center">
-                                    <span className="text-[#3C0078] font-bold text-sm">
-                                        {(sub.student?.firstName?.[0] || "?").toUpperCase()}
-                                        {(sub.student?.lastName?.[0] || "").toUpperCase()}
-                                    </span>
-                                </div>
-
-                                {/* Student info */}
-                                <div className="flex-1 min-w-0">
-                                    <p className="font-bold text-gray-900">{studentName}</p>
-                                    <p className="text-xs text-gray-400 mt-0.5">{studentEmail}</p>
-                                </div>
-
-                                {/* Submitted at */}
-                                <div className="shrink-0 text-right">
-                                    <p className="text-xs font-semibold text-gray-500">
-                                        {sub.submittedAt
-                                            ? new Date(sub.submittedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
-                                            : "—"}
-                                    </p>
-                                    <p className="text-[10px] text-gray-400">
-                                        {sub.submittedAt
-                                            ? new Date(sub.submittedAt).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
-                                            : ""}
-                                    </p>
-                                </div>
-
-                                {/* File link or quiz badge */}
-                                {sub.fileUrl && !isQuizAnswer && (
-                                    <a
-                                        href={`${(import.meta.env.VITE_API_BASE_URL || "http://localhost:5299/api").replace("/api", "")}${sub.fileUrl}`}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl bg-[#3C0078]/5 text-[#3C0078] text-xs font-bold hover:bg-[#3C0078]/10 transition-colors"
-                                    >
-                                        <FileText size={14} />
-                                        View File
-                                    </a>
-                                )}
-                                {isQuizAnswer && (
-                                    <span className="shrink-0 px-4 py-2 rounded-xl bg-orange-50 text-orange-600 text-xs font-bold">
-                                        Quiz Response
-                                    </span>
-                                )}
-
-                                {/* Status badge */}
-                                <span className={`shrink-0 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${
-                                    sub.status === "Graded"
-                                        ? "bg-green-100 text-green-700"
-                                        : sub.status === "Submitted" || sub.status === "Resubmitted"
-                                        ? "bg-blue-50 text-blue-600"
+                                {/* Top row: student + file + status */}
+                                <div className="flex items-center gap-4">
+                                    {/* Avatar */}
+                                    <div className="shrink-0 w-11 h-11 rounded-2xl bg-[#3C0078]/10 flex items-center justify-center">
+                                        <span className="text-[#3C0078] font-bold text-sm">
+                                            {(sub.student?.firstName?.[0] || "?").toUpperCase()}
+                                            {(sub.student?.lastName?.[0] || "").toUpperCase()}
+                                        </span>
+                                    </div>
+                                    {/* Student info */}
+                                    <div className="flex-1 min-w-0">
+                                        <p className="font-bold text-gray-900">{studentName}</p>
+                                        <p className="text-xs text-gray-400 mt-0.5">{studentEmail}</p>
+                                    </div>
+                                    {/* Submitted at */}
+                                    <div className="shrink-0 text-right">
+                                        <p className="text-xs font-semibold text-gray-500">
+                                            {sub.submittedAt ? new Date(sub.submittedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—"}
+                                        </p>
+                                        <p className="text-[10px] text-gray-400">
+                                            {sub.submittedAt ? new Date(sub.submittedAt).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }) : ""}
+                                        </p>
+                                    </div>
+                                    {/* File or quiz */}
+                                    {sub.fileUrl && !isQuizAnswer && (
+                                        <a
+                                            href={`${(import.meta.env.VITE_API_BASE_URL || "http://localhost:5299/api").replace("/api", "")}${sub.fileUrl}`}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl bg-[#3C0078]/5 text-[#3C0078] text-xs font-bold hover:bg-[#3C0078]/10 transition-colors"
+                                        >
+                                            <FileText size={14} />
+                                            View File
+                                        </a>
+                                    )}
+                                    {isQuizAnswer && (
+                                        <span className="shrink-0 px-4 py-2 rounded-xl bg-orange-50 text-orange-600 text-xs font-bold">Quiz Response</span>
+                                    )}
+                                    {/* Status badge */}
+                                    <span className={`shrink-0 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                                        sub.status === "Graded" ? "bg-green-100 text-green-700"
+                                        : sub.status === "Submitted" || sub.status === "Resubmitted" ? "bg-blue-50 text-blue-600"
                                         : "bg-gray-100 text-gray-500"
-                                }`}>
-                                    {sub.status || "Submitted"}
-                                </span>
+                                    }`}>
+                                        {sub.status || "Submitted"}
+                                    </span>
+                                </div>
+
+                                {/* Grading section */}
+                                <div className="border-t border-gray-50 pt-4">
+                                    {existingGrade && !gs.editing ? (
+                                        // Already graded — show result
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-4">
+                                                <div className="flex flex-col">
+                                                    <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Grade</span>
+                                                    <span className="text-2xl font-black italic text-gray-900">
+                                                        {existingGrade.pointsEarned}{maxPts != null && <span className="text-sm font-normal text-gray-400">/{maxPts} pts</span>}
+                                                    </span>
+                                                </div>
+                                                {maxPts != null && (
+                                                    <div className="px-5 py-2 rounded-2xl bg-[#3C0078] text-white">
+                                                        <span className="text-xl font-black italic">
+                                                            {Math.round((existingGrade.pointsEarned / maxPts) * 100)}%
+                                                        </span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <button
+                                                onClick={() => setField(sub.id, "editing", true)}
+                                                className="flex items-center gap-2 px-5 py-2.5 rounded-2xl border border-gray-200 text-xs font-bold text-gray-500 hover:border-[#3C0078] hover:text-[#3C0078] transition-all"
+                                            >
+                                                <Edit2 size={13} /> Update Grade
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        // Grade entry form
+                                        <div className="flex items-start gap-4">
+                                            <div className="flex-1 space-y-2">
+                                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                                                    Points Awarded{maxPts != null && ` (out of ${maxPts})`}
+                                                </label>
+                                                <div className="flex items-center gap-3">
+                                                    <input
+                                                        type="number"
+                                                        min="0"
+                                                        max={maxPts ?? undefined}
+                                                        step="0.5"
+                                                        value={gs.points}
+                                                        onChange={e => setField(sub.id, "points", e.target.value)}
+                                                        placeholder={maxPts != null ? `0 – ${maxPts}` : "Points"}
+                                                        disabled={gs.saving}
+                                                        className="w-36 px-4 py-3 rounded-2xl border border-gray-200 text-sm font-bold text-gray-900 focus:outline-none focus:border-[#3C0078] transition-colors disabled:opacity-50"
+                                                    />
+                                                    {/* Live percentage */}
+                                                    {pct !== null && (
+                                                        <div className={`px-4 py-3 rounded-2xl font-black italic text-lg min-w-[70px] text-center ${
+                                                            pct >= 75 ? "bg-green-50 text-green-700"
+                                                            : pct >= 50 ? "bg-orange-50 text-orange-600"
+                                                            : "bg-red-50 text-red-600"
+                                                        }`}>
+                                                            {pct}%
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                {gs.error && <p className="text-xs text-red-500 font-medium">{gs.error}</p>}
+                                            </div>
+                                            <div className="flex items-end gap-2 pb-0.5">
+                                                {existingGrade && (
+                                                    <button
+                                                        onClick={() => { setField(sub.id, "editing", false); setField(sub.id, "points", String(existingGrade.pointsEarned)); }}
+                                                        disabled={gs.saving}
+                                                        className="px-5 py-3 rounded-2xl border border-gray-200 text-xs font-bold text-gray-400 hover:bg-gray-50 transition-all"
+                                                    >
+                                                        Cancel
+                                                    </button>
+                                                )}
+                                                <button
+                                                    onClick={() => handleGrade(sub)}
+                                                    disabled={gs.saving || gs.points === ""}
+                                                    className={`flex items-center gap-2 px-6 py-3 rounded-2xl text-xs font-bold uppercase tracking-widest text-white transition-all ${
+                                                        gs.saving || gs.points === ""
+                                                            ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                                                            : "bg-[#3C0078] hover:bg-[#2A0054] shadow-lg shadow-[#3C0078]/20"
+                                                    }`}
+                                                >
+                                                    {gs.saving ? <><Loader size={13} className="animate-spin" /> Saving…</> : <><Check size={14} /> {existingGrade ? "Update" : "Submit Grade"}</>}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
                             </motion.div>
                         );
                     })}

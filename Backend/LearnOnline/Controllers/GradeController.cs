@@ -54,6 +54,20 @@ namespace LearnOnline.Controllers
             return grades;
         }
 
+        // GET /api/Grade/assignment/{assignmentId} – return all grades for a specific assignment
+        [HttpGet("assignment/{assignmentId}")]
+        public async Task<ActionResult<IEnumerable<Grade>>> GetByAssignmentId(string assignmentId)
+        {
+            var grades = await _context.Grades
+                .Include(g => g.Submission)
+                    .ThenInclude(s => s.Student)
+                .Include(g => g.Grader)
+                .Where(g => g.Submission != null && g.Submission.AssignmentId == assignmentId)
+                .ToListAsync();
+
+            return grades;
+        }
+
         // GET /api/Grade/course/{courseId} – return all grades for a specific course
         [HttpGet("course/{courseId}")]
         public async Task<ActionResult<IEnumerable<Grade>>> GetByCourseId(string courseId)
