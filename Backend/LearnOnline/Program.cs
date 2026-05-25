@@ -93,6 +93,9 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+// Serve files from wwwroot (student submission uploads live under /uploads)
+app.UseStaticFiles();
+
 // Enable CORS before auth so preflight requests succeed
 app.UseCors("AllowFrontend");
 

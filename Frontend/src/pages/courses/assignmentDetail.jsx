@@ -15,6 +15,7 @@ import {
   getSubmissionForAssignment,
   createSubmission,
   updateSubmission,
+  uploadSubmissionFile,
 } from "../../services/submissionService.jsx";
 import { useAuth } from "../../contexts/AuthContext";
 
@@ -212,7 +213,13 @@ export default function AssignmentDetail({ assignmentId, activeCourseId }) {
     setSubmitting(true);
     setSubmitError(null);
     try {
-      const fileUrl = isQuiz ? JSON.stringify(quizAnswers) : file.name;
+      let fileUrl;
+      if (isQuiz) {
+        fileUrl = JSON.stringify(quizAnswers);
+      } else {
+        const uploaded = await uploadSubmissionFile(file);
+        fileUrl = uploaded.url;
+      }
 
       if (existingSubmission) {
         await updateSubmission(existingSubmission.id, {
