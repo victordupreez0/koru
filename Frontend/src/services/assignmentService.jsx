@@ -35,3 +35,42 @@ export async function getCourseAssignments(courseId) {
   });
   return handleResponse(res);
 }
+
+// POST /api/Assignment – create a new assignment
+export async function createAssignment(assignment) {
+  const res = await fetch(`${API_BASE}/Assignment`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(assignment),
+  });
+  return handleResponse(res);
+}
+
+// PUT /api/Assignment/:id – update an existing assignment
+export async function updateAssignment(id, assignment) {
+  const res = await fetch(`${API_BASE}/Assignment/${encodeURIComponent(id)}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(assignment),
+  });
+  if (!res.ok) throw new Error("Failed to update assignment.");
+}
+
+// DELETE /api/Assignment/:id – delete an assignment
+export async function deleteAssignment(id) {
+  const res = await fetch(`${API_BASE}/Assignment/${encodeURIComponent(id)}`, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+  });
+  if (!res.ok) throw new Error("Failed to delete assignment.");
+}
+
+// PATCH /api/Assignment/:id/close – toggle closed state
+export async function closeAssignment(id) {
+  const res = await fetch(`${API_BASE}/Assignment/${encodeURIComponent(id)}/close`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+  });
+  return handleResponse(res);
+}
+

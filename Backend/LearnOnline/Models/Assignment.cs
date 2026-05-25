@@ -20,10 +20,29 @@ namespace LearnOnline.Models
         // Deadline for student submissions
         public DateTime? DueDate { get; set; }
 
+        // When the assignment becomes visible/available to students
+        public DateTime? OpenDate { get; set; }
+
+        // When submissions are no longer accepted (date-based close)
+        public DateTime? CloseDate { get; set; }
+
         // Maximum achievable points (used to calculate grades)
         public int? MaxPoints { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        // Assignment type: "online" | "quiz" | "discussion" | "paper" | "external" | "none"
+        public string Type { get; set; } = "online";
+
+        // When true the assignment is closed and hidden from students
+        public bool IsClosed { get; set; } = false;
+
+        // When false students may only submit once
+        public bool AllowMultipleAttempts { get; set; } = true;
+
+        // JSON array of quiz questions – only used when Type == "quiz"
+        // Format: [{"question":"...","options":["a","b","c","d"],"correctAnswer":0}]
+        public string? QuizQuestionsJson { get; set; }
 
         // Foreign key to the Course this assignment belongs to
         [Required]
