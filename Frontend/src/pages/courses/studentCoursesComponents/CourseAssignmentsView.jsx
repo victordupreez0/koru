@@ -15,8 +15,8 @@ export default function CourseAssignmentsView({ subject, activeCourseId }) {
     const [loading, setLoading] = React.useState(true);
 
     const computeStatusInfo = (item, submission, grade) => {
-        // Priority: Graded > Submitted > date-based heuristics
-        if (grade) {
+        // Only show Graded status when grade has been released to the student
+        if (grade && grade.isReleased) {
             return {
                 status: 'Graded',
                 color: 'text-purple-600',

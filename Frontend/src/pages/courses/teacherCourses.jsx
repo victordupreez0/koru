@@ -11,7 +11,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import AttendanceChart from "../../components/UI/attendanceChart";
 import AttendanceVisualizer from "../../components/UI/attendanceVisualizer";
 import { getCourseAssignments, createAssignment, updateAssignment, deleteAssignment, closeAssignment } from "../../services/assignmentService";
-import { getCourseGrades, getAssignmentGrades, createGrade, updateGrade } from "../../services/gradeService";
+import { getCourseGrades, getAssignmentGrades, createGrade, updateGrade, releaseAssignmentGrades } from "../../services/gradeService";
 import { getCourseSubmissions, getAssignmentSubmissions, updateSubmission } from "../../services/submissionService";
 import { getCourseStudentCount } from "../../services/enrollmentService";
 import StudentCourseAssignmentsView from "./studentCoursesComponents/CourseAssignmentsView";
@@ -769,6 +769,23 @@ function TeacherSubmissionReview({ assignment, onBack }) {
     const [loading, setLoading] = React.useState(true);
     // Per-submission grading state: { [submissionId]: { points: string, saving: bool, error: string|null, editing: bool } }
     const [gradingState, setGradingState] = React.useState({});
+    const [releasing, setReleasing] = React.useState(false);
+
+    async function handleRelease() {
+        setReleasing(true);
+        try {
+            await releaseAssignmentGrades(assignment.id);
+            setGrades(prev => {
+                const updated = {};
+                Object.keys(prev).forEach(k => { updated[k] = { ...prev[k], isReleased: true }; });
+                return updated;
+            });
+        } catch (err) {
+            console.error("Failed to release grades:", err);
+        } finally {
+            setReleasing(false);
+        }
+    }
 
     React.useEffect(() => {
         let mounted = true;
@@ -868,13 +885,29 @@ function TeacherSubmissionReview({ assignment, onBack }) {
                 </div>
                 {/* Quick stats */}
                 {!loading && submissions.length > 0 && (
-                    <div className="flex gap-3">
+                    <div className="flex items-center gap-3">
                         <div className="px-5 py-3 bg-green-50 rounded-2xl text-center">
                             <p className="text-[10px] font-black uppercase tracking-widest text-green-600">Graded</p>
                             <p className="text-xl font-black italic text-green-700">
                                 {Object.keys(grades).length}/{submissions.length}
                             </p>
                         </div>
+                        {Object.keys(grades).length > 0 && (
+                            Object.values(grades).every(g => g.isReleased) ? (
+                                <div className="px-4 py-2 bg-purple-50 rounded-2xl flex items-center gap-2">
+                                    <Check size={14} className="text-purple-600" />
+                                    <span className="text-xs font-bold uppercase tracking-widest text-purple-600">Grades Released</span>
+                                </div>
+                            ) : (
+                                <button
+                                    onClick={handleRelease}
+                                    disabled={releasing}
+                                    className="px-5 py-3 bg-[#3C0078] text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-[#2d0059] transition-colors disabled:opacity-60"
+                                >
+                                    {releasing ? "Releasing…" : "Release Grades"}
+                                </button>
+                            )
+                        )}
                     </div>
                 )}
             </motion.div>

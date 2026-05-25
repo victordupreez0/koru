@@ -17,6 +17,7 @@ import {
   updateSubmission,
   uploadSubmissionFile,
 } from "../../services/submissionService.jsx";
+import { getStudentGrades, createGrade, updateGrade } from "../../services/gradeService.js";
 import { useAuth } from "../../contexts/AuthContext";
 
 // ─────────────────────────────────────────────
@@ -166,6 +167,7 @@ export default function AssignmentDetail({ assignmentId, activeCourseId }) {
   const [justSubmitted, setJustSubmitted] = useState(false);
   const [quizStarted, setQuizStarted] = useState(false);
   const [quizAnswers, setQuizAnswers] = useState({});
+  const [existingGrade, setExistingGrade] = useState(null);
 
   // Fetch assignment details
   useEffect(() => {
@@ -186,17 +188,36 @@ export default function AssignmentDetail({ assignmentId, activeCourseId }) {
     return () => { mounted = false; };
   }, [assignmentId]);
 
-  // Check for an existing submission
+  // Check for an existing submission (and grade)
   useEffect(() => {
     let mounted = true;
     async function fetchSubmission() {
       if (!assignmentId || !user?.userId) return;
       try {
         setLoadingSubmission(true);
-        const sub = await getSubmissionForAssignment(user.userId, assignmentId);
-        if (mounted) setExistingSubmission(sub);
+        const [sub, grades] = await Promise.all([
+          getSubmissionForAssignment(user.userId, assignmentId).catch(() => null),
+          getStudentGrades(user.userId).catch(() => []),
+        ]);
+        if (!mounted) return;
+        if (sub) {
+          setExistingSubmission(sub);
+          // Pre-fill quiz answers from the stored submission
+          if (sub.fileUrl) {
+            try {
+              const parsed = JSON.parse(sub.fileUrl);
+              if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+                const answers = {};
+                Object.entries(parsed).forEach(([k, v]) => { answers[parseInt(k)] = v; });
+                setQuizAnswers(answers);
+              }
+            } catch { /* not a quiz submission */ }
+          }
+          // Find any existing grade for this submission
+          const grade = grades.find(g => g.submissionId === sub.id);
+          if (grade) setExistingGrade(grade);
+        }
       } catch (err) {
-        // No submission is fine – just means not submitted yet
         console.warn("No existing submission found:", err);
       } finally {
         if (mounted) setLoadingSubmission(false);
@@ -221,23 +242,49 @@ export default function AssignmentDetail({ assignmentId, activeCourseId }) {
         fileUrl = uploaded.url;
       }
 
+      let submissionId;
       if (existingSubmission) {
         await updateSubmission(existingSubmission.id, {
           fileUrl,
-          status: "Resubmitted",
+          status: isQuiz ? "Graded" : "Resubmitted",
           assignmentId,
           studentId: user.userId,
         });
-        setExistingSubmission((prev) => ({ ...prev, fileUrl, status: "Resubmitted", submittedAt: new Date().toISOString() }));
+        submissionId = existingSubmission.id;
+        setExistingSubmission((prev) => ({ ...prev, fileUrl, status: isQuiz ? "Graded" : "Resubmitted", submittedAt: new Date().toISOString() }));
       } else {
         const created = await createSubmission({
           assignmentId,
           studentId: user.userId,
           fileUrl,
-          status: "Submitted",
+          status: isQuiz ? "Graded" : "Submitted",
         });
+        submissionId = created.id;
         setExistingSubmission(created);
       }
+
+      // Auto-grade quiz submissions
+      if (isQuiz && quizQuestions.length > 0) {
+        const maxPts = assignment.points ?? quizQuestions.length;
+        let correct = 0;
+        quizQuestions.forEach((q, qi) => {
+          if (quizAnswers[qi] === q.correctAnswer) correct++;
+        });
+        const pointsEarned = Math.round((correct / quizQuestions.length) * maxPts * 10) / 10;
+        try {
+          if (existingGrade) {
+            await updateGrade(existingGrade.id, { submissionId, pointsEarned, gradedBy: user.userId });
+            setExistingGrade(prev => ({ ...prev, pointsEarned, isReleased: true }));
+          } else {
+            // isReleased: true so quiz grades are immediately visible to the student
+            const saved = await createGrade({ submissionId, pointsEarned, gradedBy: user.userId, isReleased: true });
+            setExistingGrade(saved);
+          }
+        } catch (gradeErr) {
+          console.error("Auto-grade failed:", gradeErr);
+        }
+      }
+
       setJustSubmitted(true);
       setFile(null);
       setQuizStarted(false);
@@ -258,6 +305,21 @@ export default function AssignmentDetail({ assignmentId, activeCourseId }) {
     if (!isQuiz || !assignment?.quizQuestionsJson) return [];
     try { return JSON.parse(assignment.quizQuestionsJson); } catch { return []; }
   }, [isQuiz, assignment?.quizQuestionsJson]);
+
+  // Compute quiz results from stored answers vs correct answers
+  const quizResults = React.useMemo(() => {
+    if (!isQuiz || quizQuestions.length === 0 || Object.keys(quizAnswers).length === 0) return null;
+    const maxPts = assignment?.points ?? quizQuestions.length;
+    let correct = 0;
+    const perQuestion = quizQuestions.map((q, qi) => {
+      const chosen = quizAnswers[qi];
+      const isCorrect = chosen === q.correctAnswer;
+      if (isCorrect) correct++;
+      return { qi, isCorrect, chosen, correctAnswer: q.correctAnswer, question: q.question, options: q.options };
+    });
+    const pointsEarned = Math.round((correct / quizQuestions.length) * maxPts * 10) / 10;
+    return { correct, total: quizQuestions.length, pointsEarned, maxPts, pct: Math.round((correct / quizQuestions.length) * 100), perQuestion };
+  }, [isQuiz, quizQuestions, quizAnswers, assignment?.points]);
 
   return (
     <motion.div
@@ -420,66 +482,136 @@ export default function AssignmentDetail({ assignmentId, activeCourseId }) {
             ) : isQuiz ? (
               /* Quiz submission area */
               <motion.div variants={slideUp} className="bg-white rounded-[40px] border border-gray-100 shadow-sm p-10">
-                <h2 className="text-[10px] font-black uppercase tracking-[0.25em] text-[#FF8731] mb-6">
-                  {isSubmitted ? "Retake Quiz" : "Quiz"}
-                </h2>
-                {!quizStarted && !isSubmitted ? (
-                  <div className="flex flex-col items-center gap-6 py-6">
-                    <p className="text-gray-500 text-sm">{quizQuestions.length} question{quizQuestions.length !== 1 ? "s" : ""} — select the correct answer for each</p>
-                    <button
-                      onClick={() => setQuizStarted(true)}
-                      className="px-10 py-4 rounded-2xl bg-[#FF8731] text-white font-bold text-sm uppercase tracking-widest hover:bg-[#e0722a] transition-all shadow-lg shadow-[#FF8731]/20"
-                    >
-                      Start Quiz
-                    </button>
-                  </div>
-                ) : quizStarted || isSubmitted ? (
-                  <div className="space-y-6">
-                    {quizQuestions.map((q, qi) => (
-                      <div key={qi} className="bg-gray-50 rounded-[24px] p-6">
-                        <p className="font-semibold text-gray-900 mb-4">{qi + 1}. {q.question}</p>
-                        <div className="space-y-2">
-                          {q.options.map((opt, oi) => (
-                            <label key={oi} className={`flex items-center gap-3 px-4 py-3 rounded-2xl cursor-pointer transition-all ${
-                              quizAnswers[qi] === oi
-                                ? "bg-[#3C0078]/10 border-2 border-[#3C0078]"
-                                : "bg-white border-2 border-gray-100 hover:border-gray-200"
-                            }`}>
-                              <input
-                                type="radio"
-                                name={`q-${qi}`}
-                                checked={quizAnswers[qi] === oi}
-                                onChange={() => setQuizAnswers(prev => ({ ...prev, [qi]: oi }))}
-                                className="accent-[#3C0078]"
-                                disabled={submitting}
-                              />
-                              <span className="text-sm font-medium text-gray-700">{opt}</span>
-                            </label>
-                          ))}
-                        </div>
+                {/* Results view – shown when already submitted and not retaking */}
+                {isSubmitted && !quizStarted && quizResults ? (
+                  <div>
+                    <h2 className="text-[10px] font-black uppercase tracking-[0.25em] text-[#FF8731] mb-6">Quiz Results</h2>
+                    {/* Score summary */}
+                    <div className="flex items-center gap-6 mb-8 p-6 bg-gray-50 rounded-[28px]">
+                      <div className={`w-20 h-20 rounded-3xl flex flex-col items-center justify-center font-black italic shrink-0 ${
+                        quizResults.pct >= 75 ? "bg-green-100 text-green-700"
+                        : quizResults.pct >= 50 ? "bg-orange-100 text-orange-600"
+                        : "bg-red-100 text-red-600"
+                      }`}>
+                        <span className="text-3xl leading-none">{quizResults.pct}%</span>
                       </div>
-                    ))}
-                    <AnimatePresence>
-                      {submitError && (
-                        <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                          className="text-sm text-red-500 font-medium">{submitError}</motion.p>
-                      )}
-                    </AnimatePresence>
+                      <div>
+                        <p className="text-2xl font-black italic text-gray-900">
+                          {quizResults.correct} / {quizResults.total} correct
+                        </p>
+                        <p className="text-sm text-gray-400 mt-1">
+                          {quizResults.pointsEarned} / {quizResults.maxPts} pts
+                        </p>
+                      </div>
+                    </div>
+                    {/* Per-question breakdown */}
+                    <div className="space-y-4 mb-8">
+                      {quizResults.perQuestion.map(({ qi, isCorrect, chosen, correctAnswer, question, options }) => (
+                        <div key={qi} className={`rounded-[24px] p-5 border-2 ${
+                          isCorrect ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"
+                        }`}>
+                          <div className="flex items-start gap-3 mb-3">
+                            <span className={`shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-black ${
+                              isCorrect ? "bg-green-500 text-white" : "bg-red-500 text-white"
+                            }`}>
+                              {isCorrect ? "✓" : "✗"}
+                            </span>
+                            <p className="font-semibold text-gray-900">{qi + 1}. {question}</p>
+                          </div>
+                          <div className="space-y-1.5 ml-9">
+                            {options.map((opt, oi) => (
+                              <div key={oi} className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm ${
+                                oi === correctAnswer
+                                  ? "bg-green-200/60 text-green-800 font-bold"
+                                  : oi === chosen && !isCorrect
+                                  ? "bg-red-200/60 text-red-700 line-through"
+                                  : "text-gray-500"
+                              }`}>
+                                {oi === correctAnswer && <span className="text-green-600 font-black text-xs">✓</span>}
+                                {oi === chosen && !isCorrect && <span className="text-red-500 font-black text-xs">✗</span>}
+                                {oi !== correctAnswer && oi !== chosen && <span className="w-3" />}
+                                {opt}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    {/* Retake button */}
                     <div className="flex justify-end">
                       <button
-                        onClick={handleSubmit}
-                        disabled={submitting || Object.keys(quizAnswers).length < quizQuestions.length}
-                        className={`flex items-center gap-2.5 px-8 py-3.5 rounded-2xl text-sm font-bold uppercase tracking-widest text-white transition-all shadow-sm ${
-                          submitting || Object.keys(quizAnswers).length < quizQuestions.length
-                            ? "bg-gray-200 text-gray-400 cursor-not-allowed shadow-none"
-                            : "bg-[#3C0078] hover:bg-[#2A0054] shadow-[#3C0078]/20"
-                        }`}
+                        onClick={() => { setQuizStarted(true); setQuizAnswers({}); }}
+                        className="px-8 py-3.5 rounded-2xl bg-[#FF8731] text-white font-bold text-sm uppercase tracking-widest hover:bg-[#e0722a] transition-all"
                       >
-                        {submitting ? <><Loader size={16} className="animate-spin" /> Submitting...</> : <><Upload size={16} /> Submit Quiz</>}
+                        Retake Quiz
                       </button>
                     </div>
                   </div>
-                ) : null}
+                ) : !quizStarted && !isSubmitted ? (
+                  /* Pre-start screen */
+                  <div>
+                    <h2 className="text-[10px] font-black uppercase tracking-[0.25em] text-[#FF8731] mb-6">Quiz</h2>
+                    <div className="flex flex-col items-center gap-6 py-6">
+                      <p className="text-gray-500 text-sm">{quizQuestions.length} question{quizQuestions.length !== 1 ? "s" : ""} — select the correct answer for each</p>
+                      <button
+                        onClick={() => setQuizStarted(true)}
+                        className="px-10 py-4 rounded-2xl bg-[#FF8731] text-white font-bold text-sm uppercase tracking-widest hover:bg-[#e0722a] transition-all shadow-lg shadow-[#FF8731]/20"
+                      >
+                        Start Quiz
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  /* Active quiz */
+                  <div>
+                    <h2 className="text-[10px] font-black uppercase tracking-[0.25em] text-[#FF8731] mb-6">Quiz</h2>
+                    <div className="space-y-6">
+                      {quizQuestions.map((q, qi) => (
+                        <div key={qi} className="bg-gray-50 rounded-[24px] p-6">
+                          <p className="font-semibold text-gray-900 mb-4">{qi + 1}. {q.question}</p>
+                          <div className="space-y-2">
+                            {q.options.map((opt, oi) => (
+                              <label key={oi} className={`flex items-center gap-3 px-4 py-3 rounded-2xl cursor-pointer transition-all ${
+                                quizAnswers[qi] === oi
+                                  ? "bg-[#3C0078]/10 border-2 border-[#3C0078]"
+                                  : "bg-white border-2 border-gray-100 hover:border-gray-200"
+                              }`}>
+                                <input
+                                  type="radio"
+                                  name={`q-${qi}`}
+                                  checked={quizAnswers[qi] === oi}
+                                  onChange={() => setQuizAnswers(prev => ({ ...prev, [qi]: oi }))}
+                                  className="accent-[#3C0078]"
+                                  disabled={submitting}
+                                />
+                                <span className="text-sm font-medium text-gray-700">{opt}</span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                      <AnimatePresence>
+                        {submitError && (
+                          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                            className="text-sm text-red-500 font-medium">{submitError}</motion.p>
+                        )}
+                      </AnimatePresence>
+                      <div className="flex justify-end">
+                        <button
+                          onClick={handleSubmit}
+                          disabled={submitting || Object.keys(quizAnswers).length < quizQuestions.length}
+                          className={`flex items-center gap-2.5 px-8 py-3.5 rounded-2xl text-sm font-bold uppercase tracking-widest text-white transition-all shadow-sm ${
+                            submitting || Object.keys(quizAnswers).length < quizQuestions.length
+                              ? "bg-gray-200 text-gray-400 cursor-not-allowed shadow-none"
+                              : "bg-[#3C0078] hover:bg-[#2A0054] shadow-[#3C0078]/20"
+                          }`}
+                        >
+                          {submitting ? <><Loader size={16} className="animate-spin" /> Submitting...</> : <><Upload size={16} /> Submit Quiz</>}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </motion.div>
             ) : !isPastDue || isSubmitted ? (
               <motion.div

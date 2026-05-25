@@ -71,6 +71,9 @@ namespace TodoApi.Migrations
                     b.Property<bool>("AllowMultipleAttempts")
                         .HasColumnType("boolean");
 
+                    b.Property<DateTime?>("CloseDate")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("CourseId")
                         .IsRequired()
                         .HasColumnType("text");
@@ -89,6 +92,9 @@ namespace TodoApi.Migrations
 
                     b.Property<int?>("MaxPoints")
                         .HasColumnType("integer");
+
+                    b.Property<DateTime?>("OpenDate")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("QuizQuestionsJson")
                         .HasColumnType("text");
@@ -287,6 +293,9 @@ namespace TodoApi.Migrations
                     b.Property<string>("GradedBy")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<bool>("IsReleased")
+                        .HasColumnType("boolean");
 
                     b.Property<decimal?>("PointsEarned")
                         .HasColumnType("numeric");
