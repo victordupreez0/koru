@@ -13,6 +13,7 @@ import AttendanceVisualizer from "../../components/UI/attendanceVisualizer";
 import { getCourseAssignments, createAssignment, updateAssignment, deleteAssignment, closeAssignment } from "../../services/assignmentService";
 import { getCourseGrades } from "../../services/gradeService";
 import { getCourseSubmissions } from "../../services/submissionService";
+import { getCourseStudentCount } from "../../services/enrollmentService";
 import { getCourseAnnouncements, createAnnouncement, deleteAnnouncement } from "../../services/announcementService";
 import {
     EditorRoot,
@@ -494,6 +495,8 @@ function CreateAssignmentDrawer({ onClose, onSave, initialData }) {
         type: initialData?.type ?? "online",
         points: initialData?.maxPoints ?? initialData?.points ?? 100,
         gradeDisplay: initialData?.gradeDisplay ?? "Percentage",
+        openDate: initialData?.openDate ? new Date(initialData.openDate).toISOString().slice(0,16) : "",
+        closeDate: initialData?.closeDate ? new Date(initialData.closeDate).toISOString().slice(0,16) : "",
         dueDate: initialData?.dueDate ? new Date(initialData.dueDate).toISOString().slice(0,16) : "",
         allowMultipleAttempts: initialData?.allowMultipleAttempts ?? true,
         id: initialData?.id ?? null,
@@ -648,14 +651,34 @@ function CreateAssignmentDrawer({ onClose, onSave, initialData }) {
                     {/* Dates */}
                     <div>
                         <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3 block">Dates</label>
-                        <div className="bg-gray-50 rounded-[28px] p-6">
-                            <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2 block">Due Date</label>
-                            <input
-                                type="datetime-local"
-                                value={form.dueDate}
-                                onChange={e => handleChange("dueDate", e.target.value)}
-                                className="w-full bg-white rounded-2xl px-5 py-3 text-gray-900 font-medium text-sm focus:outline-none focus:ring-2 focus:ring-[#3C0078]/20 border border-gray-100 transition-all"
-                            />
+                        <div className="bg-gray-50 rounded-[28px] p-6 space-y-4">
+                            <div>
+                                <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2 block">Opens</label>
+                                <input
+                                    type="datetime-local"
+                                    value={form.openDate}
+                                    onChange={e => handleChange("openDate", e.target.value)}
+                                    className="w-full bg-white rounded-2xl px-5 py-3 text-gray-900 font-medium text-sm focus:outline-none focus:ring-2 focus:ring-[#3C0078]/20 border border-gray-100 transition-all"
+                                />
+                            </div>
+                            <div>
+                                <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2 block">Due Date</label>
+                                <input
+                                    type="datetime-local"
+                                    value={form.dueDate}
+                                    onChange={e => handleChange("dueDate", e.target.value)}
+                                    className="w-full bg-white rounded-2xl px-5 py-3 text-gray-900 font-medium text-sm focus:outline-none focus:ring-2 focus:ring-[#3C0078]/20 border border-gray-100 transition-all"
+                                />
+                            </div>
+                            <div>
+                                <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2 block">Closes</label>
+                                <input
+                                    type="datetime-local"
+                                    value={form.closeDate}
+                                    onChange={e => handleChange("closeDate", e.target.value)}
+                                    className="w-full bg-white rounded-2xl px-5 py-3 text-gray-900 font-medium text-sm focus:outline-none focus:ring-2 focus:ring-[#3C0078]/20 border border-gray-100 transition-all"
+                                />
+                            </div>
                         </div>
                     </div>
 
@@ -797,10 +820,15 @@ function AssignmentGroupRow({ group, onTogglePublish, onDelete, onEdit, onClose 
                                             </span>
                                         </div>
                                         <div className="flex items-center gap-5 mt-1.5 text-xs text-gray-400 flex-wrap">
-                                            <span>{item.points} pts · {item.gradeDisplay}</span>
-                                            <span>Assign to: {item.assignedTo}</span>
+                                            <span>{item.points} pts</span>
+                                            {item.openDate && (
+                                                <span className="text-green-600">Opens: {new Date(item.openDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
+                                            )}
                                             {item.dueDate && (
-                                                <span>Due: {new Date(item.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
+                                                <span className="text-orange-500">Due: {new Date(item.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
+                                            )}
+                                            {item.closeDate && (
+                                                <span className="text-red-500">Closes: {new Date(item.closeDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
                                             )}
                                         </div>
                                     </div>
@@ -859,6 +887,7 @@ function AssignmentGroupRow({ group, onTogglePublish, onDelete, onEdit, onClose 
 function CourseAssignmentsView({ subject, activeCourseId }) {
     const [assignments, setAssignments] = React.useState([]);
     const [submissionCounts, setSubmissionCounts] = React.useState({});
+    const [enrollmentCount, setEnrollmentCount] = React.useState(0);
     const [loading, setLoading] = React.useState(true);
     const [showDrawer, setShowDrawer] = React.useState(false);
     const [editingAssignment, setEditingAssignment] = React.useState(null);
@@ -869,9 +898,10 @@ function CourseAssignmentsView({ subject, activeCourseId }) {
         if (!activeCourseId) return;
         try {
             setLoading(true);
-            const [data, subs] = await Promise.all([
+            const [data, subs, count] = await Promise.all([
                 getCourseAssignments(activeCourseId),
                 getCourseSubmissions(activeCourseId).catch(() => []),
+                getCourseStudentCount(activeCourseId).catch(() => 0),
             ]);
             const counts = {};
             (subs || []).forEach(s => {
@@ -879,6 +909,7 @@ function CourseAssignmentsView({ subject, activeCourseId }) {
             });
             setAssignments(data || []);
             setSubmissionCounts(counts);
+            setEnrollmentCount(count || 0);
         } catch (err) {
             console.error("Failed to load assignments:", err);
         } finally {
@@ -897,10 +928,10 @@ function CourseAssignmentsView({ subject, activeCourseId }) {
             ...a,
             points: a.maxPoints,
             submissions: submissionCounts[a.id] || 0,
-            totalStudents: 0,
+            totalStudents: enrollmentCount,
             published: !a.isClosed,
         }))
-    }], [assignments, submissionCounts]);
+    }], [assignments, submissionCounts, enrollmentCount]);
 
     const handleTogglePublish = () => {}; // handled by handleClose
 
@@ -938,7 +969,9 @@ function CourseAssignmentsView({ subject, activeCourseId }) {
             const payload = {
                 title: formData.title,
                 description: formData.description,
+                openDate: formData.openDate ? new Date(formData.openDate).toISOString() : null,
                 dueDate: formData.dueDate ? new Date(formData.dueDate).toISOString() : null,
+                closeDate: formData.closeDate ? new Date(formData.closeDate).toISOString() : null,
                 maxPoints: formData.maxPoints || formData.points,
                 courseId: activeCourseId,
                 type: formData.type,

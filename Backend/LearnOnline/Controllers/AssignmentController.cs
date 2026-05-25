@@ -92,6 +92,8 @@ namespace LearnOnline.Controllers
             assignment.Title = updated.Title;
             assignment.Description = updated.Description;
             assignment.DueDate = updated.DueDate;
+            assignment.OpenDate = updated.OpenDate;
+            assignment.CloseDate = updated.CloseDate;
             assignment.MaxPoints = updated.MaxPoints;
             assignment.CourseId = updated.CourseId;
             assignment.Type = updated.Type;

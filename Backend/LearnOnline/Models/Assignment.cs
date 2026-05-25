@@ -20,6 +20,12 @@ namespace LearnOnline.Models
         // Deadline for student submissions
         public DateTime? DueDate { get; set; }
 
+        // When the assignment becomes visible/available to students
+        public DateTime? OpenDate { get; set; }
+
+        // When submissions are no longer accepted (date-based close)
+        public DateTime? CloseDate { get; set; }
+
         // Maximum achievable points (used to calculate grades)
         public int? MaxPoints { get; set; }
 
