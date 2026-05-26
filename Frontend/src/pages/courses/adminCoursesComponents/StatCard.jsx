@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import ProgressRing from "../UI/progressRing";
+import ProgressRing from "../../../components/UI/progressRing";
 
 export default function StatCard({ label, value, icon: Icon, trend, accent = false }) {
   const isPercentage = typeof value === 'string' && value.endsWith('%');
