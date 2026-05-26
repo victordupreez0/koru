@@ -2,7 +2,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Plus, Search, Users, BookOpen, Clock, 
-  TrendingUp, CheckCircle, X
+  TrendingUp, CheckCircle, X, Bell
 } from "lucide-react";
 import Menu from "../../components/menu";
 import SideMenu from "../../components/sideMenu";
