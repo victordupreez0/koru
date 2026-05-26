@@ -1,5 +1,5 @@
 import React from "react";
-import { Plus, User } from "lucide-react";
+import { Plus, User, Bell } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { ColumnCard } from "./ColumnCard";
 import { SearchInput } from "./SearchInput";
@@ -15,19 +15,29 @@ export function LecturerColumn({
   filteredLecturers,
   selectedLecturerId,
   handleSelectLecturer,
-  onOpenAnalytics
+  onOpenAnalytics,
+  onOpenNotification
 }) {
   return (
     <div className="flex flex-col bg-white/80 border-1 border-gray-200 rounded-3xl drop-shadow-xl p-4 min-h-0">
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center justify-between mb-3 px-1">
         <h2 className="text-2xl font-bold font-['Gabarito']">Lecturers</h2>
-        <button
-          onClick={() => { setIsAddingLecturer(true); setIsAddingCourse(false); }}
-          className="w-9 h-9 rounded-full border border-gray-200 hover:bg-gray-100 flex items-center justify-center transition-colors"
-          aria-label="Add lecturer"
-        >
-          <Plus className="w-4 h-4 text-gray-600" />
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onOpenNotification}
+            className="w-9 h-9 rounded-full bg-[#3C0078]/10 text-[#3C0078] border border-[#3C0078]/20 hover:bg-[#3C0078] hover:text-white flex items-center justify-center transition-all group"
+            title="Send Notification"
+          >
+            <Bell className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => { setIsAddingLecturer(true); setIsAddingCourse(false); }}
+            className="w-9 h-9 rounded-full border border-gray-200 hover:bg-gray-100 flex items-center justify-center transition-colors"
+            aria-label="Add lecturer"
+          >
+            <Plus className="w-4 h-4 text-gray-600" />
+          </button>
+        </div>
       </div>
       <SearchInput value={lecturerSearch} onChange={setLecturerSearch} />
 

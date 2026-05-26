@@ -1,14 +1,17 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { AnimatePresence } from "framer-motion";
+import { Bell } from "lucide-react";
 import Menu from "../../components/menu";
 import SideMenu from "../../components/sideMenu";
 import { TeacherAnalyticsModal } from "../courses/adminCoursesComponents";
+import { createEvent } from "../../services/eventService";
 import { 
   FilterDropdown, 
   LecturerColumn, 
   CourseColumn, 
   StudentColumn, 
-  AssignStudentsModal 
+  AssignStudentsModal,
+  SendNotificationModal
 } from "./adminDashboardComponents";
 
 // ──────────────────────────────────────────────
@@ -70,6 +73,7 @@ export default function AdminDashboard() {
   const [isAddingLecturer, setIsAddingLecturer] = useState(false);
   const [isAddingCourse, setIsAddingCourse] = useState(false);
   const [isAssigningStudents, setIsAssigningStudents] = useState(false);
+  const [isSendingNotification, setIsSendingNotification] = useState(false);
   const [showTeacherAnalytics, setShowTeacherAnalytics] = useState(false);
   const [analyticsTeacher, setAnalyticsTeacher] = useState(null);
 
@@ -166,6 +170,21 @@ export default function AdminDashboard() {
     setShowTeacherAnalytics(true);
   };
 
+  const handleSendNotification = async (notificationData) => {
+    try {
+      // Backend integration is paused as requested. 
+      // For now, we just simulate the success.
+      console.log("Simulating notification send:", notificationData);
+      
+      alert(`Simulation Mode: Notification sent to ${notificationData.selectedIds.length} lecturers!\n\nDetails:\nTitle: ${notificationData.title}\nDate: ${notificationData.startTime}`);
+      
+      setIsSendingNotification(false);
+    } catch (err) {
+      console.error("Failed to send notification:", err);
+      alert("Failed to send notification. Please try again.");
+    }
+  };
+
   const handleSaveCourse = (title, code) => {
     const newId = Math.max(...courses.map((c) => c.id), 0) + 1;
     const newCourse = {
@@ -226,6 +245,14 @@ export default function AdminDashboard() {
               { value: "2", label: "2" },
             ]}
           />
+          
+          <button 
+            onClick={() => setIsSendingNotification(true)}
+            className="ml-auto px-6 py-3 rounded-2xl bg-[#3C0078] text-white shadow-lg shadow-[#3C0078]/20 flex items-center gap-3 hover:scale-[1.03] transition-all group"
+          >
+            <Bell size={18} />
+            <span className="text-[11px] font-black uppercase tracking-wider">Send Notification</span>
+          </button>
         </div>
 
         {/* ── Three-column grid ── */}
@@ -241,6 +268,7 @@ export default function AdminDashboard() {
             selectedLecturerId={selectedLecturerId}
             handleSelectLecturer={handleSelectLecturer}
             onOpenAnalytics={handleOpenAnalytics}
+            onOpenNotification={() => setIsSendingNotification(true)}
           />
 
           <CourseColumn
@@ -291,6 +319,17 @@ export default function AdminDashboard() {
             teacher={analyticsTeacher}
             isOpen={showTeacherAnalytics}
             onClose={() => setShowTeacherAnalytics(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* ── Send Notification Modal ── */}
+      <AnimatePresence>
+        {isSendingNotification && (
+          <SendNotificationModal
+            lecturers={lecturers}
+            onClose={() => setIsSendingNotification(false)}
+            onSend={handleSendNotification}
           />
         )}
       </AnimatePresence>

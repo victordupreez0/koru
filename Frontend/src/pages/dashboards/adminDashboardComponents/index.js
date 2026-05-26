@@ -4,6 +4,7 @@ export * from "./SearchInput";
 export * from "./AddLecturerForm";
 export * from "./AddCourseForm";
 export * from "./AssignStudentsModal";
+export * from "./SendNotificationModal";
 export * from "./LecturerColumn";
 export * from "./CourseColumn";
 export * from "./StudentColumn";
