@@ -99,6 +99,9 @@ const ClockIcon = () => (
  *  - lecturer  (string)  : optional
  *  - location  (string)  : optional
  *  - draggable (boolean) : whether the pill is draggable
+ *  - isUserTask (boolean): true for locally-created tasks (amber theme + edit/delete)
+ *  - onEdit    (function): called when the edit button is clicked
+ *  - onDelete  (function): called when the delete button is clicked
  */
 export default function CalendarDayBlockEvent({
   id,
@@ -109,6 +112,9 @@ export default function CalendarDayBlockEvent({
   lecturer,
   location,
   draggable: isDraggable = false,
+  isUserTask = false,
+  onEdit,
+  onDelete,
 }) {
   const hasTooltipDetails = lecturer || location || startTime;
 
@@ -175,7 +181,10 @@ export default function CalendarDayBlockEvent({
       {/* ── Event pill ─────────────────────────────────────── */}
       <div
         className={[
-          "flex items-center gap-1.5 bg-white rounded-full px-3 py-1 text-[11px] font-medium text-black transition-all duration-150 shadow-xs hover:-translate-y-px hover:shadow-md hover:bg-purple-100",
+          "flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-medium transition-all duration-150 shadow-xs hover:-translate-y-px hover:shadow-md",
+          isUserTask
+            ? "bg-amber-50 text-gray-800 hover:bg-amber-100"
+            : "bg-white text-black hover:bg-purple-100",
           isDraggable ? "cursor-grab active:cursor-grabbing active:opacity-60 active:scale-95" : "cursor-pointer",
         ].join(" ")}
         draggable={isDraggable}
@@ -185,19 +194,59 @@ export default function CalendarDayBlockEvent({
         } : undefined}
       >
         {/* Type icon */}
-        <span className="shrink-0 text-purple-700 mt-px ">
+        <span className={["shrink-0 mt-px", isUserTask ? "text-amber-600" : "text-purple-700"].join(" ")}>
           {ICONS[type] ?? ICONS.class}
         </span>
 
         {/* Title */}
         <span className="flex-1 truncate">{title}</span>
 
-        {/* Stacked time */}
-        {(startTime || endTime) && (
-          <span className="shrink-0 text-[10px] text-gray-400 text-right leading-tight whitespace-nowrap">
-            {startTime && <span className="block">{startTime}</span>}
-            {endTime && <span className="block">{endTime}</span>}
-          </span>
+        {/* Right side: time for regular events; time + edit/delete for user tasks */}
+        {isUserTask ? (
+          <>
+            {/* Time: hidden on hover */}
+            {(startTime || endTime) && (
+              <span className="group-hover:hidden shrink-0 text-[10px] text-amber-400 text-right leading-tight whitespace-nowrap">
+                {startTime && <span className="block">{startTime}</span>}
+                {endTime && <span className="block">{endTime}</span>}
+              </span>
+            )}
+            {/* Edit / Delete: visible on hover */}
+            <div className="hidden group-hover:flex items-center gap-0.5 shrink-0">
+              <button
+                type="button"
+                title="Edit task"
+                onClick={(e) => { e.stopPropagation(); onEdit?.(); }}
+                className="w-[18px] h-[18px] flex items-center justify-center rounded text-amber-600 hover:text-amber-800 hover:bg-amber-200 transition-colors"
+              >
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                </svg>
+              </button>
+              <button
+                type="button"
+                title="Delete task"
+                onClick={(e) => { e.stopPropagation(); onDelete?.(); }}
+                className="w-[18px] h-[18px] flex items-center justify-center rounded text-rose-400 hover:text-rose-600 hover:bg-rose-100 transition-colors"
+              >
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="3 6 5 6 21 6" />
+                  <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                  <path d="M10 11v6" />
+                  <path d="M14 11v6" />
+                  <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                </svg>
+              </button>
+            </div>
+          </>
+        ) : (
+          (startTime || endTime) && (
+            <span className="shrink-0 text-[10px] text-gray-400 text-right leading-tight whitespace-nowrap">
+              {startTime && <span className="block">{startTime}</span>}
+              {endTime && <span className="block">{endTime}</span>}
+            </span>
+          )
         )}
       </div>
     </div>

@@ -160,11 +160,24 @@ export default function TeacherCalendar() {
   const [tasks, setTasks] = useState([]);
 
   // Add Task modal
-  const [addTaskOpen, setAddTaskOpen] = useState(false);
+  const [taskModal, setTaskModal] = useState({ open: false, editEvent: null });
 
-  /** Add a locally-created task event to the calendar */
-  function handleAddTask(newEvent) {
-    setEvents((prev) => [...prev, newEvent]);
+  /** Add a new or save an edited locally-created task */
+  function handleAddTask(event) {
+    setEvents((prev) => {
+      const idx = prev.findIndex((e) => e.id === event.id);
+      if (idx >= 0) {
+        const next = [...prev];
+        next[idx] = event;
+        return next;
+      }
+      return [...prev, event];
+    });
+  }
+
+  /** Delete a user task by id */
+  function handleDeleteTask(eventId) {
+    setEvents((prev) => prev.filter((e) => e.id !== eventId));
   }
 
   /** Move an event to a new day when dropped */
@@ -286,7 +299,7 @@ export default function TeacherCalendar() {
           <button
             id="cal-add-task-btn"
             aria-label="Add Task"
-            onClick={() => setAddTaskOpen(true)}
+            onClick={() => setTaskModal({ open: true, editEvent: null })}
             className="flex items-center gap-2 bg-white rounded-full px-5 py-2.5 text-sm font-semibold text-gray-700 shadow-sm border-none cursor-pointer transition-all duration-150 hover:shadow-lg hover:-translate-y-px font-[inherit]"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -333,6 +346,8 @@ export default function TeacherCalendar() {
                         isOutside={!!isOutside}
                         events={eventMap[date] ?? []}
                         onDrop={handleEventDrop}
+                        onEditEvent={(evt) => setTaskModal({ open: true, editEvent: evt })}
+                        onDeleteEvent={handleDeleteTask}
                       />
                     ))}
                   </div>
@@ -377,8 +392,9 @@ export default function TeacherCalendar() {
 
       {/* Add Task modal — rendered outside the scrollable area */}
       <AddTaskModal
-        open={addTaskOpen}
-        onClose={() => setAddTaskOpen(false)}
+        open={taskModal.open}
+        editEvent={taskModal.editEvent}
+        onClose={() => setTaskModal({ open: false, editEvent: null })}
         onAdd={handleAddTask}
       />
     </>
