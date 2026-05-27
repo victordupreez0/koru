@@ -8,6 +8,7 @@ import CalendarDayBlock from "./UI/CalendarDayBlock";
 import CalendarViewSelector from "./UI/CalendarViewSelector";
 import CalendarTimelineView from "./UI/CalendarTimelineView";
 import CalendarDayView from "./UI/CalendarDayView";
+import AddTaskModal from "./UI/AddTaskModal";
 
 import { getAllEvents } from "../../services/eventService";
 import { getStudentAssignments } from "../../services/assignmentService";
@@ -158,6 +159,21 @@ export default function StudentCalendar() {
   const [events, setEvents] = useState([]);
   const [tasks, setTasks] = useState([]);
 
+  // Add Task modal
+  const [addTaskOpen, setAddTaskOpen] = useState(false);
+
+  /** Add a locally-created task event to the calendar */
+  function handleAddTask(newEvent) {
+    setEvents((prev) => [...prev, newEvent]);
+  }
+
+  /** Move an event to a new day when dropped */
+  function handleEventDrop(targetDate, eventId) {
+    setEvents((prev) =>
+      prev.map((evt) => (evt.id === eventId ? { ...evt, date: targetDate } : evt))
+    );
+  }
+
   useEffect(() => {
     let mounted = true;
     async function fetchData() {
@@ -258,6 +274,7 @@ export default function StudentCalendar() {
           <button
             id="cal-add-task-btn"
             aria-label="Add Task"
+            onClick={() => setAddTaskOpen(true)}
             className="flex items-center gap-2 bg-white rounded-full px-5 py-2.5 text-sm font-semibold text-gray-700 shadow-sm border-none cursor-pointer transition-all duration-150 hover:shadow-lg hover:-translate-y-px font-[inherit]"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -299,9 +316,11 @@ export default function StudentCalendar() {
                       <CalendarDayBlock
                         key={date}
                         day={day}
+                        date={date}
                         isToday={date === todayStr}
                         isOutside={!!isOutside}
                         events={eventMap[date] ?? []}
+                        onDrop={handleEventDrop}
                       />
                     ))}
                   </div>
@@ -343,6 +362,13 @@ export default function StudentCalendar() {
 
         </AnimatePresence>
       </motion.div>
+
+      {/* Add Task modal — rendered outside the scrollable area */}
+      <AddTaskModal
+        open={addTaskOpen}
+        onClose={() => setAddTaskOpen(false)}
+        onAdd={handleAddTask}
+      />
     </>
   );
 }
