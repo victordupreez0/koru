@@ -16,6 +16,8 @@ import CalendarDayBlockEvent from "./CalendarDayBlockEvent";
  *  - onEditEvent (function)      : (event) => void — called when the edit button is clicked on a user task.
  *  - onDeleteEvent (function)    : (eventId) => void — called when the delete button is clicked on a user task.
  */
+
+
 export default function CalendarDayBlock({
   day,
   date,
