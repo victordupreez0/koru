@@ -13,6 +13,8 @@ import CalendarDayBlockEvent from "./CalendarDayBlockEvent";
  *  - isOutside   (boolean)       : Day belongs to adjacent month (muted).
  *  - events      (array)         : Array of event objects for this day.
  *  - onDrop      (function)      : (date, eventId) => void — called when an event is dropped here.
+ *  - onEditEvent (function)      : (event) => void — called when the edit button is clicked on a user task.
+ *  - onDeleteEvent (function)    : (eventId) => void — called when the delete button is clicked on a user task.
  */
 export default function CalendarDayBlock({
   day,
@@ -21,6 +23,8 @@ export default function CalendarDayBlock({
   isOutside = false,
   events = [],
   onDrop,
+  onEditEvent,
+  onDeleteEvent,
 }) {
   const [isDragOver, setIsDragOver] = useState(false);
 
@@ -83,7 +87,10 @@ export default function CalendarDayBlock({
           type={evt.type}
           lecturer={evt.lecturer}
           location={evt.location}
-          draggable
+          draggable={!!evt.id?.startsWith("task-local-")}
+          isUserTask={!!evt.id?.startsWith("task-local-")}
+          onEdit={() => onEditEvent?.(evt)}
+          onDelete={() => onDeleteEvent?.(evt.id)}
         />
       ))}
     </div>
