@@ -5,8 +5,7 @@ export default function CourseModulesView() {
   return (
     <div className="flex-1 flex h-full overflow-hidden">
       {/* Third-tier Nav: Modules Accordion */}
-      <div className="flex flex-col h-full border-r border-gray-200 p-8">
-        <h2 className="text-2xl font-bold mb-8">Modules</h2>
+      <div className="flex flex-col h-full py-1 pr-6 justify-center">
         <ModuleAccordion />
       </div>
 

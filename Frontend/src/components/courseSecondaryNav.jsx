@@ -6,18 +6,18 @@ import { Plus, X, Trash2 } from "lucide-react";
 
 const INITIAL_NAV_ITEMS = [
     { label: "Home", pathSuffix: "", end: true },
-    { label: "Announcements", pathSuffix: "/announcements" },
-    { label: "Assignments", pathSuffix: "/assignments" },
-    { label: "Modules", pathSuffix: "/modules" },
-    { label: "Notes", pathSuffix: "/notes" },
-    { label: "Grades", pathSuffix: "/grades" },
-    { label: "Attendance", pathSuffix: "/attendance" },
+    { label: "Announcements", pathSuffix: "announcements" },
+    { label: "Assignments", pathSuffix: "assignments" },
+    { label: "Modules", pathSuffix: "modules" },
+    { label: "Notes", pathSuffix: "notes" },
+    { label: "Grades", pathSuffix: "grades" },
+    { label: "Attendance", pathSuffix: "attendance" },
 ];
 
 /**
  * CourseSecondaryNav Component
  */
-export default function CourseSecondaryNav({ activeCourseId }) {
+export default function CourseSecondaryNav({ activeCourseId, hideNav }) {
     const { role } = useAuth();
     const isTeacher = role === "teacher";
     const [navItems, setNavItems] = useState(INITIAL_NAV_ITEMS);
@@ -26,10 +26,11 @@ export default function CourseSecondaryNav({ activeCourseId }) {
 
     // Generate the base link using the newly introduced ID
     const basePath = activeCourseId ? `/courses/${activeCourseId}` : "/courses";
+    const queryAppend = hideNav ? "?hideNav=true" : "";
 
     const addItem = () => {
         if (newItemLabel.trim()) {
-            const suffix = `/${newItemLabel.toLowerCase().replace(/\s+/g, '-')}`;
+            const suffix = newItemLabel.toLowerCase().replace(/\s+/g, '-');
             setNavItems([...navItems, { label: newItemLabel, pathSuffix: suffix }]);
             setNewItemLabel("");
             setIsAdding(false);
@@ -44,62 +45,69 @@ export default function CourseSecondaryNav({ activeCourseId }) {
         <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            className=" py-4 flex flex-col gap-1 overflow-hidden bg-white/50 border border-1 border-gray-100  shadow-xl rounded-3xl min-w-[200px]"
+            className={`py-4 flex flex-col gap-1 overflow-hidden bg-white/50 border border-1 border-gray-100 shadow-xl rounded-3xl min-w-[200px] ${hideNav ? "hidden" : ""}`}
         >
             <ul className="flex flex-col">
                 <AnimatePresence>
-                    {navItems.map((item, index) => (
-                        <motion.li
-                            key={item.label}
-                            initial={{ opacity: 0, x: -10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -10 }}
-                            transition={{ delay: index * 0.05 }}
-                            className="list-none group relative"
-                        >
-                            <NavLink
-                                to={item.pathSuffix ? `${basePath}${item.pathSuffix}` : basePath}
-                                end={item.end}
-                                className={({ isActive }) =>
-                                    `relative flex items-center gap-3 px-5 py-1.5 text-sm font-medium transition-all duration-200 mx-2  ${isActive
-                                        ? "text-[#3C0078] border-[#3C0078] rounded-full font-bold bg-purple-300"
-                                        : "text-gray-500 border-transparent rounded-full hover:text-[#3C0078] hover:bg-purple-100"
-                                    }`
-                                }
+                    {navItems.map((item, index) => {
+                        const showQuery = queryAppend && !item.pathSuffix.includes('?');
+                        const toPath = item.pathSuffix 
+                            ? `/courses/${activeCourseId}/${item.pathSuffix}${showQuery ? queryAppend : ""}`
+                            : `/courses/${activeCourseId}${queryAppend}`;
+                        
+                        return (
+                            <motion.li
+                                key={item.label}
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -10 }}
+                                transition={{ delay: index * 0.05 }}
+                                className="list-none group relative"
                             >
-                                {({ isActive }) => (
-                                    <div className="flex items-center w-full justify-between">
-                                        <span className="truncate">{item.label}</span>
-                                        <div className="flex items-center gap-2">
-                                            {isTeacher && item.label !== "Home" && (
-                                                <button
-                                                    onClick={(e) => {
-                                                        e.preventDefault();
-                                                        e.stopPropagation();
-                                                        removeItem(item.label);
-                                                    }}
-                                                    className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-500 transition-all"
-                                                >
-                                                    <Trash2 size={12} />
-                                                </button>
-                                            )}
-                                            {isActive && (
-                                                <motion.div
-                                                    layoutId="activeBall"
-                                                    className="w-1.5 h-1.5 rounded-full bg-[#3C0078]"
-                                                    transition={{
-                                                        type: "spring",
-                                                        stiffness: 300,
-                                                        damping: 30
-                                                    }}
-                                                />
-                                            )}
+                                <NavLink
+                                    to={toPath}
+                                    end={item.end}
+                                    className={({ isActive }) =>
+                                        `relative flex items-center gap-3 px-5 py-1.5 text-sm font-medium transition-all duration-200 mx-2  ${isActive
+                                            ? "text-[#3C0078] border-[#3C0078] rounded-full font-bold bg-purple-300"
+                                            : "text-gray-500 border-transparent rounded-full hover:text-[#3C0078] hover:bg-purple-100"
+                                        }`
+                                    }
+                                >
+                                    {({ isActive }) => (
+                                        <div className="flex items-center w-full justify-between">
+                                            <span className="truncate">{item.label}</span>
+                                            <div className="flex items-center gap-2">
+                                                {isTeacher && item.label !== "Home" && (
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            e.stopPropagation();
+                                                            removeItem(item.label);
+                                                        }}
+                                                        className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-500 transition-all"
+                                                    >
+                                                        <Trash2 size={12} />
+                                                    </button>
+                                                )}
+                                                {isActive && (
+                                                    <motion.div
+                                                        layoutId="activeBall"
+                                                        className="w-1.5 h-1.5 rounded-full bg-[#3C0078]"
+                                                        transition={{
+                                                            type: "spring",
+                                                            stiffness: 300,
+                                                            damping: 30
+                                                        }}
+                                                    />
+                                                )}
+                                            </div>
                                         </div>
-                                    </div>
-                                )}
-                            </NavLink>
-                        </motion.li>
-                    ))}
+                                    )}
+                                </NavLink>
+                            </motion.li>
+                        );
+                    })}
                 </AnimatePresence>
             </ul>
 
