@@ -91,20 +91,24 @@ const ClockIcon = () => (
  * On hover, a floating tooltip appears above it with full details.
  *
  * Props:
+ *  - id        (string)  : event id — used as drag payload
  *  - title     (string)
  *  - startTime (string)
  *  - endTime   (string)
- *  - type      (string) : "class" | "meeting" | "task" | "personal"
- *  - lecturer  (string) : optional
- *  - location  (string) : optional
+ *  - type      (string)  : "class" | "meeting" | "task" | "personal"
+ *  - lecturer  (string)  : optional
+ *  - location  (string)  : optional
+ *  - draggable (boolean) : whether the pill is draggable
  */
 export default function CalendarDayBlockEvent({
+  id,
   title,
   startTime,
   endTime,
   type = "class",
   lecturer,
   location,
+  draggable: isDraggable = false,
 }) {
   const hasTooltipDetails = lecturer || location || startTime;
 
@@ -169,7 +173,17 @@ export default function CalendarDayBlockEvent({
       )}
 
       {/* ── Event pill ─────────────────────────────────────── */}
-      <div className="flex items-center gap-1.5 bg-white rounded-full px-3 py-1 text-[11px] font-medium text-black cursor-pointer transition-all duration-150 shadow-xs hover:-translate-y-px hover:shadow-md hover:bg-purple-100">
+      <div
+        className={[
+          "flex items-center gap-1.5 bg-white rounded-full px-3 py-1 text-[11px] font-medium text-black transition-all duration-150 shadow-xs hover:-translate-y-px hover:shadow-md hover:bg-purple-100",
+          isDraggable ? "cursor-grab active:cursor-grabbing active:opacity-60 active:scale-95" : "cursor-pointer",
+        ].join(" ")}
+        draggable={isDraggable}
+        onDragStart={isDraggable ? (e) => {
+          e.dataTransfer.setData("text/plain", id);
+          e.dataTransfer.effectAllowed = "move";
+        } : undefined}
+      >
         {/* Type icon */}
         <span className="shrink-0 text-purple-700 mt-px ">
           {ICONS[type] ?? ICONS.class}
