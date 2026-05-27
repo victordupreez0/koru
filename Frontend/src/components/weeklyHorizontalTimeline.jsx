@@ -312,8 +312,18 @@ export default function WeeklyHorizontalTimeline({ onModalToggle }) {
     return dayDate.toDateString() === new Date().toDateString();
   };
 
+  const isPastEvent = (date) => {
+    const eventDate = new Date(date);
+    const now = new Date();
+    // Set to start of day to compare dates
+    eventDate.setHours(0, 0, 0, 0);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return eventDate < today;
+  };
+
   return (
-    <div className="w-full flex flex-col relative h-[360px] select-none p-1">
+    <div className="w-full flex flex-col relative h-[360px] select-none p-1 mt-15 mb-15">
 
       {/* ── HEADER NAVIGATION ── */}
       <div className="flex items-center justify-between mb-4">
@@ -395,10 +405,11 @@ export default function WeeklyHorizontalTimeline({ onModalToggle }) {
                       exit={{ opacity: 0, scale: 0.9 }}
                       key={assignment.id}
                       onClick={() => setSelectedAssignment(assignment)}
-                      className="w-full max-w-[135px] h-10 truncate text-[10px] font-bold py-1 px-1.5 rounded-lg  hover:bg-purple-100 cursor-pointer transition-all flex items-center gap-1 text-left shrink-0"
+                      className={`w-full max-w-[135px] h-10 truncate text-[0.8rem] font-bold py-1 px-1.5 rounded-lg cursor-pointer transition-all flex items-center gap-1 text-left shrink-0 ${isPastEvent(assignment.dueDate) ? 'bg-gray-100 text-gray-400 hover:bg-gray-150' : 'bg-purple-50 text-purple-700 hover:bg-purple-100'
+                        }`}
                       title={`${assignment.course?.subject?.code || 'UX300'}: ${assignment.title}`}
                     >
-                      <Award className="w-3 h-3 text-purple-500 shrink-0" />
+                      <Award className={`w-3 h-3 shrink-0 ${isPastEvent(assignment.dueDate) ? 'text-gray-400' : 'text-purple-500'}`} />
                       <span className="truncate">{assignment.course?.subject?.code || "UX"}: {assignment.title}</span>
                     </motion.div>
                   ))}
@@ -411,14 +422,20 @@ export default function WeeklyHorizontalTimeline({ onModalToggle }) {
                       exit={{ opacity: 0, scale: 0.9 }}
                       key={todo.id}
                       onClick={(e) => handleToggleTodo(todo.id, e)}
-                      className={`group/todo w-full max-w-[135px] truncate text-[10px] py-1 px-1.5 rounded-lg border flex items-center justify-between cursor-pointer transition-all shadow-sm text-left shrink-0 ${todo.completed
-                        ? 'bg-slate-50 border-slate-200 text-slate-400 line-through'
-                        : 'bg-teal-50 border-teal-200 text-teal-700 hover:bg-teal-100/80 font-medium'
+                      className={`group/todo w-full max-w-[135px] truncate text-[10px] py-1 px-1.5 rounded-lg border flex items-center justify-between cursor-pointer transition-all shadow-sm text-left shrink-0 ${isPastEvent(todo.date) ? (
+                        todo.completed
+                          ? 'bg-gray-50 border-gray-200 text-gray-400 line-through'
+                          : 'bg-gray-100 border-gray-300 text-gray-500 hover:bg-gray-150 font-medium'
+                      ) : (
+                        todo.completed
+                          ? 'bg-slate-50 border-slate-200 text-slate-400 line-through'
+                          : 'bg-teal-50 border-teal-200 text-teal-700 hover:bg-teal-100/80 font-medium'
+                      )
                         }`}
                       title={`${todo.title} ${todo.time ? `(${todo.time})` : ''}`}
                     >
                       <div className="flex items-center gap-1 min-w-0">
-                        <div className={`w-3 h-3 rounded-full border flex items-center justify-center shrink-0 ${todo.completed ? 'bg-teal-500 border-teal-500 text-white' : 'border-slate-300 bg-white'
+                        <div className={`w-3 h-3 rounded-full border flex items-center justify-center shrink-0 ${todo.completed ? 'bg-teal-500 border-teal-500 text-white' : isPastEvent(todo.date) ? 'border-gray-400 bg-white' : 'border-slate-300 bg-white'
                           }`}>
                           {todo.completed && <Check className="w-2.5 h-2.5 stroke-[3]" />}
                         </div>
@@ -445,7 +462,7 @@ export default function WeeklyHorizontalTimeline({ onModalToggle }) {
               </div>
 
               {/* CONNECTIVE TOP DOTTED LINE */}
-              <div className={`w-[2px] h-4 border-l-2 x transition-all ${dayA.length > 0 || dayT.length > 0 ? 'border-gray-200' : 'border-gray-200'
+              <div className={`w-[2px] h-4 border-l-2 transition-all opacity-0 group-hover:opacity-100 ${dayA.length > 0 || dayT.length > 0 ? 'border-gray-300' : 'border-gray-200'
                 }`} />
 
               {/* ── TIMELINE AXIS DOT ── */}
@@ -464,7 +481,7 @@ export default function WeeklyHorizontalTimeline({ onModalToggle }) {
               </div>
 
               {/* CONNECTIVE BOTTOM DOTTED LINE */}
-              <div className={`w-[2px] h-4 border-l-2 transition-all ${dayC.length > 0 ? 'border-gray-200' : 'border-gray-200'
+              <div className={`w-[2px] h-4 border-l-2 transition-all opacity-0 group-hover:opacity-100 ${dayC.length > 0 ? 'border-gray-300' : 'border-gray-200'
                 }`} />
 
               {/* BOTTOM AREA: Classes & Meetings */}
@@ -478,6 +495,7 @@ export default function WeeklyHorizontalTimeline({ onModalToggle }) {
 
                     const room = cls.description?.includes("|") ? cls.description.split("|")[1] : "Room";
                     const isOnline = room.toLowerCase().includes("online");
+                    const isPast = isPastEvent(cls.startTime);
 
                     return (
                       <motion.div
@@ -486,12 +504,12 @@ export default function WeeklyHorizontalTimeline({ onModalToggle }) {
                         exit={{ opacity: 0, scale: 0.9 }}
                         key={cls.id}
                         onClick={() => setSelectedClass(cls)}
-                        className={`group/meeting w-full max-w-[135px] text-left text-[10px] p-1.5 rounded-lg cursor-pointer transition-all flex flex-col gap-0.5 leading-tight shrink-0 relative ${cls.isCustom ? 'bg-white border-dashed  hover:bg-orange-100' : ' hover:bg-purple-200/80'
+                        className={`group/meeting w-full max-w-[135px] text-left text-[0.8rem] p-1.5 rounded-lg cursor-pointer transition-all flex flex-col gap-0.5 leading-tight shrink-0 relative ${isPast ? 'bg-gray-100 border border-gray-200 hover:bg-gray-150' : (cls.isCustom ? 'bg-white border-dashed border-orange-200 hover:bg-orange-100' : 'bg-purple-50 border border-purple-200 hover:bg-purple-200/80')
                           }`}
                         title={cls.title}
                       >
                         <div className="flex justify-between items-start gap-1">
-                          <span className="font-bold truncate">{cls.title}</span>
+                          <span className={`font-bold truncate ${isPast ? 'text-gray-400' : ''}`}>{cls.title}</span>
                           {cls.isCustom && (
                             <button
                               onClick={(e) => handleDeleteEvent(cls.id, e)}
@@ -502,7 +520,7 @@ export default function WeeklyHorizontalTimeline({ onModalToggle }) {
                             </button>
                           )}
                         </div>
-                        <div className="flex items-center gap-1 text-[8px] font-semibold text-gray-400 shrink-0 mt-0.5">
+                        <div className={`flex items-center gap-1 text-[0.7rem] font-semibold shrink-0 mt-0.5 ${isPast ? 'text-gray-300' : 'text-gray-400'}`}>
                           <span className="flex items-center gap-0.5"><Clock className="w-2.5 h-2.5" /> {timeStr}</span>
                           <span>•</span>
                           <span className="flex items-center gap-0.5 shrink-0 truncate max-w-[50px]">
