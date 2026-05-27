@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ChevronDown } from "lucide-react";
+import { X, ChevronDown, BarChart3 } from "lucide-react";
 import TeacherPerspectiveModal from "./TeacherPerspectiveModal";
 import StudentPerspectiveModal from "./StudentPerspectiveModal";
+import TeacherAnalyticsModal from "./TeacherAnalyticsModal";
 
 const DEGREES = [
   "UX Design Degree",
@@ -25,6 +26,7 @@ export default function CourseDetailModal({
 }) {
   const [showTeacherPreview, setShowTeacherPreview] = useState(false);
   const [showStudentPreview, setShowStudentPreview] = useState(false);
+  const [showTeacherAnalytics, setShowTeacherAnalytics] = useState(false);
 
   if (!course) return null;
 
@@ -110,17 +112,25 @@ export default function CourseDetailModal({
                               </select>
                             </div>
                           ) : (
-                            <div className="flex items-center gap-4">
+                            <button 
+                              onClick={() => course?.teacher && setShowTeacherAnalytics(true)}
+                              className={`flex items-center gap-4 w-full text-left transition-all ${course?.teacher ? "hover:bg-gray-50 p-2 -m-2 rounded-2xl" : ""}`}
+                            >
                               <div className="w-12 h-12 rounded-2xl bg-[#3C0078] text-white flex items-center justify-center font-black text-lg shadow-lg shadow-[#3C0078]/20">
                                 {course?.teacher?.firstName?.[0] || "?"}
                               </div>
-                              <div>
+                              <div className="flex-1">
                                 <h4 className="text-[14px] font-black text-gray-900">
                                   {course?.teacher ? `${course.teacher.firstName} ${course.teacher.lastName}` : "No Teacher Assigned"}
                                 </h4>
                                 <p className="text-[10px] font-bold text-gray-400">{course?.teacher?.email || "N/A"}</p>
                               </div>
-                            </div>
+                              {course?.teacher && (
+                                <div className="p-2.5 rounded-xl text-gray-400 group-hover:text-[#3C0078] transition-all">
+                                  <BarChart3 size={18} />
+                                </div>
+                              )}
+                            </button>
                           )}
                         </div>
                     </div>
@@ -290,6 +300,16 @@ export default function CourseDetailModal({
           <StudentPerspectiveModal 
             course={course} 
             onClose={() => setShowStudentPreview(false)} 
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showTeacherAnalytics && (
+          <TeacherAnalyticsModal 
+            teacher={course.teacher} 
+            isOpen={showTeacherAnalytics}
+            onClose={() => setShowTeacherAnalytics(false)} 
           />
         )}
       </AnimatePresence>

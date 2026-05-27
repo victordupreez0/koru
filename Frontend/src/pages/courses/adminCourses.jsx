@@ -2,17 +2,19 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Plus, Search, Users, BookOpen, Clock, 
-  TrendingUp, CheckCircle, X
+  TrendingUp, CheckCircle, X, Bell
 } from "lucide-react";
 import Menu from "../../components/menu";
 import SideMenu from "../../components/sideMenu";
 
 // Modularized Components
-import StatCard from "../../components/adminCourses/StatCard";
-import FilterDropdown from "../../components/adminCourses/FilterDropdown";
-import CourseListItem from "../../components/adminCourses/CourseListItem";
-import CreateCourseModal from "../../components/adminCourses/CreateCourseModal";
-import CourseDetailModal from "../../components/adminCourses/CourseDetailModal";
+import {
+  StatCard,
+  FilterDropdown,
+  CourseListItem,
+  CreateCourseModal,
+  CourseDetailModal
+} from "./adminCoursesComponents";
 
 export default function AdminCourses() {
   const [courses, setCourses] = useState([]);
