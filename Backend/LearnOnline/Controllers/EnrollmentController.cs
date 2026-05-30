@@ -56,6 +56,15 @@ namespace LearnOnline.Controllers
             return enrollments;
         }
 
+        // GET /api/Enrollment/course/{courseId}/count – return count of active students in a course
+        [HttpGet("course/{courseId}/count")]
+        public async Task<ActionResult<int>> GetCourseStudentCount(string courseId)
+        {
+            var count = await _context.Enrollments
+                .CountAsync(e => e.CourseId == courseId && e.Status == "Active");
+            return count;
+        }
+
         // POST /api/Enrollment – enrol a student in a course
         [HttpPost]
         public async Task<ActionResult<Enrollment>> Create(Enrollment enrollment)

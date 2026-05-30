@@ -1,6 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
+import NavTooltip from "./NavTooltip";
 
 export default function NavItem({ label, href = "#", icon, filledIcon, className = "", variants, isActive, onClick }) {
   return (
@@ -22,16 +23,18 @@ export default function NavItem({ label, href = "#", icon, filledIcon, className
         />
       )}
 
-      <Link
-        to={href}
-        className={`relative z-10 rounded-full px-5 py-3 inline-flex items-center justify-center select-none
-          ${isActive ? "text-white" : "text-gray-400"}
-          ${className}`.trim()}
-        style={{ WebKitTapHighlightColor: "transparent", color: isActive ? "white" : undefined }}
-        aria-label={label}
-      >
-        {isActive && filledIcon ? filledIcon : (icon ?? <span className="text-sm font-medium">{label}</span>)}
-      </Link>
+      <NavTooltip label={label} position="bottom">
+        <Link
+          to={href}
+          className={`relative z-10 rounded-full px-5 py-3 inline-flex items-center justify-center select-none
+            ${isActive ? "text-white" : "text-gray-400"}
+            ${className}`.trim()}
+          style={{ WebKitTapHighlightColor: "transparent", color: isActive ? "white" : undefined }}
+          aria-label={label}
+        >
+          {isActive && filledIcon ? filledIcon : (icon ?? <span className="text-sm font-medium">{label}</span>)}
+        </Link>
+      </NavTooltip>
     </motion.li>
   );
 }
