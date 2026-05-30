@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
     ChevronDown, 
@@ -7,42 +7,40 @@ import {
     FileText, 
     Link as LinkIcon, 
     ExternalLink,
-    Download
+    Download,
+    Loader
 } from "lucide-react";
+import { getCourseModules } from "../../../services/moduleService";
 
 export default function CourseModulesView({ activeCourseId }) {
   const navigate = useNavigate();
-  const [modules, setModules] = useState([
-    {
-      id: 1,
-      title: "Overview",
-      isOpen: true,
-      items: [
-        { id: 101, label: "Study Guide 2026", type: "attachment" },
-        { id: 102, label: "Semester Overview", type: "document" }
-      ]
-    },
-    {
-      id: 2,
-      title: "Resources",
-      isOpen: true,
-      items: [
-        { id: 201, label: "OW Library", type: "link", isExternal: true },
-        { id: 202, label: "Academic Rules", type: "link", isExternal: true },
-        { id: 203, label: "Contact Sessions", type: "document" }
-      ]
-    },
-    {
-      id: 3,
-      title: "Week 1: Introduction & Briefing",
-      isOpen: true,
-      prefix: "①",
-      items: [
-        { id: 301, label: "Week 1 Theory", type: "document" },
-        { id: 302, label: "Week 1 Practical", type: "document" }
-      ]
-    }
-  ]);
+  const [modules, setModules] = useState([]);
+  const [modulesLoading, setModulesLoading] = useState(false);
+
+  useEffect(() => {
+    if (!activeCourseId) return;
+    let mounted = true;
+    setModulesLoading(true);
+    getCourseModules(activeCourseId)
+      .then(data => {
+        if (mounted) {
+          // Filter out unpublished modules and items for the student view
+          const visibleModules = (data ?? [])
+            .filter(mod => mod.isPublished)
+            .map(mod => ({
+              ...mod,
+              isOpen: mod.isOpen ?? true,
+              items: (mod.items ?? []).filter(item => item.isPublished)
+            }));
+          setModules(visibleModules);
+        }
+      })
+      .catch(console.error)
+      .finally(() => {
+        if (mounted) setModulesLoading(false);
+      });
+    return () => { mounted = false; };
+  }, [activeCourseId]);
 
   const toggleModule = (id) => {
     setModules(modules.map(mod => mod.id === id ? { ...mod, isOpen: !mod.isOpen } : mod));
@@ -61,6 +59,14 @@ export default function CourseModulesView({ activeCourseId }) {
 
   return (
     <div className="w-full max-w-5xl mx-auto flex flex-col gap-6 py-6 select-none">
+      {/* Loading indicator */}
+      {modulesLoading && (
+        <div className="flex items-center gap-2 text-xs text-gray-400 font-medium px-1">
+          <Loader size={13} className="animate-spin" />
+          <span>Loading modules...</span>
+        </div>
+      )}
+
       {/* Top action bar */}
       <div className="flex items-center justify-end gap-3 shrink-0">
         <button

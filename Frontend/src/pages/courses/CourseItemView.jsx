@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import NovelEditor from "../../components/NovelEditor";
 import { uploadImageToCloudinary } from "../../services/cloudinaryService";
+import { getPageContent, savePageContent, getCourseModules } from "../../services/moduleService";
 import { 
     Bold, 
     Italic, 
@@ -32,7 +33,8 @@ import {
     Link as LinkIcon,
     Plus,
     X,
-    ExternalLink
+    ExternalLink,
+    Loader
 } from "lucide-react";
 
 
@@ -54,282 +56,7 @@ const IMAGE_PRESETS = [
     { label: "Creative Workspace", url: "https://images.unsplash.com/photo-1497032628192-86f99bcd76bc?auto=format&fit=crop&w=1000&q=80" }
 ];
 
-// Default pre-populated items loaded if localStorage is empty
-const INITIAL_OVERVIEW_CONTENT = {
-  type: "doc",
-  content: [
-    {
-      type: "heading",
-      attrs: { level: 2 },
-      content: [{ type: "text", text: "Welcome to UX Design 300 | Semester 1" }]
-    },
-    {
-      type: "paragraph",
-      content: [
-        {
-          type: "text",
-          text: "This course focuses on building a strong human-centred foundation. Throughout the semester, we will cover neurodiverse, inclusive, and adaptive design systems. Please ensure you read the guidelines and download the prescribed guide below."
-        }
-      ]
-    }
-  ]
-};
 
-const INITIAL_RESOURCES_CONTENT = {
-  type: "doc",
-  content: [
-    {
-      type: "heading",
-      attrs: { level: 3 },
-      content: [{ type: "text", text: "Syllabus Guidelines & Resources" }]
-    },
-    {
-      type: "paragraph",
-      content: [
-        {
-          type: "text",
-          text: "Use the external resources and books listed below to assist your research. Make sure you register an account on the Open Window Library portal for digital book access."
-        }
-      ]
-    }
-  ]
-};
-
-const INITIAL_WEEK1_CONTENT = {
-  type: "doc",
-  content: [
-    {
-      type: "heading",
-      attrs: { level: 3 },
-      content: [{ type: "text", text: "Week 1: Foundations & Briefings" }]
-    },
-    {
-      type: "paragraph",
-      content: [
-        {
-          type: "text",
-          text: "Our first class will cover the core theoretical framework of Inclusive Design and neurodiverse patterns. Make sure you read the Week 1 Theory slides before entering the practical workshop."
-        }
-      ]
-    }
-  ]
-};
-
-const INITIAL_SCHEMAS = {
-    // Modules
-    "1": {
-        title: "Overview",
-        content: INITIAL_OVERVIEW_CONTENT,
-        htmlEmbeds: ""
-    },
-    "2": {
-        title: "Resources",
-        content: INITIAL_RESOURCES_CONTENT,
-        htmlEmbeds: ""
-    },
-    "3": {
-        title: "Week 1: Introduction & Briefing",
-        content: INITIAL_WEEK1_CONTENT,
-        htmlEmbeds: ""
-    },
-    // Semester Overview
-    "102": {
-        title: "Semester Overview",
-        content: {
-            type: "doc",
-            content: [
-                {
-                    type: "heading",
-                    attrs: { level: 2 },
-                    content: [{ type: "text", text: "Welcome to UX Design 300 | Semester Overview" }]
-                },
-                {
-                    type: "paragraph",
-                    content: [
-                        { type: "text", text: "Welcome to your third-year UX practical track! This semester we focus on creating " },
-                        { type: "text", marks: [{ type: "bold" }], text: "highly adaptive, inclusive, and accessible digital ecosystems" },
-                        { type: "text", text: ". Our curriculum stretches standard design patterns to embrace neurodiversity, screen-reader parity, and adaptive layouts." }
-                    ]
-                },
-                {
-                    type: "paragraph",
-                    content: [
-                        { type: "text", text: "We have embedded a welcoming abstract illustration and video overview below to guide your initial learning mindset:" }
-                    ]
-                },
-                {
-                    type: "paragraph",
-                    content: [
-                        {
-                            type: "text",
-                            text: " "
-                        }
-                    ]
-                }
-            ]
-        },
-        htmlEmbeds: `
-            <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80" alt="Learning Banner" class="w-full max-h-[340px] object-cover rounded-2xl border border-gray-100 shadow-sm my-6" />
-            
-            <div class="p-6 bg-[#3C0078]/5 border-l-4 border-[#3C0078] rounded-r-2xl my-6 flex gap-3 text-[#3C0078]">
-                <div class="mt-0.5"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></div>
-                <div class="flex-1">
-                    <div class="font-extrabold text-sm uppercase tracking-wider leading-none mb-1">Prescribed Syllabus Alert</div>
-                    <div class="text-xs font-semibold leading-relaxed opacity-90">Please ensure you download the "Study Guide 2026" PDF before our first practical tutorial this Wednesday at 09:00.</div>
-                </div>
-            </div>
- 
-            <h3 class="text-lg font-bold text-gray-800 mt-8 mb-4">Responsive System Tokens Example</h3>
-            <p class="text-sm text-gray-600 mb-4">Here is a CSS custom properties layout system that we will construct together in Week 2's workshop:</p>
-            <pre class="bg-gray-900 text-gray-100 p-5 rounded-2xl font-mono text-xs overflow-x-auto shadow-inner my-6 leading-relaxed"><code>/* Accessible layout theme tokens */
-:root {
-  --color-brand: #3C0078;
-  --color-active-bg: rgba(60, 0, 120, 0.08);
-  --border-radius-premium: 24px;
-  --font-body: 'Outfit', sans-serif;
-  --accessibility-contrast-ratio: 7.2; /* AAA Level */
-}</code></pre>
- 
-            <h3 class="text-lg font-bold text-gray-800 mt-8 mb-4">Course Briefing Video</h3>
-            <p class="text-sm text-gray-600 mb-4">Watch this overview covering inclusive design guidelines from the Google UX Team:</p>
-            <div class="relative w-full aspect-video rounded-2xl overflow-hidden shadow-md my-6">
-                <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" class="absolute inset-0 w-full h-full border-0" allowfullscreen></iframe>
-            </div>
-        `
-    },
-    // Contact Sessions
-    "203": {
-        title: "Contact Sessions Guidelines",
-        content: {
-            type: "doc",
-            content: [
-                {
-                    type: "heading",
-                    attrs: { level: 2 },
-                    content: [{ type: "text", text: "Contact Sessions & Office Hours" }]
-                },
-                {
-                    type: "paragraph",
-                    content: [
-                        { type: "text", text: "All design reviews will take place inside Lab 304 or online via MS Teams. Below are the contact hours for our course moderators:" }
-                    ]
-                }
-            ]
-        },
-        htmlEmbeds: `
-            <div class="p-6 bg-amber-50 border-l-4 border-amber-500 rounded-r-2xl my-6 flex gap-3 text-amber-900">
-                <div class="mt-0.5"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0L20 8M4 8l6.3 13"/></svg></div>
-                <div class="flex-1">
-                    <div class="font-extrabold text-sm uppercase tracking-wider leading-none mb-1">Booking Form Required</div>
-                    <div class="text-xs font-semibold leading-relaxed opacity-90">Please book a calendar slot at least 24 hours in advance via the Student Portal. Walk-ins are subject to session availability.</div>
-                </div>
-            </div>
- 
-            <table class="w-full border-collapse my-6 text-left text-xs font-medium text-gray-700">
-                <thead>
-                    <tr class="border-b border-gray-200 bg-gray-50/80">
-                        <th class="p-3 font-bold uppercase tracking-wider text-gray-500">Moderator</th>
-                        <th class="p-3 font-bold uppercase tracking-wider text-gray-500">Day & Time</th>
-                        <th class="p-3 font-bold uppercase tracking-wider text-gray-500">Location</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-100">
-                    <tr>
-                        <td class="p-3 font-bold text-gray-900">Dr. Sarah Jenkins</td>
-                        <td class="p-3 text-gray-600">Tuesdays | 14:00 - 16:00</td>
-                        <td class="p-3 text-gray-600">Lab 304 (Design Office)</td>
-                    </tr>
-                    <tr>
-                        <td class="p-3 font-bold text-gray-900">Prof. Marcus Cole</td>
-                        <td class="p-3 text-gray-600">Thursdays | 09:00 - 11:30</td>
-                        <td class="p-3 text-gray-600">MS Teams (Online Portal)</td>
-                    </tr>
-                </tbody>
-            </table>
-        `
-    },
-    // Week 1 Theory
-    "301": {
-        title: "Week 1: Foundations of Adaptive UX",
-        content: {
-            type: "doc",
-            content: [
-                {
-                    type: "heading",
-                    attrs: { level: 2 },
-                    content: [{ type: "text", text: "Week 1: Foundations of Adaptive UX" }]
-                },
-                {
-                    type: "paragraph",
-                    content: [
-                        { type: "text", text: "This week we explore the foundational theories behind responsive and adaptive systems, and how accessibility contrast ratios alter visual layouts under various physical conditions." }
-                    ]
-                }
-            ]
-        },
-        htmlEmbeds: `
-            <img src="https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1200&q=80" alt="Design Grid" class="w-full max-h-[300px] object-cover rounded-2xl border border-gray-100 shadow-sm my-6" />
-            
-            <h3 class="text-lg font-bold text-gray-800 mt-6 mb-3">Key Theoretical Principles</h3>
-            <ul class="list-disc pl-5 space-y-2 text-xs font-semibold text-gray-600 my-4">
-                <li><strong class="text-gray-900">Fluid Sizing:</strong> Building components that resize with viewport percentages.</li>
-                <li><strong class="text-gray-900">Flexbox & Grid Systems:</strong> Declining rigid width anchors in favor of content-driven layouts.</li>
-                <li><strong class="text-gray-900">Semantic Nodes:</strong> Restructuring pages using HTML5 layouts so screen readers traverse sections logically.</li>
-            </ul>
-        `
-    },
-    // Week 1 Practical
-    "302": {
-        title: "Week 1 Practical Brief: Building Your First Grid",
-        content: {
-            type: "doc",
-            content: [
-                {
-                    type: "heading",
-                    attrs: { level: 2 },
-                    content: [{ type: "text", text: "Week 1 Practical Brief: Dynamic Columns" }]
-                },
-                {
-                    type: "paragraph",
-                    content: [
-                        { type: "text", text: "In this practical session, you will construct a fluid 3-column system that collapses into single-column rows on mobile viewports." }
-                    ]
-                }
-            ]
-        },
-        htmlEmbeds: `
-            <div class="p-6 bg-emerald-50 border-l-4 border-emerald-500 rounded-r-2xl my-6 flex gap-3 text-emerald-900">
-                <div class="mt-0.5"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
-                <div class="flex-1">
-                    <div class="font-extrabold text-sm uppercase tracking-wider leading-none mb-1">Practical Brief Outcomes</div>
-                    <div class="text-xs font-semibold leading-relaxed opacity-90">Successfully submit your code zipped on the portal before next Monday at midnight. Late submissions lose 10% per day.</div>
-                </div>
-            </div>
- 
-            <h3 class="text-lg font-bold text-gray-800 mt-6 mb-3">Project Requirements Checklist</h3>
-            <ol class="list-decimal pl-5 space-y-2 text-xs font-semibold text-gray-600 my-4">
-                <li>Create a clean repository inside your workspaces folder.</li>
-                <li>Ensure all colors conform to AA contrast ratios (minimum 4.5:1).</li>
-                <li>Validate that the grid scales smoothly between 320px and 1920px.</li>
-            </ol>
-        `
-    }
-};
- 
-// Flattened list of course items across modules to calculate Prev / Next
-const MOCK_MODULE_ITEMS = [
-    { id: 1, label: "Overview Module", type: "document" },
-    { id: 101, label: "Study Guide 2026", type: "attachment" },
-    { id: 102, label: "Semester Overview", type: "document" },
-    { id: 2, label: "Resources Module", type: "document" },
-    { id: 201, label: "OW Library", type: "link", isExternal: true },
-    { id: 202, label: "Academic Rules", type: "link", isExternal: true },
-    { id: 203, label: "Contact Sessions", type: "document" },
-    { id: 3, label: "Week 1 Module", type: "document" },
-    { id: 301, label: "Week 1 Theory", type: "document" },
-    { id: 302, label: "Week 1 Practical", type: "document" }
-];
- 
 export default function CourseItemView({ activeCourseId, activeItemId, isStudentView = false }) {
     const navigate = useNavigate();
     const [isEditing, setIsEditing] = useState(false);
@@ -347,20 +74,40 @@ export default function CourseItemView({ activeCourseId, activeItemId, isStudent
     const [saveAlert, setSaveAlert] = useState(false);
     const [sections, setSections] = useState([]);
     const [uploading, setUploading] = useState(false);
+    const [pageLoading, setPageLoading] = useState(false);
+    const [saving, setSaving] = useState(false);
+    const [pageType, setPageType] = useState(null); // 'module' | 'item'
     const fileInputRef = useRef(null);
     const editorMapRef = useRef({});
 
-    const storageKey = `course_item_${activeItemId}`;
+    // Flattened ordered item list derived from course modules – used for Prev/Next navigation
+    const [allItems, setAllItems] = useState([]);
 
-    // Compute Previous and Next items
+    useEffect(() => {
+        if (!activeCourseId) return;
+        getCourseModules(activeCourseId)
+            .then(mods => {
+                const flat = [];
+                for (const mod of mods) {
+                    flat.push({ id: mod.id, label: mod.title, type: "document" });
+                    for (const item of (mod.items ?? [])) {
+                        flat.push({ id: item.id, label: item.label, type: item.type, isExternal: item.isExternal });
+                    }
+                }
+                setAllItems(flat);
+            })
+            .catch(console.error);
+    }, [activeCourseId]);
+
+    // Compute Previous and Next items from the live course modules list
     const { prevItem, nextItem } = useMemo(() => {
-        const index = MOCK_MODULE_ITEMS.findIndex(item => item.id.toString() === activeItemId.toString());
+        const index = allItems.findIndex(item => item.id === activeItemId);
         if (index === -1) return { prevItem: null, nextItem: null };
         return {
-            prevItem: index > 0 ? MOCK_MODULE_ITEMS[index - 1] : null,
-            nextItem: index < MOCK_MODULE_ITEMS.length - 1 ? MOCK_MODULE_ITEMS[index + 1] : null
+            prevItem: index > 0 ? allItems[index - 1] : null,
+            nextItem: index < allItems.length - 1 ? allItems[index + 1] : null,
         };
-    }, [activeItemId]);
+    }, [allItems, activeItemId]);
 
     // Handle Prev/Next click
     const handleItemNavigation = (item) => {
@@ -374,67 +121,50 @@ export default function CourseItemView({ activeCourseId, activeItemId, isStudent
         }
     };
 
-    // Load initial item state
-    const itemData = useMemo(() => {
-        const saved = localStorage.getItem(storageKey);
-        if (saved) {
-            try {
-                return JSON.parse(saved);
-            } catch (err) {
-                console.error("Failed to parse item content", err);
-            }
-        }
-        
-        // Fallback to initial pre-populated schema or generic outline
-        const initialSchema = INITIAL_SCHEMAS[activeItemId];
-        if (initialSchema) {
-            return {
-                title: initialSchema.title,
-                content: initialSchema.content,
-                htmlEmbeds: initialSchema.htmlEmbeds || ""
-            };
-        }
-
-        const fallbackLabel = MOCK_MODULE_ITEMS.find(i => i.id.toString() === activeItemId.toString())?.label || "New Page";
-        return {
-            title: fallbackLabel,
-            content: {
-                type: "doc",
-                content: [
-                    {
-                        type: "heading",
-                        attrs: { level: 2 },
-                        content: [{ type: "text", text: fallbackLabel }]
-                    },
-                    {
-                        type: "paragraph",
-                        content: [{ type: "text", text: "Click edit to start building this module layout page..." }]
-                    }
-                ]
-            },
-            htmlEmbeds: ""
+    // Build a default single empty text section
+    const makeDefaultSections = (fallbackTitle) => {
+        const emptyDoc = {
+            type: "doc",
+            content: [
+                { type: "heading", attrs: { level: 2 }, content: [{ type: "text", text: fallbackTitle }] },
+                { type: "paragraph", content: [{ type: "text", text: "Click Edit to start building this page..." }] },
+            ],
         };
-    }, [activeItemId, storageKey]);
+        return [{ id: `text-${Date.now()}`, type: "text", content: emptyDoc }];
+    };
 
-    // Build the sections list whenever the active item changes
+    // Load content from backend whenever the active item changes
     useEffect(() => {
+        if (!activeItemId) return;
+        let mounted = true;
         editorMapRef.current = {};
-        setTitle(itemData.title);
-        if (itemData.sections) {
-            setSections(itemData.sections);
-        } else {
-            // Legacy format: content + htmlEmbeds → convert to sections array
-            const textSection = { id: `text-${activeItemId}-0`, type: "text", content: itemData.content };
-            setSections(
-                itemData.htmlEmbeds
-                    ? [textSection, { id: "embed-legacy", type: "embed", html: itemData.htmlEmbeds }]
-                    : [textSection]
-            );
-        }
+        setPageLoading(true);
         setIsEditing(false);
-    }, [itemData, activeItemId]);
 
-    const handleSave = () => {
+        getPageContent(activeItemId)
+            .then(({ pageType: pt, title: t, sections: s, raw }) => {
+                if (!mounted) return;
+                setPageType(pt);
+                setTitle(t || "Untitled");
+                if (s && s.length > 0) {
+                    setSections(s);
+                } else {
+                    setSections(makeDefaultSections(t || raw?.title || raw?.label || "New Page"));
+                }
+            })
+            .catch(err => {
+                console.error("Failed to load page content:", err);
+                if (mounted) {
+                    setTitle("New Page");
+                    setSections(makeDefaultSections("New Page"));
+                }
+            })
+            .finally(() => { if (mounted) setPageLoading(false); });
+
+        return () => { mounted = false; };
+    }, [activeItemId]);
+
+    const handleSave = async () => {
         const updatedSections = sections.map(s => {
             if (s.type === "text") {
                 const inst = editorMapRef.current[s.id];
@@ -442,12 +172,18 @@ export default function CourseItemView({ activeCourseId, activeItemId, isStudent
             }
             return s;
         });
-        const updatedData = { title, sections: updatedSections };
-        localStorage.setItem(storageKey, JSON.stringify(updatedData));
         setSections(updatedSections);
-        setSaveAlert(true);
-        setIsEditing(false);
-        setTimeout(() => setSaveAlert(false), 2000);
+        setSaving(true);
+        try {
+            await savePageContent(activeItemId, pageType, { title, sections: updatedSections });
+            setSaveAlert(true);
+            setIsEditing(false);
+            setTimeout(() => setSaveAlert(false), 2000);
+        } catch (err) {
+            console.error("Failed to save page content:", err);
+        } finally {
+            setSaving(false);
+        }
     };
 
     // Text formatting actions helper
@@ -578,6 +314,12 @@ export default function CourseItemView({ activeCourseId, activeItemId, isStudent
 
     return (
         <div className="w-full max-w-5xl mx-auto flex flex-col min-h-full">
+            {pageLoading && (
+                <div className="flex items-center justify-center py-20">
+                    <Loader size={24} className="animate-spin text-gray-400" />
+                </div>
+            )}
+            {!pageLoading && (<>
             {/* Top Editor controls and Toggles */}
             <div className="flex items-center justify-between border-b border-gray-100 pb-4 mb-6 shrink-0">
                 <div className="flex items-center gap-2">
@@ -604,7 +346,8 @@ export default function CourseItemView({ activeCourseId, activeItemId, isStudent
                                 setIsEditing(true);
                             }
                         }}
-                        className={`flex items-center gap-1.5 px-4 py-2 text-xs font-black rounded-xl cursor-pointer shadow-2xs border transition-all ${
+                        disabled={saving}
+                        className={`flex items-center gap-1.5 px-4 py-2 text-xs font-black rounded-xl cursor-pointer shadow-2xs border transition-all disabled:opacity-60 disabled:cursor-not-allowed ${
                             isEditing 
                             ? "bg-green-600 border-green-700 text-white hover:bg-green-700" 
                             : "bg-[#3C0078] border-[#2A0054] text-white hover:bg-[#2A0054]"
@@ -612,8 +355,8 @@ export default function CourseItemView({ activeCourseId, activeItemId, isStudent
                     >
                         {isEditing ? (
                             <>
-                                <Save size={13} />
-                                <span>Save Changes</span>
+                                {saving ? <Loader size={13} className="animate-spin" /> : <Save size={13} />}
+                                <span>{saving ? "Saving..." : "Save Changes"}</span>
                             </>
                         ) : (
                             <>
@@ -943,6 +686,7 @@ export default function CourseItemView({ activeCourseId, activeItemId, isStudent
                     <div className="w-10" />
                 )}
             </div>
+            </>)}
         </div>
     );
 }
