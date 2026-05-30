@@ -33,6 +33,7 @@ import {
     useEditor,
 } from "novel";
 import { getNotes, createNote, updateNote, deleteNote } from "../../services/noteService";
+import { getCourseModules, createModule, updateModule, deleteModule, createModuleItem, updateModuleItem, deleteModuleItem } from "../../services/moduleService";
 import { useAuth } from "../../contexts/AuthContext";
 import { Plus, Bold, Italic, Underline, Strikethrough, Code, Heading1, Heading2, Heading3, List, ListOrdered, Quote, Minus, Trash2, Maximize2, Minimize2, FileText, HelpCircle, MessageSquare, Users, ExternalLink, ClipboardList, Eye, EyeOff, Edit2, ChevronDown, ChevronRight, CheckSquare, GripVertical, ToggleLeft, ToggleRight, PenLine, BookOpen, X, Loader, Check, Download, Paperclip, Link as LinkIcon } from "lucide-react";
 import NovelBlockMenu from "../../components/NovelBlockMenu";
@@ -2211,108 +2212,27 @@ function CourseHomeView({ subject, course, loading }) {
   );
 }
 
-const INITIAL_OVERVIEW_CONTENT = {
-  type: "doc",
-  content: [
-    {
-      type: "heading",
-      attrs: { level: 2 },
-      content: [{ type: "text", text: "Welcome to UX Design 300 | Semester 1" }]
-    },
-    {
-      type: "paragraph",
-      content: [
-        {
-          type: "text",
-          text: "This course focuses on building a strong human-centred foundation. Throughout the semester, we will cover neurodiverse, inclusive, and adaptive design systems. Please ensure you read the guidelines and download the prescribed guide below."
-        }
-      ]
-    }
-  ]
-};
-
-const INITIAL_RESOURCES_CONTENT = {
-  type: "doc",
-  content: [
-    {
-      type: "heading",
-      attrs: { level: 3 },
-      content: [{ type: "text", text: "Syllabus Guidelines & Resources" }]
-    },
-    {
-      type: "paragraph",
-      content: [
-        {
-          type: "text",
-          text: "Use the external resources and books listed below to assist your research. Make sure you register an account on the Open Window Library portal for digital book access."
-        }
-      ]
-    }
-  ]
-};
-
-const INITIAL_WEEK1_CONTENT = {
-  type: "doc",
-  content: [
-    {
-      type: "heading",
-      attrs: { level: 3 },
-      content: [{ type: "text", text: "Week 1: Foundations & Briefings" }]
-    },
-    {
-      type: "paragraph",
-      content: [
-        {
-          type: "text",
-          text: "Our first class will cover the core theoretical framework of Inclusive Design and neurodiverse patterns. Make sure you read the Week 1 Theory slides before entering the practical workshop."
-        }
-      ]
-    }
-  ]
-};
-
 function CourseModulesView({ activeCourseId }) {
   const navigate = useNavigate();
-  const [modules, setModules] = useState([
-    {
-      id: 1,
-      title: "Overview",
-      isOpen: true,
-      isPublished: true,
-      content: JSON.stringify(INITIAL_OVERVIEW_CONTENT),
-      items: [
-        { id: 101, label: "Study Guide 2026", type: "attachment", isPublished: true },
-        { id: 102, label: "Semester Overview", type: "document", isPublished: true }
-      ]
-    },
-    {
-      id: 2,
-      title: "Resources",
-      isOpen: true,
-      isPublished: true,
-      content: JSON.stringify(INITIAL_RESOURCES_CONTENT),
-      items: [
-        { id: 201, label: "OW Library", type: "link", isExternal: true, isPublished: true },
-        { id: 202, label: "Academic Rules", type: "link", isExternal: true, isPublished: true },
-        { id: 203, label: "Contact Sessions", type: "document", isPublished: false }
-      ]
-    },
-    {
-      id: 3,
-      title: "Week 1: Introduction & Briefing",
-      isOpen: true,
-      prefix: "①",
-      isPublished: false,
-      content: JSON.stringify(INITIAL_WEEK1_CONTENT),
-      items: [
-        { id: 301, label: "Week 1 Theory", type: "document", isPublished: true },
-        { id: 302, label: "Week 1 Practical", type: "document", isPublished: true }
-      ]
-    }
-  ]);
+  const [modules, setModules] = useState([]);
+  const [modulesLoading, setModulesLoading] = useState(false);
+
+  // Fetch modules from backend on mount and when the active course changes
+  useEffect(() => {
+    if (!activeCourseId) return;
+    let mounted = true;
+    setModulesLoading(true);
+    getCourseModules(activeCourseId)
+      .then(data => { if (mounted) setModules(data); })
+      .catch(console.error)
+      .finally(() => { if (mounted) setModulesLoading(false); });
+    return () => { mounted = false; };
+  }, [activeCourseId]);
 
   const [isAddingModule, setIsAddingModule] = useState(false);
   const [newModuleTitle, setNewModuleTitle] = useState("");
+  const [isCreatingModule, setIsCreatingModule] = useState(false);
+  const [createModuleError, setCreateModuleError] = useState("");
   
   // Section Rename states
   const [editingModuleId, setEditingModuleId] = useState(null);
@@ -2345,142 +2265,173 @@ function CourseModulesView({ activeCourseId }) {
   };
 
   // Section CRUD Handlers
-  const handleAddModule = () => {
-    if (newModuleTitle.trim()) {
-      const newId = Date.now().toString();
-      
-      // Store initial page structure in localStorage immediately so the editor loads it
-      const initialData = {
+  const handleAddModule = async () => {
+    if (!newModuleTitle.trim() || !activeCourseId) return;
+    setIsCreatingModule(true);
+    setCreateModuleError("");
+    try {
+      const created = await createModule({
+        courseId: activeCourseId,
         title: newModuleTitle,
-        content: {
-          type: "doc",
-          content: [
-            {
-              type: "heading",
-              attrs: { level: 2 },
-              content: [{ type: "text", text: newModuleTitle }]
-            },
-            {
-              type: "paragraph",
-              content: [{ type: "text", text: "Click edit to start building this module layout page..." }]
-            }
-          ]
-        },
-        htmlEmbeds: ""
-      };
-      localStorage.setItem(`course_item_${newId}`, JSON.stringify(initialData));
-
-      // Append new module to modules state
-      setModules([
-        ...modules,
-        {
-          id: newId,
-          title: newModuleTitle,
-          isOpen: true,
-          isPublished: true,
-          content: JSON.stringify(initialData.content),
-          items: []
-        }
-      ]);
+        isPublished: true,
+        isOpen: true,
+      });
+      setModules(prev => [...prev, { ...created, items: created.items ?? [] }]);
       setNewModuleTitle("");
       setIsAddingModule(false);
-      
-      // Navigate straight to the new module's editor page!
-      navigate(`/courses/${activeCourseId}/items/${newId}`);
+      navigate(`/courses/${activeCourseId}/items/${created.id}`);
+    } catch (err) {
+      console.error("Failed to create module:", err);
+      setCreateModuleError(err.message || "Failed to create module. Please try again.");
+    } finally {
+      setIsCreatingModule(false);
     }
   };
 
-  const handleRenameModule = (modId) => {
-    if (editingModuleTitle.trim()) {
-      setModules(modules.map(mod => mod.id === modId ? { ...mod, title: editingModuleTitle } : mod));
-      setEditingModuleId(null);
-      setEditingModuleTitle("");
+  const handleRenameModule = async (modId) => {
+    if (!editingModuleTitle.trim()) return;
+    const mod = modules.find(m => m.id === modId);
+    if (!mod) return;
+    // Optimistic update
+    setModules(prev => prev.map(m => m.id === modId ? { ...m, title: editingModuleTitle } : m));
+    setEditingModuleId(null);
+    setEditingModuleTitle("");
+    try {
+      await updateModule(modId, { ...mod, title: editingModuleTitle });
+    } catch (err) {
+      console.error("Failed to rename module:", err);
+      // Revert on failure
+      setModules(prev => prev.map(m => m.id === modId ? { ...m, title: mod.title } : m));
     }
   };
 
-  const handleDeleteModule = (modId, e) => {
+  const handleDeleteModule = async (modId, e) => {
     e.stopPropagation();
-    if (confirm("Are you sure you want to delete this module section?")) {
-      setModules(modules.filter(mod => mod.id !== modId));
+    if (!confirm("Are you sure you want to delete this module section?")) return;
+    setModules(prev => prev.filter(m => m.id !== modId));
+    try {
+      await deleteModule(modId);
+    } catch (err) {
+      console.error("Failed to delete module:", err);
+      // Reload on failure
+      getCourseModules(activeCourseId).then(setModules).catch(console.error);
     }
   };
 
-  const handleToggleModulePublish = (modId, e) => {
+  const handleToggleModulePublish = async (modId, e) => {
     e.stopPropagation();
-    setModules(modules.map(mod => mod.id === modId ? { ...mod, isPublished: !mod.isPublished } : mod));
+    const mod = modules.find(m => m.id === modId);
+    if (!mod) return;
+    const next = !mod.isPublished;
+    setModules(prev => prev.map(m => m.id === modId ? { ...m, isPublished: next } : m));
+    try {
+      await updateModule(modId, { ...mod, isPublished: next });
+    } catch (err) {
+      console.error("Failed to update module publish state:", err);
+      setModules(prev => prev.map(m => m.id === modId ? { ...m, isPublished: mod.isPublished } : m));
+    }
   };
 
   // Sub-item CRUD Handlers
-  const handleAddItem = (modId) => {
-    if (newItemLabel.trim()) {
-      setModules(modules.map(mod => {
+  const handleAddItem = async (modId) => {
+    if (!newItemLabel.trim()) return;
+    try {
+      const created = await createModuleItem({
+        moduleId: modId,
+        label: newItemLabel,
+        type: newItemType,
+        isPublished: true,
+        isExternal: newItemType === "link" ? isNewItemExternal : false,
+      });
+      setModules(prev => prev.map(mod => {
         if (mod.id === modId) {
-          return {
-            ...mod,
-            items: [
-              ...mod.items,
-              {
-                id: Date.now(),
-                label: newItemLabel,
-                type: newItemType,
-                isPublished: true,
-                isExternal: newItemType === "link" ? isNewItemExternal : undefined
-              }
-            ]
-          };
+          return { ...mod, items: [...(mod.items ?? []), created] };
         }
         return mod;
       }));
       setNewItemLabel("");
       setAddingItemTo(null);
+    } catch (err) {
+      console.error("Failed to create module item:", err);
     }
   };
 
-  const handleRenameItem = (modId, itemId) => {
-    if (editingItemLabel.trim()) {
-      setModules(modules.map(mod => {
-        if (mod.id === modId) {
-          return {
-            ...mod,
-            items: mod.items.map(item => item.id === itemId ? { ...item, label: editingItemLabel } : item)
-          };
-        }
-        return mod;
-      }));
-      setEditingItemId(null);
-      setEditingItemModuleId(null);
-      setEditingItemLabel("");
-    }
-  };
-
-  const handleDeleteItem = (modId, itemId) => {
-    if (confirm("Are you sure you want to remove this item?")) {
-      setModules(modules.map(mod => {
-        if (mod.id === modId) {
-          return {
-            ...mod,
-            items: mod.items.filter(item => item.id !== itemId)
-          };
-        }
-        return mod;
-      }));
-    }
-  };
-
-  const handleToggleItemPublish = (modId, itemId) => {
-    setModules(modules.map(mod => {
-      if (mod.id === modId) {
-        return {
-          ...mod,
-          items: mod.items.map(item => item.id === itemId ? { ...item, isPublished: !item.isPublished } : item)
-        };
+  const handleRenameItem = async (modId, itemId) => {
+    if (!editingItemLabel.trim()) return;
+    const mod = modules.find(m => m.id === modId);
+    const item = mod?.items?.find(i => i.id === itemId);
+    if (!item) return;
+    // Optimistic update
+    setModules(prev => prev.map(m => {
+      if (m.id === modId) {
+        return { ...m, items: m.items.map(i => i.id === itemId ? { ...i, label: editingItemLabel } : i) };
       }
-      return mod;
+      return m;
     }));
+    setEditingItemId(null);
+    setEditingItemModuleId(null);
+    setEditingItemLabel("");
+    try {
+      await updateModuleItem(itemId, { ...item, label: editingItemLabel });
+    } catch (err) {
+      console.error("Failed to rename item:", err);
+      setModules(prev => prev.map(m => {
+        if (m.id === modId) {
+          return { ...m, items: m.items.map(i => i.id === itemId ? { ...i, label: item.label } : i) };
+        }
+        return m;
+      }));
+    }
+  };
+
+  const handleDeleteItem = async (modId, itemId) => {
+    if (!confirm("Are you sure you want to remove this item?")) return;
+    setModules(prev => prev.map(m => {
+      if (m.id === modId) return { ...m, items: m.items.filter(i => i.id !== itemId) };
+      return m;
+    }));
+    try {
+      await deleteModuleItem(itemId);
+    } catch (err) {
+      console.error("Failed to delete item:", err);
+      getCourseModules(activeCourseId).then(setModules).catch(console.error);
+    }
+  };
+
+  const handleToggleItemPublish = async (modId, itemId) => {
+    const mod = modules.find(m => m.id === modId);
+    const item = mod?.items?.find(i => i.id === itemId);
+    if (!item) return;
+    const next = !item.isPublished;
+    setModules(prev => prev.map(m => {
+      if (m.id === modId) {
+        return { ...m, items: m.items.map(i => i.id === itemId ? { ...i, isPublished: next } : i) };
+      }
+      return m;
+    }));
+    try {
+      await updateModuleItem(itemId, { ...item, isPublished: next });
+    } catch (err) {
+      console.error("Failed to toggle item publish:", err);
+      setModules(prev => prev.map(m => {
+        if (m.id === modId) {
+          return { ...m, items: m.items.map(i => i.id === itemId ? { ...i, isPublished: item.isPublished } : i) };
+        }
+        return m;
+      }));
+    }
   };
 
   return (
     <div className="w-full flex flex-col gap-6 py-6 select-none">
+      {/* Loading skeleton */}
+      {modulesLoading && (
+        <div className="flex items-center gap-2 text-xs text-gray-400 font-medium px-1">
+          <Loader size={13} className="animate-spin" />
+          <span>Loading modules...</span>
+        </div>
+      )}
+
       {/* Top action bar */}
       <div className="flex items-center justify-between gap-3 shrink-0 px-1">
         <h2 className="text-lg font-black tracking-tight text-gray-900">Course Modules Manager</h2>
@@ -2524,22 +2475,28 @@ function CourseModulesView({ activeCourseId }) {
               className="flex-1 bg-white border border-gray-200 rounded-xl px-4 py-2 text-xs outline-none focus:border-[#3C0078]/40 transition-colors"
               onKeyDown={(e) => {
                 if (e.key === "Enter") handleAddModule();
-                if (e.key === "Escape") setIsAddingModule(false);
+                if (e.key === "Escape") { setIsAddingModule(false); setCreateModuleError(""); }
               }}
             />
             <button
               onClick={handleAddModule}
-              className="px-5 py-2 bg-[#3C0078] hover:bg-[#2A0054] text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm"
+              disabled={isCreatingModule}
+              className="flex items-center gap-1.5 px-5 py-2 bg-[#3C0078] hover:bg-[#2A0054] disabled:opacity-60 disabled:cursor-not-allowed text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm"
             >
-              Add Module
+              {isCreatingModule && <Loader size={12} className="animate-spin" />}
+              {isCreatingModule ? "Creating..." : "Add Module"}
             </button>
             <button
-              onClick={() => setIsAddingModule(false)}
-              className="px-4 py-2 bg-white border border-gray-200 text-gray-500 rounded-xl hover:bg-gray-50 text-xs font-bold cursor-pointer"
+              onClick={() => { setIsAddingModule(false); setCreateModuleError(""); }}
+              disabled={isCreatingModule}
+              className="px-4 py-2 bg-white border border-gray-200 text-gray-500 rounded-xl hover:bg-gray-50 text-xs font-bold cursor-pointer disabled:opacity-60"
             >
               Cancel
             </button>
           </div>
+          {createModuleError && (
+            <p className="text-xs text-red-500 font-medium mt-1">{createModuleError}</p>
+          )}
         </div>
       )}
 
