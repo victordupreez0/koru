@@ -352,6 +352,8 @@ export default function CourseItemView({ activeCourseId, activeItemId, isStudent
     const [youtubeUrl, setYoutubeUrl] = useState("");
     
     const [saveAlert, setSaveAlert] = useState(false);
+    const [embedsHtml, setEmbedsHtml] = useState("");
+    const fileInputRef = useRef(null);
 
     const storageKey = `course_item_${activeItemId}`;
 
@@ -422,6 +424,7 @@ export default function CourseItemView({ activeCourseId, activeItemId, isStudent
     // Initialize local states when itemData changes
     useEffect(() => {
         setTitle(itemData.title);
+        setEmbedsHtml(itemData.htmlEmbeds || "");
         setIsEditing(false);
     }, [itemData]);
 
@@ -429,11 +432,10 @@ export default function CourseItemView({ activeCourseId, activeItemId, isStudent
         if (!editorInstance) return;
         const currentJSON = editorInstance.getJSON();
         
-        // Retain existing htmlEmbeds so we don't wipe them when editing standard text
         const updatedData = {
             title: title,
             content: currentJSON,
-            htmlEmbeds: itemData.htmlEmbeds || ""
+            htmlEmbeds: embedsHtml
         };
 
         localStorage.setItem(storageKey, JSON.stringify(updatedData));
@@ -483,21 +485,27 @@ export default function CourseItemView({ activeCourseId, activeItemId, isStudent
         editorInstance.chain().focus().insertContent(`<span style="font-size: ${fontSize}">${editorInstance.state.doc.slice(editorInstance.state.selection.from, editorInstance.state.selection.to).textContent || "Sample Sized Text"}</span>`).run();
     };
 
-    // Image insertion logic
+    // Image file upload → object URL
+    const handleFileUpload = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const url = URL.createObjectURL(file);
+        handleInsertImage(url);
+    };
+
+    // Image insertion – appends to embedsHtml state
     const handleInsertImage = (url) => {
-        if (!editorInstance || !url.trim()) return;
-        editorInstance.chain().focus().insertContent(`
-            <img src="${url.trim()}" alt="Visual banner" class="w-full max-h-[340px] object-cover rounded-2xl border border-gray-100 shadow-sm my-6" />
-        `).run();
+        if (!url.trim()) return;
+        const html = `<img src="${url.trim()}" alt="Visual" style="width:100%;max-height:340px;object-fit:cover;border-radius:16px;border:1px solid #e5e7eb;box-shadow:0 1px 3px rgba(0,0,0,0.08);margin:24px 0;display:block;" />`;
+        setEmbedsHtml(prev => prev + html);
         setImageUrl("");
         setShowEmbedMenu(false);
     };
 
-    // Video insertion logic
+    // Video insertion – appends to embedsHtml state
     const handleInsertVideo = (url) => {
-        if (!editorInstance || !url.trim()) return;
+        if (!url.trim()) return;
         let embedUrl = url.trim();
-        // Parse YouTube URL if applicable
         if (url.includes("youtube.com") || url.includes("youtu.be")) {
             const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
             const match = url.match(regExp);
@@ -505,37 +513,26 @@ export default function CourseItemView({ activeCourseId, activeItemId, isStudent
                 embedUrl = `https://www.youtube.com/embed/${match[2]}`;
             }
         }
-        editorInstance.chain().focus().insertContent(`
-            <div class="relative w-full aspect-video rounded-2xl overflow-hidden shadow-md my-6">
-                <iframe src="${embedUrl}" class="absolute inset-0 w-full h-full border-0" allowfullscreen></iframe>
-            </div>
-        `).run();
+        const html = `<div style="position:relative;width:100%;padding-top:56.25%;border-radius:16px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.1);margin:24px 0;"><iframe src="${embedUrl}" style="position:absolute;inset:0;width:100%;height:100%;border:0;" allowfullscreen></iframe></div>`;
+        setEmbedsHtml(prev => prev + html);
         setYoutubeUrl("");
         setShowEmbedMenu(false);
     };
 
-    // Code embed insertion
+    // Code embed insertion – appends to embedsHtml state
     const handleInsertCode = () => {
-        if (!editorInstance || !codeSnippet.trim()) return;
-        editorInstance.chain().focus().insertContent(`
-            <pre class="bg-gray-900 text-gray-100 p-5 rounded-2xl font-mono text-xs overflow-x-auto shadow-inner my-6 leading-relaxed"><code>${codeSnippet.trim()}</code></pre>
-        `).run();
+        if (!codeSnippet.trim()) return;
+        const escaped = codeSnippet.trim().replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        const html = `<pre style="background:#111827;color:#f3f4f6;padding:20px;border-radius:16px;font-family:monospace;font-size:12px;overflow-x:auto;margin:24px 0;"><code>${escaped}</code></pre>`;
+        setEmbedsHtml(prev => prev + html);
         setCodeSnippet("");
         setShowEmbedMenu(false);
     };
 
-    // Callout box insertion
+    // Callout box insertion – appends to embedsHtml state
     const handleInsertCallout = () => {
-        if (!editorInstance) return;
-        editorInstance.chain().focus().insertContent(`
-            <div class="p-6 bg-[#3C0078]/5 border-l-4 border-[#3C0078] rounded-r-2xl my-6 flex gap-3 text-[#3C0078]">
-                <div class="mt-0.5"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></div>
-                <div class="flex-1">
-                    <div class="font-extrabold text-sm uppercase tracking-wider leading-none mb-1">Alert Box</div>
-                    <div class="text-xs font-semibold leading-relaxed opacity-90">Enter your notification details or custom block guidelines here.</div>
-                </div>
-            </div>
-        `).run();
+        const html = `<div style="padding:20px 24px;background:rgba(60,0,120,0.05);border-left:4px solid #3C0078;border-radius:0 16px 16px 0;margin:24px 0;color:#3C0078;"><div style="font-weight:800;font-size:12px;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">ℹ Alert Box</div><div style="font-size:13px;font-weight:500;opacity:0.9;">Enter your notification details or custom block guidelines here.</div></div>`;
+        setEmbedsHtml(prev => prev + html);
         setShowEmbedMenu(false);
     };
 
@@ -681,8 +678,13 @@ export default function CourseItemView({ activeCourseId, activeItemId, isStudent
 
                         <div className="w-px h-4 bg-gray-300 mx-1" />
 
-                        {/* Interactive "+ Insert Embed" Menu */}
-                        <div className="relative">
+                        {/* Interactive "+ Insert Embed" Menu */}                        <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={handleFileUpload}
+                        />                        <div className="relative">
                             <button 
                                 onClick={() => setShowEmbedMenu(!showEmbedMenu)}
                                 className="flex items-center gap-1 py-1 px-3 rounded-lg text-[10px] font-black uppercase tracking-wider bg-purple-50 text-[#3C0078] border border-purple-100 hover:bg-purple-100 cursor-pointer shadow-3xs"
@@ -699,13 +701,22 @@ export default function CourseItemView({ activeCourseId, activeItemId, isStudent
                                             <button onClick={() => setShowEmbedMenu(false)} className="p-1 text-gray-400 hover:text-gray-600"><X size={12} /></button>
                                         </div>
 
-                                        {/* Preset Images */}
+                                        {/* Image section */}
                                         <div className="flex flex-col gap-1.5">
-                                            <label className="text-[10px] font-bold text-gray-400 uppercase">Insert Banner Image</label>
+                                            <label className="text-[10px] font-bold text-gray-400 uppercase">Insert Image</label>
+                                            {/* Upload from device */}
+                                            <button
+                                                onClick={() => { setShowEmbedMenu(false); fileInputRef.current?.click(); }}
+                                                className="flex items-center justify-center gap-2 py-2 px-3 border-2 border-dashed border-[#3C0078]/20 rounded-xl text-[10px] font-bold text-[#3C0078] hover:bg-[#3C0078]/5 transition-colors"
+                                            >
+                                                <Paperclip size={12} />
+                                                Upload from device
+                                            </button>
+                                            {/* URL input */}
                                             <div className="flex gap-2">
                                                 <input
                                                     type="text"
-                                                    placeholder="Enter image URL..."
+                                                    placeholder="Or paste image URL..."
                                                     value={imageUrl}
                                                     onChange={(e) => setImageUrl(e.target.value)}
                                                     className="flex-1 bg-white border border-gray-200 rounded-xl px-3 py-1.5 text-xs outline-none focus:border-[#3C0078]/40"
@@ -805,12 +816,23 @@ export default function CourseItemView({ activeCourseId, activeItemId, isStudent
                         )}
                     </EditorRoot>
 
-                    {/* Pre-populated standard HTML embeds wrapper (rendered below Tiptap content for gorgeous visuals) */}
-                    {itemData.htmlEmbeds && !isEditing && (
-                        <div 
-                            className="mt-6 border-t border-gray-100/60 pt-6 select-text" 
-                            dangerouslySetInnerHTML={{ __html: itemData.htmlEmbeds }} 
-                        />
+                    {/* Embeds section – always visible; populated via the Insert Embed toolbar */}
+                    {embedsHtml && (
+                        <div className="mt-6 border-t border-gray-100/60 pt-6 select-text">
+                            <div dangerouslySetInnerHTML={{ __html: embedsHtml }} />
+                            {isEditing && (
+                                <button
+                                    onClick={() => {
+                                        if (window.confirm("Clear all media embeds from this page?")) {
+                                            setEmbedsHtml("");
+                                        }
+                                    }}
+                                    className="mt-3 flex items-center gap-1 text-[10px] font-bold text-red-400 hover:text-red-600 border border-red-200 hover:border-red-300 rounded-lg px-3 py-1.5 transition-colors"
+                                >
+                                    <X size={11} /> Clear all embeds
+                                </button>
+                            )}
+                        </div>
                     )}
                 </div>
             </div>
