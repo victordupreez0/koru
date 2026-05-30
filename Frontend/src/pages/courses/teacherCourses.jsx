@@ -1,10 +1,7 @@
-﻿import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useCourses } from "../../contexts/CoursesContext";
-import CourseMenu from "../../components/coursesMenu";
 import CourseSecondaryNav from "../../components/courseSecondaryNav";
-import SideMenu from "../../components/sideMenu";
-import Menu from "../../components/menu";
 import ModuleAccordion from "../../components/moduleAccordion";
 import { Bell, Calendar, Folder, Upload, InfoCircle, CheckCircle, CloseCircle, CloseSquare, User, Filter } from "@solar-icons/react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -2676,22 +2673,10 @@ export default function TeacherCourses() {
 
     return (
         <div className="flex h-screen overflow-hidden">
-            {/* The global top menu that was previously disappearing */}
-            <Menu />
-            
-            {/* Leftmost Course Navigation Bar */}
-            <div className="flex flex-col h-full py-8 px-4 items-center gap-6 ">
-                <CourseMenu />
-
-                <div className="mt-auto">
-                    <SideMenu />
-                </div>
+            {/* Middle Section: Second Navigation Bar for course-internal links */}
+            <div className="flex flex-col h-full py-1 justify-center">
+                <CourseSecondaryNav activeCourseId={activeCourseId || (visibleCourses[0]?.id)} />
             </div>
-
-      {/* Middle Section: Second Navigation Bar for course-internal links */}
-      <div className="flex flex-col h-full py-1 justify-center">
-        <CourseSecondaryNav activeCourseId={activeCourseId || (visibleCourses[0]?.id)} />
-      </div>
 
             {/* Main Content Area */}
             {isGradesPage ? (

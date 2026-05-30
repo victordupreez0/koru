@@ -1,8 +1,7 @@
-﻿import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
-import Menu from "../../components/menu";
-import SideMenu from "../../components/sideMenu";
+
 import ProfileTopBar from "../../components/ProfileTopBar";
 import ProfileSidebar from "../../components/ProfileSidebar";
 import ProfileHeader from "../../components/ProfileHeader";
@@ -276,8 +275,7 @@ export default function Profile({ publicRoute = false }) {
   // Render
   return (
     <div data-tts-root="true" className="relative w-full pb-10 text-slate-900">
-      <Menu />
-      <SideMenu />
+
 
       <div className="relative mx-auto flex w-full max-w-7xl flex-col gap-6 px-3 lg:px-4">
         <ProfileTopBar

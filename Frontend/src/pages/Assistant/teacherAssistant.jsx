@@ -1,8 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Bot, User, Loader2 } from "lucide-react";
-import Menu from "../../components/menu";
-import SideMenu from "../../components/sideMenu";
+
 import Orb from "../../components/UI/Orb";
 import AssistantInput from "../../components/assistantInput";
 
@@ -45,8 +44,7 @@ export default function TeacherAssistant() {
             </div>
 
             <div className="flex flex-col h-[calc(100vh-10rem)] text-black w-full relative">
-                <Menu />
-                <SideMenu />
+
 
                 <div className="flex w-full flex-col z-10 h-full pb-4">
                     <div className="flex flex-col items-center justify-center flex-1 h-full w-full max-w-4xl mx-auto overflow-hidden">

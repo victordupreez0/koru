@@ -1,8 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { AnimatePresence } from "framer-motion";
 import { Bell } from "lucide-react";
-import Menu from "../../components/menu";
-import SideMenu from "../../components/sideMenu";
+
 import { TeacherAnalyticsModal } from "../courses/adminCoursesComponents";
 import { createEvent } from "../../services/eventService";
 import { 
@@ -219,12 +218,11 @@ export default function AdminDashboard() {
 
   return (
     <div className="relative h-[80vh] overflow-hidden flex items-center justify-center p-6">
-      <Menu />
-      <SideMenu />
+
 
       <div className="flex flex-col h-full w-full max-w-[1400px]">
         {/* ── Year / Semester filter bar ── */}
-        <div className="flex items-center justify-start gap-4 pt-16 pb-4">
+        <div className="flex items-center justify-start gap-4 pt-2 pb-4">
           <FilterDropdown
             label="Year"
             value={year}

@@ -1,10 +1,7 @@
 import React, { useEffect, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useCourses } from "../../contexts/CoursesContext";
-import CourseMenu from "../../components/coursesMenu";
 import CourseSecondaryNav from "../../components/courseSecondaryNav";
-import SideMenu from "../../components/sideMenu";
-import Menu from "../../components/menu";
 import AssignmentDetail from "./assignmentDetail";
 
 import {
@@ -78,25 +75,15 @@ export default function StudentCourses() {
     const isHomePage = !isGradesPage && !isAnnouncementsPage && !isAssignmentsPage && !isAttendancePage && !isModulesPage && !isNotesPage && !isAssignmentDetailPage;
 
     return (
-        <div className={`flex overflow-hidden ${hideNav ? "" : "-ml-30 -mr-20 -mt-24"}`} style={{ height: '100vh' }}>
-            {/* The global top menu that was previously disappearing */}
-            {!hideNav && <Menu />}
-
-            {/* Leftmost Course Navigation Bar — CourseMenu is fixed, so this div is just a spacer */}
-            {!hideNav && (
-                <div className="w-16 shrink-0 flex flex-col h-full items-center">
-                    <CourseMenu />
-                    <SideMenu />
-                </div>
-            )}
+        <div className="flex overflow-hidden" style={{ height: '100vh' }}>
 
             {/* Middle Section: Second Navigation Bar for course-internal links */}
             <div className="flex flex-col h-full py-1 justify-center">
                 <CourseSecondaryNav activeCourseId={activeCourseId || (visibleCourses[0]?.id)} hideNav={hideNav} />
             </div>
 
-            {/* Main Content Area — pt-24 clears the fixed top nav */}
-            <div className={`flex-1 flex flex-col ${hideNav ? "pt-4" : "pt-24"} px-8 overflow-y-auto`}>
+            {/* Main Content Area */}
+            <div className="flex-1 flex flex-col pt-4 px-8 overflow-y-auto">
                 {isAssignmentDetailPage ? (
                     <AssignmentDetail assignmentId={activeAssignmentId} activeCourseId={activeCourseId} />
                 ) : isGradesPage ? (
