@@ -31,8 +31,18 @@ export default function SideMenu() {
   const footerItems = [
     ...(role === "admin"
       ? []
-      : [{ label: "Profile", href: "/profile", icon: <User weight="Outline" size={24} color="currentColor" /> }]),
-    { label: "Settings", href: "/settings", icon: <Settings weight="Outline" size={24} color="currentColor" /> },
+      : [{ 
+          label: "Profile", 
+          href: "/profile", 
+          icon: <User weight="Outline" size={24} color="currentColor" />,
+          filledIcon: <User weight="Bold" size={24} color="currentColor" />
+        }]),
+    { 
+      label: "Settings", 
+      href: "/settings", 
+      icon: <Settings weight="Outline" size={24} color="currentColor" />,
+      filledIcon: <Settings weight="Bold" size={24} color="currentColor" />
+    },
   ];
 
   return (
