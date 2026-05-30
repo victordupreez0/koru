@@ -1,15 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { 
-    EditorRoot, 
-    EditorContent, 
-    StarterKit, 
-    Placeholder, 
-    TiptapUnderline, 
-    TextStyle, 
-    Color,
-    createSuggestionItems
-} from "novel";
+import NovelEditor from "../../components/NovelEditor";
+import { uploadImageToCloudinary } from "../../services/cloudinaryService";
 import { 
     Bold, 
     Italic, 
@@ -33,6 +25,7 @@ import {
     ArrowRight,
     Sparkles,
     ChevronDown,
+    ChevronUp,
     Palette,
     Paperclip,
     FileText,
@@ -41,7 +34,7 @@ import {
     X,
     ExternalLink
 } from "lucide-react";
-import NovelBlockMenu from "../../components/NovelBlockMenu";
+
 
 // Curated brand color options for text
 const TEXT_COLORS = [
@@ -352,8 +345,10 @@ export default function CourseItemView({ activeCourseId, activeItemId, isStudent
     const [youtubeUrl, setYoutubeUrl] = useState("");
     
     const [saveAlert, setSaveAlert] = useState(false);
-    const [embedsHtml, setEmbedsHtml] = useState("");
+    const [sections, setSections] = useState([]);
+    const [uploading, setUploading] = useState(false);
     const fileInputRef = useRef(null);
+    const editorMapRef = useRef({});
 
     const storageKey = `course_item_${activeItemId}`;
 
@@ -421,24 +416,35 @@ export default function CourseItemView({ activeCourseId, activeItemId, isStudent
         };
     }, [activeItemId, storageKey]);
 
-    // Initialize local states when itemData changes
+    // Build the sections list whenever the active item changes
     useEffect(() => {
+        editorMapRef.current = {};
         setTitle(itemData.title);
-        setEmbedsHtml(itemData.htmlEmbeds || "");
+        if (itemData.sections) {
+            setSections(itemData.sections);
+        } else {
+            // Legacy format: content + htmlEmbeds → convert to sections array
+            const textSection = { id: `text-${activeItemId}-0`, type: "text", content: itemData.content };
+            setSections(
+                itemData.htmlEmbeds
+                    ? [textSection, { id: "embed-legacy", type: "embed", html: itemData.htmlEmbeds }]
+                    : [textSection]
+            );
+        }
         setIsEditing(false);
-    }, [itemData]);
+    }, [itemData, activeItemId]);
 
     const handleSave = () => {
-        if (!editorInstance) return;
-        const currentJSON = editorInstance.getJSON();
-        
-        const updatedData = {
-            title: title,
-            content: currentJSON,
-            htmlEmbeds: embedsHtml
-        };
-
+        const updatedSections = sections.map(s => {
+            if (s.type === "text") {
+                const inst = editorMapRef.current[s.id];
+                return inst ? { ...s, content: inst.getJSON() } : s;
+            }
+            return s;
+        });
+        const updatedData = { title, sections: updatedSections };
         localStorage.setItem(storageKey, JSON.stringify(updatedData));
+        setSections(updatedSections);
         setSaveAlert(true);
         setIsEditing(false);
         setTimeout(() => setSaveAlert(false), 2000);
@@ -485,19 +491,28 @@ export default function CourseItemView({ activeCourseId, activeItemId, isStudent
         editorInstance.chain().focus().insertContent(`<span style="font-size: ${fontSize}">${editorInstance.state.doc.slice(editorInstance.state.selection.from, editorInstance.state.selection.to).textContent || "Sample Sized Text"}</span>`).run();
     };
 
-    // Image file upload → object URL
-    const handleFileUpload = (e) => {
+    // Image file upload → Cloudinary CDN URL
+    const handleFileUpload = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
-        const url = URL.createObjectURL(file);
-        handleInsertImage(url);
+        e.target.value = "";
+        try {
+            setUploading(true);
+            setShowEmbedMenu(false);
+            const url = await uploadImageToCloudinary(file);
+            handleInsertImage(url);
+        } catch (err) {
+            console.error("Image upload failed:", err);
+        } finally {
+            setUploading(false);
+        }
     };
 
-    // Image insertion – appends to embedsHtml state
+    // Image insertion – adds a new embed section
     const handleInsertImage = (url) => {
         if (!url.trim()) return;
         const html = `<img src="${url.trim()}" alt="Visual" style="width:100%;max-height:340px;object-fit:cover;border-radius:16px;border:1px solid #e5e7eb;box-shadow:0 1px 3px rgba(0,0,0,0.08);margin:24px 0;display:block;" />`;
-        setEmbedsHtml(prev => prev + html);
+        setSections(prev => [...prev, { id: `embed-${Date.now()}`, type: "embed", html }]);
         setImageUrl("");
         setShowEmbedMenu(false);
     };
@@ -514,7 +529,7 @@ export default function CourseItemView({ activeCourseId, activeItemId, isStudent
             }
         }
         const html = `<div style="position:relative;width:100%;padding-top:56.25%;border-radius:16px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.1);margin:24px 0;"><iframe src="${embedUrl}" style="position:absolute;inset:0;width:100%;height:100%;border:0;" allowfullscreen></iframe></div>`;
-        setEmbedsHtml(prev => prev + html);
+        setSections(prev => [...prev, { id: `embed-${Date.now()}`, type: "embed", html }]);
         setYoutubeUrl("");
         setShowEmbedMenu(false);
     };
@@ -524,16 +539,41 @@ export default function CourseItemView({ activeCourseId, activeItemId, isStudent
         if (!codeSnippet.trim()) return;
         const escaped = codeSnippet.trim().replace(/</g, "&lt;").replace(/>/g, "&gt;");
         const html = `<pre style="background:#111827;color:#f3f4f6;padding:20px;border-radius:16px;font-family:monospace;font-size:12px;overflow-x:auto;margin:24px 0;"><code>${escaped}</code></pre>`;
-        setEmbedsHtml(prev => prev + html);
+        setSections(prev => [...prev, { id: `embed-${Date.now()}`, type: "embed", html }]);
         setCodeSnippet("");
         setShowEmbedMenu(false);
     };
 
-    // Callout box insertion – appends to embedsHtml state
+    // Callout box insertion – adds a new embed section
     const handleInsertCallout = () => {
         const html = `<div style="padding:20px 24px;background:rgba(60,0,120,0.05);border-left:4px solid #3C0078;border-radius:0 16px 16px 0;margin:24px 0;color:#3C0078;"><div style="font-weight:800;font-size:12px;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">ℹ Alert Box</div><div style="font-size:13px;font-weight:500;opacity:0.9;">Enter your notification details or custom block guidelines here.</div></div>`;
-        setEmbedsHtml(prev => prev + html);
+        setSections(prev => [...prev, { id: `embed-${Date.now()}`, type: "embed", html }]);
         setShowEmbedMenu(false);
+    };
+
+    // Move a section one step up or down in the ordered list
+    const moveSection = (id, direction) => {
+        setSections(prev => {
+            const idx = prev.findIndex(s => s.id === id);
+            if (idx === -1) return prev;
+            const newIdx = direction === "up" ? idx - 1 : idx + 1;
+            if (newIdx < 0 || newIdx >= prev.length) return prev;
+            const next = [...prev];
+            [next[idx], next[newIdx]] = [next[newIdx], next[idx]];
+            return next;
+        });
+    };
+
+    // Remove a section by id (any type)
+    const removeSection = (id) => {
+        setSections(prev => prev.filter(s => s.id !== id));
+    };
+
+    // Add a new empty text editor section at the bottom
+    const addTextSection = () => {
+        // Pass a valid empty doc so Novel fires onCreate reliably (null skips it)
+        const emptyDoc = { type: "doc", content: [{ type: "paragraph" }] };
+        setSections(prev => [...prev, { id: `text-${Date.now()}`, type: "text", content: emptyDoc }]);
     };
 
     return (
@@ -687,10 +727,11 @@ export default function CourseItemView({ activeCourseId, activeItemId, isStudent
                         />                        <div className="relative">
                             <button 
                                 onClick={() => setShowEmbedMenu(!showEmbedMenu)}
-                                className="flex items-center gap-1 py-1 px-3 rounded-lg text-[10px] font-black uppercase tracking-wider bg-purple-50 text-[#3C0078] border border-purple-100 hover:bg-purple-100 cursor-pointer shadow-3xs"
+                                disabled={uploading}
+                                className="flex items-center gap-1 py-1 px-3 rounded-lg text-[10px] font-black uppercase tracking-wider bg-purple-50 text-[#3C0078] border border-purple-100 hover:bg-purple-100 cursor-pointer shadow-3xs disabled:opacity-60 disabled:cursor-not-allowed"
                             >
                                 <Plus size={11} />
-                                <span>Insert Embed</span>
+                                <span>{uploading ? "Uploading…" : "Insert Embed"}</span>
                             </button>
                             {showEmbedMenu && (
                                 <>
@@ -704,13 +745,14 @@ export default function CourseItemView({ activeCourseId, activeItemId, isStudent
                                         {/* Image section */}
                                         <div className="flex flex-col gap-1.5">
                                             <label className="text-[10px] font-bold text-gray-400 uppercase">Insert Image</label>
-                                            {/* Upload from device */}
+                                            {/* Upload from device → Cloudinary */}
                                             <button
-                                                onClick={() => { setShowEmbedMenu(false); fileInputRef.current?.click(); }}
-                                                className="flex items-center justify-center gap-2 py-2 px-3 border-2 border-dashed border-[#3C0078]/20 rounded-xl text-[10px] font-bold text-[#3C0078] hover:bg-[#3C0078]/5 transition-colors"
+                                                onClick={() => fileInputRef.current?.click()}
+                                                disabled={uploading}
+                                                className="flex items-center justify-center gap-2 py-2 px-3 border-2 border-dashed border-[#3C0078]/20 rounded-xl text-[10px] font-bold text-[#3C0078] hover:bg-[#3C0078]/5 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                                             >
                                                 <Paperclip size={12} />
-                                                Upload from device
+                                                {uploading ? "Uploading…" : "Upload from device"}
                                             </button>
                                             {/* URL input */}
                                             <div className="flex gap-2">
@@ -787,52 +829,80 @@ export default function CourseItemView({ activeCourseId, activeItemId, isStudent
                     </div>
                 )}
 
-                {/* Editor Content Area */}
-                <div className="flex-1 relative novel-editor-wrapper select-text font-medium text-xs leading-relaxed text-gray-800">
-                    <EditorRoot>
-                        <EditorContent
-                            initialContent={itemData.content}
-                            editable={isEditing}
-                            extensions={[
-                                StarterKit,
-                                Placeholder.configure({ placeholder: "Write some beautiful syllabus materials, assignments guidelines or course information here..." }),
-                                TiptapUnderline,
-                                TextStyle,
-                                Color,
-                            ]}
-                            onCreate={({ editor }) => {
-                                setEditorInstance(editor);
-                            }}
-                            onUpdate={({ editor }) => {
-                                // Auto-save preview content locally (actual save happens on clicking Save button)
-                            }}
-                            className="w-full max-w-none focus:outline-none min-h-[300px]"
-                        />
-                        {/* Only render block menus and selections in edit mode */}
-                        {isEditing && (
-                            <>
-                                <NovelBlockMenu />
-                            </>
-                        )}
-                    </EditorRoot>
-
-                    {/* Embeds section – always visible; populated via the Insert Embed toolbar */}
-                    {embedsHtml && (
-                        <div className="mt-6 border-t border-gray-100/60 pt-6 select-text">
-                            <div dangerouslySetInnerHTML={{ __html: embedsHtml }} />
+                {/* Sections — text and embeds rendered in reorderable order */}
+                <div className="flex-1 flex flex-col gap-6 font-medium text-xs leading-relaxed text-gray-800">
+                    {sections.map((section, idx) => (
+                        <div key={section.id} className="relative">
+                            {/* Section reorder / remove controls — edit mode only */}
                             {isEditing && (
-                                <button
-                                    onClick={() => {
-                                        if (window.confirm("Clear all media embeds from this page?")) {
-                                            setEmbedsHtml("");
-                                        }
-                                    }}
-                                    className="mt-3 flex items-center gap-1 text-[10px] font-bold text-red-400 hover:text-red-600 border border-red-200 hover:border-red-300 rounded-lg px-3 py-1.5 transition-colors"
+                                <div className="flex items-center gap-1 mb-2 pb-1.5 border-b border-gray-100">
+                                    <span className="text-[9px] font-black uppercase tracking-widest text-gray-300 mr-auto select-none">
+                                        {section.type === "text" ? "Text" : "Embed"}
+                                    </span>
+                                    <button
+                                        onClick={() => moveSection(section.id, "up")}
+                                        disabled={idx === 0}
+                                        title="Move up"
+                                        className="p-1 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 disabled:opacity-25 transition-colors"
+                                    >
+                                        <ChevronUp size={13} />
+                                    </button>
+                                    <button
+                                        onClick={() => moveSection(section.id, "down")}
+                                        disabled={idx === sections.length - 1}
+                                        title="Move down"
+                                        className="p-1 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 disabled:opacity-25 transition-colors"
+                                    >
+                                        <ChevronDown size={13} />
+                                    </button>
+                                    {sections.length > 1 && (
+                                        <button
+                                            onClick={() => removeSection(section.id)}
+                                            title="Remove section"
+                                            className="p-1 rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                                        >
+                                            <X size={13} />
+                                        </button>
+                                    )}
+                                </div>
+                            )}
+
+                            {section.type === "text" ? (
+                                <div
+                                    className="novel-editor-wrapper select-text"
+                                    onFocus={() => setEditorInstance(editorMapRef.current[section.id])}
                                 >
-                                    <X size={11} /> Clear all embeds
-                                </button>
+                                    <NovelEditor
+                                        initialContent={section.content}
+                                        editable={isEditing}
+                                        placeholder="Write some beautiful syllabus materials, assignments guidelines or course information here..."
+                                        onCreate={({ editor }) => {
+                                            editorMapRef.current[section.id] = editor;
+                                            setEditorInstance(editor);
+                                        }}
+                                        onUpdate={({ editor }) => {
+                                            editorMapRef.current[section.id] = editor;
+                                        }}
+                                        showBubbleMenu={false}
+                                        showSlashCommands={false}
+                                        className="min-h-[1.5rem]"
+                                    />
+                                </div>
+                            ) : (
+                                <div className="select-text" dangerouslySetInnerHTML={{ __html: section.html }} />
                             )}
                         </div>
+                    ))}
+
+                    {/* Add text section — edit mode only */}
+                    {isEditing && (
+                        <button
+                            onClick={addTextSection}
+                            className="flex items-center gap-2 self-start text-[11px] font-bold text-[#3C0078]/60 hover:text-[#3C0078] border border-dashed border-[#3C0078]/20 hover:border-[#3C0078]/40 rounded-xl px-4 py-2.5 transition-all hover:bg-[#3C0078]/5"
+                        >
+                            <Plus size={13} />
+                            Add text section
+                        </button>
                     )}
                 </div>
             </div>
