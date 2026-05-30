@@ -15,10 +15,12 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import TeacherAssistant from "./pages/Assistant/teacherAssistant";
 import Profile from "./pages/profile/profile";
 import AnalyticsPage from "./pages/analytics";
+import AdminCourses from "./pages/courses/adminCourses";
 
 // Root application component – sets up routing and the shared layout
 function App() {
   const { role } = useAuth();
+  const isIframeMode = window.self !== window.top;
 
   // Stamp the user role on <body> so CSS can drive role-specific backgrounds
   useEffect(() => {
@@ -41,7 +43,7 @@ function App() {
       >
 
         {/* Main content area – padded to avoid overlapping the fixed menus */}
-        <main className="pt-24 pl-40 pr-40">
+        <main className={isIframeMode ? "" : "pt-24 pl-40 pr-40"}>
           <Routes>
             {/* Public routes – landing & role-specific login portals */}
             <Route path="/" element={<Onboarding />} />
@@ -56,6 +58,7 @@ function App() {
             <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
             <Route path="/teacherassistant" element={<ProtectedRoute><TeacherAssistant /></ProtectedRoute>} />
             <Route path="/analytics" element={<ProtectedRoute><AnalyticsPage /></ProtectedRoute>} />
+            <Route path="/admin/courses" element={<ProtectedRoute><AdminCourses /></ProtectedRoute>} />
 
             {/* Profile routes*/}
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />

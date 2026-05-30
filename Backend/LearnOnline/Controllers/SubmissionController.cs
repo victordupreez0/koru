@@ -88,6 +88,18 @@ namespace LearnOnline.Controllers
         {
             submission.Id = Guid.NewGuid().ToString();
             submission.SubmittedAt = DateTime.UtcNow;
+
+            // Auto-detect if the submission is late based on the assignment's due date
+            var assignment = await _context.Assignments.FindAsync(submission.AssignmentId);
+            if (assignment?.DueDate.HasValue == true && submission.SubmittedAt > assignment.DueDate.Value)
+            {
+                submission.Status = "Late";
+            }
+            else if (string.IsNullOrEmpty(submission.Status))
+            {
+                submission.Status = "Submitted";
+            }
+
             _context.Submissions.Add(submission);
             await _context.SaveChangesAsync();
             return CreatedAtAction(nameof(GetById), new { id = submission.Id }, submission);
@@ -118,6 +130,29 @@ namespace LearnOnline.Controllers
             _context.Submissions.Remove(submission);
             await _context.SaveChangesAsync();
             return NoContent();
+        }
+
+        // POST /api/Submission/upload – save a submitted file to wwwroot/uploads and return its URL
+        [HttpPost("upload")]
+        public async Task<ActionResult<object>> UploadFile(IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+                return BadRequest(new { message = "No file provided." });
+
+            // Sanitise filename to prevent path traversal
+            var originalName = Path.GetFileName(file.FileName);
+            var safeFileName = $"{Guid.NewGuid()}_{originalName}";
+
+            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
+            Directory.CreateDirectory(uploadsFolder);
+
+            var filePath = Path.Combine(uploadsFolder, safeFileName);
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            return Ok(new { url = $"/uploads/{safeFileName}" });
         }
     }
 }

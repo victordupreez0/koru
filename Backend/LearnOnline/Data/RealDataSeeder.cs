@@ -78,12 +78,9 @@ namespace LearnOnline.Data
                 "Term 1", 2026, karl.Id, student.Id);
 
             // ─── 3. Assignments ──────────────────────────────────────────────────────────
-            // Always wipe and regenerate so date anchors stay current and timezone fixes apply.
-            // Grades and Submissions cascade-delete from Assignments, so one delete is enough.
-            context.Database.ExecuteSqlRaw(@"DELETE FROM ""Assignments"";");
-
+            // Upsert seeded assignments only – never delete existing rows so teacher-created
+            // assignments survive server restarts. Due-date anchors are refreshed each boot.
             {
-
                 var dvId = CourseId(context, "DV300");
                 var ccId = CourseId(context, "CC300");
                 var meId = CourseId(context, "ME300");
@@ -95,31 +92,39 @@ namespace LearnOnline.Data
                 var todaySa  = DateTimeOffset.UtcNow.ToOffset(saZone).Date;  // today in SA
                 var baseDate = new DateTimeOffset(todaySa, saZone).UtcDateTime; // SA 00:00 → UTC
 
+                var seeds = new List<(string? CourseId, string Title, string Description, int MaxPoints, DateTime DueDate)>();
+
                 if (dvId != null)
-                    context.Assignments.AddRange(
-                        new Assignment { CourseId = dvId, Title = "Technical Architecture Document",  Description = "Design and document a full-stack system architecture covering API layer, database schema, and deployment strategy.", MaxPoints = 100, DueDate = baseDate.AddDays(21).AddHours(23).AddMinutes(59) },
-                        new Assignment { CourseId = dvId, Title = "Full-Stack Application – Sprint 1", Description = "Deliver a working vertical slice of your term project: authentication, one complete feature, and a deployed staging environment.", MaxPoints = 100, DueDate = baseDate.AddDays(2).AddHours(17) },
-                        new Assignment { CourseId = dvId, Title = "API Documentation Review",          Description = "Submit a documented Swagger / OpenAPI spec covering all endpoints in your project API.", MaxPoints = 50, DueDate = baseDate.AddDays(-7).AddHours(23).AddMinutes(59) }
-                    );
-
+                {
+                    seeds.Add((dvId, "Technical Architecture Document",  "Design and document a full-stack system architecture covering API layer, database schema, and deployment strategy.", 100, baseDate.AddDays(21).AddHours(23).AddMinutes(59)));
+                    seeds.Add((dvId, "Full-Stack Application \u2013 Sprint 1", "Deliver a working vertical slice of your term project: authentication, one complete feature, and a deployed staging environment.", 100, baseDate.AddDays(2).AddHours(17)));
+                    seeds.Add((dvId, "API Documentation Review",          "Submit a documented Swagger / OpenAPI spec covering all endpoints in your project API.", 50, baseDate.AddDays(-7).AddHours(23).AddMinutes(59)));
+                }
                 if (ccId != null)
-                    context.Assignments.AddRange(
-                        new Assignment { CourseId = ccId, Title = "Creative Coding Sketch 1",   Description = "Build an interactive p5.js sketch that responds to mouse and keyboard input, exploring a given theme.", MaxPoints = 100, DueDate = baseDate.AddDays(7).AddHours(23).AddMinutes(59) },
-                        new Assignment { CourseId = ccId, Title = "Generative Systems Project", Description = "Create a generative artwork using procedural rules. Include a written reflection on creative intent.", MaxPoints = 100, DueDate = baseDate.AddDays(28).AddHours(23).AddMinutes(59) }
-                    );
-
+                {
+                    seeds.Add((ccId, "Creative Coding Sketch 1",   "Build an interactive p5.js sketch that responds to mouse and keyboard input, exploring a given theme.", 100, baseDate.AddDays(7).AddHours(23).AddMinutes(59)));
+                    seeds.Add((ccId, "Generative Systems Project", "Create a generative artwork using procedural rules. Include a written reflection on creative intent.", 100, baseDate.AddDays(28).AddHours(23).AddMinutes(59)));
+                }
                 if (meId != null)
-                    context.Assignments.AddRange(
-                        new Assignment { CourseId = meId, Title = "Business Model Canvas",    Description = "Complete a Business Model Canvas for your proposed venture, supported by primary research findings.", MaxPoints = 100, DueDate = baseDate.AddDays(10).AddHours(23).AddMinutes(59) },
-                        new Assignment { CourseId = meId, Title = "Lean Startup Pitch Deck", Description = "Prepare a 10-slide investor pitch deck following the lean startup framework. Present in class on Thursday.", MaxPoints = 50, DueDate = baseDate.AddDays(1).AddHours(12) }
-                    );
-
+                {
+                    seeds.Add((meId, "Business Model Canvas",    "Complete a Business Model Canvas for your proposed venture, supported by primary research findings.", 100, baseDate.AddDays(10).AddHours(23).AddMinutes(59)));
+                    seeds.Add((meId, "Lean Startup Pitch Deck", "Prepare a 10-slide investor pitch deck following the lean startup framework. Present in class on Thursday.", 50, baseDate.AddDays(1).AddHours(12)));
+                }
                 if (vcId != null)
-                    context.Assignments.AddRange(
-                        new Assignment { CourseId = vcId, Title = "Visual Analysis Essay",           Description = "Write a 1500-word essay deconstructing a chosen piece of contemporary visual media using semiotic theory.", MaxPoints = 100, DueDate = baseDate.AddDays(-1).AddHours(23).AddMinutes(59) },
-                        new Assignment { CourseId = vcId, Title = "Mood Board & Style Direction",    Description = "Produce a 12-slide visual research document anchoring your term project's aesthetic direction.", MaxPoints = 50, DueDate = baseDate.AddDays(14).AddHours(23).AddMinutes(59) },
-                        new Assignment { CourseId = vcId, Title = "Brand Identity Deconstruction",   Description = "Analyse a chosen brand system (logo, typography, colour, tone) and present your findings in a structured deck.", MaxPoints = 100, DueDate = baseDate.AddDays(5).AddHours(17) }
-                    );
+                {
+                    seeds.Add((vcId, "Visual Analysis Essay",         "Write a 1500-word essay deconstructing a chosen piece of contemporary visual media using semiotic theory.", 100, baseDate.AddDays(-1).AddHours(23).AddMinutes(59)));
+                    seeds.Add((vcId, "Mood Board & Style Direction",  "Produce a 12-slide visual research document anchoring your term project's aesthetic direction.", 50, baseDate.AddDays(14).AddHours(23).AddMinutes(59)));
+                    seeds.Add((vcId, "Brand Identity Deconstruction", "Analyse a chosen brand system (logo, typography, colour, tone) and present your findings in a structured deck.", 100, baseDate.AddDays(5).AddHours(17)));
+                }
+
+                foreach (var (courseId, title, description, maxPoints, dueDate) in seeds)
+                {
+                    var existing = context.Assignments.FirstOrDefault(a => a.CourseId == courseId && a.Title == title);
+                    if (existing == null)
+                        context.Assignments.Add(new Assignment { CourseId = courseId, Title = title, Description = description, MaxPoints = maxPoints, DueDate = dueDate });
+                    else
+                        existing.DueDate = dueDate;
+                }
 
                 context.SaveChanges();
             }

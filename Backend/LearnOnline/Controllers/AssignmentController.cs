@@ -92,11 +92,28 @@ namespace LearnOnline.Controllers
             assignment.Title = updated.Title;
             assignment.Description = updated.Description;
             assignment.DueDate = updated.DueDate;
+            assignment.OpenDate = updated.OpenDate;
+            assignment.CloseDate = updated.CloseDate;
             assignment.MaxPoints = updated.MaxPoints;
             assignment.CourseId = updated.CourseId;
+            assignment.Type = updated.Type;
+            assignment.IsClosed = updated.IsClosed;
+            assignment.AllowMultipleAttempts = updated.AllowMultipleAttempts;
+            assignment.QuizQuestionsJson = updated.QuizQuestionsJson;
 
             await _context.SaveChangesAsync();
             return NoContent();
+        }
+
+        // PATCH /api/Assignment/{id}/close – toggle the closed state of an assignment
+        [HttpPatch("{id}/close")]
+        public async Task<IActionResult> Close(string id)
+        {
+            var assignment = await _context.Assignments.FindAsync(id);
+            if (assignment == null) return NotFound();
+            assignment.IsClosed = !assignment.IsClosed;
+            await _context.SaveChangesAsync();
+            return Ok(new { isClosed = assignment.IsClosed });
         }
 
         // DELETE /api/Assignment/{id} – permanently remove an assignment

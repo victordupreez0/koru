@@ -209,7 +209,13 @@ a:hover {
 .menu li>a:hover,
 .menu li>a:active,
 .menu li>a:focus,
-.menu li>a.active {
+.menu li>a.active,
+.menu li>div:hover,
+.menu li>div:active,
+.menu li>div:focus,
+.menu li>div>a:hover,
+.menu li>div>a:active,
+.menu li>div>a:focus {
   background: transparent !important;
   box-shadow: none !important;
   outline: none !important;
