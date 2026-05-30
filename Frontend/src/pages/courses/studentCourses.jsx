@@ -66,7 +66,6 @@ export default function StudentCourses() {
     const isModulesPage = path.endsWith("/modules");
     const isNotesPage = path.endsWith("/notes");
 
-
     // Home logic: If we are at /courses or /courses/:id NOT ending in a sub-path
     // Assignment detail: /courses/:courseId/assignments/:assignmentId
     const isAssignmentDetailPage = pathParts[2] === "assignments" && pathParts.length === 4;
@@ -74,33 +73,59 @@ export default function StudentCourses() {
 
     const isHomePage = !isGradesPage && !isAnnouncementsPage && !isAssignmentsPage && !isAttendancePage && !isModulesPage && !isNotesPage && !isAssignmentDetailPage;
 
-    return (
-        <div className="flex overflow-hidden" style={{ height: '100vh' }}>
+    // Determine active subpage label for the top breadcrumb bar
+    const activeSubpageLabel = useMemo(() => {
+        if (isGradesPage) return "Grades";
+        if (isAnnouncementsPage) return "Announcements";
+        if (isAssignmentsPage) return "Assignments";
+        if (isAttendancePage) return "Attendance";
+        if (isModulesPage) return "Modules";
+        if (isNotesPage) return "Notes";
+        if (isAssignmentDetailPage) return "Assignment Details";
+        return "Home";
+    }, [isGradesPage, isAnnouncementsPage, isAssignmentsPage, isAttendancePage, isModulesPage, isNotesPage, isAssignmentDetailPage]);
 
-            {/* Middle Section: Second Navigation Bar for course-internal links */}
-            <div className="flex flex-col h-full py-1 justify-center">
-                <CourseSecondaryNav activeCourseId={activeCourseId || (visibleCourses[0]?.id)} hideNav={hideNav} />
-            </div>
+    return (
+        <div className="flex h-screen overflow-hidden -ml-4 -mr-8 -mt-6 bg-gray-50/10">
+            {/* Left Section: Full-Height Course Secondary Navigation */}
+            <CourseSecondaryNav activeCourseId={activeCourseId || (visibleCourses[0]?.id)} hideNav={hideNav} />
 
             {/* Main Content Area */}
-            <div className="flex-1 flex flex-col pt-4 px-8 overflow-y-auto">
-                {isAssignmentDetailPage ? (
-                    <AssignmentDetail assignmentId={activeAssignmentId} activeCourseId={activeCourseId} />
-                ) : isGradesPage ? (
-                    <CourseGradesView subject={subject} activeCourseId={activeCourseId} />
-                ) : isAnnouncementsPage ? (
-                    <CourseAnnouncementsView activeCourseId={activeCourseId} />
-                ) : isAssignmentsPage ? (
-                    <CourseAssignmentsView subject={subject} activeCourseId={activeCourseId} />
-                ) : isAttendancePage ? (
-                    <CourseAttendanceView />
-                ) : isModulesPage ? (
-                    <CourseModulesView />
-                ) : isNotesPage ? (
-                    <CourseNotesView activeCourseId={activeCourseId} />
-                ) : (
-                    <CourseHomeView subject={subject} course={course} loading={loading} />
+            <div className="flex-1 flex flex-col overflow-hidden bg-white">
+                {/* Course Header Top Bar */}
+                {course && (
+                    <div className="h-14 border-b border-gray-100 bg-white/60 backdrop-blur-md flex items-center justify-between px-8 z-10 shrink-0 select-none">
+                        <div className="flex items-center gap-3">
+                            <span className="px-2.5 py-0.5 rounded-lg text-[10px] font-black text-white shadow-sm" style={{ backgroundColor: course.color }}>
+                                {course.code} {course.number}
+                            </span>
+                            <h2 className="text-sm font-extrabold text-gray-900">{course.subjectName}</h2>
+                            <span className="text-gray-300 text-xs">/</span>
+                            <span className="text-xs font-bold text-gray-500 capitalize">{activeSubpageLabel}</span>
+                        </div>
+                    </div>
                 )}
+
+                {/* Scrollable View Content */}
+                <div className="flex-1 overflow-y-auto pt-6 px-8 pb-12">
+                    {isAssignmentDetailPage ? (
+                        <AssignmentDetail assignmentId={activeAssignmentId} activeCourseId={activeCourseId} />
+                    ) : isGradesPage ? (
+                        <CourseGradesView subject={subject} activeCourseId={activeCourseId} />
+                    ) : isAnnouncementsPage ? (
+                        <CourseAnnouncementsView activeCourseId={activeCourseId} />
+                    ) : isAssignmentsPage ? (
+                        <CourseAssignmentsView subject={subject} activeCourseId={activeCourseId} />
+                    ) : isAttendancePage ? (
+                        <CourseAttendanceView />
+                    ) : isModulesPage ? (
+                        <CourseModulesView />
+                    ) : isNotesPage ? (
+                        <CourseNotesView activeCourseId={activeCourseId} />
+                    ) : (
+                        <CourseHomeView subject={subject} course={course} loading={loading} />
+                    )}
+                </div>
             </div>
         </div>
     );

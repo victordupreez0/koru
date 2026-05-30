@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Link, NavLink, useLocation } from "react-router-dom";
+import React, { useState, useRef, useEffect } from "react";
+import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
 import {
   Home,
@@ -32,69 +32,84 @@ const itemVariants = {
   visible: { opacity: 1, x: 0, transition: { duration: 0.25, ease: "easeOut" } },
 };
 
-const courseListVariants = {
-  hidden: { opacity: 0, height: 0 },
+const secondarySidebarVariants = {
+  hidden: { x: -280, opacity: 0 },
   visible: {
+    x: 0,
     opacity: 1,
-    height: "auto",
-    transition: { duration: 0.3, ease: "easeOut", staggerChildren: 0.05, delayChildren: 0.05 },
+    transition: {
+      type: "spring",
+      stiffness: 380,
+      damping: 32,
+    },
   },
   exit: {
+    x: -280,
     opacity: 0,
-    height: 0,
-    transition: { duration: 0.2, ease: "easeIn" },
+    transition: {
+      type: "spring",
+      stiffness: 400,
+      damping: 38,
+    },
   },
 };
 
-const courseItemVariants = {
-  hidden: { opacity: 0, scale: 0.8 },
-  visible: { opacity: 1, scale: 1, transition: { duration: 0.2, ease: "easeOut" } },
-  exit: { opacity: 0, scale: 0.8, transition: { duration: 0.15 } },
+const courseCardVariants = {
+  hidden: { x: -10, opacity: 0 },
+  visible: {
+    x: 0,
+    opacity: 1,
+    transition: { duration: 0.2, ease: "easeOut" },
+  },
 };
 
 // ── Sidebar Nav Item ────────────────────────────────────────────────────────
-function SidebarNavItem({ label, href, icon, filledIcon, isActive, onClick }) {
-  return (
-    <motion.div variants={itemVariants}>
-      <Link
-        to={href}
-        onClick={onClick}
-        className={`relative flex flex-col items-center justify-center gap-0.5 w-full py-2 px-1 rounded-2xl transition-all duration-200 group select-none
-          ${isActive
-            ? "bg-[#3C0078] text-white shadow-lg shadow-[#3C0078]/25"
-            : "text-gray-400 hover:text-[#3C0078] hover:bg-[#3C0078]/5"
-          }`}
-        aria-label={label}
-      >
-        <div className="flex items-center justify-center w-6 h-6">
-          {isActive && filledIcon ? filledIcon : icon}
-        </div>
-        <span className="text-[9px] font-semibold leading-tight tracking-wide">{label}</span>
-      </Link>
-    </motion.div>
+function SidebarNavItem({
+  label,
+  href,
+  icon,
+  filledIcon,
+  isActive,
+  onClick,
+  isButton = false,
+  buttonRef,
+}) {
+  const content = (
+    <>
+      <div className="flex items-center justify-center w-6 h-6 !text-inherit">
+        {isActive && filledIcon ? filledIcon : icon}
+      </div>
+      <span className="text-[9px] font-semibold leading-tight tracking-wide !text-inherit">{label}</span>
+    </>
   );
-}
 
-// ── Course Avatar (inside sidebar) ──────────────────────────────────────────
-function CourseAvatar({ course, isActive, onClick }) {
+  const baseClassName = `relative flex flex-col items-center justify-center gap-0.5 w-full py-2.5 transition-all duration-200 group select-none cursor-pointer
+    ${isActive
+      ? "bg-purple-500 !text-white"
+      : "!text-gray-900 hover:!text-[#3C0078] hover:bg-purple-100"
+    }`;
+
   return (
-    <motion.div variants={courseItemVariants}>
-      <Link
-        to={course.href}
-        onClick={onClick}
-        style={{
-          backgroundColor: isActive ? course.color : "transparent",
-          borderColor: course.color,
-          color: isActive ? "#FFFFFF" : course.color,
-        }}
-        className={`flex flex-col items-center justify-center w-11 h-11 rounded-full border-2 transition-all duration-300 ${
-          isActive ? "shadow-md scale-105" : "hover:bg-gray-50 hover:scale-105"
-        }`}
-        title={course.subjectName}
-      >
-        <span className="text-[10px] font-bold leading-none">{course.code}</span>
-        <span className="text-[8px] font-bold leading-none mt-0.5">{course.number}</span>
-      </Link>
+    <motion.div variants={itemVariants} className="w-full">
+      {isButton ? (
+        <button
+          ref={buttonRef}
+          onClick={onClick}
+          className={baseClassName}
+          aria-label={label}
+        >
+          {content}
+        </button>
+      ) : (
+        <Link
+          to={href}
+          onClick={onClick}
+          className={baseClassName}
+          aria-label={label}
+        >
+          {content}
+        </Link>
+      )}
     </motion.div>
   );
 }
@@ -106,6 +121,29 @@ export default function AppSidebar() {
   const { visibleCourses } = useCourses();
   const [modalOpen, setModalOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [showCourseNav, setShowCourseNav] = useState(false);
+
+  const sidebarRef = useRef(null);
+  const coursesButtonRef = useRef(null);
+
+  // Close courses sidebar on click-outside
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (
+        showCourseNav &&
+        sidebarRef.current &&
+        !sidebarRef.current.contains(event.target) &&
+        coursesButtonRef.current &&
+        !coursesButtonRef.current.contains(event.target)
+      ) {
+        setShowCourseNav(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showCourseNav]);
 
   // Hide sidebar in iframe mode or on public routes
   const isIframeMode = window.self !== window.top;
@@ -114,9 +152,6 @@ export default function AppSidebar() {
   const isPublicRoute = publicRoutes.includes(location.pathname);
 
   if (isIframeMode || hideNav || isPublicRoute) return null;
-
-  // Check if we're on a courses page to show course avatars
-  const isOnCourses = location.pathname.startsWith("/courses");
 
   // Primary navigation items
   const navItems = [
@@ -177,6 +212,12 @@ export default function AppSidebar() {
       ? location.pathname === "/dashboard"
       : location.pathname.startsWith(href);
 
+  const isActiveCourse = (courseId) => {
+    const pathParts = location.pathname.split('/').filter(Boolean);
+    const activeCourseId = pathParts.length > 1 ? pathParts[1] : null;
+    return activeCourseId === courseId;
+  };
+
   const closeMobile = () => setMobileOpen(false);
 
   const sidebarContent = (
@@ -191,92 +232,56 @@ export default function AppSidebar() {
       {/* ── Logo ── */}
       <div className="pt-5 pb-3 flex items-center justify-center">
         <Link to="/dashboard" className="group" aria-label="Home">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#3C0078] to-[#7B2FBE] flex items-center justify-center shadow-lg shadow-[#3C0078]/20 group-hover:shadow-[#3C0078]/40 transition-shadow duration-300 overflow-hidden">
+          <div className="w-12 h-12 flex items-center justify-center transition-transform duration-300 group-hover:scale-105">
             <img
               src="/fav.png"
               alt="Learn Online"
-              className="w-8 h-8 object-contain"
+              className="w-10 h-10 object-contain"
             />
           </div>
         </Link>
       </div>
 
       {/* ── Primary Nav ── */}
-      <nav className="flex-1 flex flex-col items-center gap-0.5 px-2 pt-1 overflow-y-auto overflow-x-hidden scrollbar-hide">
+      <nav className="flex-1 flex flex-col items-center gap-0.5 w-full pt-1 overflow-y-auto overflow-x-hidden scrollbar-hide">
         <LayoutGroup>
-          {navItems.map((item) => (
-            <SidebarNavItem
-              key={item.label}
-              {...item}
-              isActive={isActive(item.href)}
-              onClick={closeMobile}
-            />
-          ))}
+          {navItems.map((item) => {
+            const isCourses = item.label === "Courses";
+            return (
+              <SidebarNavItem
+                key={item.label}
+                {...item}
+                isActive={isActive(item.href)}
+                isButton={isCourses}
+                buttonRef={isCourses ? coursesButtonRef : undefined}
+                onClick={
+                  isCourses
+                    ? () => setShowCourseNav(!showCourseNav)
+                    : () => {
+                        setShowCourseNav(false);
+                        closeMobile();
+                      }
+                }
+              />
+            );
+          })}
         </LayoutGroup>
-
-        {/* ── Course Avatars (contextual, only on /courses/*) ── */}
-        <AnimatePresence>
-          {isOnCourses && visibleCourses.length > 0 && (
-            <motion.div
-              className="flex flex-col items-center gap-1.5 w-full py-2"
-              variants={courseListVariants}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-            >
-              {/* Subtle divider */}
-              <div className="w-8 h-px bg-gray-200 mb-1" />
-
-              {visibleCourses.map((course) => (
-                <CourseAvatar
-                  key={course.id}
-                  course={course}
-                  isActive={
-                    location.pathname.startsWith(course.href) ||
-                    (location.pathname === "/courses" && visibleCourses[0].id === course.id)
-                  }
-                  onClick={closeMobile}
-                />
-              ))}
-
-              {/* Teacher: Add course button */}
-              {role === "teacher" && (
-                <button
-                  onClick={() => console.log("Add new course logic here")}
-                  className="flex items-center justify-center w-9 h-9 rounded-xl text-green-500 hover:text-green-600 hover:bg-green-50 transition-all cursor-pointer"
-                  title="Add New Course"
-                >
-                  <AddCircle size={20} />
-                </button>
-              )}
-
-              {/* Manage courses button */}
-              <button
-                onClick={() => setModalOpen(true)}
-                className="flex items-center justify-center w-9 h-9 rounded-xl text-gray-400 hover:text-[#3C0078] hover:bg-gray-100 transition-all cursor-pointer"
-                title="Manage Enrolled Courses"
-              >
-                <Eye size={20} />
-              </button>
-
-              {/* Subtle divider */}
-              <div className="w-8 h-px bg-gray-200 mt-1" />
-            </motion.div>
-          )}
-        </AnimatePresence>
       </nav>
 
       {/* ── Divider ── */}
       <div className="mx-4 h-px bg-gray-200/80" />
 
       {/* ── Utility Nav (Profile / Settings) ── */}
-      <div className="py-3 flex flex-col items-center gap-0.5 px-2">
+      <div className="py-3 flex flex-col items-center gap-0.5 w-full">
         {utilityItems.map((item) => (
           <SidebarNavItem
             key={item.label}
             {...item}
             isActive={isActive(item.href)}
-            onClick={closeMobile}
+            onClick={() => {
+              setShowCourseNav(false);
+              closeMobile();
+            }}
           />
         ))}
       </div>
@@ -311,6 +316,108 @@ export default function AppSidebar() {
       <div className={`max-md:${mobileOpen ? "block" : "hidden"} md:block`}>
         {sidebarContent}
       </div>
+
+      {/* ── Secondary Collapsible Course Sidebar ── */}
+      <AnimatePresence>
+        {showCourseNav && (
+          <motion.div
+            ref={sidebarRef}
+            variants={secondarySidebarVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className="fixed left-[76px] top-0 h-screen w-72 bg-white/95 backdrop-blur-2xl border-r border-gray-200/50 shadow-2xl z-40 flex flex-col pt-5"
+          >
+            {/* Header */}
+            <div className="px-5 pb-4 border-b border-gray-100 flex flex-col gap-1">
+              <h3 className="text-base font-extrabold tracking-tight !text-gray-900">
+                My Courses
+              </h3>
+              <p className="text-[11px] text-gray-500 font-medium">
+                Select a course to view details
+              </p>
+            </div>
+
+            {/* Scrollable Course Cards List */}
+            <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-2 scrollbar-hide">
+              {visibleCourses.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-xs text-gray-400 font-medium">No courses enrolled</p>
+                </div>
+              ) : (
+                visibleCourses.map((course) => (
+                  <motion.div
+                    key={course.id}
+                    variants={courseCardVariants}
+                    className="w-full"
+                  >
+                    <Link
+                      to={course.href}
+                      onClick={() => {
+                        setShowCourseNav(false);
+                        closeMobile();
+                      }}
+                      className={`flex items-center gap-3 p-3 rounded-2xl border transition-all duration-200 group select-none
+                        ${isActiveCourse(course.id)
+                          ? "bg-[#3C0078]/5 border-[#3C0078]/20"
+                          : "bg-transparent border-gray-100/50 hover:bg-gray-50/80 hover:border-gray-200"
+                        }`}
+                    >
+                      {/* Dynamic Colored Badge */}
+                      <div
+                        style={{ backgroundColor: course.color }}
+                        className="w-10 h-10 rounded-xl flex flex-col items-center justify-center text-white shrink-0 shadow-sm transition-transform group-hover:scale-105 duration-200"
+                      >
+                        <span className="text-[10px] font-black tracking-wider leading-none uppercase">{course.code}</span>
+                        <span className="text-[8px] font-black leading-none mt-0.5">{course.number}</span>
+                      </div>
+
+                      {/* Course info */}
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-xs font-bold !text-gray-900 truncate group-hover:text-[#3C0078] transition-colors">
+                          {course.subjectName}
+                        </h4>
+                        <p className="text-[10px] text-gray-500 truncate mt-0.5">
+                          {course.description || `${course.code} ${course.number}`}
+                        </p>
+                      </div>
+
+                      {/* Indicator dot */}
+                      <div className={`w-1.5 h-1.5 rounded-full shrink-0 transition-colors
+                        ${isActiveCourse(course.id) ? "bg-[#3C0078]" : "bg-transparent group-hover:bg-gray-300"}`}
+                      />
+                    </Link>
+                  </motion.div>
+                ))
+              )}
+            </div>
+
+            {/* Footer / Actions */}
+            <div className="p-4 border-t border-gray-100 flex flex-col gap-2 bg-gray-50/50">
+              {role === "teacher" && (
+                <button
+                  onClick={() => console.log("Add new course logic here")}
+                  className="flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl text-xs font-semibold bg-green-500 hover:bg-green-600 text-white transition-all cursor-pointer shadow-sm hover:shadow-md"
+                >
+                  <AddCircle size={16} />
+                  <span>Add New Course</span>
+                </button>
+              )}
+
+              <button
+                onClick={() => {
+                  setModalOpen(true);
+                  setShowCourseNav(false);
+                }}
+                className="flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl text-xs font-semibold border border-gray-200 bg-white hover:bg-gray-50 !text-gray-700 transition-all cursor-pointer shadow-xs"
+              >
+                <Eye size={16} />
+                <span>Manage Courses</span>
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ── Course Manager Modal ── */}
       <CourseManagerModal isOpen={modalOpen} onClose={() => setModalOpen(false)} />
