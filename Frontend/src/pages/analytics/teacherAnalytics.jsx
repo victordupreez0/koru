@@ -5,8 +5,7 @@ import {
   Target, ArrowUpRight, ArrowDownRight, ChevronDown, Filter,
   BookOpen, FileText, BarChart3, AlertTriangle, GraduationCap
 } from "lucide-react";
-import Menu from "../../components/menu";
-import SideMenu from "../../components/sideMenu";
+
 import { useAuth } from "../../contexts/AuthContext";
 import { getTeacherCourses } from "../../services/courseService";
 import { getCourseAssignments } from "../../services/assignmentService";
@@ -245,8 +244,6 @@ export default function TeacherAnalytics() {
 
   return (
     <div className="w-full pb-16">
-      <Menu />
-      <SideMenu />
 
       <motion.div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-2" initial="hidden" animate="visible" variants={stagger}>
 

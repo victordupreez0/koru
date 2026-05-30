@@ -1,11 +1,10 @@
-﻿import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Plus, Search, Users, BookOpen, Clock, 
   TrendingUp, CheckCircle, X, Bell
 } from "lucide-react";
-import Menu from "../../components/menu";
-import SideMenu from "../../components/sideMenu";
+
 
 // Modularized Components
 import {
@@ -215,10 +214,7 @@ export default function AdminCourses() {
 
   return (
     <div className="relative min-h-screen flex flex-col font-sans">
-      <Menu />
-      <SideMenu />
-
-      <main className="flex-1 w-full max-w-[1700px] mx-auto pt-16 px-12 pb-24 space-y-10">
+      <main className="flex-1 w-full max-w-[1700px] mx-auto px-12 pb-24 space-y-10">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div>
                 <div className="flex items-center gap-2 mb-3">

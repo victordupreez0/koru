@@ -1,8 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import Menu from "../../components/menu";
-import SideMenu from "../../components/sideMenu";
+
 
 import CalendarDayBlock from "./UI/CalendarDayBlock";
 import CalendarViewSelector from "./UI/CalendarViewSelector";
@@ -257,8 +256,6 @@ export default function TeacherCalendar() {
 
   return (
     <>
-      <Menu />
-      <SideMenu />
 
       <motion.div
         className="max-w-[1400px] mx-auto px-8 pt-5 pb-10"

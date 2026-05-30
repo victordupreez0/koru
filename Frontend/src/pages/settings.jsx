@@ -10,8 +10,7 @@ import {
   Save,
   RotateCcw,
 } from "lucide-react";
-import Menu from "../components/menu";
-import SideMenu from "../components/sideMenu";
+
 import AuthInput from "../components/UI/authInput";
 import { useTextToSpeech } from "../hooks/useTextToSpeech";
 import {
@@ -207,8 +206,7 @@ export default function SettingsPage() {
 
   return (
     <div data-tts-root="true" className={`w-full pb-10 ${settings.font === "OpenDyslexic" ? "dyslexic-font" : ""} ${pageClasses.wrapper}`}>
-      <Menu />
-      <SideMenu />
+
 
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-2">
         <div className={`rounded-[28px] border p-6 shadow-sm ${pageClasses.card}`}>

@@ -16,6 +16,7 @@ import TeacherAssistant from "./pages/Assistant/teacherAssistant";
 import Profile from "./pages/profile/profile";
 import AnalyticsPage from "./pages/analytics";
 import AdminCourses from "./pages/courses/adminCourses";
+import AppSidebar from "./components/AppSidebar";
 
 // Root application component – sets up routing and the shared layout
 function App() {
@@ -41,9 +42,11 @@ function App() {
         sparkCount={8}
         duration={400}
       >
+        {/* Unified left sidebar – rendered once, visible on all protected routes */}
+        <AppSidebar />
 
-        {/* Main content area – padded to avoid overlapping the fixed menus */}
-        <main className={isIframeMode ? "" : "pt-24 pl-40 pr-40"}>
+        {/* Main content area – offset for the 76px sidebar */}
+        <main className={isIframeMode ? "" : "pt-6 pl-[92px] pr-8"}>
           <Routes>
             {/* Public routes – landing & role-specific login portals */}
             <Route path="/" element={<Onboarding />} />
