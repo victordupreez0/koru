@@ -4,9 +4,11 @@ import ChipListEditor from "./ChipListEditor";
 import { ensureHttps, slugify } from "../pages/profile/profileUtils";
 
 const PANEL_CLASS =
-  "rounded-[28px] border border-white/60 bg-white/85 p-6 shadow-[0_16px_40px_rgba(15,23,42,0.08)] backdrop-blur-md transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_20px_44px_rgba(15,23,42,0.12)]";
+  "rounded-[30px] border border-gray-200/50 bg-white p-6 shadow-2xs hover:shadow-xs transition-all duration-300";
 const INPUT_CLASS =
-  "rounded-2xl border border-slate-300 bg-white/90 px-4 py-2.5 transition focus:border-[#3C0078] focus:outline-none focus:ring-2 focus:ring-[#3C0078]/20";
+  "w-full text-sm rounded-xl border border-gray-200 bg-white px-4 py-2.5 transition focus:border-[#3C0078]/40 focus:outline-none focus:ring-4 focus:ring-[#3C0078]/10 text-gray-900";
+const LABEL_CLASS =
+  "text-gray-700 font-bold text-xs uppercase tracking-wider mb-1.5 block";
 
 export default function ProfileSidebar({
   profile,
@@ -24,80 +26,109 @@ export default function ProfileSidebar({
     <aside className="flex flex-col gap-6">
       {/* Header & Identity */}
       <section className={PANEL_CLASS}>
-        <div className="mb-4 flex items-center gap-2">
-          <UserRound size={20} />
-          <h2 className="text-2xl font-bold">Header &amp; Identity</h2>
+        <div className="mb-6 flex items-center gap-3 border-b border-gray-100 pb-3">
+          <span className="rounded-xl bg-[#3C0078]/5 p-2 text-[#3C0078]">
+            <UserRound size={20} />
+          </span>
+          <h2 className="text-xl font-extrabold tracking-tight text-gray-900">Header &amp; Identity</h2>
         </div>
 
         {editMode ? (
-          <div className="grid gap-3">
-            <input
-              value={profile.header.fullName}
-              onChange={(e) => updateProfile("header.fullName", e.target.value)}
-              placeholder="Full name"
-              className={`w-full ${INPUT_CLASS}`}
-            />
-            <input
-              value={profile.header.headline}
-              onChange={(e) => updateProfile("header.headline", e.target.value)}
-              placeholder="Professional headline"
-              className={`w-full ${INPUT_CLASS}`}
-            />
-            <input
-              value={profile.header.major}
-              onChange={(e) => updateProfile("header.major", e.target.value)}
-              placeholder="Major / Faculty"
-              className={`w-full ${INPUT_CLASS}`}
-            />
-            <div className="grid grid-cols-2 gap-2">
+          <div className="grid gap-4">
+            <div>
+              <label className={LABEL_CLASS}>Full Name</label>
               <input
-                value={profile.header.degree}
-                onChange={(e) => updateProfile("header.degree", e.target.value)}
-                placeholder="Degree"
-                className={`w-full ${INPUT_CLASS}`}
-              />
-              <input
-                value={profile.header.expectedGraduation}
-                onChange={(e) => updateProfile("header.expectedGraduation", e.target.value)}
-                placeholder="Expected graduation"
-                className={`w-full ${INPUT_CLASS}`}
+                value={profile.header.fullName}
+                onChange={(e) => updateProfile("header.fullName", e.target.value)}
+                placeholder="Full name"
+                className={INPUT_CLASS}
               />
             </div>
-            <input
-              value={profile.header.email}
-              onChange={(e) => updateProfile("header.email", e.target.value)}
-              placeholder="Email"
-              className={`w-full ${INPUT_CLASS}`}
-            />
-            <input
-              value={profile.header.photoUrl}
-              onChange={(e) => updateProfile("header.photoUrl", e.target.value)}
-              placeholder="Profile photo URL (or upload below)"
-              className={`w-full ${INPUT_CLASS}`}
-            />
-            <label className="inline-flex w-fit cursor-pointer items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50">
-              <Upload size={14} /> Upload profile image
+            <div>
+              <label className={LABEL_CLASS}>Professional Headline</label>
               <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => {
-                  const [file] = Array.from(e.target.files || []);
-                  attachProfileImage(file);
-                  e.target.value = "";
-                }}
+                value={profile.header.headline}
+                onChange={(e) => updateProfile("header.headline", e.target.value)}
+                placeholder="Professional headline"
+                className={INPUT_CLASS}
               />
-            </label>
-            {profile.header.photoName ? (
-              <p className="text-xs text-slate-500">Uploaded: {profile.header.photoName}</p>
-            ) : null}
-            <textarea
-              value={profile.header.summary}
-              onChange={(e) => updateProfile("header.summary", e.target.value)}
-              rows={4}
-              placeholder="2-3 sentence professional summary visible to recruiters"
-              className={`w-full ${INPUT_CLASS}`}
-            />
+            </div>
+            <div>
+              <label className={LABEL_CLASS}>Major / Faculty</label>
+              <input
+                value={profile.header.major}
+                onChange={(e) => updateProfile("header.major", e.target.value)}
+                placeholder="Major / Faculty"
+                className={INPUT_CLASS}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className={LABEL_CLASS}>Degree</label>
+                <input
+                  value={profile.header.degree}
+                  onChange={(e) => updateProfile("header.degree", e.target.value)}
+                  placeholder="Degree"
+                  className={INPUT_CLASS}
+                />
+              </div>
+              <div>
+                <label className={LABEL_CLASS}>Graduation Year</label>
+                <input
+                  value={profile.header.expectedGraduation}
+                  onChange={(e) => updateProfile("header.expectedGraduation", e.target.value)}
+                  placeholder="Expected graduation"
+                  className={INPUT_CLASS}
+                />
+              </div>
+            </div>
+            <div>
+              <label className={LABEL_CLASS}>Email Address</label>
+              <input
+                value={profile.header.email}
+                onChange={(e) => updateProfile("header.email", e.target.value)}
+                placeholder="Email"
+                className={INPUT_CLASS}
+              />
+            </div>
+            <div>
+              <label className={LABEL_CLASS}>Profile Photo URL</label>
+              <input
+                value={profile.header.photoUrl}
+                onChange={(e) => updateProfile("header.photoUrl", e.target.value)}
+                placeholder="Profile photo URL (or upload below)"
+                className={INPUT_CLASS}
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <label className="inline-flex w-fit cursor-pointer items-center gap-2 rounded-xl border-2 border-[#3C0078] bg-white px-4 py-2.5 text-xs font-black uppercase tracking-wider text-[#3C0078] hover:bg-[#3C0078] hover:text-white transition-all hover:scale-[1.02]">
+                <Upload size={14} />
+                <span>Upload profile image</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const [file] = Array.from(e.target.files || []);
+                    attachProfileImage(file);
+                    e.target.value = "";
+                  }}
+                />
+              </label>
+              {profile.header.photoName ? (
+                <p className="text-xs text-gray-500 font-medium">Uploaded: {profile.header.photoName}</p>
+              ) : null}
+            </div>
+            <div>
+              <label className={LABEL_CLASS}>Professional Summary</label>
+              <textarea
+                value={profile.header.summary}
+                onChange={(e) => updateProfile("header.summary", e.target.value)}
+                rows={4}
+                placeholder="2-3 sentence professional summary visible to recruiters"
+                className={INPUT_CLASS}
+              />
+            </div>
             <ChipListEditor
               title="Verified Digital Badges"
               items={profile.badges}
@@ -106,24 +137,29 @@ export default function ProfileSidebar({
             />
           </div>
         ) : (
-          <p className="text-sm text-slate-600">Turn on Edit Profile to update identity details.</p>
+          <p className="text-sm font-medium text-gray-500 leading-relaxed">Turn on Edit Profile to update identity details.</p>
         )}
       </section>
 
       {/* Share & Visibility */}
       <section className={PANEL_CLASS}>
-        <div className="mb-4 flex items-center gap-2">
-          <LinkIcon size={20} />
-          <h2 className="text-2xl font-bold">Share &amp; Visibility</h2>
+        <div className="mb-6 flex items-center gap-3 border-b border-gray-100 pb-3">
+          <span className="rounded-xl bg-[#3C0078]/5 p-2 text-[#3C0078]">
+            <LinkIcon size={20} />
+          </span>
+          <h2 className="text-xl font-extrabold tracking-tight text-gray-900">Share &amp; Visibility</h2>
         </div>
 
-        <label className="mb-3 flex cursor-pointer items-center justify-between gap-3 rounded-2xl border border-slate-200/90 bg-slate-50/85 px-4 py-3">
-          <span className="text-sm font-medium">Public Profile Visibility</span>
+        <label className="mb-4 flex cursor-pointer items-center justify-between gap-3 rounded-2xl border border-gray-100 bg-gray-50/40 p-4 hover:bg-gray-50 transition-colors duration-200 shadow-3xs">
+          <div className="flex flex-col">
+            <span className="text-sm font-extrabold text-gray-900 tracking-tight">Public Profile Visibility</span>
+            <span className="text-[11px] text-gray-500 font-medium">Allow search engines and recruiters to find you</span>
+          </div>
           <input
             type="checkbox"
             checked={profile.privacy.profilePublic}
             onChange={() => toggleVisibility("profilePublic")}
-            className="h-4 w-4 accent-[#3C0078]"
+            className="h-5 w-5 cursor-pointer accent-[#3C0078] shrink-0"
           />
         </label>
 
@@ -131,61 +167,64 @@ export default function ProfileSidebar({
           {privacySectionConfig.map(([key, label]) => (
             <label
               key={key}
-              className="flex cursor-pointer items-center justify-between rounded-xl border border-slate-200 bg-white/70 px-3 py-2 text-sm"
+              className="flex cursor-pointer items-center justify-between rounded-xl border border-gray-100 bg-gray-50/20 px-3.5 py-2.5 text-sm hover:bg-gray-50 transition-colors duration-200"
             >
-              <span>{label}</span>
+              <span className="text-xs font-bold text-gray-700">{label}</span>
               <input
                 type="checkbox"
                 checked={profile.privacy[key]}
                 onChange={() => toggleVisibility(key)}
-                className="h-4 w-4 accent-[#3C0078]"
+                className="h-4 w-4 cursor-pointer accent-[#3C0078] shrink-0"
               />
             </label>
           ))}
         </div>
 
         {editMode ? (
-          <>
-            <label className="mt-4 block text-sm font-medium text-slate-700">Vanity URL slug</label>
+          <div className="mt-4">
+            <label className={LABEL_CLASS}>Vanity URL slug</label>
             <input
               value={profile.vanityUrlSlug}
               onChange={(e) => updateProfile("vanityUrlSlug", slugify(e.target.value))}
-              className={`mt-1 w-full ${INPUT_CLASS}`}
+              placeholder="e.g. johndoe"
+              className={INPUT_CLASS}
             />
-          </>
+          </div>
         ) : null}
 
-        <div className="mt-4 rounded-2xl border border-slate-200 bg-gradient-to-r from-slate-50 to-[#f5f0ff] p-3">
-          <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+        <div className="mt-6 rounded-2xl border border-purple-100 bg-gradient-to-br from-purple-50/40 to-indigo-50/20 p-4">
+          <p className="text-[10px] font-black uppercase tracking-wider text-[#3C0078]">
             Shareable Link
           </p>
-          <p className="mt-1 break-all text-sm text-slate-700">{shareUrl}</p>
+          <p className="mt-1.5 break-all text-xs font-bold text-gray-700 font-mono select-all bg-white/85 px-3 py-2.5 rounded-xl border border-purple-100/50 shadow-3xs">{shareUrl}</p>
           <button
             type="button"
             onClick={copyShareUrl}
-            className="mt-3 inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:-translate-y-0.5 hover:bg-slate-100"
+            className="mt-3.5 inline-flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-4 py-2 text-xs font-black uppercase tracking-wider text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all hover:scale-[1.02] shadow-3xs cursor-pointer"
           >
-            <Copy size={14} /> {copied ? "Copied!" : "Copy link"}
+            <Copy size={13} /> <span>{copied ? "Copied!" : "Copy link"}</span>
           </button>
         </div>
       </section>
 
       {/* External Portfolios */}
       <section className={PANEL_CLASS}>
-        <div className="mb-4 flex items-center gap-2">
-          <ExternalLink size={20} />
-          <h2 className="text-2xl font-bold">External Portfolios</h2>
+        <div className="mb-6 flex items-center gap-3 border-b border-gray-100 pb-3">
+          <span className="rounded-xl bg-[#3C0078]/5 p-2 text-[#3C0078]">
+            <ExternalLink size={20} />
+          </span>
+          <h2 className="text-xl font-extrabold tracking-tight text-gray-900">External Portfolios</h2>
         </div>
-        <div className="grid gap-3">
+        <div className="grid gap-4">
           {linkFieldConfig.map(({ key, label, placeholder }) => (
             <div key={key}>
-              <label className="mb-1 block text-xs font-semibold text-slate-600">{label}</label>
+              <label className={LABEL_CLASS}>{label}</label>
               <input
                 value={profile.links[key]}
                 onChange={(e) => updateProfile(`links.${key}`, ensureHttps(e.target.value))}
                 disabled={!editMode}
                 placeholder={placeholder}
-                className={`w-full ${INPUT_CLASS} disabled:cursor-not-allowed disabled:bg-slate-50`}
+                className={`${INPUT_CLASS} disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500 disabled:border-gray-150`}
               />
             </div>
           ))}

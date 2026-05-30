@@ -313,7 +313,7 @@ export default function CourseItemView({ activeCourseId, activeItemId, isStudent
     };
 
     return (
-        <div className="w-full max-w-5xl mx-auto flex flex-col min-h-full">
+        <div className="w-full flex flex-col min-h-full">
             {pageLoading && (
                 <div className="flex items-center justify-center py-20">
                     <Loader size={24} className="animate-spin text-gray-400" />
@@ -369,7 +369,7 @@ export default function CourseItemView({ activeCourseId, activeItemId, isStudent
             </div>
 
             {/* Title / Editor Container */}
-            <div className="flex-1 flex flex-col bg-white border border-gray-200 rounded-[32px] shadow-2xs p-8 md:p-12 min-h-[500px]">
+            <div className="flex-1 flex flex-col bg-white min-h-[500px] p-6 md:p-10">
                 {/* Title Input or View Label */}
                 {isEditing ? (
                     <input
@@ -385,7 +385,7 @@ export default function CourseItemView({ activeCourseId, activeItemId, isStudent
 
                 {/* Gorgeous Canvas-Style Editor Toolbar */}
                 {isEditing && (
-                    <div className="flex flex-wrap items-center gap-1 bg-gray-50 border border-gray-200 p-2 rounded-2xl mb-6 shadow-3xs z-20">
+                    <div className="sticky top-2 flex flex-wrap items-center gap-1 bg-gray-50/95 backdrop-blur-xs border border-gray-200/80 p-2 rounded-2xl mb-6 shadow-md z-30">
                         {/* Heading Selector */}
                         <button onClick={() => handleFormat("paragraph")} className="px-2 py-1 text-[10px] font-bold text-gray-600 hover:bg-gray-200 rounded-lg" title="Paragraph">P</button>
                         <button onClick={() => handleFormat("heading", 1)} className="p-1 text-gray-600 hover:bg-gray-200 rounded-lg" title="Heading 1"><Heading1 size={14} /></button>

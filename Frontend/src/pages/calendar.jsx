@@ -1,5 +1,6 @@
 import React from "react";
 import { useAuth } from "../contexts/AuthContext";
+import HeaderTopBar from "../components/HeaderTopBar";
 
 // View components
 import StudentCalendar from "./calendars/studentCalendar";
@@ -10,14 +11,24 @@ import AdminCalendar from "./calendars/adminCalendar";
 export default function CalendarPage() {
   const { role } = useAuth();
 
+  let content = <StudentCalendar />;
   if (role === "admin") {
-    return <AdminCalendar />;
+    content = <AdminCalendar />;
+  } else if (role === "teacher") {
+    content = <TeacherCalendar />;
   }
 
-  if (role === "teacher") {
-    return <TeacherCalendar />;
-  }
+  return (
+    <div className="h-screen overflow-hidden -ml-4 -mr-8 -mt-6 flex flex-col bg-gray-50/10 text-slate-900">
+      {/* Reusable breadcrumb header top bar */}
+      <HeaderTopBar />
 
-  // Default fallback is the student calendar
-  return <StudentCalendar />;
+      {/* Scrollable View Content area */}
+      <div className="flex-1 overflow-y-auto pt-6 px-8 pb-12 bg-white">
+        <div className="w-full">
+          {content}
+        </div>
+      </div>
+    </div>
+  );
 }
