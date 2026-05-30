@@ -3,29 +3,55 @@ import { Briefcase } from "lucide-react";
 import ChipListEditor from "./ChipListEditor";
 
 const PANEL_CLASS =
-  "rounded-[28px] border border-white/60 bg-white/85 p-6 shadow-[0_16px_40px_rgba(15,23,42,0.08)] backdrop-blur-md transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_20px_44px_rgba(15,23,42,0.12)]";
+  "rounded-[30px] border border-gray-200/50 bg-white p-6 shadow-2xs hover:shadow-xs transition-all duration-300";
 
-// Experience always shows ChipListEditor (no edit-mode guard).
-// Changes are blocked on publicRoute by the parent's updateProfile.
-export default function ProfileExperience({ experienceGroups, updateProfile }) {
+export default function ProfileExperience({ experienceGroups, editMode, updateProfile }) {
   return (
     <section className={PANEL_CLASS}>
-      <div className="mb-4 flex items-center gap-2">
-        <Briefcase size={20} />
-        <h2 className="text-2xl font-bold">Academic &amp; Practical Experience</h2>
+      <div className="mb-6 flex items-center gap-3 border-b border-gray-100 pb-3">
+        <span className="rounded-xl bg-[#3C0078]/5 p-2 text-[#3C0078]">
+          <Briefcase size={20} />
+        </span>
+        <h2 className="text-xl font-extrabold tracking-tight text-gray-900">Academic &amp; Practical Experience</h2>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        {experienceGroups.map((group) => (
-          <ChipListEditor
-            key={group.key}
-            title={group.label}
-            items={group.items}
-            onChange={(value) => updateProfile(`experience.${group.key}`, value)}
-            placeholder={group.placeholder}
-          />
-        ))}
-      </div>
+      {!editMode ? (
+        <div className="grid gap-6 md:grid-cols-2">
+          {experienceGroups.map((group) => (
+            <div
+              key={group.key}
+              className="rounded-[22px] border border-gray-200/50 bg-gradient-to-b from-white to-gray-50/30 p-5 shadow-3xs hover:shadow-2xs transition-all duration-200"
+            >
+              <p className="text-[11px] font-black uppercase tracking-wider text-gray-500 mb-3">{group.label}</p>
+              <ul className="space-y-3">
+                {group.items && group.items.filter(Boolean).length > 0 ? (
+                  group.items.filter(Boolean).map((item, index) => (
+                    <li key={`${group.key}-${index}`} className="flex items-start gap-2.5 text-sm font-medium text-gray-700">
+                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#3C0078]" />
+                      <span className="leading-relaxed">{item}</span>
+                    </li>
+                  ))
+                ) : (
+                  <li className="text-xs text-gray-400 font-medium italic">No entries added yet.</li>
+                )}
+              </ul>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="grid gap-6 md:grid-cols-2">
+          {experienceGroups.map((group) => (
+            <div key={group.key} className="rounded-[22px] border border-gray-100 bg-gray-50/20 p-5 shadow-3xs">
+              <ChipListEditor
+                title={group.label}
+                items={group.items}
+                onChange={(value) => updateProfile(`experience.${group.key}`, value)}
+                placeholder={group.placeholder}
+              />
+            </div>
+          ))}
+        </div>
+      )}
     </section>
   );
 }

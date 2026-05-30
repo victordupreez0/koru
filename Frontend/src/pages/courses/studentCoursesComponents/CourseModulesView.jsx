@@ -58,7 +58,7 @@ export default function CourseModulesView({ activeCourseId }) {
   };
 
   return (
-    <div className="w-full max-w-5xl mx-auto flex flex-col gap-6 py-6 select-none">
+    <div className="w-full flex flex-col gap-6 py-6 select-none">
       {/* Loading indicator */}
       {modulesLoading && (
         <div className="flex items-center gap-2 text-xs text-gray-400 font-medium px-1">
