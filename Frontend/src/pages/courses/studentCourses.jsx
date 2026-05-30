@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useCourses } from "../../contexts/CoursesContext";
 import CourseSecondaryNav from "../../components/courseSecondaryNav";
 import AssignmentDetail from "./assignmentDetail";
+import CourseItemView from "./CourseItemView";
 
 import {
     CourseAnnouncementsView,
@@ -71,7 +72,11 @@ export default function StudentCourses() {
     const isAssignmentDetailPage = pathParts[2] === "assignments" && pathParts.length === 4;
     const activeAssignmentId = isAssignmentDetailPage ? pathParts[3] : null;
 
-    const isHomePage = !isGradesPage && !isAnnouncementsPage && !isAssignmentsPage && !isAttendancePage && !isModulesPage && !isNotesPage && !isAssignmentDetailPage;
+    // Module Item detail: /courses/:courseId/items/:itemId
+    const isItemDetailPage = pathParts[2] === "items" && pathParts.length === 4;
+    const activeItemId = isItemDetailPage ? pathParts[3] : null;
+
+    const isHomePage = !isGradesPage && !isAnnouncementsPage && !isAssignmentsPage && !isAttendancePage && !isModulesPage && !isNotesPage && !isAssignmentDetailPage && !isItemDetailPage;
 
     // Determine active subpage label for the top breadcrumb bar
     const activeSubpageLabel = useMemo(() => {
@@ -82,8 +87,9 @@ export default function StudentCourses() {
         if (isModulesPage) return "Modules";
         if (isNotesPage) return "Notes";
         if (isAssignmentDetailPage) return "Assignment Details";
+        if (isItemDetailPage) return "Module Page";
         return "Home";
-    }, [isGradesPage, isAnnouncementsPage, isAssignmentsPage, isAttendancePage, isModulesPage, isNotesPage, isAssignmentDetailPage]);
+    }, [isGradesPage, isAnnouncementsPage, isAssignmentsPage, isAttendancePage, isModulesPage, isNotesPage, isAssignmentDetailPage, isItemDetailPage]);
 
     return (
         <div className="flex h-screen overflow-hidden -ml-4 -mr-8 -mt-6 bg-gray-50/10">
@@ -108,7 +114,9 @@ export default function StudentCourses() {
 
                 {/* Scrollable View Content */}
                 <div className="flex-1 overflow-y-auto pt-6 px-8 pb-12">
-                    {isAssignmentDetailPage ? (
+                    {isItemDetailPage ? (
+                        <CourseItemView activeCourseId={activeCourseId} activeItemId={activeItemId} isStudentView={true} />
+                    ) : isAssignmentDetailPage ? (
                         <AssignmentDetail assignmentId={activeAssignmentId} activeCourseId={activeCourseId} />
                     ) : isGradesPage ? (
                         <CourseGradesView subject={subject} activeCourseId={activeCourseId} />
@@ -119,7 +127,7 @@ export default function StudentCourses() {
                     ) : isAttendancePage ? (
                         <CourseAttendanceView />
                     ) : isModulesPage ? (
-                        <CourseModulesView />
+                        <CourseModulesView activeCourseId={activeCourseId} />
                     ) : isNotesPage ? (
                         <CourseNotesView activeCourseId={activeCourseId} />
                     ) : (

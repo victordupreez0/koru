@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { 
     ChevronDown, 
     ChevronRight, 
@@ -9,7 +10,8 @@ import {
     Download
 } from "lucide-react";
 
-export default function CourseModulesView() {
+export default function CourseModulesView({ activeCourseId }) {
+  const navigate = useNavigate();
   const [modules, setModules] = useState([
     {
       id: 1,
@@ -49,7 +51,7 @@ export default function CourseModulesView() {
   const areAllCollapsed = modules.every(mod => !mod.isOpen);
 
   const toggleAll = () => {
-    const targetState = areAllCollapsed; // if all are collapsed, we expand them all
+    const targetState = areAllCollapsed;
     setModules(modules.map(mod => ({ ...mod, isOpen: targetState })));
   };
 
@@ -58,7 +60,7 @@ export default function CourseModulesView() {
   };
 
   return (
-    <div className="w-full flex flex-col gap-6 py-6 select-none">
+    <div className="w-full max-w-5xl mx-auto flex flex-col gap-6 py-6 select-none">
       {/* Top action bar */}
       <div className="flex items-center justify-end gap-3 shrink-0">
         <button
@@ -82,10 +84,16 @@ export default function CourseModulesView() {
           <div key={mod.id} className="border border-gray-200 rounded-2xl overflow-hidden shadow-xs bg-white">
             {/* Header row */}
             <div 
-              onClick={() => toggleModule(mod.id)}
+              onClick={() => navigate(`/courses/${activeCourseId}/items/${mod.id}?viewAs=student`)}
               className="flex items-center gap-3 px-5 py-4 bg-gray-50/80 border-b border-gray-200 cursor-pointer select-none group"
             >
-              <span className="text-gray-400 group-hover:text-gray-600 transition-colors shrink-0">
+              <span 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleModule(mod.id);
+                }}
+                className="text-gray-400 group-hover:text-gray-600 transition-colors shrink-0 p-1 hover:bg-gray-200 rounded-md"
+              >
                 {mod.isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
               </span>
               <div className="flex items-center gap-2">
@@ -100,7 +108,7 @@ export default function CourseModulesView() {
               </div>
             </div>
 
-            {/* Nested items */}
+            {/* Nested items & layout content */}
             {mod.isOpen && (
               <div className="flex flex-col">
                 {mod.items.length === 0 ? (
@@ -131,10 +139,17 @@ export default function CourseModulesView() {
                             <span className="truncate">{item.label}</span>
                             {item.isExternal && <ExternalLink size={11} className="shrink-0" />}
                           </a>
+                        ) : item.type === "document" ? (
+                          <span 
+                            className="text-xs font-bold text-gray-700 hover:text-[#3C0078] hover:underline truncate cursor-pointer"
+                            onClick={() => navigate(`/courses/${activeCourseId}/items/${item.id}${window.location.search}`)}
+                          >
+                            {item.label}
+                          </span>
                         ) : (
                           <span 
                             className="text-xs font-bold text-gray-700 truncate cursor-pointer hover:text-gray-900"
-                            onClick={() => alert(`Viewing document: ${item.label}`)}
+                            onClick={() => alert(`Downloading attachment: ${item.label}`)}
                           >
                             {item.label}
                           </span>
