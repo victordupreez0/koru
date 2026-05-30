@@ -36,6 +36,7 @@ import { getNotes, createNote, updateNote, deleteNote } from "../../services/not
 import { useAuth } from "../../contexts/AuthContext";
 import { Plus, Bold, Italic, Underline, Strikethrough, Code, Heading1, Heading2, Heading3, List, ListOrdered, Quote, Minus, Trash2, Maximize2, Minimize2, FileText, HelpCircle, MessageSquare, Users, ExternalLink, ClipboardList, Eye, EyeOff, Edit2, ChevronDown, ChevronRight, CheckSquare, GripVertical, ToggleLeft, ToggleRight, PenLine, BookOpen, X, Loader, Check, Download, Paperclip, Link as LinkIcon } from "lucide-react";
 import NovelBlockMenu from "../../components/NovelBlockMenu";
+import CourseItemView from "./CourseItemView";
 
 /**
  * CourseContent Components
@@ -2210,13 +2211,75 @@ function CourseHomeView({ subject, course, loading }) {
   );
 }
 
-function CourseModulesView() {
+const INITIAL_OVERVIEW_CONTENT = {
+  type: "doc",
+  content: [
+    {
+      type: "heading",
+      attrs: { level: 2 },
+      content: [{ type: "text", text: "Welcome to UX Design 300 | Semester 1" }]
+    },
+    {
+      type: "paragraph",
+      content: [
+        {
+          type: "text",
+          text: "This course focuses on building a strong human-centred foundation. Throughout the semester, we will cover neurodiverse, inclusive, and adaptive design systems. Please ensure you read the guidelines and download the prescribed guide below."
+        }
+      ]
+    }
+  ]
+};
+
+const INITIAL_RESOURCES_CONTENT = {
+  type: "doc",
+  content: [
+    {
+      type: "heading",
+      attrs: { level: 3 },
+      content: [{ type: "text", text: "Syllabus Guidelines & Resources" }]
+    },
+    {
+      type: "paragraph",
+      content: [
+        {
+          type: "text",
+          text: "Use the external resources and books listed below to assist your research. Make sure you register an account on the Open Window Library portal for digital book access."
+        }
+      ]
+    }
+  ]
+};
+
+const INITIAL_WEEK1_CONTENT = {
+  type: "doc",
+  content: [
+    {
+      type: "heading",
+      attrs: { level: 3 },
+      content: [{ type: "text", text: "Week 1: Foundations & Briefings" }]
+    },
+    {
+      type: "paragraph",
+      content: [
+        {
+          type: "text",
+          text: "Our first class will cover the core theoretical framework of Inclusive Design and neurodiverse patterns. Make sure you read the Week 1 Theory slides before entering the practical workshop."
+        }
+      ]
+    }
+  ]
+};
+
+function CourseModulesView({ activeCourseId }) {
+  const navigate = useNavigate();
   const [modules, setModules] = useState([
     {
       id: 1,
       title: "Overview",
       isOpen: true,
       isPublished: true,
+      content: JSON.stringify(INITIAL_OVERVIEW_CONTENT),
       items: [
         { id: 101, label: "Study Guide 2026", type: "attachment", isPublished: true },
         { id: 102, label: "Semester Overview", type: "document", isPublished: true }
@@ -2227,6 +2290,7 @@ function CourseModulesView() {
       title: "Resources",
       isOpen: true,
       isPublished: true,
+      content: JSON.stringify(INITIAL_RESOURCES_CONTENT),
       items: [
         { id: 201, label: "OW Library", type: "link", isExternal: true, isPublished: true },
         { id: 202, label: "Academic Rules", type: "link", isExternal: true, isPublished: true },
@@ -2239,6 +2303,7 @@ function CourseModulesView() {
       isOpen: true,
       prefix: "①",
       isPublished: false,
+      content: JSON.stringify(INITIAL_WEEK1_CONTENT),
       items: [
         { id: 301, label: "Week 1 Theory", type: "document", isPublished: true },
         { id: 302, label: "Week 1 Practical", type: "document", isPublished: true }
@@ -2282,18 +2347,46 @@ function CourseModulesView() {
   // Section CRUD Handlers
   const handleAddModule = () => {
     if (newModuleTitle.trim()) {
+      const newId = Date.now().toString();
+      
+      // Store initial page structure in localStorage immediately so the editor loads it
+      const initialData = {
+        title: newModuleTitle,
+        content: {
+          type: "doc",
+          content: [
+            {
+              type: "heading",
+              attrs: { level: 2 },
+              content: [{ type: "text", text: newModuleTitle }]
+            },
+            {
+              type: "paragraph",
+              content: [{ type: "text", text: "Click edit to start building this module layout page..." }]
+            }
+          ]
+        },
+        htmlEmbeds: ""
+      };
+      localStorage.setItem(`course_item_${newId}`, JSON.stringify(initialData));
+
+      // Append new module to modules state
       setModules([
         ...modules,
         {
-          id: Date.now(),
+          id: newId,
           title: newModuleTitle,
           isOpen: true,
           isPublished: true,
+          content: JSON.stringify(initialData.content),
           items: []
         }
       ]);
       setNewModuleTitle("");
       setIsAddingModule(false);
+      
+      // Navigate straight to the new module's editor page!
+      navigate(`/courses/${activeCourseId}/items/${newId}`);
     }
   };
 
@@ -2456,11 +2549,17 @@ function CourseModulesView() {
           <div key={mod.id} className="border border-gray-200 rounded-2xl overflow-hidden shadow-xs bg-white">
             {/* Header row */}
             <div 
-              onClick={() => toggleModule(mod.id)}
+              onClick={() => navigate(`/courses/${activeCourseId}/items/${mod.id}`)}
               className="flex items-center justify-between px-5 py-4 bg-gray-50/80 border-b border-gray-200 cursor-pointer select-none group"
             >
               <div className="flex-1 flex items-center gap-3 min-w-0">
-                <span className="text-gray-400 group-hover:text-gray-600 transition-colors shrink-0">
+                <span 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleModule(mod.id);
+                  }}
+                  className="text-gray-400 group-hover:text-gray-600 transition-colors shrink-0 p-1 hover:bg-gray-200 rounded-md"
+                >
                   {mod.isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
                 </span>
                 
@@ -2612,7 +2711,7 @@ function CourseModulesView() {
               </div>
             )}
 
-            {/* Nested items */}
+            {/* Nested items & guidelines editor */}
             {mod.isOpen && (
               <div className="flex flex-col">
                 {mod.items.length === 0 ? (
@@ -2678,10 +2777,17 @@ function CourseModulesView() {
                                 <span className="truncate">{item.label}</span>
                                 {item.isExternal && <ExternalLink size={11} className="shrink-0" />}
                               </a>
+                            ) : item.type === "document" ? (
+                              <span 
+                                className="text-xs font-bold text-gray-700 hover:text-[#3C0078] hover:underline truncate cursor-pointer"
+                                onClick={() => navigate(`/courses/${activeCourseId}/items/${item.id}`)}
+                              >
+                                {item.label}
+                              </span>
                             ) : (
                               <span 
                                 className="text-xs font-bold text-gray-700 truncate cursor-pointer hover:text-gray-900"
-                                onClick={() => alert(`Viewing document: ${item.label}`)}
+                                onClick={() => alert(`Downloading attachment: ${item.label}`)}
                               >
                                 {item.label}
                               </span>
@@ -3150,9 +3256,13 @@ export default function TeacherCourses() {
     const isModulesPage = path.endsWith("/modules");
     const isNotesPage = path.endsWith("/notes");
     
+    // Module Item detail: /courses/:courseId/items/:itemId
+    const isItemDetailPage = pathParts[2] === "items" && pathParts.length === 4;
+    const activeItemId = isItemDetailPage ? pathParts[3] : null;
+    
     // Home logic: Strictly defined as the base course page
     // We force Home if exactly on the course ID path or if no other specific sub-page is matched below
-    const isHomePage = !isGradesPage && !isAnnouncementsPage && !isAssignmentsPage && !isAttendancePage && !isModulesPage && !isNotesPage;
+    const isHomePage = !isGradesPage && !isAnnouncementsPage && !isAssignmentsPage && !isAttendancePage && !isModulesPage && !isNotesPage && !isItemDetailPage;
 
     // Determine active subpage label for the top breadcrumb bar
     const activeSubpageLabel = React.useMemo(() => {
@@ -3162,8 +3272,9 @@ export default function TeacherCourses() {
         if (isAttendancePage) return "Attendance";
         if (isModulesPage) return "Modules";
         if (isNotesPage) return "Notes";
+        if (isItemDetailPage) return "Module Page";
         return "Home";
-    }, [isGradesPage, isAnnouncementsPage, isAssignmentsPage, isAttendancePage, isModulesPage, isNotesPage]);
+    }, [isGradesPage, isAnnouncementsPage, isAssignmentsPage, isAttendancePage, isModulesPage, isNotesPage, isItemDetailPage]);
 
     return (
         <div className="flex h-screen overflow-hidden -ml-4 -mr-8 -mt-6 bg-gray-50/10">
@@ -3186,7 +3297,7 @@ export default function TeacherCourses() {
 
                         {/* Student View Action Button */}
                         <button
-                            onClick={() => navigate(`/courses/${activeCourseId}?viewAs=student`)}
+                            onClick={() => navigate(`/courses/${activeCourseId}/items/${activeItemId || "102"}?viewAs=student`)}
                             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-xs font-bold text-gray-600 transition-all cursor-pointer shadow-xs hover:border-gray-300"
                         >
                             <Eye size={13} />
@@ -3197,7 +3308,9 @@ export default function TeacherCourses() {
 
                 {/* Scrollable View Content */}
                 <div className="flex-1 overflow-y-auto pt-6 px-8 pb-12">
-                    {isGradesPage ? (
+                    {isItemDetailPage ? (
+                        <CourseItemView activeCourseId={activeCourseId} activeItemId={activeItemId} isStudentView={false} />
+                    ) : isGradesPage ? (
                         <CourseGradesView activeCourseId={activeCourseId} />
                     ) : isAnnouncementsPage ? (
                         <CourseAnnouncementsView activeCourseId={activeCourseId} />
@@ -3206,7 +3319,7 @@ export default function TeacherCourses() {
                     ) : isAttendancePage ? (
                         <CourseAttendanceView />
                     ) : isModulesPage ? (
-                        <CourseModulesView />
+                        <CourseModulesView activeCourseId={activeCourseId} />
                     ) : isNotesPage ? (
                         <CourseNotesView activeCourseId={activeCourseId} />
                     ) : (
