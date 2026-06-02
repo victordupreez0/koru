@@ -7,8 +7,8 @@ import StudentIcon from "../assets/icons/Student.png";
 import TeacherIcon from "../assets/icons/Teacher.png";
 import AdminIcon from "../assets/icons/Administrator.png";
 
-// Brand logo – shown in the onboarding welcome section
-import Logo from "../assets/Logo.png";
+// Animated Koru branding
+import KoruLogo from "../components/UI/KoruLogo";
 
 // Onboarding page – introduces the platform and routes users by role
 export default function Onboarding() {
@@ -19,16 +19,11 @@ export default function Onboarding() {
       style={{ backgroundImage: `url(${OnboardBackground})` }}
     >
       {/* Welcome section – displays the platform branding and tagline */}
-      <div className="absolute top-[10%] left-[5%] z-10 flex flex-col">
-        <h1 className="!text-3xl mb-[-60px]">Welcome to</h1>
-        <img
-          src={Logo}
-          alt="Learn Online logo"
-          className="h-80 w-100 object-contain sm:h-75 sm:w-120"
-        />
-        {/* <h2 className="text-left !text-4xl text-black sm:text-3xl">
-          online
-        </h2> */}
+      <div className="absolute top-[12%] left-[6%] z-10 flex flex-col">
+        <h1 className="!text-3xl text-slate-800 font-medium tracking-tight mb-4">Welcome to</h1>
+        <div className="h-20 sm:h-24 flex items-center justify-start">
+          <KoruLogo showText={true} className="h-full w-auto" />
+        </div>
       </div>
 
       {/* Role selection section – lets the user choose how they want to continue */}
