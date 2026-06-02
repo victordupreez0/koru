@@ -29,7 +29,8 @@ export default function CourseGradesView({ subject, activeCourseId }) {
 
                 const mapped = assignments.map(a => {
                     const sub = submissions.find(s => s.assignmentId === a.id);
-                    const grade = sub ? grades.find(g => g.submissionId === sub.id) : null;
+                    const grade = sub ? grades.find(g => g.submissionId === sub.id && g.isReleased) : null;
+                    const pendingGrade = sub ? grades.find(g => g.submissionId === sub.id && !g.isReleased) : null;
 
                     let status = "Pending";
                     let gradeText = "-";
@@ -40,6 +41,8 @@ export default function CourseGradesView({ subject, activeCourseId }) {
                         gradeText = `${Math.round((grade.pointsEarned / a.maxPoints) * 100)}%`;
                         totalPoints += a.maxPoints;
                         earnedPoints += grade.pointsEarned;
+                    } else if (pendingGrade) {
+                        status = "Pending Release";
                     } else if (sub) {
                         status = "Submitted";
                     } else if (new Date(a.dueDate) < new Date()) {
@@ -105,7 +108,7 @@ export default function CourseGradesView({ subject, activeCourseId }) {
                                     </td>
                                     <td className="px-8 py-6 text-sm text-gray-600">{item.weight}</td>
                                     <td className="px-8 py-6">
-                                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide ${item.status === "Graded" ? "bg-green-50 text-green-600" : item.status === "Late" ? "bg-red-50 text-red-600" : "bg-orange-50 text-orange-600"}`}>{item.status}</span>
+                                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide ${item.status === "Graded" ? "bg-green-50 text-green-600" : item.status === "Late" ? "bg-red-50 text-red-600" : item.status === "Pending Release" ? "bg-blue-50 text-blue-500" : "bg-orange-50 text-orange-600"}`}>{item.status}</span>
                                     </td>
                                     <td className="px-8 py-6 text-right">
                                         <span className="text-lg font-semibold text-gray-900">{item.grade}</span>
