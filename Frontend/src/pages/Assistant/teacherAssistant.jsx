@@ -6,8 +6,10 @@ import Orb from "../../components/UI/Orb";
 import AssistantInput from "../../components/assistantInput";
 import HeaderTopBar from "../../components/HeaderTopBar";
 import { getAssistantResponse } from "../../services/assistantService";
+import { useAuth } from "../../contexts/AuthContext";
 
 export default function TeacherAssistant() {
+    const { user } = useAuth();
     const [messages, setMessages] = useState([]);
     const [isTyping, setIsTyping] = useState(false);
     const [copiedIndex, setCopiedIndex] = useState(null);
@@ -29,8 +31,8 @@ export default function TeacherAssistant() {
         setIsTyping(true);
 
         try {
-            // 2. Call the AI assistant service (passes message history)
-            const response = await getAssistantResponse(updatedMessages);
+            // 2. Call the AI assistant service (passes message history and user identity context)
+            const response = await getAssistantResponse(updatedMessages, user?.userId, user?.role);
             
             // 3. Add AI assistant response
             setMessages((prev) => [...prev, { role: "assistant", content: response.content }]);
