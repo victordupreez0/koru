@@ -6,6 +6,7 @@ import ProgressRing from "./UI/progressRing";
 import { useAuth } from "../contexts/AuthContext";
 import { getStudentAssignments } from "../services/assignmentService";
 import { getStudentSubmissions } from "../services/submissionService";
+import { getStudentStats } from "../services/attendanceService";
 
 // ──────────────────────────────────────────────
 // Assignments data – easy to swap with backend later
@@ -15,6 +16,7 @@ import { getStudentSubmissions } from "../services/submissionService";
 export default function AssignmentsProgress() {
   const { user } = useAuth();
   const [assignments, setAssignments] = useState([]);
+  const [attendanceRate, setAttendanceRate] = useState(100);
   const [loading, setLoading] = useState(true);
 
   const getRankAndState = (dbAssignment, submissions) => {
@@ -35,13 +37,14 @@ export default function AssignmentsProgress() {
 
   useEffect(() => {
     let mounted = true;
-    async function fetchAssignments() {
+    async function fetchAssignmentsAndStats() {
       if (!user?.userId) return;
       try {
         setLoading(true);
-        const [data, subs] = await Promise.all([
+        const [data, subs, stats] = await Promise.all([
             getStudentAssignments(user.userId),
             getStudentSubmissions(user.userId).catch(() => []),
+            getStudentStats(user.userId).catch(() => null)
         ]);
 
         // Map backend schema to our required UI schema and sort by priority
@@ -59,15 +62,19 @@ export default function AssignmentsProgress() {
           };
         }).sort((a, b) => a.rank - b.rank);
 
-        // For the aesthetic of the minimal dashboard, let's list all dynamically
-        if (mounted) setAssignments(mapped);
+        if (mounted) {
+          setAssignments(mapped);
+          if (stats && typeof stats.overallAttendanceRate === "number") {
+            setAttendanceRate(stats.overallAttendanceRate);
+          }
+        }
       } catch (err) {
-        console.error("Failed loading assignments:", err);
+        console.error("Failed loading data:", err);
       } finally {
         if (mounted) setLoading(false);
       }
     }
-    fetchAssignments();
+    fetchAssignmentsAndStats();
     return () => { mounted = false; };
   }, [user?.userId]);
 
@@ -156,11 +163,18 @@ export default function AssignmentsProgress() {
         </div>
 
         {/* ── Progress Header ── */}
-        <h2 className="text-2xl font-['Gabarito'] mt-8 mb-2">Progress</h2>
+        <h2 className="text-2xl font-['Gabarito'] mt-8 mb-4">Progress & Stats</h2>
 
-        {/* ── Progress Ring ── */}
-        <div className="w-full bg-gray-100 rounded-2xl border border-gray-200 p-4">
-          <ProgressRing percentage={progress} />
+        {/* ── Progress Rings Grid ── */}
+        <div className="grid grid-cols-2 gap-4">
+          <div className="bg-gray-50/50 rounded-[28px] border border-gray-100 p-4 flex flex-col items-center">
+            <span className="text-[10px] font-black uppercase tracking-widest text-[#3C0078] opacity-60 mb-2">Assignments</span>
+            <ProgressRing percentage={progress} size={110} strokeWidth={8} />
+          </div>
+          <div className="bg-gray-50/50 rounded-[28px] border border-gray-100 p-4 flex flex-col items-center">
+            <span className="text-[10px] font-black uppercase tracking-widest text-[#3C0078] opacity-60 mb-2">Attendance</span>
+            <ProgressRing percentage={attendanceRate} size={110} strokeWidth={8} />
+          </div>
         </div>
       </div>
     </div>

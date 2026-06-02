@@ -13,6 +13,8 @@ import { getCourseSubmissions, getAssignmentSubmissions, updateSubmission } from
 import { getCourseStudentCount } from "../../services/enrollmentService";
 import StudentCourseAssignmentsView from "./studentCoursesComponents/CourseAssignmentsView";
 import { getCourseAnnouncements, createAnnouncement, deleteAnnouncement } from "../../services/announcementService";
+import { createAttendanceSession, getSessionDetails, submitAttendance, getCourseStats, getCohortSessions } from "../../services/attendanceService";
+import { getCourseCohorts, getCohortDetails } from "../../services/classGroupService";
 import {
     EditorRoot,
     EditorContent,
@@ -1529,174 +1531,542 @@ function CourseAssignmentsView({ subject, activeCourseId }) {
     );
 }
 
-function CourseAttendanceView() {
+function CourseAttendanceView({ activeCourseId }) {
+    const { user } = useAuth();
+    const courseId = activeCourseId || window.location.pathname.split('/')[2];
+
+    const [cohorts, setCohorts] = useState([]);
+    const [selectedCohortId, setSelectedCohortId] = useState("");
+    const [cohortDetails, setCohortDetails] = useState(null);
+    const [cohortStats, setCohortStats] = useState([]);
+    const [sessions, setSessions] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    // Attendance Taking Form State
+    const [isTaking, setIsTaking] = useState(false);
+    const [showCreateSessionPrompt, setShowCreateSessionPrompt] = useState(false);
+    const [sessionDate, setSessionDate] = useState(new Date().toISOString().split('T')[0]);
+    const [roster, setRoster] = useState([]);
+    const [statuses, setStatuses] = useState({}); // studentId -> status
+    const [remarks, setRemarks] = useState({}); // studentId -> string
+    const [searchQuery, setSearchQuery] = useState("");
+    const [isSaving, setIsSaving] = useState(false);
+    const [activeSessionId, setActiveSessionId] = useState(null);
+
+    // Historical Session View Modal State
+    const [selectedSessionDetails, setSelectedSessionDetails] = useState(null);
+    const [isViewingDetails, setIsViewingDetails] = useState(false);
+
+    useEffect(() => {
+        if (courseId) {
+            loadInitialData();
+        }
+    }, [courseId]);
+
+    useEffect(() => {
+        if (selectedCohortId) {
+            loadCohortSessionsAndDetails(selectedCohortId);
+        }
+    }, [selectedCohortId]);
+
+    const loadInitialData = async () => {
+        setIsLoading(true);
+        try {
+            const fetchedCohorts = await getCourseCohorts(courseId);
+            const fetchedStats = await getCourseStats(courseId);
+            
+            setCohorts(fetchedCohorts);
+            setCohortStats(fetchedStats);
+            
+            if (fetchedCohorts.length > 0) {
+                setSelectedCohortId(fetchedCohorts[0].id);
+            }
+        } catch (err) {
+            console.error("Failed to load initial attendance data:", err);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const loadCohortSessionsAndDetails = async (cohortId) => {
+        try {
+            const details = await getCohortDetails(cohortId);
+            setCohortDetails(details);
+            
+            const fetchedSessions = await getCohortSessions(cohortId);
+            setSessions(fetchedSessions);
+        } catch (err) {
+            console.error("Failed to load cohort sessions:", err);
+        }
+    };
+
+    const handleStartNewSession = async () => {
+        if (!selectedCohortId) return;
+        setIsSaving(true);
+        try {
+            const session = await createAttendanceSession({
+                classGroupId: selectedCohortId,
+                sessionDate: new Date(sessionDate).toISOString(),
+                lecturerId: user?.userId || "t1"
+            });
+            
+            setActiveSessionId(session.id);
+            setRoster(cohortDetails.students || []);
+            
+            const initialStatuses = {};
+            const initialRemarks = {};
+            (cohortDetails.students || []).forEach(s => {
+                initialStatuses[s.id] = "Present";
+                initialRemarks[s.id] = "";
+            });
+            setStatuses(initialStatuses);
+            setRemarks(initialRemarks);
+            setIsTaking(true);
+            setShowCreateSessionPrompt(false);
+        } catch (err) {
+            alert("Failed to start attendance session: " + err.message);
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleSaveAttendance = async () => {
+        if (!activeSessionId) return;
+        setIsSaving(true);
+        try {
+            const records = roster.map(student => ({
+                attendanceSessionId: activeSessionId,
+                studentId: student.id,
+                status: statuses[student.id] || "Present",
+                remarks: remarks[student.id] || ""
+            }));
+
+            await submitAttendance(records);
+            
+            await loadInitialData();
+            await loadCohortSessionsAndDetails(selectedCohortId);
+            setIsTaking(false);
+            setActiveSessionId(null);
+        } catch (err) {
+            alert("Failed to save attendance: " + err.message);
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleViewSessionHistory = async (sessionId) => {
+        try {
+            const details = await getSessionDetails(sessionId);
+            setSelectedSessionDetails(details);
+            setIsViewingDetails(true);
+        } catch (err) {
+            alert("Failed to fetch session details: " + err.message);
+        }
+    };
+
+    const filteredRoster = roster.filter(student => {
+        const fullName = `${student.firstName} ${student.lastName}`.toLowerCase();
+        return fullName.includes(searchQuery.toLowerCase()) || (student.email || "").toLowerCase().includes(searchQuery.toLowerCase());
+    });
+
+    const activeCohortRate = cohortStats.find(s => s.id === selectedCohortId)?.attendanceRate ?? 100;
+    const activeCohortSessionsCount = cohortStats.find(s => s.id === selectedCohortId)?.totalSessions ?? 0;
+
+    if (isLoading) {
+        return (
+            <div className="flex flex-col items-center justify-center py-24 gap-4">
+                <div className="w-12 h-12 border-4 border-[#3C0078] border-t-transparent rounded-full animate-spin"></div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Loading Attendance Board...</p>
+            </div>
+        );
+    }
+
+    if (isTaking) {
+        return (
+            <motion.div className="flex-1 space-y-8" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                <header className="flex justify-between items-end bg-gray-50/50 p-6 rounded-3xl border border-gray-100 shadow-xs">
+                    <div>
+                        <div className="flex items-center gap-2 mb-1.5">
+                            <div className="w-1.5 h-4 bg-[#3C0078] rounded-full"></div>
+                            <span className="text-[10px] font-black uppercase tracking-wider text-[#3C0078]">Session In Progress</span>
+                        </div>
+                        <h1 className="text-3xl font-black text-gray-900 tracking-tight">
+                            Take Attendance: <span className="text-[#3C0078]">{cohortDetails?.cohort?.name}</span>
+                        </h1>
+                        <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mt-1">
+                            Session Date: {new Date(sessionDate).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                        </p>
+                    </div>
+                    <div className="flex gap-3">
+                        <button 
+                            onClick={() => {
+                                if (window.confirm("Discard current attendance entries? All changes will be lost.")) {
+                                    setIsTaking(false);
+                                    setActiveSessionId(null);
+                                }
+                            }}
+                            className="px-6 py-3.5 rounded-2xl border border-gray-200 bg-white text-[11px] font-black uppercase tracking-widest text-gray-400 hover:bg-red-50 hover:text-red-500 hover:border-red-100 transition-all cursor-pointer"
+                        >
+                            Cancel
+                        </button>
+                        <button 
+                            onClick={handleSaveAttendance}
+                            disabled={isSaving}
+                            className="px-6 py-3.5 rounded-2xl bg-[#3C0078] text-white text-[11px] font-black uppercase tracking-widest hover:scale-[1.03] active:scale-[0.98] transition-all disabled:opacity-50 disabled:scale-100 shadow-lg shadow-[#3C0078]/25 cursor-pointer"
+                        >
+                            {isSaving ? "Saving..." : "Save Attendance Logs"}
+                        </button>
+                    </div>
+                </header>
+
+                <div className="bg-white rounded-[40px] border border-gray-100 shadow-sm overflow-hidden p-8 space-y-6">
+                    <div className="flex items-center justify-between">
+                        <h2 className="text-xl font-black text-gray-800 tracking-tight">Student Roster ({filteredRoster.length})</h2>
+                        <div className="relative w-80">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+                            <input 
+                                type="text" 
+                                placeholder="Search student by name..."
+                                value={searchQuery}
+                                onChange={e => setSearchQuery(e.target.value)}
+                                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border-none rounded-xl text-[12px] font-bold outline-none focus:bg-white focus:ring-2 focus:ring-[#3C0078]/10 transition-all"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="divide-y divide-gray-100 max-h-[500px] overflow-y-auto pr-1">
+                        {filteredRoster.map((student) => {
+                            const currentStatus = statuses[student.id] || "Present";
+                            return (
+                                <div key={student.id} className="py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-12 h-12 rounded-2xl bg-[#3C0078]/5 border border-[#3C0078]/10 flex items-center justify-center font-black text-sm text-[#3C0078]">
+                                            {student.firstName[0]}{student.lastName[0]}
+                                        </div>
+                                        <div>
+                                            <h4 className="text-[13px] font-black text-gray-800">{student.firstName} {student.lastName}</h4>
+                                            <p className="text-[10px] text-gray-400 font-bold">{student.email}</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                                        <div className="flex bg-gray-50 p-1 rounded-2xl border border-gray-100 gap-1 select-none">
+                                            {[
+                                                { label: "Present", value: "Present", color: "text-green-600 bg-green-500/10 border-green-500/20", activeBg: "bg-green-500 text-white" },
+                                                { label: "Late", value: "Late", color: "text-yellow-600 bg-yellow-500/10 border-yellow-500/20", activeBg: "bg-yellow-500 text-white" },
+                                                { label: "Absent", value: "Absent", color: "text-red-600 bg-red-500/10 border-red-500/20", activeBg: "bg-red-500 text-white" },
+                                                { label: "Excused", value: "Excused", color: "text-blue-600 bg-blue-500/10 border-blue-500/20", activeBg: "bg-blue-500 text-white" }
+                                            ].map(opt => {
+                                                const isActive = currentStatus === opt.value;
+                                                return (
+                                                    <button
+                                                        key={opt.value}
+                                                        onClick={() => setStatuses(prev => ({ ...prev, [student.id]: opt.value }))}
+                                                        className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border-none cursor-pointer ${
+                                                            isActive ? opt.activeBg + " shadow-sm font-extrabold" : "text-gray-400 bg-transparent hover:text-gray-600"
+                                                        }`}
+                                                    >
+                                                        {opt.label}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                        
+                                        <input 
+                                            type="text" 
+                                            placeholder="Add a remark..."
+                                            value={remarks[student.id] || ""}
+                                            onChange={e => setRemarks(prev => ({ ...prev, [student.id]: e.target.value }))}
+                                            className="px-3.5 py-2 bg-gray-50 border-none rounded-xl text-[11px] font-bold w-48 outline-none focus:bg-white focus:ring-1 focus:ring-gray-200"
+                                        />
+                                    </div>
+                                </div>
+                            );
+                        })}
+
+                        {filteredRoster.length === 0 && (
+                            <div className="py-12 text-center text-gray-400 text-[12px] font-bold">
+                                No matching students found
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </motion.div>
+        );
+    }
+
     return (
-        <motion.div className="flex-1 p-8 overflow-y-auto" initial="hidden" animate="visible" variants={staggerContainer}>
-            <motion.header variants={slideUp} className="mb-12 flex justify-between items-end">
+        <motion.div className="flex-1 space-y-8" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+            {/* Top Bar Header */}
+            <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 bg-gray-50/50 p-8 rounded-[36px] border border-gray-100 shadow-xs">
                 <div>
-                    <h1 className="text-3xl font-semibold tracking-tight text-gray-900">Attendance & Presence</h1>
-                    <p className="text-gray-500 mt-2">UX300 | Academic Presence Analytics</p>
+                    <h1 className="text-3xl font-black text-gray-900 tracking-tight">Attendance & presence</h1>
+                    <p className="text-xs text-gray-400 font-bold uppercase tracking-widest mt-1">UX300 | Academic Presence Analytics</p>
                 </div>
-                <div className="flex gap-4">
-                    <button className="px-6 py-3 rounded-2xl border border-gray-200 text-sm font-semibold hover:bg-gray-50 transition-colors flex items-center gap-2 shadow-sm">
-                        <Folder size={18} /> Export Log
-                    </button>
-                    <button className="px-6 py-3 rounded-2xl bg-[#3C0078] text-white text-sm font-semibold shadow-lg shadow-[#3C0078]/20 hover:bg-[#2A0054] transition-all">
-                        Take Attendance
+                
+                <div className="flex items-center gap-3">
+                    <div className="flex flex-col gap-1 text-right sm:mr-3">
+                        <label className="text-[9px] font-black uppercase tracking-wider text-gray-400 block">Cohort Group</label>
+                        <select 
+                            value={selectedCohortId}
+                            onChange={e => setSelectedCohortId(e.target.value)}
+                            className="px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-[12px] font-black uppercase tracking-wider outline-none text-[#3C0078]"
+                        >
+                            {cohorts.map(c => (
+                                <option key={c.id} value={c.id}>{c.name}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <button 
+                        onClick={() => setShowCreateSessionPrompt(true)}
+                        className="px-6 py-3.5 rounded-2xl bg-[#3C0078] text-white text-[11px] font-black uppercase tracking-widest hover:scale-[1.03] active:scale-[0.98] transition-all shadow-lg shadow-[#3C0078]/25 flex items-center gap-1.5 cursor-pointer border-none"
+                    >
+                        <Plus size={14} /> Start Daily Session
                     </button>
                 </div>
-            </motion.header>
+            </header>
 
             {/* Attendance Analytics Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12 items-stretch">
-                <motion.div variants={scaleIn} className="lg:col-span-2">
-                    <div className="bg-white rounded-[40px] border border-gray-100 shadow-sm p-8 h-full flex flex-col">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch">
+                <div className="lg:col-span-2">
+                    <div className="bg-white rounded-[40px] border border-gray-100 shadow-sm p-8 h-full flex flex-col justify-between min-h-[300px]">
                         <div className="flex justify-between items-center mb-6">
                             <div>
-                                <h3 className="text-xl font-bold">Class Attendance Overview</h3>
-                                <p className="text-sm text-gray-400">Semester 1 | UX300</p>
+                                <h3 className="text-lg font-black text-gray-800 tracking-tight">Cohort Attendance Overview</h3>
+                                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">
+                                    Semester 1 | {cohortDetails?.cohort?.name || "Group A"}
+                                </p>
                             </div>
-                            <div className="bg-green-50 px-4 py-2 rounded-2xl">
-                                <span className="text-green-600 font-bold text-sm">+5.2% from last wk</span>
+                            <div className="bg-green-50 px-4 py-1.5 rounded-2xl border border-green-100">
+                                <span className="text-green-600 font-black text-[11px] uppercase tracking-wider">Active</span>
                             </div>
                         </div>
-                        <div className="flex-1 min-h-[250px] relative">
-                            <AttendanceChart attended={84} total={100} missed={16} />
+                        <div className="flex-1 min-h-[220px] relative">
+                            <AttendanceChart attended={activeCohortRate} total={100} missed={100 - activeCohortRate} />
                         </div>
                     </div>
-                </motion.div>
+                </div>
                 
-                <motion.div variants={scaleIn} className="flex flex-col gap-6">
-                    <div className="bg-[#3C0078] rounded-[40px] p-8 text-white flex-1 relative overflow-hidden group">
+                <div className="flex flex-col gap-6">
+                    <div className="bg-[#3C0078] rounded-[40px] p-8 text-white flex-1 relative overflow-hidden group flex flex-col justify-between shadow-lg shadow-[#3C0078]/10 min-h-[140px]">
                         <div className="absolute -right-8 -top-8 w-32 h-32 bg-white/10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700"></div>
-                        <span className="text-[10px] uppercase font-bold tracking-[0.2em] opacity-80 block mb-2">Weekly Rate</span>
-                        <div className="flex items-baseline gap-2">
-                            <span className="text-5xl font-black italic">92%</span>
-                            <span className="text-sm opacity-60">Avg</span>
+                        <div>
+                            <span className="text-[10px] uppercase font-bold tracking-[0.2em] opacity-80 block mb-1">Weekly Attendance Rate</span>
+                            <div className="flex items-baseline gap-2">
+                                <span className="text-5xl font-black italic">{activeCohortRate}%</span>
+                                <span className="text-xs opacity-60">Avg</span>
+                            </div>
                         </div>
-                        <div className="mt-8 flex items-center gap-2 text-sm">
-                            <CheckCircle size={16} className="text-green-400" />
-                            <span>On track with semester goal</span>
+                        <div className="flex items-center gap-2 text-xs opacity-90">
+                            <CheckCircle size={15} className="text-green-400" />
+                            <span>On track with Koru requirements</span>
                         </div>
                     </div>
 
-                    <div className="bg-white rounded-[40px] border border-gray-100 shadow-sm p-8 flex-1 group hover:border-[#3C0078]/20 transition-all cursor-pointer">
-                        <div className="flex justify-between items-center mb-6">
-                            <span className="text-[10px] uppercase font-bold tracking-[0.2em] text-gray-400">Class Engagement</span>
-                            <div className="flex -space-x-2">
-                                {[1,2,3].map(i => (
-                                    <div key={i} className="w-6 h-6 rounded-full border-2 border-white bg-gray-100 flex items-center justify-center text-[8px] font-bold">
-                                        {String.fromCharCode(64 + i)}
-                                    </div>
-                                ))}
-                            </div>
+                    <div className="bg-white rounded-[40px] border border-gray-100 shadow-sm p-8 flex-1 group hover:border-[#3C0078]/10 transition-all min-h-[140px] flex flex-col justify-between">
+                        <div className="flex justify-between items-center">
+                            <span className="text-[10px] uppercase font-bold tracking-[0.2em] text-gray-400">Recorded Sessions</span>
+                            <ClipboardList size={16} className="text-[#3C0078]/60" />
                         </div>
                         
-                        <div className="space-y-4">
-                            <div className="flex items-end justify-between gap-1 h-16">
-                                {[30, 80, 45, 95, 60, 40, 85].map((h, i) => (
-                                    <div 
-                                        key={i} 
-                                        className={`w-full rounded-t-lg transition-all duration-500 bg-gray-100 group-hover:bg-[#3C0078]/10 ${i === 3 ? 'bg-[#3C0078]' : ''}`}
-                                        style={{ height: `${h}%` }}
-                                    ></div>
-                                ))}
-                            </div>
-                            <div className="flex justify-between items-center bg-gray-50 rounded-2xl p-4">
-                                <div>
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-[#3C0078]">Peak Activity</p>
-                                    <p className="text-xl font-black italic">Thursday</p>
-                                </div>
-                                <div className="text-right">
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Avg Session</p>
-                                    <p className="text-xl font-black italic">42m</p>
-                                </div>
-                            </div>
+                        <div>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-[#3C0078] mb-1">Roster Statuses Compiled</p>
+                            <p className="text-4xl font-black italic text-gray-800">{activeCohortSessionsCount} Sessions</p>
                         </div>
                     </div>
-                </motion.div>
+                </div>
             </div>
 
-            <motion.div variants={slideUp} className="bg-white rounded-[48px] border border-gray-100 shadow-sm overflow-hidden mb-12">
-                <div className="px-10 py-8 border-b border-gray-50 flex justify-between items-center">
-                    <h2 className="text-2xl font-bold">Students Attendance</h2>
-                    <div className="flex gap-2">
-                        <button className="p-2.5 rounded-xl bg-gray-50 text-gray-400 hover:bg-gray-100"><Filter size={20} /></button>
-                    </div>
+            {/* Sessions History Table */}
+            <div className="bg-white rounded-[40px] border border-gray-100 shadow-sm overflow-hidden">
+                <div className="px-8 py-6 border-b border-gray-50 flex justify-between items-center">
+                    <h2 className="text-xl font-black text-gray-800 tracking-tight">Recorded Daily Sessions</h2>
                 </div>
                 <table className="w-full text-left">
                     <thead>
-                        <tr className="bg-gray-50/30">
-                            <th className="px-10 py-5 text-[10px] font-black uppercase tracking-widest text-gray-400">Student Info</th>
-                            <th className="px-10 py-5 text-[10px] font-black uppercase tracking-widest text-gray-400 text-center">Sessions Present</th>
-                            <th className="px-10 py-5 text-[10px] font-black uppercase tracking-widest text-gray-400 text-center">Present Rate</th>
-                            <th className="px-10 py-5 text-[10px] font-black uppercase tracking-widest text-gray-400">Status</th>
-                            <th className="px-10 py-5 text-[10px] font-black uppercase tracking-widest text-gray-400 text-right">Actions</th>
+                        <tr className="bg-gray-50/50">
+                            <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Session Date</th>
+                            <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Lecturer In Charge</th>
+                            <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400 text-center">Roster size</th>
+                            <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400 text-center">Present Rate</th>
+                            <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400 text-right">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {STUDENT_GRADES_DATA.map((student) => (
-                            <tr key={student.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-all group">
-                                <td className="px-10 py-6">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 rounded-full bg-[#3C0078]/5 border-2 border-[#3C0078]/10 flex items-center justify-center font-black text-xs text-[#3C0078] shadow-sm">
-                                            {student.avatar}
+                        {sessions.map((sess) => {
+                            const rate = sess.totalStudents === 0 ? 100 : Math.round((sess.presentCount / sess.totalStudents) * 100);
+                            return (
+                                <tr key={sess.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/20 transition-all group">
+                                    <td className="px-8 py-5">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-xl bg-[#3C0078]/5 flex items-center justify-center font-black text-xs text-[#3C0078]">
+                                                {new Date(sess.sessionDate).getDate()}
+                                            </div>
+                                            <div>
+                                                <div className="font-black text-gray-800 text-[13px]">
+                                                    {new Date(sess.sessionDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                                                </div>
+                                                <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">
+                                                    {new Date(sess.sessionDate).toLocaleDateString(undefined, { weekday: 'short' })}
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <div className="font-bold text-gray-900 group-hover:text-[#3C0078] transition-colors">{student.name}</div>
-                                            <div className="text-xs text-gray-400 mt-1">{student.email}</div>
+                                    </td>
+                                    <td className="px-8 py-5 text-gray-600 text-[13px] font-bold">
+                                        {sess.lecturerName}
+                                    </td>
+                                    <td className="px-8 py-5 text-center text-gray-800 text-[13px] font-black">
+                                        {sess.totalStudents} Students
+                                    </td>
+                                    <td className="px-8 py-5">
+                                        <div className="flex flex-col items-center gap-1">
+                                            <span className="text-[13px] font-black italic text-gray-800">{rate}%</span>
+                                            <div className="w-16 h-1 bg-gray-100 rounded-full overflow-hidden">
+                                                <div 
+                                                    className={`h-full rounded-full ${
+                                                        rate > 80 ? 'bg-green-500' : rate > 70 ? 'bg-orange-400' : 'bg-red-500'
+                                                    }`}
+                                                    style={{ width: `${rate}%` }}
+                                                ></div>
+                                            </div>
                                         </div>
-                                    </div>
-                                </td>
-                                <td className="px-10 py-6 text-center">
-                                    <span className="text-sm font-bold text-gray-900">24/26 Sessions</span>
-                                </td>
-                                <td className="px-10 py-6 text-center">
-                                    <div className="flex flex-col items-center gap-1.5">
-                                        <span className="text-base font-black italic text-gray-900">{student.attendance}</span>
-                                        <div className="w-16 h-1 bg-gray-100 rounded-full overflow-hidden">
-                                            <div 
-                                                className={`h-full rounded-full ${
-                                                    parseInt(student.attendance) > 80 ? 'bg-green-500' : 
-                                                    parseInt(student.attendance) > 70 ? 'bg-orange-400' : 'bg-red-500'
-                                                }`}
-                                                style={{ width: student.attendance }}
-                                            ></div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td className="px-10 py-6">
-                                    <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm ${
-                                        parseInt(student.attendance) > 85 ? "bg-green-100 text-green-700" :
-                                        parseInt(student.attendance) > 75 ? "bg-blue-50 text-blue-700" :
-                                        parseInt(student.attendance) > 65 ? "bg-orange-50 text-orange-700" : "bg-red-50 text-red-700"
-                                    }`}>
-                                        {parseInt(student.attendance) > 85 ? "Excellent" : "Regular"}
-                                    </span>
-                                </td>
-                                <td className="px-10 py-6 text-right">
-                                    <button className="px-5 py-2 rounded-xl border border-gray-100 text-[10px] font-black uppercase tracking-[0.15em] text-gray-400 group-hover:bg-[#3C0078] group-hover:text-white group-hover:border-[#3C0078] transition-all whitespace-nowrap shadow-sm">
-                                        View Student
-                                    </button>
+                                    </td>
+                                    <td className="px-8 py-5 text-right">
+                                        <button 
+                                            onClick={() => handleViewSessionHistory(sess.id)}
+                                            className="px-4 py-2 rounded-xl border border-gray-100 text-[9px] font-black uppercase tracking-wider text-gray-400 group-hover:bg-[#3C0078] group-hover:text-white group-hover:border-[#3C0078] transition-all shadow-sm cursor-pointer"
+                                        >
+                                            View Logs
+                                        </button>
+                                    </td>
+                                </tr>
+                            );
+                        })}
+
+                        {sessions.length === 0 && (
+                            <tr>
+                                <td colSpan="5" className="py-12 text-center text-gray-400 text-[12px] font-bold italic">
+                                    No sessions recorded for this cohort yet. Click "Start Daily Session" to begin.
                                 </td>
                             </tr>
-                        ))}
+                        )}
                     </tbody>
                 </table>
-            </motion.div>
+            </div>
+
+            {/* Modal - Create Session Prompt */}
+            <AnimatePresence>
+                {showCreateSessionPrompt && (
+                    <div className="fixed inset-0 z-[250] flex items-center justify-center bg-black/60 backdrop-blur-md p-6">
+                        <motion.div 
+                            initial={{ scale: 0.95, opacity: 0 }} 
+                            animate={{ scale: 1, opacity: 1 }} 
+                            exit={{ scale: 0.95, opacity: 0 }}
+                            className="bg-white rounded-[32px] w-full max-w-md p-8 shadow-3xl space-y-6"
+                        >
+                            <div className="flex justify-between items-center">
+                                <h3 className="text-xl font-black text-gray-800 tracking-tight">New Attendance Log</h3>
+                                <button onClick={() => setShowCreateSessionPrompt(false)} className="p-2 bg-gray-50 rounded-xl text-gray-400 hover:text-gray-600 transition-colors border-none"><X size={16} /></button>
+                            </div>
+                            
+                            <div className="space-y-4">
+                                <div className="p-4 bg-[#3C0078]/5 border border-[#3C0078]/10 rounded-2xl">
+                                    <span className="text-[10px] uppercase font-black text-[#3C0078] tracking-widest block mb-1">Target Cohort</span>
+                                    <span className="text-[14px] font-black text-gray-800">
+                                        {cohorts.find(c => c.id === selectedCohortId)?.name}
+                                    </span>
+                                </div>
+
+                                <div>
+                                    <label className="text-[10px] font-black uppercase tracking-wider text-gray-400 block mb-1.5">Session Date</label>
+                                    <input 
+                                        type="date"
+                                        value={sessionDate}
+                                        onChange={e => setSessionDate(e.target.value)}
+                                        className="w-full px-4 py-3 bg-gray-50 rounded-2xl border-none outline-none text-[13px] font-bold"
+                                    />
+                                </div>
+                            </div>
+
+                            <button 
+                                onClick={handleStartNewSession}
+                                disabled={isSaving}
+                                className="w-full py-4 rounded-2xl bg-[#3C0078] text-white text-[11px] font-black uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 shadow-md shadow-[#3C0078]/15 border-none cursor-pointer"
+                            >
+                                {isSaving ? "Initializing..." : "Start Taking Attendance"}
+                            </button>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* Modal - View Session History Details */}
+            <AnimatePresence>
+                {isViewingDetails && selectedSessionDetails && (
+                    <div className="fixed inset-0 z-[250] flex items-center justify-center bg-black/60 backdrop-blur-md p-6">
+                        <motion.div 
+                            initial={{ scale: 0.95, opacity: 0 }} 
+                            animate={{ scale: 1, opacity: 1 }} 
+                            exit={{ scale: 0.95, opacity: 0 }}
+                            className="bg-white rounded-[40px] w-full max-w-3xl h-[80vh] flex flex-col shadow-3xl overflow-hidden"
+                        >
+                            <div className="p-8 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                                <div>
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <div className="w-1.5 h-4 bg-[#3C0078] rounded-full"></div>
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-[#3C0078]">Historical logs</span>
+                                    </div>
+                                    <h3 className="text-2xl font-black text-gray-800 tracking-tight">
+                                        Roster Log: {selectedSessionDetails.groupName}
+                                    </h3>
+                                    <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mt-1">
+                                        {new Date(selectedSessionDetails.sessionDate).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                                    </p>
+                                </div>
+                                <button 
+                                    onClick={() => {
+                                        setIsViewingDetails(false);
+                                        setSelectedSessionDetails(null);
+                                    }} 
+                                    className="p-3 bg-white border border-gray-100 rounded-xl text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+                                >
+                                    <X size={16} />
+                                </button>
+                            </div>
+
+                            <div className="flex-1 overflow-y-auto p-8 divide-y divide-gray-100">
+                                {selectedSessionDetails.records?.map((record) => (
+                                    <div key={record.id} className="py-3.5 flex items-center justify-between">
+                                        <div>
+                                            <h4 className="text-[13px] font-black text-gray-800">{record.studentName}</h4>
+                                            {record.remarks && (
+                                                <p className="text-[10px] text-gray-400 font-medium italic mt-0.5">
+                                                    * Note: "{record.remarks}"
+                                                </p>
+                                            )}
+                                        </div>
+                                        
+                                        <span className={`px-4.5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider shadow-inner ${
+                                            record.status === "Present" ? "bg-green-50 text-green-600 border border-green-100" :
+                                            record.status === "Late" ? "bg-yellow-50 text-yellow-600 border border-yellow-100" :
+                                            record.status === "Absent" ? "bg-red-50 text-red-600 border border-red-100" :
+                                            "bg-blue-50 text-blue-600 border border-blue-100"
+                                        }`}>
+                                            {record.status}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </motion.div>
     );
 }
 
-// TODO: backend endpoint missing — used only by CourseAttendanceView since no AttendanceController exists yet.
-const STUDENT_GRADES_DATA = [
-    { id: 1, name: "Alice Johnson", email: "alice.j@student.ac.za", attendance: "95%", avgGrade: "88%", status: "Good", avatar: "AJ" },
-    { id: 2, name: "Bob Smith", email: "bob.s@student.ac.za", attendance: "82%", avgGrade: "74%", status: "At Risk", avatar: "BS" },
-    { id: 3, name: "Charlie Davis", email: "charlie.d@student.ac.za", attendance: "91%", avgGrade: "92%", status: "Excellent", avatar: "CD" },
-    { id: 4, name: "Diana Prince", email: "diana.p@student.ac.za", attendance: "98%", avgGrade: "85%", status: "Good", avatar: "DP" },
-    { id: 5, name: "Ethan Hunt", email: "ethan.h@student.ac.za", attendance: "65%", avgGrade: "58%", status: "Critical", avatar: "EH" },
-    { id: 6, name: "Fiona Apple", email: "fiona.a@student.ac.za", attendance: "89%", avgGrade: "79%", status: "Good", avatar: "FA" },
-];
+// TODO: dummy grades seeder to preserve layout compatibility with other files
 
 function CourseGradesView({ activeCourseId }) {
     const [grades, setGrades] = useState([]);
@@ -3274,7 +3644,7 @@ export default function TeacherCourses() {
                     ) : isAssignmentsPage ? (
                         <CourseAssignmentsView subject={subject} activeCourseId={activeCourseId} />
                     ) : isAttendancePage ? (
-                        <CourseAttendanceView />
+                        <CourseAttendanceView activeCourseId={activeCourseId} />
                     ) : isModulesPage ? (
                         <CourseModulesView activeCourseId={activeCourseId} />
                     ) : isNotesPage ? (

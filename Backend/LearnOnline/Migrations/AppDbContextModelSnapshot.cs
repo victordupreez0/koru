@@ -114,9 +114,97 @@ namespace TodoApi.Migrations
                     b.ToTable("Assignments");
                 });
 
+            modelBuilder.Entity("LearnOnline.Models.AssignmentClassOverride", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<string>("AssignmentId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ClassGroupId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("CloseDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("DueDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("OpenDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AssignmentId");
+
+                    b.HasIndex("ClassGroupId");
+
+                    b.ToTable("AssignmentClassOverrides");
+                });
+
+            modelBuilder.Entity("LearnOnline.Models.AttendanceRecord", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<string>("AttendanceSessionId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Remarks")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("StudentId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AttendanceSessionId");
+
+                    b.HasIndex("StudentId");
+
+                    b.ToTable("AttendanceRecords");
+                });
+
+            modelBuilder.Entity("LearnOnline.Models.AttendanceSession", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ClassGroupId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("LecturerId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("SessionDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClassGroupId");
+
+                    b.HasIndex("LecturerId");
+
+                    b.ToTable("AttendanceSessions");
+                });
+
             modelBuilder.Entity("LearnOnline.Models.Class", b =>
                 {
                     b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ClassGroupId")
                         .HasColumnType("text");
 
                     b.Property<string>("CourseId")
@@ -139,6 +227,29 @@ namespace TodoApi.Migrations
                         .HasColumnType("time without time zone");
 
                     b.Property<string>("TimetableId")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClassGroupId");
+
+                    b.HasIndex("CourseId");
+
+                    b.HasIndex("TimetableId");
+
+                    b.ToTable("Classes");
+                });
+
+            modelBuilder.Entity("LearnOnline.Models.ClassGroup", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<string>("CourseId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -146,9 +257,7 @@ namespace TodoApi.Migrations
 
                     b.HasIndex("CourseId");
 
-                    b.HasIndex("TimetableId");
-
-                    b.ToTable("Classes");
+                    b.ToTable("ClassGroups");
                 });
 
             modelBuilder.Entity("LearnOnline.Models.Course", b =>
@@ -268,6 +377,9 @@ namespace TodoApi.Migrations
                     b.Property<string>("Id")
                         .HasColumnType("text");
 
+                    b.Property<string>("ClassGroupId")
+                        .HasColumnType("text");
+
                     b.Property<string>("CourseId")
                         .IsRequired()
                         .HasColumnType("text");
@@ -283,6 +395,8 @@ namespace TodoApi.Migrations
                         .HasColumnType("text");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ClassGroupId");
 
                     b.HasIndex("CourseId");
 
@@ -616,8 +730,69 @@ namespace TodoApi.Migrations
                     b.Navigation("Course");
                 });
 
+            modelBuilder.Entity("LearnOnline.Models.AssignmentClassOverride", b =>
+                {
+                    b.HasOne("LearnOnline.Models.Assignment", "Assignment")
+                        .WithMany()
+                        .HasForeignKey("AssignmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("LearnOnline.Models.ClassGroup", "ClassGroup")
+                        .WithMany()
+                        .HasForeignKey("ClassGroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Assignment");
+
+                    b.Navigation("ClassGroup");
+                });
+
+            modelBuilder.Entity("LearnOnline.Models.AttendanceRecord", b =>
+                {
+                    b.HasOne("LearnOnline.Models.AttendanceSession", "Session")
+                        .WithMany("Records")
+                        .HasForeignKey("AttendanceSessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("LearnOnline.Models.User", "Student")
+                        .WithMany()
+                        .HasForeignKey("StudentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Session");
+
+                    b.Navigation("Student");
+                });
+
+            modelBuilder.Entity("LearnOnline.Models.AttendanceSession", b =>
+                {
+                    b.HasOne("LearnOnline.Models.ClassGroup", "ClassGroup")
+                        .WithMany()
+                        .HasForeignKey("ClassGroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("LearnOnline.Models.User", "Lecturer")
+                        .WithMany()
+                        .HasForeignKey("LecturerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ClassGroup");
+
+                    b.Navigation("Lecturer");
+                });
+
             modelBuilder.Entity("LearnOnline.Models.Class", b =>
                 {
+                    b.HasOne("LearnOnline.Models.ClassGroup", "ClassGroup")
+                        .WithMany("ScheduledClasses")
+                        .HasForeignKey("ClassGroupId");
+
                     b.HasOne("LearnOnline.Models.Course", "Course")
                         .WithMany()
                         .HasForeignKey("CourseId")
@@ -626,13 +801,24 @@ namespace TodoApi.Migrations
 
                     b.HasOne("LearnOnline.Models.Timetable", "Timetable")
                         .WithMany()
-                        .HasForeignKey("TimetableId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("TimetableId");
+
+                    b.Navigation("ClassGroup");
 
                     b.Navigation("Course");
 
                     b.Navigation("Timetable");
+                });
+
+            modelBuilder.Entity("LearnOnline.Models.ClassGroup", b =>
+                {
+                    b.HasOne("LearnOnline.Models.Course", "Course")
+                        .WithMany()
+                        .HasForeignKey("CourseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Course");
                 });
 
             modelBuilder.Entity("LearnOnline.Models.Course", b =>
@@ -678,6 +864,10 @@ namespace TodoApi.Migrations
 
             modelBuilder.Entity("LearnOnline.Models.Enrollment", b =>
                 {
+                    b.HasOne("LearnOnline.Models.ClassGroup", "ClassGroup")
+                        .WithMany("Enrollments")
+                        .HasForeignKey("ClassGroupId");
+
                     b.HasOne("LearnOnline.Models.Course", "Course")
                         .WithMany()
                         .HasForeignKey("CourseId")
@@ -689,6 +879,8 @@ namespace TodoApi.Migrations
                         .HasForeignKey("StudentId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("ClassGroup");
 
                     b.Navigation("Course");
 
@@ -810,6 +1002,18 @@ namespace TodoApi.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("LearnOnline.Models.AttendanceSession", b =>
+                {
+                    b.Navigation("Records");
+                });
+
+            modelBuilder.Entity("LearnOnline.Models.ClassGroup", b =>
+                {
+                    b.Navigation("Enrollments");
+
+                    b.Navigation("ScheduledClasses");
                 });
 
             modelBuilder.Entity("LearnOnline.Models.CourseModule", b =>

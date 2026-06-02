@@ -4,6 +4,7 @@ import { X, ChevronDown, BarChart3 } from "lucide-react";
 import TeacherPerspectiveModal from "./TeacherPerspectiveModal";
 import StudentPerspectiveModal from "./StudentPerspectiveModal";
 import TeacherAnalyticsModal from "./TeacherAnalyticsModal";
+import CohortManagerModal from "./CohortManagerModal";
 
 const DEGREES = [
   "UX Design Degree",
@@ -27,6 +28,7 @@ export default function CourseDetailModal({
   const [showTeacherPreview, setShowTeacherPreview] = useState(false);
   const [showStudentPreview, setShowStudentPreview] = useState(false);
   const [showTeacherAnalytics, setShowTeacherAnalytics] = useState(false);
+  const [showCohortManager, setShowCohortManager] = useState(false);
 
   if (!course) return null;
 
@@ -249,6 +251,21 @@ export default function CourseDetailModal({
                         </div>
                       </div>
                     )}
+
+                    {!isEditing && (
+                      <div className="mt-6 flex items-center justify-between gap-4 p-8 rounded-[32px] bg-[#3C0078] text-white shadow-xl shadow-[#3C0078]/15 group/cohort">
+                        <div className="flex-1">
+                          <h4 className="text-[14px] font-black uppercase tracking-widest mb-1">Cohorts & Schedules</h4>
+                          <p className="text-[11px] font-medium text-purple-100/70 leading-tight">Manage student cohorts (Groups A/B) and weekly timetabled sessions.</p>
+                        </div>
+                        <button 
+                          onClick={() => setShowCohortManager(true)}
+                          className="px-6 py-3.5 rounded-2xl bg-white text-[#3C0078] text-[11px] font-black uppercase tracking-widest hover:bg-purple-50 transition-all shadow-sm flex items-center gap-1.5"
+                        >
+                          Manage Cohorts
+                        </button>
+                      </div>
+                    )}
                 </div>
 
                 <div className="flex gap-6 mt-16 font-sans">
@@ -310,6 +327,15 @@ export default function CourseDetailModal({
             teacher={course.teacher} 
             isOpen={showTeacherAnalytics}
             onClose={() => setShowTeacherAnalytics(false)} 
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showCohortManager && (
+          <CohortManagerModal 
+            course={course}
+            onClose={() => setShowCohortManager(false)}
           />
         )}
       </AnimatePresence>
