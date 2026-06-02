@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { HashRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "./contexts/AuthContext";
 
 // Page components – rendered based on the current route
@@ -33,7 +33,7 @@ function App() {
   }, [role]);
 
   return (
-    <BrowserRouter>
+    <HashRouter>
       <RouteSpeechAnnouncer />
       <ClickSpark
         sparkColor="#3C0078"
@@ -72,7 +72,7 @@ function App() {
           </Routes>
         </main>
       </ClickSpark>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
 
