@@ -9,6 +9,17 @@ import AdminCourses from "./courses/adminCourses";
 // The unified Courses route - acts as a traffic controller based on user role
 export default function Courses() {
   const { role } = useAuth();
+  const searchParams = new URLSearchParams(window.location.search);
+  const viewAs = searchParams.get("viewAs");
+
+  // Allow forcing a perspective view (e.g., for Admin Preview modals)
+  if (viewAs === "teacher") {
+    return <TeacherCourses />;
+  }
+  
+  if (viewAs === "student") {
+    return <StudentCourses />;
+  }
 
   if (role === "admin") {
     return <AdminCourses />;

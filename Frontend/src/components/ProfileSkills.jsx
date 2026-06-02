@@ -3,18 +3,20 @@ import { Sparkles } from "lucide-react";
 import ChipListEditor from "./ChipListEditor";
 
 const PANEL_CLASS =
-  "rounded-[28px] border border-white/60 bg-white/85 p-6 shadow-[0_16px_40px_rgba(15,23,42,0.08)] backdrop-blur-md transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_20px_44px_rgba(15,23,42,0.12)]";
+  "rounded-[30px] border border-gray-200/50 bg-white p-6 shadow-2xs hover:shadow-xs transition-all duration-300";
 
 export default function ProfileSkills({ skillGroups, editMode, updateProfile }) {
   return (
     <section className={PANEL_CLASS}>
-      <div className="mb-4 flex items-center gap-2">
-        <Sparkles size={20} />
-        <h2 className="text-2xl font-bold">Skills Matrix</h2>
+      <div className="mb-6 flex items-center gap-3 border-b border-gray-100 pb-3">
+        <span className="rounded-xl bg-[#3C0078]/5 p-2 text-[#3C0078]">
+          <Sparkles size={20} />
+        </span>
+        <h2 className="text-xl font-extrabold tracking-tight text-gray-900">Skills Matrix</h2>
       </div>
 
       {editMode ? (
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-6 md:grid-cols-3">
           {skillGroups.map((group) => (
             <ChipListEditor
               key={group.key}
@@ -26,22 +28,26 @@ export default function ProfileSkills({ skillGroups, editMode, updateProfile }) 
           ))}
         </div>
       ) : (
-        <div className="grid gap-3 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-3">
           {skillGroups.map((group) => (
             <div
               key={group.key}
-              className="rounded-2xl border border-slate-200 bg-gradient-to-b from-slate-50 to-white p-3 shadow-sm"
+              className="rounded-[22px] border border-gray-200/50 bg-gradient-to-b from-white to-gray-50/30 p-4 shadow-3xs hover:shadow-2xs transition-all duration-200"
             >
-              <p className="text-sm font-semibold text-slate-700">{group.label}</p>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {group.items.map((item, index) => (
-                  <span
-                    key={`${group.key}-${index}`}
-                    className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 shadow-sm"
-                  >
-                    {item}
-                  </span>
-                ))}
+              <p className="text-[11px] font-black uppercase tracking-wider text-gray-500">{group.label}</p>
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {group.items.length > 0 ? (
+                  group.items.map((item, index) => (
+                    <span
+                      key={`${group.key}-${index}`}
+                      className="rounded-full border border-purple-100 bg-purple-50/40 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-[#3C0078] shadow-3xs"
+                    >
+                      {item}
+                    </span>
+                  ))
+                ) : (
+                  <span className="text-xs text-gray-400 font-medium italic">No skills listed.</span>
+                )}
               </div>
             </div>
           ))}

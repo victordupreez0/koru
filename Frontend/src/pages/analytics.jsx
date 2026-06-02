@@ -1,21 +1,34 @@
 import React from "react";
 import { useAuth } from "../contexts/AuthContext";
+import HeaderTopBar from "../components/HeaderTopBar";
 
 // View components
 import StudentAnalytics from "./analytics/studentAnalytics";
 import TeacherAnalytics from "./analytics/teacherAnalytics";
+import AdminAnalytics from "./analytics/adminAnalytics";
 
 // The unified Analytics route - acts as a traffic controller based on user role
 export default function AnalyticsPage() {
   const { role } = useAuth();
 
-  // Future: add admin analytics view here
-  // if (role === "admin") return <AdminAnalytics />;
-
-  if (role === "teacher") {
-    return <TeacherAnalytics />;
+  let content = <StudentAnalytics />;
+  if (role === "admin") {
+    content = <AdminAnalytics />;
+  } else if (role === "teacher") {
+    content = <TeacherAnalytics />;
   }
 
-  // Default fallback is the student analytics
-  return <StudentAnalytics />;
+  return (
+    <div className="flex flex-col overflow-hidden transition-all duration-300 md:h-[calc(100vh-32px)] md:w-full md:bg-white/75 md:backdrop-blur-xl md:border md:border-white/20 md:rounded-[28px] md:shadow-lg max-md:h-screen max-md:w-screen max-md:-ml-4 max-md:-mr-4 max-md:-mt-4 max-md:bg-white text-slate-900">
+      {/* Reusable breadcrumb header top bar */}
+      <HeaderTopBar />
+
+      {/* Scrollable View Content area */}
+      <div className="flex-1 overflow-y-auto pt-6 px-8 pb-12">
+        <div className="w-full">
+          {content}
+        </div>
+      </div>
+    </div>
+  );
 }

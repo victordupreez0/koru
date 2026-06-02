@@ -29,5 +29,8 @@ namespace LearnOnline.Models
 
         [ForeignKey("GradedBy")]
         public User? Grader { get; set; }
+
+        // Whether this grade has been released to the student
+        public bool IsReleased { get; set; } = false;
     }
 }
