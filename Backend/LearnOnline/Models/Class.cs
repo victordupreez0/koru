@@ -10,12 +10,17 @@ namespace LearnOnline.Models
         [Key]
         public string Id { get; set; } = Guid.NewGuid().ToString();
 
-        // Foreign key to the Timetable this class belongs to
-        [Required]
-        public string TimetableId { get; set; } = null!;
+        // Foreign key to the Timetable this class belongs to (optional for backward compatibility)
+        public string? TimetableId { get; set; }
 
         [ForeignKey("TimetableId")]
         public Timetable? Timetable { get; set; }
+
+        // Foreign key to the ClassGroup (cohort section) this scheduled slot belongs to
+        public string? ClassGroupId { get; set; }
+
+        [ForeignKey("ClassGroupId")]
+        public ClassGroup? ClassGroup { get; set; }
 
         // Foreign key to the Course being taught in this slot
         [Required]

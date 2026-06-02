@@ -42,5 +42,11 @@ namespace LearnOnline.Data
         // Course Modules (sections and nested items on the Modules page)
         public DbSet<CourseModule> CourseModules { get; set; }
         public DbSet<CourseModuleItem> CourseModuleItems { get; set; }
+
+        // Cohorts & Attendance
+        public DbSet<ClassGroup> ClassGroups { get; set; }
+        public DbSet<AssignmentClassOverride> AssignmentClassOverrides { get; set; }
+        public DbSet<AttendanceSession> AttendanceSessions { get; set; }
+        public DbSet<AttendanceRecord> AttendanceRecords { get; set; }
     }
 }

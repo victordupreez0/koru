@@ -57,6 +57,7 @@ namespace LearnOnline.Controllers
             if (cls == null) return NotFound();
 
             cls.TimetableId = updated.TimetableId;
+            cls.ClassGroupId = updated.ClassGroupId;
             cls.CourseId = updated.CourseId;
             cls.Room = updated.Room;
             cls.DayOfWeek = updated.DayOfWeek;

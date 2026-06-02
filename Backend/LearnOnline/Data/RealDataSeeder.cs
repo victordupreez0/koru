@@ -203,6 +203,55 @@ namespace LearnOnline.Data
                         new Announcement { CourseId = meId, LecturerId = deon.Id,    Title = "Pitch Deck Template Released",        DatePosted = DateTime.UtcNow.AddHours(-5),  Preview = "The standardised pitch deck template is now on Moodle. Use this exact structure for your Lean Startup submission on Thursday.", Label = "Resource", Color = "#2d6a4f" }
                     );
 
+                // ─── 6. Assignment Class Overrides & Attendance Session ───────────────────
+                var dvCourseId = CourseId(context, "DV300");
+                if (dvCourseId != null)
+                {
+                    var groupA = context.ClassGroups.FirstOrDefault(g => g.CourseId == dvCourseId && g.Name == "Group A");
+                    var groupB = context.ClassGroups.FirstOrDefault(g => g.CourseId == dvCourseId && g.Name == "Group B");
+                    var assignment = context.Assignments.FirstOrDefault(a => a.CourseId == dvCourseId && a.Title == "Full-Stack Application – Sprint 1");
+                    if (assignment != null && groupA != null && groupB != null)
+                    {
+                        if (!context.AssignmentClassOverrides.Any(o => o.AssignmentId == assignment.Id))
+                        {
+                            var saZone   = TimeSpan.FromHours(2);
+                            var todaySa  = DateTimeOffset.UtcNow.ToOffset(saZone).Date;
+                            var baseDate = new DateTimeOffset(todaySa, saZone).UtcDateTime;
+
+                            context.AssignmentClassOverrides.AddRange(
+                                new AssignmentClassOverride { AssignmentId = assignment.Id, ClassGroupId = groupA.Id, DueDate = baseDate.AddDays(2).AddHours(17) }, // Group A
+                                new AssignmentClassOverride { AssignmentId = assignment.Id, ClassGroupId = groupB.Id, DueDate = baseDate.AddDays(3).AddHours(12) }  // Group B
+                            );
+                        }
+                    }
+                }
+
+                var studentUser = context.Users.FirstOrDefault(u => u.Email == "devstudent@learnonline.co.za");
+                var lecturerUser = context.Users.FirstOrDefault(u => u.Email == "william@learnonline.co.za");
+                if (dvCourseId != null && studentUser != null && lecturerUser != null)
+                {
+                    var groupA = context.ClassGroups.FirstOrDefault(g => g.CourseId == dvCourseId && g.Name == "Group A");
+                    if (groupA != null && !context.AttendanceSessions.Any(s => s.ClassGroupId == groupA.Id))
+                    {
+                        var session = new AttendanceSession
+                        {
+                            ClassGroupId = groupA.Id,
+                            SessionDate = DateTime.UtcNow.AddDays(-1), // yesterday
+                            LecturerId = lecturerUser.Id
+                        };
+                        context.AttendanceSessions.Add(session);
+                        context.SaveChanges();
+
+                        context.AttendanceRecords.Add(new AttendanceRecord
+                        {
+                            AttendanceSessionId = session.Id,
+                            StudentId = studentUser.Id,
+                            Status = "Present",
+                            Remarks = "Attended practical on time"
+                        });
+                    }
+                }
+
                 context.SaveChanges();
             }
         }
@@ -212,24 +261,94 @@ namespace LearnOnline.Data
         private static void EnsureCourse(AppDbContext context, string adminId, string code, string name,
             string description, string term, int year, string teacherId, string studentId)
         {
+            Course? course = null;
             if (!context.Subjects.Any(s => s.Code == code))
             {
                 var subject = new Subject { Name = name, Code = code, Description = description, CreatedBy = adminId };
                 context.Subjects.Add(subject);
                 context.SaveChanges();
 
-                var course = new Course { Term = term, Year = year, Capacity = 150, SubjectId = subject.Id, TeacherId = teacherId };
+                course = new Course { Term = term, Year = year, Capacity = 150, SubjectId = subject.Id, TeacherId = teacherId };
                 context.Courses.Add(course);
-                context.SaveChanges();
-
-                context.Enrollments.Add(new Enrollment { Status = "Active", CourseId = course.Id, StudentId = studentId });
                 context.SaveChanges();
             }
             else
             {
                 var subject = context.Subjects.First(s => s.Code == code);
-                var course  = context.Courses.FirstOrDefault(c => c.SubjectId == subject.Id);
-                if (course != null && course.TeacherId != teacherId) { course.TeacherId = teacherId; context.SaveChanges(); }
+                course = context.Courses.FirstOrDefault(c => c.SubjectId == subject.Id);
+                if (course != null && course.TeacherId != teacherId) 
+                { 
+                    course.TeacherId = teacherId; 
+                    context.SaveChanges(); 
+                }
+            }
+
+            if (course != null)
+            {
+                // Ensure ClassGroups (cohorts) exist
+                var groupA = context.ClassGroups.FirstOrDefault(g => g.CourseId == course.Id && g.Name == "Group A");
+                if (groupA == null)
+                {
+                    groupA = new ClassGroup { CourseId = course.Id, Name = "Group A" };
+                    context.ClassGroups.Add(groupA);
+                    context.SaveChanges();
+                }
+
+                var groupB = context.ClassGroups.FirstOrDefault(g => g.CourseId == course.Id && g.Name == "Group B");
+                if (groupB == null)
+                {
+                    groupB = new ClassGroup { CourseId = course.Id, Name = "Group B" };
+                    context.ClassGroups.Add(groupB);
+                    context.SaveChanges();
+                }
+
+                // Ensure Enrollment exists and is linked to Group A
+                var enrollment = context.Enrollments.FirstOrDefault(e => e.CourseId == course.Id && e.StudentId == studentId);
+                if (enrollment == null)
+                {
+                    enrollment = new Enrollment { Status = "Active", CourseId = course.Id, StudentId = studentId, ClassGroupId = groupA.Id };
+                    context.Enrollments.Add(enrollment);
+                    context.SaveChanges();
+                }
+                else if (enrollment.ClassGroupId == null)
+                {
+                    enrollment.ClassGroupId = groupA.Id;
+                    context.SaveChanges();
+                }
+
+                // Seed some shared weekly class slots linked to the ClassGroups!
+                if (!context.Classes.Any(c => c.ClassGroupId == groupA.Id))
+                {
+                    if (code == "DV300")
+                    {
+                        context.Classes.AddRange(
+                            new Class { CourseId = course.Id, ClassGroupId = groupA.Id, Room = "Online", DayOfWeek = "Monday", StartTime = new TimeOnly(11, 0), EndTime = new TimeOnly(12, 0) },
+                            new Class { CourseId = course.Id, ClassGroupId = groupA.Id, Room = "C1", DayOfWeek = "Wednesday", StartTime = new TimeOnly(14, 0), EndTime = new TimeOnly(18, 0) }
+                        );
+                    }
+                    else if (code == "VC300")
+                    {
+                        context.Classes.Add(new Class { CourseId = course.Id, ClassGroupId = groupA.Id, Room = "Online", DayOfWeek = "Monday", StartTime = new TimeOnly(9, 0), EndTime = new TimeOnly(11, 0) });
+                    }
+                    else if (code == "ME300")
+                    {
+                        context.Classes.Add(new Class { CourseId = course.Id, ClassGroupId = groupA.Id, Room = "Online", DayOfWeek = "Thursday", StartTime = new TimeOnly(9, 0), EndTime = new TimeOnly(11, 0) });
+                    }
+                    else if (code == "CC300")
+                    {
+                        context.Classes.Add(new Class { CourseId = course.Id, ClassGroupId = groupA.Id, Room = "CUBE", DayOfWeek = "Thursday", StartTime = new TimeOnly(16, 0), EndTime = new TimeOnly(18, 0) });
+                    }
+                    context.SaveChanges();
+                }
+
+                if (!context.Classes.Any(c => c.ClassGroupId == groupB.Id))
+                {
+                    if (code == "DV300")
+                    {
+                        context.Classes.Add(new Class { CourseId = course.Id, ClassGroupId = groupB.Id, Room = "Online", DayOfWeek = "Tuesday", StartTime = new TimeOnly(10, 0), EndTime = new TimeOnly(12, 0) });
+                    }
+                    context.SaveChanges();
+                }
             }
         }
 
