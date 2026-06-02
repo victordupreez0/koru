@@ -19,13 +19,20 @@ namespace LearnOnline.Controllers
 
         // GET /api/Note – return all notes with their Course, Student, and Author
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Note>>> GetAll()
+        public async Task<ActionResult<IEnumerable<Note>>> GetAll([FromQuery] string? authorId = null)
         {
-            return await _context.Notes
+            var query = _context.Notes
                 .Include(n => n.Course)
                 .Include(n => n.Student)
                 .Include(n => n.Author)
-                .ToListAsync();
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(authorId))
+            {
+                query = query.Where(n => n.AuthorId == authorId);
+            }
+
+            return await query.ToListAsync();
         }
 
         // GET /api/Note/{id} – return a single note by ID

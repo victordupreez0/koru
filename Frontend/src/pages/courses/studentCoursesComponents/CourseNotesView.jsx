@@ -17,7 +17,7 @@ export default function CourseNotesView({ activeCourseId }) {
             if (!activeCourseId) return;
             try {
                 setLoading(true);
-                const data = await getNotes();
+                const data = await getNotes(user?.userId);
                 const courseNotes = data.filter(n => n.courseId === activeCourseId);
                 if (mounted) {
                     setNotes(courseNotes);

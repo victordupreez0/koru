@@ -102,3 +102,40 @@ export const subjectService = {
     return handleResponse(res);
   }
 };
+
+/**
+ * Enrollment Service - For reading and creating student enrollments.
+ */
+export const enrollmentService = {
+  async getAll() {
+    const res = await fetch(`${API_BASE}/Enrollment`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" }
+    });
+    return handleResponse(res);
+  },
+
+  async create(enrollmentData) {
+    const res = await fetch(`${API_BASE}/Enrollment`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(enrollmentData)
+    });
+    return handleResponse(res);
+  }
+};
+
+/**
+ * Registration Service - For creating teacher accounts from the admin dashboard.
+ */
+export const registrationService = {
+  async registerTeacher({ firstName, lastName, email }) {
+    const tempPassword = `Change${Math.random().toString(36).slice(2, 10)}!`;
+    const res = await fetch(`${API_BASE}/User/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ firstName, lastName, email, password: tempPassword, role: "teacher" })
+    });
+    return handleResponse(res);
+  }
+};
