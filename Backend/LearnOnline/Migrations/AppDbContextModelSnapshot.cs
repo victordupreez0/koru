@@ -545,6 +545,43 @@ namespace TodoApi.Migrations
                     b.ToTable("Timetables");
                 });
 
+            modelBuilder.Entity("LearnOnline.Models.TodoItem", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<string>("CourseCode")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedByAdminId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("DueDate")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsCompleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("TeacherId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedByAdminId");
+
+                    b.HasIndex("TeacherId");
+
+                    b.ToTable("TodoItems");
+                });
+
             modelBuilder.Entity("LearnOnline.Models.User", b =>
                 {
                     b.Property<string>("Id")
@@ -810,6 +847,23 @@ namespace TodoApi.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("LearnOnline.Models.TodoItem", b =>
+                {
+                    b.HasOne("LearnOnline.Models.User", "CreatedByAdmin")
+                        .WithMany()
+                        .HasForeignKey("CreatedByAdminId");
+
+                    b.HasOne("LearnOnline.Models.User", "Teacher")
+                        .WithMany()
+                        .HasForeignKey("TeacherId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CreatedByAdmin");
+
+                    b.Navigation("Teacher");
                 });
 
             modelBuilder.Entity("LearnOnline.Models.CourseModule", b =>
