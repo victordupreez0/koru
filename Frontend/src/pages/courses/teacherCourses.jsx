@@ -50,7 +50,7 @@ const GRADES_DATA = [
     { id: 4, name: "Final Case Study Delivery", weight: "40%", grade: "-", status: "Pending", date: "Expected June" },
 ];
 
-// TODO: backend endpoint missing — no AttendanceController exists. Static for now.
+// TODO: backend endpoint missing â€” no AttendanceController exists. Static for now.
 const ATTENDANCE_STATS = [
     { label: "Total Sessions", value: "42", color: "#3C0078" },
     { label: "Attended", value: "38", color: "#87CEFA" },
@@ -270,7 +270,7 @@ function CourseAnnouncementsView({ activeCourseId }) {
                                 {post.title}
                             </h2>
                             <div>
-                                <p className="text-xs font-bold uppercase tracking-widest text-[#3C0078] mt-2 opacity-60">Posted by {post.lecturer?.name || post.lecturer || "Lecturer"}</p>
+                                <p className="text-xs font-bold uppercase tracking-widest text-[#3C0078] mt-2 opacity-60">Posted by {post.lecturerName || post.lecturer?.name || post.lecturer || "Lecturer"}</p>
                             </div>
                             <p className="text-gray-500 mt-4 leading-relaxed line-clamp-2">
                                 {post.preview}
@@ -337,7 +337,7 @@ function CourseAnnouncementsView({ activeCourseId }) {
                                         </div>
                                         <div>
                                             <p className="text-xs font-black uppercase tracking-widest text-gray-400">Published By</p>
-                                            <p className="font-bold text-[#3C0078]">{selectedAnnouncement.lecturer?.name || selectedAnnouncement.lecturer || "Lecturer"}</p>
+                                            <p className="font-bold text-[#3C0078]">{selectedAnnouncement.lecturerName || selectedAnnouncement.lecturer?.name || selectedAnnouncement.lecturer || "Lecturer"}</p>
                                         </div>
                                     </div>
 
@@ -374,7 +374,7 @@ function CourseAnnouncementsView({ activeCourseId }) {
     );
 }
 
-// ─── Static data for teacher assignments view ───────────────────────────────
+// â”€â”€â”€ Static data for teacher assignments view â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const ASSIGNMENT_TYPES = [
     {
@@ -758,9 +758,9 @@ function CreateAssignmentDrawer({ onClose, onSave, initialData }) {
     );
 }
 
-// ─────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Teacher: review submissions for a single assignment
-// ─────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function TeacherSubmissionReview({ assignment, onBack }) {
     const { user } = useAuth();
     const [submissions, setSubmissions] = React.useState([]);
@@ -903,7 +903,7 @@ function TeacherSubmissionReview({ assignment, onBack }) {
                                     disabled={releasing}
                                     className="px-5 py-3 bg-[#3C0078] text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-[#2d0059] transition-colors disabled:opacity-60"
                                 >
-                                    {releasing ? "Releasing…" : "Release Grades"}
+                                    {releasing ? "Releasingâ€¦" : "Release Grades"}
                                 </button>
                             )
                         )}
@@ -912,7 +912,7 @@ function TeacherSubmissionReview({ assignment, onBack }) {
             </motion.div>
 
             {loading ? (
-                <div className="flex items-center justify-center h-48 text-gray-400 font-medium">Loading submissions…</div>
+                <div className="flex items-center justify-center h-48 text-gray-400 font-medium">Loading submissionsâ€¦</div>
             ) : submissions.length === 0 ? (
                 <motion.div variants={slideUp} className="text-center py-20 bg-gray-50 rounded-[40px] border border-gray-100 text-gray-400 font-medium">
                     No submissions yet for this assignment.
@@ -960,7 +960,7 @@ function TeacherSubmissionReview({ assignment, onBack }) {
                                     {/* Submitted at */}
                                     <div className="shrink-0 text-right">
                                         <p className="text-xs font-semibold text-gray-500">
-                                            {sub.submittedAt ? new Date(sub.submittedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—"}
+                                            {sub.submittedAt ? new Date(sub.submittedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "â€”"}
                                         </p>
                                         <p className="text-[10px] text-gray-400">
                                             {sub.submittedAt ? new Date(sub.submittedAt).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }) : ""}
@@ -994,7 +994,7 @@ function TeacherSubmissionReview({ assignment, onBack }) {
                                 {/* Grading section */}
                                 <div className="border-t border-gray-50 pt-4">
                                     {existingGrade && !gs.editing ? (
-                                        // Already graded — show result
+                                        // Already graded â€” show result
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-4">
                                                 <div className="flex flex-col">
@@ -1033,7 +1033,7 @@ function TeacherSubmissionReview({ assignment, onBack }) {
                                                         step="0.5"
                                                         value={gs.points}
                                                         onChange={e => setField(sub.id, "points", e.target.value)}
-                                                        placeholder={maxPts != null ? `0 – ${maxPts}` : "Points"}
+                                                        placeholder={maxPts != null ? `0 â€“ ${maxPts}` : "Points"}
                                                         disabled={gs.saving}
                                                         className="w-36 px-4 py-3 rounded-2xl border border-gray-200 text-sm font-bold text-gray-900 focus:outline-none focus:border-[#3C0078] transition-colors disabled:opacity-50"
                                                     />
@@ -1069,7 +1069,7 @@ function TeacherSubmissionReview({ assignment, onBack }) {
                                                             : "bg-[#3C0078] hover:bg-[#2A0054] shadow-lg shadow-[#3C0078]/20"
                                                     }`}
                                                 >
-                                                    {gs.saving ? <><Loader size={13} className="animate-spin" /> Saving…</> : <><Check size={14} /> {existingGrade ? "Update" : "Submit Grade"}</>}
+                                                    {gs.saving ? <><Loader size={13} className="animate-spin" /> Savingâ€¦</> : <><Check size={14} /> {existingGrade ? "Update" : "Submit Grade"}</>}
                                                 </button>
                                             </div>
                                         </div>
@@ -1230,7 +1230,6 @@ function CourseAssignmentsView({ subject, activeCourseId }) {
     const [activeTypeFilter, setActiveTypeFilter] = React.useState("all");
     const [saving, setSaving] = React.useState(false);
     const [reviewingAssignment, setReviewingAssignment] = React.useState(null);
-    const [showStudentPreview, setShowStudentPreview] = React.useState(false);
 
     const loadData = React.useCallback(async () => {
         if (!activeCourseId) return;
@@ -1378,9 +1377,9 @@ function CourseAssignmentsView({ subject, activeCourseId }) {
             {/* Summary Stats */}
             <motion.div variants={slideUp} className="grid grid-cols-3 gap-4 mb-10">
                 {[
-                    { label: "Total Assignments", value: loading ? "…" : totalAssignments, accent: false },
-                    { label: "Open", value: loading ? "…" : openCount, accent: true },
-                    { label: "Closed", value: loading ? "…" : totalAssignments - openCount, accent: false },
+                    { label: "Total Assignments", value: loading ? "â€¦" : totalAssignments, accent: false },
+                    { label: "Open", value: loading ? "â€¦" : openCount, accent: true },
+                    { label: "Closed", value: loading ? "â€¦" : totalAssignments - openCount, accent: false },
                 ].map((stat) => (
                     <div key={stat.label} className={`rounded-[28px] px-7 py-6 flex flex-col gap-1 ${stat.accent ? "bg-[#3C0078] text-white" : "bg-white border border-gray-100 shadow-sm"}`}>
                         <span className={`text-[10px] font-black uppercase tracking-widest ${stat.accent ? "text-white/60" : "text-gray-400"}`}>{stat.label}</span>
@@ -1462,60 +1461,6 @@ function CourseAssignmentsView({ subject, activeCourseId }) {
                     ))
                 )}
             </motion.div>
-
-            {/* Student View Hint */}
-            <motion.div variants={slideUp} className="mt-10 flex items-center gap-4 p-6 bg-[#3C0078]/5 rounded-[28px] border border-[#3C0078]/10">
-                <BookOpen size={22} className="text-[#3C0078] shrink-0" />
-                <div>
-                    <p className="text-sm font-bold text-[#3C0078]">Student View</p>
-                    <p className="text-xs text-gray-500 mt-0.5">Use Student View to see exactly how published assignments appear to students before releasing a new brief.</p>
-                </div>
-                <button
-                    onClick={() => setShowStudentPreview(true)}
-                    className="ml-auto shrink-0 px-6 py-2.5 rounded-2xl bg-[#3C0078] text-white text-xs font-bold uppercase tracking-widest hover:bg-[#2A0054] transition-all whitespace-nowrap"
-                >
-                    Preview as Student
-                </button>
-            </motion.div>
-
-            {/* Student preview modal */}
-            <AnimatePresence>
-                {showStudentPreview && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 bg-black/40 flex items-stretch justify-end"
-                        onClick={(e) => { if (e.target === e.currentTarget) setShowStudentPreview(false); }}
-                    >
-                        <motion.div
-                            initial={{ x: "100%" }}
-                            animate={{ x: 0 }}
-                            exit={{ x: "100%" }}
-                            transition={{ type: "spring", damping: 30, stiffness: 300 }}
-                            className="w-full max-w-3xl bg-white shadow-2xl flex flex-col overflow-hidden"
-                        >
-                            {/* Modal header */}
-                            <div className="flex items-center justify-between px-8 py-5 border-b border-gray-100">
-                                <div>
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-[#3C0078]">Student Preview</p>
-                                    <p className="text-sm font-bold text-gray-900 mt-0.5">How students see this course’s assignments</p>
-                                </div>
-                                <button
-                                    onClick={() => setShowStudentPreview(false)}
-                                    className="w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
-                                >
-                                    <X size={16} />
-                                </button>
-                            </div>
-                            {/* Student view component */}
-                            <div className="flex-1 overflow-y-auto">
-                                <StudentCourseAssignmentsView subject={subject} activeCourseId={activeCourseId} />
-                            </div>
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
 
             {/* Create / Edit Assignment Drawer */}
             {showDrawer && (
@@ -1688,7 +1633,7 @@ function CourseAttendanceView() {
     );
 }
 
-// TODO: backend endpoint missing — used only by CourseAttendanceView since no AttendanceController exists yet.
+// TODO: backend endpoint missing â€” used only by CourseAttendanceView since no AttendanceController exists yet.
 const STUDENT_GRADES_DATA = [
     { id: 1, name: "Alice Johnson", email: "alice.j@student.ac.za", attendance: "95%", avgGrade: "88%", status: "Good", avatar: "AJ" },
     { id: 2, name: "Bob Smith", email: "bob.s@student.ac.za", attendance: "82%", avgGrade: "74%", status: "At Risk", avatar: "BS" },
@@ -1757,7 +1702,7 @@ function CourseGradesView({ activeCourseId }) {
                 ...r,
                 avgGrade: `${pct}%`,
                 avgGradePct: pct,
-                attendance: "—", // TODO: backend endpoint missing
+                attendance: "â€”", // TODO: backend endpoint missing
                 status: pct >= 85 ? "Excellent" : pct >= 70 ? "Good" : pct >= 50 ? "At Risk" : "Critical"
             };
         });
@@ -1827,7 +1772,7 @@ function CourseGradesView({ activeCourseId }) {
                                 {topStudent && topStudent.avgGradePct >= 90 ? "A+" : topStudent && topStudent.avgGradePct >= 80 ? "A" : "B"}
                             </div>
                             <div>
-                                <h4 className="text-2xl font-black italic text-gray-900 leading-none">{topStudent ? `${topStudent.avgGradePct}%` : "—"}</h4>
+                                <h4 className="text-2xl font-black italic text-gray-900 leading-none">{topStudent ? `${topStudent.avgGradePct}%` : "â€”"}</h4>
                                 <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mt-2">{topStudent ? topStudent.name : "No students"}</p>
                             </div>
                         </div>
@@ -1983,7 +1928,7 @@ function CourseHomeView({ subject, course, loading }) {
         <p className="text-xl text-gray-500 mt-3 font-medium">{loading ? "..." : subject?.code}</p>
       </header>
 
-      {/* Left column – course overview with todo, next class & announcements */}
+      {/* Left column â€“ course overview with todo, next class & announcements */}
       <main className="space-y-24 w-full flex flex-col items-center">
         <div className="w-full h-[500px] rounded-[60px] shadow-sm overflow-hidden">
           <img 
@@ -2008,7 +1953,7 @@ function CourseHomeView({ subject, course, loading }) {
                 </div>
                 <div className="mt-8">
                   <Link to="#" className="inline-flex items-center gap-2 text-[#3C0078] font-bold text-sm uppercase tracking-widest hover:translate-x-1 transition-transform">
-                    Full Term Overview <span>→</span>
+                    Full Term Overview <span>â†’</span>
                   </Link>
                 </div>
               </div>
@@ -2024,7 +1969,7 @@ function CourseHomeView({ subject, course, loading }) {
                 </div>
                 <div className="mt-8">
                   <Link to="#" className="inline-flex items-center gap-2 text-[#3C0078] font-bold text-sm uppercase tracking-widest hover:translate-x-1 transition-transform">
-                    Full Term Overview <span>→</span>
+                    Full Term Overview <span>â†’</span>
                   </Link>
                 </div>
               </div>
@@ -2864,7 +2809,7 @@ function CourseNotesView({ activeCourseId }) {
             if (!activeCourseId) return;
             try {
                 setLoading(true);
-                const data = await getNotes();
+                const data = await getNotes(user?.userId);
                 const courseNotes = data.filter(n => n.courseId === activeCourseId);
                 if (mounted) {
                     setNotes(courseNotes);
@@ -2910,7 +2855,7 @@ function CourseNotesView({ activeCourseId }) {
 
     return (
         <div className="flex-1 flex h-full overflow-hidden">
-            {/* Notes sidebar — animates width to 0 when expanded */}
+            {/* Notes sidebar â€” animates width to 0 when expanded */}
             <div
                 className="flex flex-col h-full border-r border-gray-200 shrink-0 overflow-hidden"
                 style={{
@@ -3036,7 +2981,7 @@ function CourseNotesView({ activeCourseId }) {
                                     }}
                                     className="w-full max-w-none focus:outline-none"
                                 >
-                                    {/* Bubble menu — appears when you select text */}
+                                    {/* Bubble menu â€” appears when you select text */}
                                     <EditorBubble className="flex items-center gap-0.5 rounded-xl border border-gray-200 bg-white px-1.5 py-1 shadow-xl">
                                         <EditorBubbleItem
                                             onSelect={(editor) => editor.chain().focus().toggleBold().run()}
