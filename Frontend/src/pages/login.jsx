@@ -3,7 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { GraduationCap, ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { motion } from "framer-motion";
 import Background from "../assets/backgrounds/background-3.jpeg";
-import Logo from "../assets/Logo.png";
+import KoruLogo from "../components/UI/KoruLogo";
 import AuthInput from "../components/UI/authInput";
 import GoogleAuthButton from "../components/UI/googleAuthButton";
 import { loginUser, loginWithGoogle } from "../services/authService";
@@ -114,8 +114,8 @@ export default function Login({ role = "student" }) {
       className="fixed inset-0 flex min-h-screen items-center justify-center bg-cover bg-center px-4 py-8"
       style={{ backgroundImage: `url(${Background})`, backgroundSize: '120%' }}
     >
-      {/* Overlay for readability */}
-      <div className="fixed inset-0 bg-black/20" />
+      {/* Overlay for readability - dimmed to make the card pop */}
+      <div className="fixed inset-0 bg-black/55 backdrop-blur-[3px]" />
 
       <motion.div
         initial={{ opacity: 0, y: 24, scale: 0.97 }}
@@ -123,17 +123,19 @@ export default function Login({ role = "student" }) {
         transition={{ duration: 0.45, ease: "easeOut" }}
         className="relative z-10 w-full max-w-md"
       >
-        {/* Back button – returns to the landing / onboarding page */}
-        <Link
-          to="/"
-          className="group mb-4 inline-flex items-center gap-2 rounded-full bg-white/80 px-4 py-2 text-sm font-medium text-slate-700 shadow-sm backdrop-blur-md transition hover:bg-white hover:shadow-md"
-        >
-          <ArrowLeft size={16} className="transition group-hover:-translate-x-0.5" />
-          Back to role selection
-        </Link>
+        <div className="overflow-hidden rounded-[32px] bg-white/95 shadow-2xl backdrop-blur-md relative">
+          {/* Back button inside the white card */}
+          <div className="absolute top-4 left-4 z-20">
+            <Link
+              to="/"
+              className="group inline-flex items-center gap-1.5 rounded-full bg-white/90 hover:bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-xs hover:shadow-sm border border-slate-100/50 transition duration-200"
+            >
+              <ArrowLeft size={12} className="transition group-hover:-translate-x-0.5" />
+              <span>Back</span>
+            </Link>
+          </div>
 
-        <div className="overflow-hidden rounded-[32px] bg-white/95 shadow-2xl backdrop-blur-md">
-          {/* Coloured header strip with role icon */}
+          {/* Coloured header strip with animated logo */}
           <div
             className="flex flex-col items-center gap-3 px-6 pb-5 pt-8"
             style={{
@@ -141,22 +143,12 @@ export default function Login({ role = "student" }) {
               borderBottom: `2px solid ${config.accent}20`,
             }}
           >
-            {/* Role icon badge */}
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.15, type: "spring", stiffness: 150, damping: 20 }}
-              className="flex h-20 w-20 items-center justify-center rounded-full shadow-lg"
-              style={{ backgroundColor: `${config.accent}18` }}
-            >
-              <img
-                src={config.icon}
-                alt={`${config.label} icon`}
-                className="h-12 w-12 object-contain"
-              />
-            </motion.div>
+            {/* Animated Koru Logo replacing the old role icon badge */}
+            <div className="h-16 w-16 flex items-center justify-center filter drop-shadow-[0_4px_6px_rgba(0,0,0,0.1)]">
+              <KoruLogo />
+            </div>
 
-            <div className="text-center">
+            <div className="text-center mt-1">
               <h1 className="text-2xl font-bold text-slate-900">
                 {config.label} Login
               </h1>

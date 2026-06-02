@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
+import KoruLogo from "./UI/KoruLogo";
 import {
   Home,
   Book,
@@ -233,11 +234,7 @@ export default function AppSidebar() {
       <div className="pt-5 pb-3 flex items-center justify-center">
         <Link to="/dashboard" className="group" aria-label="Home">
           <div className="w-12 h-12 flex items-center justify-center transition-transform duration-300 group-hover:scale-105">
-            <img
-              src="/fav.png"
-              alt="Learn Online"
-              className="w-10 h-10 object-contain"
-            />
+            <KoruLogo className="w-9 h-9" />
           </div>
         </Link>
       </div>
