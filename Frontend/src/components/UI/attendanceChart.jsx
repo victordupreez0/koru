@@ -7,7 +7,7 @@ import { motion } from "framer-motion";
  * A visually engaging, modern attendance tracker that uses a segmented ring 
  * to show attendance ratios and small floating indicators for stats.
  */
-export default function AttendanceChart({ attended = 38, total = 42, missed = 4 }) {
+export default function AttendanceChart({ attended = 38, total = 42, missed = 4, centerLabel = "Attendance", leftStat = "Total", midStat = "Attended", rightStat = "Missed", leftValue, midValue, rightValue }) {
     const percentage = Math.round((attended / total) * 100);
     
     // SVG Circle Math
@@ -56,23 +56,23 @@ export default function AttendanceChart({ attended = 38, total = 42, missed = 4 
                     >
                         {percentage}%
                     </motion.span>
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mt-1">Attendance</span>
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mt-1">{centerLabel}</span>
                 </div>
             </div>
 
             {/* Floating Stats Layout */}
             <div className="grid grid-cols-3 gap-8 w-full mt-8 border-t border-gray-50 pt-8">
                 <div className="flex flex-col items-center">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Total</span>
-                    <span className="text-xl font-bold text-gray-900">{total}</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">{leftStat}</span>
+                    <span className="text-xl font-bold text-gray-900">{leftValue ?? total}</span>
                 </div>
                 <div className="flex flex-col items-center">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-[#87CEFA] mb-1">Attended</span>
-                    <span className="text-xl font-bold text-gray-900">{attended}</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-[#87CEFA] mb-1">{midStat}</span>
+                    <span className="text-xl font-bold text-gray-900">{midValue ?? attended}</span>
                 </div>
                 <div className="flex flex-col items-center">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-[#FF8731] mb-1">Missed</span>
-                    <span className="text-xl font-bold text-gray-900">{missed}</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-[#FF8731] mb-1">{rightStat}</span>
+                    <span className="text-xl font-bold text-gray-900">{rightValue ?? missed}</span>
                 </div>
             </div>
 
