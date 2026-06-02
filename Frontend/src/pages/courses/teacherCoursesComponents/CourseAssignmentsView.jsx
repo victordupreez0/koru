@@ -1,5 +1,5 @@
 import React from "react";
-import { Plus, X, Eye, EyeOff, Edit2, Trash2, Folder, BookOpen, ChevronDown } from "lucide-react";
+import { Plus, X, Eye, EyeOff, Edit2, Trash2, Folder, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
     ASSIGNMENT_TYPES, 
@@ -551,18 +551,6 @@ export function CourseAssignmentsView({ subject }) {
                         />
                     ))
                 )}
-            </motion.div>
-
-            {/* Student View Hint */}
-            <motion.div variants={slideUp} className="mt-10 flex items-center gap-4 p-6 bg-[#3C0078]/5 rounded-[28px] border border-[#3C0078]/10">
-                <BookOpen size={22} className="text-[#3C0078] shrink-0" />
-                <div>
-                    <p className="text-sm font-bold text-[#3C0078]">Student View</p>
-                    <p className="text-xs text-gray-500 mt-0.5">Use Student View to see exactly how published assignments appear to students before releasing a new brief.</p>
-                </div>
-                <button className="ml-auto shrink-0 px-6 py-2.5 rounded-2xl bg-[#3C0078] text-white text-xs font-bold uppercase tracking-widest hover:bg-[#2A0054] transition-all whitespace-nowrap">
-                    Preview as Student
-                </button>
             </motion.div>
 
             {/* Create / Edit Assignment Drawer */}
