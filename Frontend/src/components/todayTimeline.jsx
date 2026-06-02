@@ -4,8 +4,8 @@ import TimelineNode from "./UI/timelineNode";
 import TimelineEventExpanded from "./UI/timelineEventExpanded";
 import TimelineEventCompressed from "./UI/timelineEventCompressed";
 
-import { getAllEvents } from "../services/eventService";
-import { getStudentAssignments } from "../services/assignmentService";
+import { getAllEvents, getTeacherEvents } from "../services/eventService";
+import { getStudentAssignments, getTeacherAssignments } from "../services/assignmentService";
 import { useAuth } from "../contexts/AuthContext";
 
 // Helper: map backend event to timeline format
@@ -40,11 +40,12 @@ function mapBackendEventToTimeline(evt) {
 
 function mapAssignmentToTimeline(assignment) {
   const due = new Date(assignment.dueDate);
+  const courseCode = assignment.course?.subject?.code || assignment.course?.subject?.name || "Assignment";
   return {
     id: `assign-${assignment.id}`,
     title: assignment.title,
-    subtitle: assignment.course?.subject?.code || "Assignment",
-    lecturer: "Submission",
+    subtitle: courseCode,
+    lecturer: "Due",
     duration: "Due",
     location: "Online",
     startHour: due.getHours(),
@@ -93,9 +94,14 @@ export default function TodayTimeline() {
     async function fetchData() {
       try {
         setLoading(true);
+        const isTeacher = user?.role === "teacher";
         const [data, assignmentsData] = await Promise.all([
-          getAllEvents(),
-          user?.userId ? getStudentAssignments(user.userId) : Promise.resolve([]),
+          isTeacher && user?.userId ? getTeacherEvents(user.userId) : getAllEvents(),
+          isTeacher && user?.userId
+            ? getTeacherAssignments(user.userId)
+            : user?.userId
+            ? getStudentAssignments(user.userId)
+            : Promise.resolve([]),
         ]);
 
         const todayStr = new Date().toDateString();
@@ -123,7 +129,7 @@ export default function TodayTimeline() {
     return () => {
       mounted = false;
     };
-  }, [user?.userId]);
+  }, [user?.userId, user?.role]);
 
   // Re‑sync every 30 s so the "next" event updates automatically
   useEffect(() => {
