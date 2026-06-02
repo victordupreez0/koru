@@ -17,15 +17,21 @@ const SYSTEM_INSTRUCTION = {
  * missing the API key, it falls back to a direct call if VITE_GROQ_API_KEY is available.
  * 
  * @param {Array} chatHistory - Array of { role, content } messages
+ * @param {string} userId - ID of the logged-in user
+ * @param {string} role - Role of the logged-in user
  * @returns {Promise<Object>} Object containing { role: "assistant", content: string }
  */
-export async function getAssistantResponse(chatHistory) {
+export async function getAssistantResponse(chatHistory, userId, role) {
   // 1. Try to call the secure backend proxy first
   try {
     const res = await fetch(`${API_BASE}/Assistant/chat`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ messages: chatHistory })
+      body: JSON.stringify({ 
+        messages: chatHistory,
+        userId: userId,
+        role: role
+      })
     });
 
     if (res.ok) {
