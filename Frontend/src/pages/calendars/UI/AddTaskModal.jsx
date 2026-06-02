@@ -11,12 +11,13 @@ import { motion, AnimatePresence } from "framer-motion";
  *  - defaultDate (string)   : optional YYYY-MM-DD to pre-fill the date field
  *  - editEvent   (object)   : when set, the modal opens in edit mode pre-filled with this event
  */
-export default function AddTaskModal({ open, onClose, onAdd, defaultDate = "", editEvent = null }) {
+export default function AddTaskModal({ open, onClose, onAdd, defaultDate = "", editEvent = null, courses = [] }) {
   const isEditing = !!editEvent;
   const [title, setTitle] = useState("");
   const [date, setDate] = useState(defaultDate);
   const [startTime, setStartTime] = useState("09:00");
   const [endTime, setEndTime] = useState("10:00");
+  const [courseId, setCourseId] = useState("");
 
   // Populate form when modal opens (new or edit)
   useEffect(() => {
@@ -26,24 +27,26 @@ export default function AddTaskModal({ open, onClose, onAdd, defaultDate = "", e
       setDate(editEvent.date || defaultDate || "");
       setStartTime(editEvent.startTime || "09:00");
       setEndTime(editEvent.endTime || "10:00");
+      setCourseId(editEvent.courseId || courses[0]?.id || "");
     } else {
       setTitle("");
       setDate(defaultDate || "");
       setStartTime("09:00");
       setEndTime("10:00");
+      setCourseId(courses[0]?.id || "");
     }
-  }, [open, editEvent, defaultDate]);
+  }, [open, editEvent, defaultDate, courses]);
 
   function handleSubmit(e) {
     e.preventDefault();
-    if (!title.trim() || !date) return;
+    if (!title.trim() || !date || !courseId) return;
     onAdd({
-      id: isEditing ? editEvent.id : `task-local-${Date.now()}`,
-      date,
+      id: isEditing ? editEvent.id : null,
       title: title.trim(),
-      startTime,
-      endTime,
-      type: "task",
+      startTime: new Date(`${date}T${startTime}`).toISOString(),
+      endTime: new Date(`${date}T${endTime}`).toISOString(),
+      courseId,
+      description: editEvent?.description || "",
       lecturer: editEvent?.lecturer || "",
       location: editEvent?.location || "",
     });
@@ -105,6 +108,26 @@ export default function AddTaskModal({ open, onClose, onAdd, defaultDate = "", e
                   placeholder="e.g. Review lesson plan"
                   className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-purple-400 transition"
                 />
+              </div>
+
+              {/* Course Selector */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  Course <span className="text-red-400">*</span>
+                </label>
+                <select
+                  value={courseId}
+                  onChange={(e) => setCourseId(e.target.value)}
+                  required
+                  className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-purple-400 bg-white transition cursor-pointer"
+                >
+                  <option value="" disabled>Select a course</option>
+                  {courses.map((course) => (
+                    <option key={course.id} value={course.id}>
+                      {course.subject?.code} - {course.subject?.name} ({course.term})
+                    </option>
+                  ))}
+                </select>
               </div>
 
               {/* Date */}
