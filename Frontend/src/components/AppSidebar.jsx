@@ -77,21 +77,32 @@ function SidebarNavItem({
 }) {
   const content = (
     <>
-      <div className="flex items-center justify-center w-6 h-6 !text-inherit">
+      {isActive && (
+        <motion.div
+          layoutId="active-sidebar-pill"
+          className="absolute inset-0 bg-[#3C0078] rounded-[20px] -z-10 shadow-md shadow-[#3C0078]/25"
+          transition={{
+            type: "spring",
+            stiffness: 380,
+            damping: 30,
+          }}
+        />
+      )}
+      <div className="flex items-center justify-center w-6 h-6 z-10 !text-inherit">
         {isActive && filledIcon ? filledIcon : icon}
       </div>
-      <span className="text-[9px] font-semibold leading-tight tracking-wide !text-inherit">{label}</span>
+      <span className="text-[9px] font-bold leading-tight tracking-wide z-10 !text-inherit mt-1 select-none">{label}</span>
     </>
   );
 
-  const baseClassName = `relative flex flex-col items-center justify-center gap-0.5 w-full py-2.5 transition-all duration-200 group select-none cursor-pointer
+  const baseClassName = `relative flex flex-col items-center justify-center w-full py-3.5 px-1.5 transition-all duration-200 group select-none cursor-pointer rounded-2xl
     ${isActive
-      ? "bg-purple-500 !text-white"
-      : "!text-gray-900 hover:!text-[#3C0078] hover:bg-purple-100"
+      ? "!text-white"
+      : "!text-gray-500 hover:!text-[#3C0078]"
     }`;
 
   return (
-    <motion.div variants={itemVariants} className="w-full">
+    <motion.div variants={itemVariants} className="w-full px-2 relative">
       {isButton ? (
         <button
           ref={buttonRef}
@@ -223,15 +234,17 @@ export default function AppSidebar() {
 
   const sidebarContent = (
     <motion.aside
-      className={`fixed left-0 top-0 h-screen w-[76px] bg-white/80 backdrop-blur-xl border-r border-gray-200/50 z-50 flex flex-col
-        ${mobileOpen ? "translate-x-0" : ""}
+      className={`fixed z-50 flex flex-col items-center justify-between transition-all duration-300
+        md:left-4 md:top-4 md:bottom-4 md:w-20 md:bg-white/70 md:backdrop-blur-xl md:border md:border-white/20 md:rounded-[32px] md:shadow-xl md:py-5
+        max-md:left-0 max-md:top-0 max-md:h-screen max-md:w-[76px] max-md:bg-white/90 max-md:backdrop-blur-2xl max-md:border-r max-md:border-gray-200/50 max-md:py-3
+        ${mobileOpen ? "max-md:translate-x-0" : "max-md:-translate-x-full"}
         max-md:shadow-2xl`}
       variants={sidebarVariants}
       initial="hidden"
       animate="visible"
     >
       {/* ── Logo ── */}
-      <div className="pt-5 pb-3 flex items-center justify-center">
+      <div className="pt-5 pb-3 flex items-center justify-center shrink-0">
         <Link to="/dashboard" className="group" aria-label="Home">
           <div className="w-12 h-12 flex items-center justify-center transition-transform duration-300 group-hover:scale-105">
             <KoruLogo className="w-9 h-9" />
@@ -240,7 +253,7 @@ export default function AppSidebar() {
       </div>
 
       {/* ── Primary Nav ── */}
-      <nav className="flex-1 flex flex-col items-center gap-0.5 w-full pt-1 overflow-y-auto overflow-x-hidden scrollbar-hide">
+      <nav className="flex-1 flex flex-col items-center gap-1.5 w-full pt-2 overflow-y-auto overflow-x-hidden scrollbar-hide">
         <LayoutGroup>
           {navItems.map((item) => {
             const isCourses = item.label === "Courses";
@@ -266,10 +279,10 @@ export default function AppSidebar() {
       </nav>
 
       {/* ── Divider ── */}
-      <div className="mx-4 h-px bg-gray-200/80" />
+      <div className="w-10 h-px bg-gray-200/50 my-1.5 shrink-0" />
 
       {/* ── Utility Nav (Profile / Settings) ── */}
-      <div className="py-3 flex flex-col items-center gap-0.5 w-full">
+      <div className="py-2 flex flex-col items-center gap-1.5 w-full shrink-0">
         {utilityItems.map((item) => (
           <SidebarNavItem
             key={item.label}
@@ -323,7 +336,9 @@ export default function AppSidebar() {
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="fixed left-[76px] top-0 h-screen w-72 bg-white/95 backdrop-blur-2xl border-r border-gray-200/50 shadow-2xl z-40 flex flex-col pt-5"
+            className="fixed z-40 flex flex-col pt-6 overflow-hidden transition-all duration-300
+              md:left-[104px] md:top-4 md:bottom-4 md:w-72 md:bg-white/80 md:backdrop-blur-2xl md:border md:border-white/20 md:rounded-[28px] md:shadow-2xl
+              max-md:left-[76px] max-md:top-0 max-md:h-screen max-md:w-72 max-md:bg-white/95 max-md:backdrop-blur-2xl max-md:border-r max-md:border-gray-200/50 max-md:shadow-2xl"
           >
             {/* Header */}
             <div className="px-5 pb-4 border-b border-gray-100 flex flex-col gap-1">
