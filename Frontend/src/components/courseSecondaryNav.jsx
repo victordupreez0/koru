@@ -2,34 +2,65 @@ import React, { useState } from "react";
 import { NavLink } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../contexts/AuthContext";
-import { Plus, X, Trash2 } from "lucide-react";
+import { useCourses } from "../contexts/CoursesContext";
+import {
+    Home,
+    Megaphone,
+    ClipboardList,
+    Layers,
+    Notebook,
+    Award,
+    CalendarCheck,
+    FileText,
+    Plus,
+    X,
+    Trash2,
+} from "lucide-react";
 
 const INITIAL_NAV_ITEMS = [
     { label: "Home", pathSuffix: "", end: true },
-    { label: "Announcements", pathSuffix: "/announcements" },
-    { label: "Assignments", pathSuffix: "/assignments" },
-    { label: "Modules", pathSuffix: "/modules" },
-    { label: "Notes", pathSuffix: "/notes" },
-    { label: "Grades", pathSuffix: "/grades" },
-    { label: "Attendance", pathSuffix: "/attendance" },
+    { label: "Announcements", pathSuffix: "announcements" },
+    { label: "Assignments", pathSuffix: "assignments" },
+    { label: "Modules", pathSuffix: "modules" },
+    { label: "Notes", pathSuffix: "notes" },
+    { label: "Grades", pathSuffix: "grades" },
+    { label: "Attendance", pathSuffix: "attendance" },
 ];
 
-/**
- * CourseSecondaryNav Component
- */
-export default function CourseSecondaryNav({ activeCourseId }) {
+const ICON_MAP = {
+    Home: Home,
+    Announcements: Megaphone,
+    Assignments: ClipboardList,
+    Modules: Layers,
+    Notes: Notebook,
+    Grades: Award,
+    Attendance: CalendarCheck,
+};
+
+function getIcon(label) {
+    const IconComponent = ICON_MAP[label] || FileText;
+    return <IconComponent size={15} />;
+}
+
+export default function CourseSecondaryNav({ activeCourseId, hideNav }) {
     const { role } = useAuth();
+    const { visibleCourses } = useCourses();
     const isTeacher = role === "teacher";
+    
     const [navItems, setNavItems] = useState(INITIAL_NAV_ITEMS);
     const [isAdding, setIsAdding] = useState(false);
     const [newItemLabel, setNewItemLabel] = useState("");
+    const [isPublished, setIsPublished] = useState(true);
 
-    // Generate the base link using the newly introduced ID
-    const basePath = activeCourseId ? `/courses/${activeCourseId}` : "/courses";
+    // Fetch active course details
+    const course = visibleCourses.find(c => c.id === activeCourseId) || visibleCourses[0] || null;
+
+    // Generate base link
+    const queryAppend = hideNav ? "?hideNav=true" : "";
 
     const addItem = () => {
         if (newItemLabel.trim()) {
-            const suffix = `/${newItemLabel.toLowerCase().replace(/\s+/g, '-')}`;
+            const suffix = newItemLabel.toLowerCase().replace(/\s+/g, '-');
             setNavItems([...navItems, { label: newItemLabel, pathSuffix: suffix }]);
             setNewItemLabel("");
             setIsAdding(false);
@@ -40,108 +71,204 @@ export default function CourseSecondaryNav({ activeCourseId }) {
         setNavItems(navItems.filter(item => item.label !== label));
     };
 
+    if (hideNav) return null;
+
     return (
         <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            className=" py-4 flex flex-col gap-1 overflow-hidden bg-white/50 border border-1 border-gray-100  shadow-xl rounded-3xl min-w-[200px]"
+            className="flex flex-col shrink-0 transition-all duration-300
+              md:h-full md:w-64 md:bg-white/70 md:backdrop-blur-xl md:border md:border-white/20 md:rounded-[28px] md:shadow-lg md:overflow-hidden
+              max-md:h-full max-md:w-64 max-md:bg-white/80 max-md:backdrop-blur-md max-md:border-r max-md:border-gray-200/50"
         >
-            <ul className="flex flex-col">
-                <AnimatePresence>
-                    {navItems.map((item, index) => (
-                        <motion.li
-                            key={item.label}
-                            initial={{ opacity: 0, x: -10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -10 }}
-                            transition={{ delay: index * 0.05 }}
-                            className="list-none group relative"
+            {/* Course Header Info */}
+            {course && (
+                <div className="px-6 pt-6 pb-5 border-b border-gray-100 flex flex-col gap-2 shrink-0">
+                    <div className="flex items-center gap-2">
+                        <div 
+                            style={{ backgroundColor: course.color }} 
+                            className="px-2 py-0.5 rounded-lg text-white font-black text-[9px] uppercase tracking-wider shadow-sm"
                         >
-                            <NavLink
-                                to={item.pathSuffix ? `${basePath}${item.pathSuffix}` : basePath}
-                                end={item.end}
-                                className={({ isActive }) =>
-                                    `relative flex items-center gap-3 px-5 py-1.5 text-sm font-medium transition-all duration-200 mx-2  ${isActive
-                                        ? "text-[#3C0078] border-[#3C0078] rounded-full font-bold bg-purple-300"
-                                        : "text-gray-500 border-transparent rounded-full hover:text-[#3C0078] hover:bg-purple-100"
-                                    }`
-                                }
-                            >
-                                {({ isActive }) => (
-                                    <div className="flex items-center w-full justify-between">
-                                        <span className="truncate">{item.label}</span>
-                                        <div className="flex items-center gap-2">
-                                            {isTeacher && item.label !== "Home" && (
-                                                <button
-                                                    onClick={(e) => {
-                                                        e.preventDefault();
-                                                        e.stopPropagation();
-                                                        removeItem(item.label);
-                                                    }}
-                                                    className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-500 transition-all"
-                                                >
-                                                    <Trash2 size={12} />
-                                                </button>
-                                            )}
-                                            {isActive && (
-                                                <motion.div
-                                                    layoutId="activeBall"
-                                                    className="w-1.5 h-1.5 rounded-full bg-[#3C0078]"
-                                                    transition={{
-                                                        type: "spring",
-                                                        stiffness: 300,
-                                                        damping: 30
-                                                    }}
-                                                />
-                                            )}
-                                        </div>
-                                    </div>
-                                )}
-                            </NavLink>
-                        </motion.li>
-                    ))}
-                </AnimatePresence>
-            </ul>
-
-            {isTeacher && (
-                <div className="mt-4 px-4">
-                    {isAdding ? (
-                        <div className="flex flex-col gap-2">
-                            <input
-                                autoFocus
-                                type="text"
-                                placeholder="Link name..."
-                                className="w-full bg-gray-50 border border-black/10 rounded-lg px-3 py-2 text-xs outline-none focus:border-black transition-colors"
-                                value={newItemLabel}
-                                onChange={(e) => setNewItemLabel(e.target.value)}
-                                onKeyDown={(e) => {
-                                    if (e.key === "Enter") addItem();
-                                    if (e.key === "Escape") setIsAdding(false);
-                                }}
-                            />
-                            <div className="flex gap-1">
-                                <button
-                                    onClick={addItem}
-                                    className="flex-1 py-1.5 bg-[#3C0078] text-white text-[10px] font-bold uppercase tracking-widest rounded-lg hover:bg-[#2A0054] transition-colors"
-                                >
-                                    Add
-                                </button>
-                                <button
-                                    onClick={() => setIsAdding(false)}
-                                    className="p-1.5 bg-gray-100 text-gray-500 rounded-lg hover:bg-gray-200"
-                                >
-                                    <X size={14} />
-                                </button>
-                            </div>
+                            {course.code}
                         </div>
-                    ) : (
+                        <span className="text-[10px] font-extrabold text-gray-400 tracking-wider">
+                            {course.code} {course.number}
+                        </span>
+                    </div>
+                    <h3 className="text-sm font-extrabold text-gray-900 leading-snug mt-1 truncate" title={course.subjectName}>
+                        {course.subjectName}
+                    </h3>
+                </div>
+            )}
+
+            {/* Navigation links */}
+            <div className="flex-1 overflow-y-auto pt-4 pb-6 scrollbar-hide">
+                <ul className="flex flex-col gap-0.5">
+                    <AnimatePresence>
+                        {navItems.map((item, index) => {
+                            const showQuery = queryAppend && !item.pathSuffix.includes('?');
+                            const toPath = item.pathSuffix 
+                                ? `/courses/${activeCourseId}/${item.pathSuffix}${showQuery ? queryAppend : ""}`
+                                : `/courses/${activeCourseId}${queryAppend}`;
+                            
+                            return (
+                                <motion.li
+                                    key={item.label}
+                                    initial={{ opacity: 0, x: -10 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: -10 }}
+                                    transition={{ delay: index * 0.03 }}
+                                    className="list-none group relative"
+                                >
+                                    <NavLink
+                                        to={toPath}
+                                        end={item.end}
+                                        className={({ isActive }) =>
+                                            `relative flex items-center gap-3 px-4 py-2.5 text-xs font-semibold transition-all duration-200 mx-3 my-0.5 rounded-xl group select-none cursor-pointer
+                                            ${isActive
+                                                ? "bg-[#3C0078]/5 text-[#3C0078]"
+                                                : "text-gray-600 hover:bg-gray-50/80 hover:text-gray-900"
+                                            }`
+                                        }
+                                    >
+                                        {({ isActive }) => (
+                                            <>
+                                                {/* Left Accent indicator dot */}
+                                                {isActive && (
+                                                    <motion.div
+                                                        layoutId="activeSecondaryLeftAccent"
+                                                        className="absolute left-0 top-1/4 bottom-1/4 w-0.75 bg-[#3C0078] rounded-r-md shrink-0"
+                                                        transition={{
+                                                            type: "spring",
+                                                            stiffness: 300,
+                                                            damping: 30
+                                                        }}
+                                                    />
+                                                )}
+
+                                                <span className={`transition-colors shrink-0 ${isActive ? "text-[#3C0078]" : "text-gray-400 group-hover:text-gray-600"}`}>
+                                                    {getIcon(item.label)}
+                                                </span>
+                                                
+                                                <span className="flex-1 truncate !text-inherit">{item.label}</span>
+                                                
+                                                {isTeacher && item.label !== "Home" && (
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            e.stopPropagation();
+                                                            removeItem(item.label);
+                                                        }}
+                                                        className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-500 transition-all shrink-0 cursor-pointer"
+                                                        title="Remove Link"
+                                                    >
+                                                        <Trash2 size={12} />
+                                                    </button>
+                                                )}
+                                                
+                                                {isActive && (
+                                                    <motion.div
+                                                        layoutId="activeSecondaryDot"
+                                                        className="w-1.5 h-1.5 rounded-full bg-[#3C0078] shrink-0"
+                                                        transition={{
+                                                            type: "spring",
+                                                            stiffness: 300,
+                                                            damping: 30
+                                                        }}
+                                                    />
+                                                )}
+                                            </>
+                                        )}
+                                    </NavLink>
+                                </motion.li>
+                            );
+                        })}
+                    </AnimatePresence>
+                </ul>
+
+                {/* Add Link Option for Teachers */}
+                {isTeacher && (
+                    <div className="mt-4 px-6 shrink-0">
+                        {isAdding ? (
+                            <div className="flex flex-col gap-2 p-3 bg-gray-50 border border-gray-100 rounded-2xl">
+                                <input
+                                    autoFocus
+                                    type="text"
+                                    placeholder="Link name..."
+                                    className="w-full bg-white border border-gray-200 rounded-xl px-3 py-1.5 text-xs outline-none focus:border-[#3C0078]/40 transition-colors"
+                                    value={newItemLabel}
+                                    onChange={(e) => setNewItemLabel(e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Enter") addItem();
+                                        if (e.key === "Escape") setIsAdding(false);
+                                    }}
+                                />
+                                <div className="flex gap-1.5">
+                                    <button
+                                        onClick={addItem}
+                                        className="flex-1 py-1.5 bg-[#3C0078] hover:bg-[#2A0054] text-white text-[10px] font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-sm hover:shadow"
+                                    >
+                                        Add
+                                    </button>
+                                    <button
+                                        onClick={() => setIsAdding(false)}
+                                        className="p-1.5 bg-white border border-gray-200 text-gray-400 hover:text-gray-600 rounded-xl transition-all cursor-pointer shadow-xs"
+                                    >
+                                        <X size={13} />
+                                    </button>
+                                </div>
+                            </div>
+                        ) : (
+                            <button
+                                onClick={() => setIsAdding(true)}
+                                className="w-full flex items-center justify-center gap-1.5 py-2.5 border border-dashed border-gray-200 hover:border-[#3C0078]/40 hover:bg-[#3C0078]/5 rounded-xl text-[10px] font-bold uppercase tracking-wider text-gray-400 hover:text-[#3C0078] transition-all cursor-pointer"
+                            >
+                                <Plus size={12} />
+                                <span>Add Page</span>
+                            </button>
+                        )}
+                    </div>
+                )}
+            </div>
+
+            {/* Teacher controls footer */}
+            {isTeacher && (
+                <div className="p-4 border-t border-gray-100 flex flex-col gap-3 bg-gray-50/50 shrink-0">
+                    <div className="flex flex-col gap-1 px-2">
+                        <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none">
+                            Course Controls
+                        </span>
+                        
+                        {/* Course Status Toggle */}
+                        <div className="flex items-center justify-between mt-2.5">
+                            <span className="text-[10px] font-bold text-gray-500">Course Status</span>
+                            <button
+                                onClick={() => setIsPublished(!isPublished)}
+                                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer shadow-xs
+                                    ${isPublished 
+                                        ? "bg-green-50 text-green-600 border border-green-200/50 hover:bg-green-100/50" 
+                                        : "bg-amber-50 text-amber-600 border border-amber-200/50 hover:bg-amber-100/50"
+                                    }`}
+                            >
+                                <span className={`w-1.5 h-1.5 rounded-full ${isPublished ? "bg-green-500 animate-pulse" : "bg-amber-500"}`} />
+                                <span>{isPublished ? "Published" : "Draft"}</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Quick Module Shortcut Button */}
+                    <div className="flex flex-col mt-1">
                         <button
-                            onClick={() => setIsAdding(true)}
-                            className="w-full flex items-center justify-center gap-2 py-3 border-2 border-dashed border-black/10 rounded-xl text-[10px] font-bold uppercase tracking-widest text-gray-400 hover:border-black/30 hover:text-black transition-all"
+                            onClick={() => {
+                                // Direct page navigation to modules page
+                                window.location.href = `/courses/${activeCourseId}/modules`;
+                            }}
+                            className="flex items-center justify-center gap-2 w-full py-2 px-3 rounded-xl text-[10px] font-extrabold uppercase tracking-wider border border-dashed border-gray-200 bg-white hover:border-[#3C0078]/30 hover:bg-[#3C0078]/5 hover:text-[#3C0078] text-gray-500 transition-all cursor-pointer shadow-xs"
                         >
-                            <Plus size={14} /> Add Link
+                            <Plus size={11} />
+                            <span>Add New Module</span>
                         </button>
-                    )}
+                    </div>
                 </div>
             )}
         </motion.div>

@@ -1,5 +1,6 @@
 import React from "react";
 import { useAuth } from "../contexts/AuthContext";
+import HeaderTopBar from "../components/HeaderTopBar";
 
 // View components
 import StudentDashboard from "./dashboards/studentDashboard";
@@ -10,14 +11,24 @@ import AdminDashboard from "./dashboards/adminDashboard";
 export default function Dashboard() {
   const { role } = useAuth();
 
+  let content = <StudentDashboard />;
   if (role === "admin") {
-    return <AdminDashboard />;
+    content = <AdminDashboard />;
+  } else if (role === "teacher") {
+    content = <TeacherDashboard />;
   }
 
-  if (role === "teacher") {
-    return <TeacherDashboard />;
-  }
+  return (
+    <div className="flex flex-col overflow-hidden transition-all duration-300 md:h-[calc(100vh-32px)] md:w-full md:bg-white/75 md:backdrop-blur-xl md:border md:border-white/20 md:rounded-[28px] md:shadow-lg max-md:h-screen max-md:w-screen max-md:-ml-4 max-md:-mr-4 max-md:-mt-4 max-md:bg-white text-slate-900">
+      {/* Reusable breadcrumb header top bar */}
+      <HeaderTopBar />
 
-  // Default assumption fallback is the student dashboard
-  return <StudentDashboard />;
+      {/* Scrollable View Content area */}
+      <div className="flex-1 overflow-y-auto pt-6 px-8 pb-12">
+        <div className="w-full">
+          {content}
+        </div>
+      </div>
+    </div>
+  );
 }

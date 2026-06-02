@@ -5,8 +5,7 @@ import {
   Target, BarChart3, ArrowUpRight, ArrowDownRight, ChevronDown,
   Flame, Zap, GraduationCap, FileText, AlertTriangle
 } from "lucide-react";
-import Menu from "../../components/menu";
-import SideMenu from "../../components/sideMenu";
+
 import { useAuth } from "../../contexts/AuthContext";
 import { useCourses } from "../../contexts/CoursesContext";
 import { getStudentGrades } from "../../services/gradeService";
@@ -289,8 +288,6 @@ export default function StudentAnalytics() {
 
   return (
     <div className="w-full pb-16">
-      <Menu />
-      <SideMenu />
 
       <motion.div
         className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-2"
@@ -305,7 +302,7 @@ export default function StudentAnalytics() {
         </motion.div> */}
 
         {/* ─── Top Stat Cards ─── */}
-        <motion.div variants={fadeUp} className="grid mt-15 grid-cols-2 lg:grid-cols-4 gap-4">
+        <motion.div variants={fadeUp} className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard label="Overall Average" value={stats.overallAverage} suffix="%" icon={Target} trend={monthlyTrendData.overallTrend} accent />
           <StatCard label="Courses Enrolled" value={visibleCourses.length} icon={BookOpen} />
           <StatCard label="Assignments Graded" value={stats.totalGraded} icon={CheckCircle} />

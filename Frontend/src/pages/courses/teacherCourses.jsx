@@ -1,18 +1,17 @@
-﻿import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useCourses } from "../../contexts/CoursesContext";
-import CourseMenu from "../../components/coursesMenu";
 import CourseSecondaryNav from "../../components/courseSecondaryNav";
-import SideMenu from "../../components/sideMenu";
-import Menu from "../../components/menu";
 import ModuleAccordion from "../../components/moduleAccordion";
 import { Bell, Calendar, Folder, Upload, InfoCircle, CheckCircle, CloseCircle, CloseSquare, User, Filter } from "@solar-icons/react";
 import { motion, AnimatePresence } from "framer-motion";
 import AttendanceChart from "../../components/UI/attendanceChart";
 import AttendanceVisualizer from "../../components/UI/attendanceVisualizer";
-import { getCourseAssignments } from "../../services/assignmentService";
-import { getCourseGrades } from "../../services/gradeService";
-import { getCourseSubmissions } from "../../services/submissionService";
+import { getCourseAssignments, createAssignment, updateAssignment, deleteAssignment, closeAssignment } from "../../services/assignmentService";
+import { getCourseGrades, getAssignmentGrades, createGrade, updateGrade, releaseAssignmentGrades } from "../../services/gradeService";
+import { getCourseSubmissions, getAssignmentSubmissions, updateSubmission } from "../../services/submissionService";
+import { getCourseStudentCount } from "../../services/enrollmentService";
+import StudentCourseAssignmentsView from "./studentCoursesComponents/CourseAssignmentsView";
 import { getCourseAnnouncements, createAnnouncement, deleteAnnouncement } from "../../services/announcementService";
 import {
     EditorRoot,
@@ -34,9 +33,11 @@ import {
     useEditor,
 } from "novel";
 import { getNotes, createNote, updateNote, deleteNote } from "../../services/noteService";
+import { getCourseModules, createModule, updateModule, deleteModule, createModuleItem, updateModuleItem, deleteModuleItem } from "../../services/moduleService";
 import { useAuth } from "../../contexts/AuthContext";
-import { Plus, Bold, Italic, Underline, Strikethrough, Code, Heading1, Heading2, Heading3, List, ListOrdered, Quote, Minus, Trash2, Maximize2, Minimize2, FileText, HelpCircle, MessageSquare, Users, ExternalLink, ClipboardList, Eye, EyeOff, Edit2, ChevronDown, ChevronRight, CheckSquare, GripVertical, ToggleLeft, ToggleRight, PenLine, BookOpen, X } from "lucide-react";
+import { Plus, Bold, Italic, Underline, Strikethrough, Code, Heading1, Heading2, Heading3, List, ListOrdered, Quote, Minus, Trash2, Maximize2, Minimize2, FileText, HelpCircle, MessageSquare, Users, ExternalLink, ClipboardList, Eye, EyeOff, Edit2, ChevronDown, ChevronRight, CheckSquare, GripVertical, ToggleLeft, ToggleRight, PenLine, BookOpen, X, Loader, Check, Download, Paperclip, Link as LinkIcon } from "lucide-react";
 import NovelBlockMenu from "../../components/NovelBlockMenu";
+import CourseItemView from "./CourseItemView";
 
 /**
  * CourseContent Components
@@ -492,26 +493,37 @@ function CreateAssignmentDrawer({ onClose, onSave, initialData }) {
         title: initialData?.title ?? "",
         description: initialData?.description ?? "",
         type: initialData?.type ?? "online",
-        points: initialData?.points ?? 100,
+        points: initialData?.maxPoints ?? initialData?.points ?? 100,
         gradeDisplay: initialData?.gradeDisplay ?? "Percentage",
-        submissionType: initialData?.submissionType ?? "Online",
-        assignedTo: initialData?.assignedTo ?? "Everyone",
-        dueDate: initialData?.dueDate ?? "",
-        availableFrom: initialData?.availableFrom ?? "",
-        availableUntil: initialData?.availableUntil ?? "",
-        published: initialData?.published ?? false,
-        group: initialData?.group ?? "g1",
+        openDate: initialData?.openDate ? new Date(initialData.openDate).toISOString().slice(0,16) : "",
+        closeDate: initialData?.closeDate ? new Date(initialData.closeDate).toISOString().slice(0,16) : "",
+        dueDate: initialData?.dueDate ? new Date(initialData.dueDate).toISOString().slice(0,16) : "",
+        allowMultipleAttempts: initialData?.allowMultipleAttempts ?? true,
         id: initialData?.id ?? null,
         submissions: initialData?.submissions ?? 0,
-        totalStudents: initialData?.totalStudents ?? 26,
+        totalStudents: initialData?.totalStudents ?? 0,
     });
+
+    const parseInitialQuestions = () => {
+        if (!initialData?.quizQuestionsJson) return [];
+        try { return JSON.parse(initialData.quizQuestionsJson); } catch { return []; }
+    };
+    const [quizQuestions, setQuizQuestions] = React.useState(parseInitialQuestions);
 
     const handleChange = (field, value) => setForm(prev => ({ ...prev, [field]: value }));
 
-    const handleSubmit = (publish) => {
+    const addQuestion = () => setQuizQuestions(prev => [...prev, { question: "", options: ["", "", "", ""], correctAnswer: 0 }]);
+    const removeQuestion = (qi) => setQuizQuestions(prev => prev.filter((_, i) => i !== qi));
+    const updateQuestion = (qi, field, value) => setQuizQuestions(prev => prev.map((q, i) => i !== qi ? q : { ...q, [field]: value }));
+    const updateOption = (qi, oi, value) => setQuizQuestions(prev => prev.map((q, i) => i !== qi ? q : { ...q, options: q.options.map((o, j) => j !== oi ? o : value) }));
+
+    const handleSubmit = () => {
         if (!form.title.trim()) return;
-        const payload = { ...form, published: publish };
-        if (!isEditing) payload.id = `a_${Date.now()}`;
+        const payload = {
+            ...form,
+            maxPoints: form.points,
+            quizQuestionsJson: form.type === "quiz" && quizQuestions.length > 0 ? JSON.stringify(quizQuestions) : null,
+        };
         onSave(payload);
     };
 
@@ -622,48 +634,33 @@ function CreateAssignmentDrawer({ onClose, onSave, initialData }) {
                         </div>
                     </div>
 
-                    {/* Submission Type & Assignees */}
-                    <div className="grid grid-cols-2 gap-4">
+                    {/* Allow Multiple Attempts */}
+                    <div className="flex items-center justify-between bg-gray-50 rounded-2xl px-5 py-4">
                         <div>
-                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2 block">Submission Type</label>
-                            <select
-                                value={form.submissionType}
-                                onChange={e => handleChange("submissionType", e.target.value)}
-                                className="w-full bg-gray-50 rounded-2xl px-5 py-4 text-gray-900 font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-[#3C0078]/20 border border-transparent transition-all appearance-none"
-                            >
-                                {SUBMISSION_TYPE_OPTIONS.map(o => <option key={o}>{o}</option>)}
-                            </select>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Allow Multiple Attempts</p>
+                            <p className="text-xs text-gray-500 mt-0.5">Students can resubmit until closed</p>
                         </div>
-                        <div>
-                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2 block">Assign To</label>
-                            <select
-                                value={form.assignedTo}
-                                onChange={e => handleChange("assignedTo", e.target.value)}
-                                className="w-full bg-gray-50 rounded-2xl px-5 py-4 text-gray-900 font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-[#3C0078]/20 border border-transparent transition-all appearance-none"
-                            >
-                                {ASSIGN_TO_OPTIONS.map(o => <option key={o}>{o}</option>)}
-                            </select>
-                        </div>
-                    </div>
-
-                    {/* Assignment Group */}
-                    <div>
-                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2 block">Assignment Group</label>
-                        <select
-                            value={form.group}
-                            onChange={e => handleChange("group", e.target.value)}
-                            className="w-full bg-gray-50 rounded-2xl px-5 py-4 text-gray-900 font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-[#3C0078]/20 border border-transparent transition-all appearance-none"
+                        <button
+                            onClick={() => handleChange("allowMultipleAttempts", !form.allowMultipleAttempts)}
+                            className={`w-12 h-6 rounded-full transition-colors flex items-center px-0.5 ${form.allowMultipleAttempts ? "bg-[#3C0078]" : "bg-gray-300"}`}
                         >
-                            {ASSIGNMENT_GROUPS_DATA.map(g => (
-                                <option key={g.id} value={g.id}>{g.name} ({g.weight}%)</option>
-                            ))}
-                        </select>
+                            <span className={`w-5 h-5 bg-white rounded-full shadow transition-transform ${form.allowMultipleAttempts ? "translate-x-6" : "translate-x-0"}`} />
+                        </button>
                     </div>
 
                     {/* Dates */}
                     <div>
                         <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3 block">Dates</label>
                         <div className="bg-gray-50 rounded-[28px] p-6 space-y-4">
+                            <div>
+                                <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2 block">Opens</label>
+                                <input
+                                    type="datetime-local"
+                                    value={form.openDate}
+                                    onChange={e => handleChange("openDate", e.target.value)}
+                                    className="w-full bg-white rounded-2xl px-5 py-3 text-gray-900 font-medium text-sm focus:outline-none focus:ring-2 focus:ring-[#3C0078]/20 border border-gray-100 transition-all"
+                                />
+                            </div>
                             <div>
                                 <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2 block">Due Date</label>
                                 <input
@@ -673,43 +670,87 @@ function CreateAssignmentDrawer({ onClose, onSave, initialData }) {
                                     className="w-full bg-white rounded-2xl px-5 py-3 text-gray-900 font-medium text-sm focus:outline-none focus:ring-2 focus:ring-[#3C0078]/20 border border-gray-100 transition-all"
                                 />
                             </div>
-                            <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2 block">Available From</label>
-                                    <input
-                                        type="datetime-local"
-                                        value={form.availableFrom}
-                                        onChange={e => handleChange("availableFrom", e.target.value)}
-                                        className="w-full bg-white rounded-2xl px-4 py-3 text-gray-900 font-medium text-sm focus:outline-none focus:ring-2 focus:ring-[#3C0078]/20 border border-gray-100 transition-all"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2 block">Available Until</label>
-                                    <input
-                                        type="datetime-local"
-                                        value={form.availableUntil}
-                                        onChange={e => handleChange("availableUntil", e.target.value)}
-                                        className="w-full bg-white rounded-2xl px-4 py-3 text-gray-900 font-medium text-sm focus:outline-none focus:ring-2 focus:ring-[#3C0078]/20 border border-gray-100 transition-all"
-                                    />
-                                </div>
+                            <div>
+                                <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2 block">Closes</label>
+                                <input
+                                    type="datetime-local"
+                                    value={form.closeDate}
+                                    onChange={e => handleChange("closeDate", e.target.value)}
+                                    className="w-full bg-white rounded-2xl px-5 py-3 text-gray-900 font-medium text-sm focus:outline-none focus:ring-2 focus:ring-[#3C0078]/20 border border-gray-100 transition-all"
+                                />
                             </div>
                         </div>
                     </div>
+
+                    {/* Quiz Questions (only for quiz type) */}
+                    {form.type === "quiz" && (
+                        <div>
+                            <div className="flex items-center justify-between mb-3">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Quiz Questions</label>
+                                <button onClick={addQuestion} className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#FF8731]/10 text-[#FF8731] font-bold text-[10px] uppercase tracking-widest hover:bg-[#FF8731]/20 transition-all">
+                                    <Plus size={14} /> Add Question
+                                </button>
+                            </div>
+                            {quizQuestions.length === 0 && (
+                                <p className="text-xs text-gray-400 bg-gray-50 rounded-2xl px-5 py-4">No questions yet. Click "Add Question" to begin.</p>
+                            )}
+                            <div className="space-y-4">
+                                {quizQuestions.map((q, qi) => (
+                                    <div key={qi} className="bg-gray-50 rounded-[24px] p-5 space-y-3">
+                                        <div className="flex items-start gap-3">
+                                            <span className="w-6 h-6 rounded-full bg-[#FF8731]/20 text-[#FF8731] text-[10px] font-black flex items-center justify-center shrink-0 mt-1">{qi + 1}</span>
+                                            <input
+                                                type="text"
+                                                placeholder="Question text..."
+                                                value={q.question}
+                                                onChange={e => updateQuestion(qi, "question", e.target.value)}
+                                                className="flex-1 bg-white rounded-xl px-4 py-2 text-sm text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-[#FF8731]/20 border border-gray-100"
+                                            />
+                                            <button onClick={() => removeQuestion(qi)} className="p-1.5 rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 transition-all">
+                                                <Trash2 size={14} />
+                                            </button>
+                                        </div>
+                                        <div className="space-y-2 pl-9">
+                                            {q.options.map((opt, oi) => (
+                                                <div key={oi} className="flex items-center gap-2">
+                                                    <input
+                                                        type="radio"
+                                                        name={`correct-${qi}`}
+                                                        checked={q.correctAnswer === oi}
+                                                        onChange={() => updateQuestion(qi, "correctAnswer", oi)}
+                                                        className="accent-[#3C0078]"
+                                                    />
+                                                    <input
+                                                        type="text"
+                                                        placeholder={`Option ${oi + 1}...`}
+                                                        value={opt}
+                                                        onChange={e => updateOption(qi, oi, e.target.value)}
+                                                        className="flex-1 bg-white rounded-xl px-4 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#3C0078]/10 border border-gray-100"
+                                                    />
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <p className="text-[10px] text-gray-400 pl-9">Select the radio button next to the correct answer</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Drawer Footer */}
                 <div className="px-10 py-6 border-t border-gray-100 flex gap-3 shrink-0">
                     <button
-                        onClick={() => handleSubmit(false)}
+                        onClick={onClose}
                         className="flex-1 py-4 rounded-2xl border-2 border-gray-200 text-gray-700 font-bold text-xs uppercase tracking-widest hover:bg-gray-50 transition-all"
                     >
-                        {isEditing ? "Save as Draft" : "Save as Draft"}
+                        Cancel
                     </button>
                     <button
-                        onClick={() => handleSubmit(true)}
+                        onClick={handleSubmit}
                         className="flex-1 py-4 rounded-2xl bg-[#3C0078] text-white font-bold text-xs uppercase tracking-widest hover:bg-[#2A0054] transition-all shadow-lg shadow-[#3C0078]/20 flex items-center justify-center gap-2"
                     >
-                        <Eye size={16} /> {isEditing ? "Save & Publish" : "Publish"}
+                        <Eye size={16} /> {isEditing ? "Save Changes" : "Publish"}
                     </button>
                 </div>
             </motion.div>
@@ -717,7 +758,333 @@ function CreateAssignmentDrawer({ onClose, onSave, initialData }) {
     );
 }
 
-function AssignmentGroupRow({ group, onTogglePublish, onDelete, onEdit }) {
+// ─────────────────────────────────────────────
+// Teacher: review submissions for a single assignment
+// ─────────────────────────────────────────────
+function TeacherSubmissionReview({ assignment, onBack }) {
+    const { user } = useAuth();
+    const [submissions, setSubmissions] = React.useState([]);
+    const [grades, setGrades] = React.useState({}); // keyed by submissionId
+    const [loading, setLoading] = React.useState(true);
+    // Per-submission grading state: { [submissionId]: { points: string, saving: bool, error: string|null, editing: bool } }
+    const [gradingState, setGradingState] = React.useState({});
+    const [releasing, setReleasing] = React.useState(false);
+
+    async function handleRelease() {
+        setReleasing(true);
+        try {
+            await releaseAssignmentGrades(assignment.id);
+            setGrades(prev => {
+                const updated = {};
+                Object.keys(prev).forEach(k => { updated[k] = { ...prev[k], isReleased: true }; });
+                return updated;
+            });
+        } catch (err) {
+            console.error("Failed to release grades:", err);
+        } finally {
+            setReleasing(false);
+        }
+    }
+
+    React.useEffect(() => {
+        let mounted = true;
+        async function load() {
+            try {
+                setLoading(true);
+                const [subs, gradeList] = await Promise.all([
+                    getAssignmentSubmissions(assignment.id),
+                    getAssignmentGrades(assignment.id).catch(() => []),
+                ]);
+                if (!mounted) return;
+                setSubmissions(subs);
+                // Build a map: submissionId -> grade object
+                const gradeMap = {};
+                gradeList.forEach(g => { gradeMap[g.submissionId] = g; });
+                setGrades(gradeMap);
+                // Pre-fill grading inputs for already-graded submissions
+                const initial = {};
+                subs.forEach(s => {
+                    const existing = gradeMap[s.id];
+                    initial[s.id] = { points: existing ? String(existing.pointsEarned) : "", saving: false, error: null, editing: false };
+                });
+                setGradingState(initial);
+            } catch (err) {
+                console.error("Failed to load submissions:", err);
+            } finally {
+                if (mounted) setLoading(false);
+            }
+        }
+        load();
+        return () => { mounted = false; };
+    }, [assignment.id]);
+
+    function setField(subId, field, value) {
+        setGradingState(prev => ({ ...prev, [subId]: { ...prev[subId], [field]: value } }));
+    }
+
+    async function handleGrade(sub) {
+        const gs = gradingState[sub.id];
+        const pts = parseFloat(gs?.points);
+        if (isNaN(pts) || pts < 0 || pts > (assignment.points || Infinity)) {
+            setField(sub.id, "error", `Enter a value between 0 and ${assignment.points ?? "max"}.`);
+            return;
+        }
+        setField(sub.id, "saving", true);
+        setField(sub.id, "error", null);
+        try {
+            const existing = grades[sub.id];
+            let saved;
+            if (existing) {
+                await updateGrade(existing.id, { submissionId: sub.id, pointsEarned: pts, gradedBy: user.userId });
+                saved = { ...existing, pointsEarned: pts };
+            } else {
+                saved = await createGrade({ submissionId: sub.id, pointsEarned: pts, gradedBy: user.userId });
+            }
+            // Mark submission as Graded on the backend
+            await updateSubmission(sub.id, { assignmentId: sub.assignmentId, studentId: sub.studentId, fileUrl: sub.fileUrl, status: "Graded" }).catch(() => {});
+            setGrades(prev => ({ ...prev, [sub.id]: saved }));
+            setField(sub.id, "editing", false);
+            setField(sub.id, "saving", false);
+            // Reflect "Graded" status in the local submissions list
+            setSubmissions(prev => prev.map(s => s.id === sub.id ? { ...s, status: "Graded" } : s));
+        } catch (err) {
+            setField(sub.id, "error", err.message || "Failed to save grade.");
+            setField(sub.id, "saving", false);
+        }
+    }
+
+    const maxPts = assignment.points ?? null;
+
+    return (
+        <motion.div className="flex-1 p-8 overflow-y-auto" initial="hidden" animate="visible" variants={staggerContainer}>
+            {/* Back */}
+            <motion.div variants={slideUp} className="flex items-center gap-3 mb-10">
+                <button
+                    onClick={onBack}
+                    className="flex items-center gap-2 text-gray-400 hover:text-[#3C0078] transition-colors font-semibold text-sm group"
+                >
+                    <ChevronRight size={18} className="rotate-180 group-hover:-translate-x-1 transition-transform" />
+                    Back to Assignments
+                </button>
+                <span className="text-gray-200">/</span>
+                <span className="text-sm text-gray-700 font-semibold truncate max-w-[320px]">{assignment.title}</span>
+            </motion.div>
+
+            {/* Header */}
+            <motion.div variants={slideUp} className="mb-8 flex items-end justify-between">
+                <div>
+                    <h1 className="text-3xl font-bold text-gray-900 tracking-tight">{assignment.title}</h1>
+                    {!loading && (
+                        <p className="text-gray-400 text-sm mt-1">
+                            {submissions.length} submission{submissions.length !== 1 ? "s" : ""}
+                            {maxPts != null && <span className="ml-3 text-gray-300">|</span>}
+                            {maxPts != null && <span className="ml-3">Max: <strong>{maxPts} pts</strong></span>}
+                        </p>
+                    )}
+                </div>
+                {/* Quick stats */}
+                {!loading && submissions.length > 0 && (
+                    <div className="flex items-center gap-3">
+                        <div className="px-5 py-3 bg-green-50 rounded-2xl text-center">
+                            <p className="text-[10px] font-black uppercase tracking-widest text-green-600">Graded</p>
+                            <p className="text-xl font-black italic text-green-700">
+                                {Object.keys(grades).length}/{submissions.length}
+                            </p>
+                        </div>
+                        {Object.keys(grades).length > 0 && (
+                            Object.values(grades).every(g => g.isReleased) ? (
+                                <div className="px-4 py-2 bg-purple-50 rounded-2xl flex items-center gap-2">
+                                    <Check size={14} className="text-purple-600" />
+                                    <span className="text-xs font-bold uppercase tracking-widest text-purple-600">Grades Released</span>
+                                </div>
+                            ) : (
+                                <button
+                                    onClick={handleRelease}
+                                    disabled={releasing}
+                                    className="px-5 py-3 bg-[#3C0078] text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-[#2d0059] transition-colors disabled:opacity-60"
+                                >
+                                    {releasing ? "Releasing…" : "Release Grades"}
+                                </button>
+                            )
+                        )}
+                    </div>
+                )}
+            </motion.div>
+
+            {loading ? (
+                <div className="flex items-center justify-center h-48 text-gray-400 font-medium">Loading submissions…</div>
+            ) : submissions.length === 0 ? (
+                <motion.div variants={slideUp} className="text-center py-20 bg-gray-50 rounded-[40px] border border-gray-100 text-gray-400 font-medium">
+                    No submissions yet for this assignment.
+                </motion.div>
+            ) : (
+                <motion.div variants={staggerContainer} className="space-y-4">
+                    {submissions.map(sub => {
+                        const studentName = sub.student
+                            ? `${sub.student.firstName} ${sub.student.lastName}`
+                            : sub.studentId;
+                        const studentEmail = sub.student?.email || "";
+                        const isQuizAnswer = (() => {
+                            try {
+                                if (!sub.fileUrl) return false;
+                                const parsed = JSON.parse(sub.fileUrl);
+                                return typeof parsed === "object" && !Array.isArray(parsed);
+                            } catch { return false; }
+                        })();
+                        const existingGrade = grades[sub.id];
+                        const gs = gradingState[sub.id] || { points: "", saving: false, error: null, editing: false };
+                        const ptsVal = parseFloat(gs.points);
+                        const pct = maxPts && !isNaN(ptsVal) ? Math.round((ptsVal / maxPts) * 100) : null;
+                        const isEditing = gs.editing || !existingGrade;
+
+                        return (
+                            <motion.div
+                                key={sub.id}
+                                variants={slideUp}
+                                className="bg-white border border-gray-100 rounded-[28px] p-6 space-y-4"
+                            >
+                                {/* Top row: student + file + status */}
+                                <div className="flex items-center gap-4">
+                                    {/* Avatar */}
+                                    <div className="shrink-0 w-11 h-11 rounded-2xl bg-[#3C0078]/10 flex items-center justify-center">
+                                        <span className="text-[#3C0078] font-bold text-sm">
+                                            {(sub.student?.firstName?.[0] || "?").toUpperCase()}
+                                            {(sub.student?.lastName?.[0] || "").toUpperCase()}
+                                        </span>
+                                    </div>
+                                    {/* Student info */}
+                                    <div className="flex-1 min-w-0">
+                                        <p className="font-bold text-gray-900">{studentName}</p>
+                                        <p className="text-xs text-gray-400 mt-0.5">{studentEmail}</p>
+                                    </div>
+                                    {/* Submitted at */}
+                                    <div className="shrink-0 text-right">
+                                        <p className="text-xs font-semibold text-gray-500">
+                                            {sub.submittedAt ? new Date(sub.submittedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—"}
+                                        </p>
+                                        <p className="text-[10px] text-gray-400">
+                                            {sub.submittedAt ? new Date(sub.submittedAt).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }) : ""}
+                                        </p>
+                                    </div>
+                                    {/* File or quiz */}
+                                    {sub.fileUrl && !isQuizAnswer && (
+                                        <a
+                                            href={`${(import.meta.env.VITE_API_BASE_URL || "http://localhost:5299/api").replace("/api", "")}${sub.fileUrl}`}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl bg-[#3C0078]/5 text-[#3C0078] text-xs font-bold hover:bg-[#3C0078]/10 transition-colors"
+                                        >
+                                            <FileText size={14} />
+                                            View File
+                                        </a>
+                                    )}
+                                    {isQuizAnswer && (
+                                        <span className="shrink-0 px-4 py-2 rounded-xl bg-orange-50 text-orange-600 text-xs font-bold">Quiz Response</span>
+                                    )}
+                                    {/* Status badge */}
+                                    <span className={`shrink-0 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                                        sub.status === "Graded" ? "bg-green-100 text-green-700"
+                                        : sub.status === "Submitted" || sub.status === "Resubmitted" ? "bg-blue-50 text-blue-600"
+                                        : "bg-gray-100 text-gray-500"
+                                    }`}>
+                                        {sub.status || "Submitted"}
+                                    </span>
+                                </div>
+
+                                {/* Grading section */}
+                                <div className="border-t border-gray-50 pt-4">
+                                    {existingGrade && !gs.editing ? (
+                                        // Already graded — show result
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-4">
+                                                <div className="flex flex-col">
+                                                    <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Grade</span>
+                                                    <span className="text-2xl font-black italic text-gray-900">
+                                                        {existingGrade.pointsEarned}{maxPts != null && <span className="text-sm font-normal text-gray-400">/{maxPts} pts</span>}
+                                                    </span>
+                                                </div>
+                                                {maxPts != null && (
+                                                    <div className="px-5 py-2 rounded-2xl bg-[#3C0078] text-white">
+                                                        <span className="text-xl font-black italic">
+                                                            {Math.round((existingGrade.pointsEarned / maxPts) * 100)}%
+                                                        </span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <button
+                                                onClick={() => setField(sub.id, "editing", true)}
+                                                className="flex items-center gap-2 px-5 py-2.5 rounded-2xl border border-gray-200 text-xs font-bold text-gray-500 hover:border-[#3C0078] hover:text-[#3C0078] transition-all"
+                                            >
+                                                <Edit2 size={13} /> Update Grade
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        // Grade entry form
+                                        <div className="flex items-start gap-4">
+                                            <div className="flex-1 space-y-2">
+                                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                                                    Points Awarded{maxPts != null && ` (out of ${maxPts})`}
+                                                </label>
+                                                <div className="flex items-center gap-3">
+                                                    <input
+                                                        type="number"
+                                                        min="0"
+                                                        max={maxPts ?? undefined}
+                                                        step="0.5"
+                                                        value={gs.points}
+                                                        onChange={e => setField(sub.id, "points", e.target.value)}
+                                                        placeholder={maxPts != null ? `0 – ${maxPts}` : "Points"}
+                                                        disabled={gs.saving}
+                                                        className="w-36 px-4 py-3 rounded-2xl border border-gray-200 text-sm font-bold text-gray-900 focus:outline-none focus:border-[#3C0078] transition-colors disabled:opacity-50"
+                                                    />
+                                                    {/* Live percentage */}
+                                                    {pct !== null && (
+                                                        <div className={`px-4 py-3 rounded-2xl font-black italic text-lg min-w-[70px] text-center ${
+                                                            pct >= 75 ? "bg-green-50 text-green-700"
+                                                            : pct >= 50 ? "bg-orange-50 text-orange-600"
+                                                            : "bg-red-50 text-red-600"
+                                                        }`}>
+                                                            {pct}%
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                {gs.error && <p className="text-xs text-red-500 font-medium">{gs.error}</p>}
+                                            </div>
+                                            <div className="flex items-end gap-2 pb-0.5">
+                                                {existingGrade && (
+                                                    <button
+                                                        onClick={() => { setField(sub.id, "editing", false); setField(sub.id, "points", String(existingGrade.pointsEarned)); }}
+                                                        disabled={gs.saving}
+                                                        className="px-5 py-3 rounded-2xl border border-gray-200 text-xs font-bold text-gray-400 hover:bg-gray-50 transition-all"
+                                                    >
+                                                        Cancel
+                                                    </button>
+                                                )}
+                                                <button
+                                                    onClick={() => handleGrade(sub)}
+                                                    disabled={gs.saving || gs.points === ""}
+                                                    className={`flex items-center gap-2 px-6 py-3 rounded-2xl text-xs font-bold uppercase tracking-widest text-white transition-all ${
+                                                        gs.saving || gs.points === ""
+                                                            ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                                                            : "bg-[#3C0078] hover:bg-[#2A0054] shadow-lg shadow-[#3C0078]/20"
+                                                    }`}
+                                                >
+                                                    {gs.saving ? <><Loader size={13} className="animate-spin" /> Saving…</> : <><Check size={14} /> {existingGrade ? "Update" : "Submit Grade"}</>}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </motion.div>
+                        );
+                    })}
+                </motion.div>
+            )}
+        </motion.div>
+    );
+}
+
+function AssignmentGroupRow({ group, onTogglePublish, onDelete, onEdit, onClose, onView }) {
     const [expanded, setExpanded] = React.useState(true);
 
     return (
@@ -779,10 +1146,15 @@ function AssignmentGroupRow({ group, onTogglePublish, onDelete, onEdit }) {
                                             </span>
                                         </div>
                                         <div className="flex items-center gap-5 mt-1.5 text-xs text-gray-400 flex-wrap">
-                                            <span>{item.points} pts · {item.gradeDisplay}</span>
-                                            <span>Assign to: {item.assignedTo}</span>
+                                            <span>{item.points} pts</span>
+                                            {item.openDate && (
+                                                <span className="text-green-600">Opens: {new Date(item.openDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
+                                            )}
                                             {item.dueDate && (
-                                                <span>Due: {new Date(item.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
+                                                <span className="text-orange-500">Due: {new Date(item.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
+                                            )}
+                                            {item.closeDate && (
+                                                <span className="text-red-500">Closes: {new Date(item.closeDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
                                             )}
                                         </div>
                                     </div>
@@ -798,18 +1170,28 @@ function AssignmentGroupRow({ group, onTogglePublish, onDelete, onEdit }) {
                                         </div>
                                     </div>
 
-                                    {/* Published toggle */}
+                                    {/* Review Submissions */}
                                     <button
-                                        onClick={() => onTogglePublish(group.id, item.id)}
-                                        className={`shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all ${
-                                            item.published
-                                                ? "bg-green-50 text-green-700 hover:bg-red-50 hover:text-red-600"
-                                                : "bg-gray-100 text-gray-400 hover:bg-green-50 hover:text-green-600"
-                                        }`}
-                                        title={item.published ? "Click to unpublish" : "Click to publish"}
+                                        onClick={() => onView(item)}
+                                        className="shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl bg-[#3C0078]/5 text-[#3C0078] font-bold text-[10px] uppercase tracking-widest hover:bg-[#3C0078]/10 transition-all"
+                                        title="Review submissions"
                                     >
-                                        {item.published ? <Eye size={14} /> : <EyeOff size={14} />}
-                                        {item.published ? "Published" : "Draft"}
+                                        <Users size={14} />
+                                        Review
+                                    </button>
+
+                                    {/* Close/Reopen toggle */}
+                                    <button
+                                        onClick={() => onClose(group.id, item.id)}
+                                        className={`shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all ${
+                                            item.isClosed
+                                                ? "bg-red-50 text-red-600 hover:bg-green-50 hover:text-green-700"
+                                                : "bg-green-50 text-green-700 hover:bg-red-50 hover:text-red-600"
+                                        }`}
+                                        title={item.isClosed ? "Click to reopen" : "Click to close"}
+                                    >
+                                        {item.isClosed ? <EyeOff size={14} /> : <Eye size={14} />}
+                                        {item.isClosed ? "Closed" : "Open"}
                                     </button>
 
                                     {/* Edit */}
@@ -838,66 +1220,120 @@ function AssignmentGroupRow({ group, onTogglePublish, onDelete, onEdit }) {
     );
 }
 
-function CourseAssignmentsView({ subject }) {
-    const [groups, setGroups] = React.useState(ASSIGNMENT_GROUPS_DATA);
+function CourseAssignmentsView({ subject, activeCourseId }) {
+    const [assignments, setAssignments] = React.useState([]);
+    const [submissionCounts, setSubmissionCounts] = React.useState({});
+    const [enrollmentCount, setEnrollmentCount] = React.useState(0);
+    const [loading, setLoading] = React.useState(true);
     const [showDrawer, setShowDrawer] = React.useState(false);
     const [editingAssignment, setEditingAssignment] = React.useState(null);
     const [activeTypeFilter, setActiveTypeFilter] = React.useState("all");
+    const [saving, setSaving] = React.useState(false);
+    const [reviewingAssignment, setReviewingAssignment] = React.useState(null);
+    const [showStudentPreview, setShowStudentPreview] = React.useState(false);
 
-    const totalWeight = groups.reduce((sum, g) => sum + g.weight, 0);
-    const totalAssignments = groups.reduce((sum, g) => sum + g.assignments.length, 0);
-    const publishedCount = groups.reduce((sum, g) => sum + g.assignments.filter(a => a.published).length, 0);
+    const loadData = React.useCallback(async () => {
+        if (!activeCourseId) return;
+        try {
+            setLoading(true);
+            const [data, subs, count] = await Promise.all([
+                getCourseAssignments(activeCourseId),
+                getCourseSubmissions(activeCourseId).catch(() => []),
+                getCourseStudentCount(activeCourseId).catch(() => 0),
+            ]);
+            const counts = {};
+            (subs || []).forEach(s => {
+                counts[s.assignmentId] = (counts[s.assignmentId] || 0) + 1;
+            });
+            setAssignments(data || []);
+            setSubmissionCounts(counts);
+            setEnrollmentCount(count || 0);
+        } catch (err) {
+            console.error("Failed to load assignments:", err);
+        } finally {
+            setLoading(false);
+        }
+    }, [activeCourseId]);
 
-    const handleTogglePublish = (groupId, assignmentId) => {
-        setGroups(prev => prev.map(g =>
-            g.id !== groupId ? g : {
-                ...g,
-                assignments: g.assignments.map(a =>
-                    a.id !== assignmentId ? a : { ...a, published: !a.published }
-                )
-            }
-        ));
-    };
+    React.useEffect(() => { loadData(); }, [loadData]);
 
-    const handleDelete = (groupId, assignmentId) => {
-        setGroups(prev => prev.map(g =>
-            g.id !== groupId ? g : {
-                ...g,
-                assignments: g.assignments.filter(a => a.id !== assignmentId)
-            }
-        ));
+    // Build one group from real data
+    const groups = React.useMemo(() => [{
+        id: "all",
+        name: "All Assignments",
+        weight: 100,
+        assignments: assignments.map(a => ({
+            ...a,
+            points: a.maxPoints,
+            submissions: submissionCounts[a.id] || 0,
+            totalStudents: enrollmentCount,
+            published: !a.isClosed,
+        }))
+    }], [assignments, submissionCounts, enrollmentCount]);
+
+    const handleTogglePublish = () => {}; // handled by handleClose
+
+    const handleDelete = async (groupId, assignmentId) => {
+        try {
+            await deleteAssignment(assignmentId);
+            setAssignments(prev => prev.filter(a => a.id !== assignmentId));
+        } catch (err) {
+            console.error("Delete failed:", err);
+        }
     };
 
     const handleEdit = (groupId, assignmentId) => {
-        const group = groups.find(g => g.id === groupId);
-        const assignment = group?.assignments.find(a => a.id === assignmentId);
+        const assignment = assignments.find(a => a.id === assignmentId);
         if (assignment) {
-            setEditingAssignment({ ...assignment, group: groupId });
+            setEditingAssignment(assignment);
             setShowDrawer(true);
         }
     };
 
-    const handleSave = (savedAssignment) => {
-        if (editingAssignment) {
-            // Update existing
-            setGroups(prev => prev.map(g => ({
-                ...g,
-                assignments: g.assignments.map(a =>
-                    a.id !== savedAssignment.id ? a : { ...a, ...savedAssignment }
-                )
-            })));
-        } else {
-            // Add new
-            setGroups(prev => prev.map(g =>
-                g.id !== savedAssignment.group ? g : {
-                    ...g,
-                    assignments: [...g.assignments, savedAssignment]
-                }
+    const handleClose = async (groupId, assignmentId) => {
+        try {
+            const result = await closeAssignment(assignmentId);
+            setAssignments(prev => prev.map(a =>
+                a.id !== assignmentId ? a : { ...a, isClosed: result.isClosed }
             ));
+        } catch (err) {
+            console.error("Close failed:", err);
         }
-        setEditingAssignment(null);
-        setShowDrawer(false);
     };
+
+    const handleSave = async (formData) => {
+        setSaving(true);
+        try {
+            const payload = {
+                title: formData.title,
+                description: formData.description,
+                openDate: formData.openDate ? new Date(formData.openDate).toISOString() : null,
+                dueDate: formData.dueDate ? new Date(formData.dueDate).toISOString() : null,
+                closeDate: formData.closeDate ? new Date(formData.closeDate).toISOString() : null,
+                maxPoints: formData.maxPoints || formData.points,
+                courseId: activeCourseId,
+                type: formData.type,
+                isClosed: false,
+                allowMultipleAttempts: formData.allowMultipleAttempts ?? true,
+                quizQuestionsJson: formData.quizQuestionsJson ?? null,
+            };
+            if (editingAssignment) {
+                await updateAssignment(editingAssignment.id, { ...payload, id: editingAssignment.id });
+            } else {
+                await createAssignment(payload);
+            }
+            await loadData();
+            setEditingAssignment(null);
+            setShowDrawer(false);
+        } catch (err) {
+            console.error("Save failed:", err);
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const totalAssignments = assignments.length;
+    const openCount = assignments.filter(a => !a.isClosed).length;
 
     const filteredGroups = activeTypeFilter === "all"
         ? groups
@@ -905,6 +1341,15 @@ function CourseAssignmentsView({ subject }) {
             ...g,
             assignments: g.assignments.filter(a => a.type === activeTypeFilter)
         })).filter(g => g.assignments.length > 0);
+
+    if (reviewingAssignment) {
+        return (
+            <TeacherSubmissionReview
+                assignment={reviewingAssignment}
+                onBack={() => setReviewingAssignment(null)}
+            />
+        );
+    }
 
     return (
         <motion.div className="flex-1 p-8 overflow-y-auto" initial="hidden" animate="visible" variants={staggerContainer}>
@@ -931,12 +1376,11 @@ function CourseAssignmentsView({ subject }) {
             </motion.header>
 
             {/* Summary Stats */}
-            <motion.div variants={slideUp} className="grid grid-cols-4 gap-4 mb-10">
+            <motion.div variants={slideUp} className="grid grid-cols-3 gap-4 mb-10">
                 {[
-                    { label: "Total Assignments", value: totalAssignments, accent: false },
-                    { label: "Published", value: publishedCount, accent: true },
-                    { label: "Drafts", value: totalAssignments - publishedCount, accent: false },
-                    { label: "Total Weight", value: `${totalWeight}%`, accent: false },
+                    { label: "Total Assignments", value: loading ? "…" : totalAssignments, accent: false },
+                    { label: "Open", value: loading ? "…" : openCount, accent: true },
+                    { label: "Closed", value: loading ? "…" : totalAssignments - openCount, accent: false },
                 ].map((stat) => (
                     <div key={stat.label} className={`rounded-[28px] px-7 py-6 flex flex-col gap-1 ${stat.accent ? "bg-[#3C0078] text-white" : "bg-white border border-gray-100 shadow-sm"}`}>
                         <span className={`text-[10px] font-black uppercase tracking-widest ${stat.accent ? "text-white/60" : "text-gray-400"}`}>{stat.label}</span>
@@ -1012,6 +1456,8 @@ function CourseAssignmentsView({ subject }) {
                             onTogglePublish={handleTogglePublish}
                             onDelete={handleDelete}
                             onEdit={handleEdit}
+                            onClose={handleClose}
+                            onView={(item) => setReviewingAssignment(item)}
                         />
                     ))
                 )}
@@ -1024,10 +1470,52 @@ function CourseAssignmentsView({ subject }) {
                     <p className="text-sm font-bold text-[#3C0078]">Student View</p>
                     <p className="text-xs text-gray-500 mt-0.5">Use Student View to see exactly how published assignments appear to students before releasing a new brief.</p>
                 </div>
-                <button className="ml-auto shrink-0 px-6 py-2.5 rounded-2xl bg-[#3C0078] text-white text-xs font-bold uppercase tracking-widest hover:bg-[#2A0054] transition-all whitespace-nowrap">
+                <button
+                    onClick={() => setShowStudentPreview(true)}
+                    className="ml-auto shrink-0 px-6 py-2.5 rounded-2xl bg-[#3C0078] text-white text-xs font-bold uppercase tracking-widest hover:bg-[#2A0054] transition-all whitespace-nowrap"
+                >
                     Preview as Student
                 </button>
             </motion.div>
+
+            {/* Student preview modal */}
+            <AnimatePresence>
+                {showStudentPreview && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 bg-black/40 flex items-stretch justify-end"
+                        onClick={(e) => { if (e.target === e.currentTarget) setShowStudentPreview(false); }}
+                    >
+                        <motion.div
+                            initial={{ x: "100%" }}
+                            animate={{ x: 0 }}
+                            exit={{ x: "100%" }}
+                            transition={{ type: "spring", damping: 30, stiffness: 300 }}
+                            className="w-full max-w-3xl bg-white shadow-2xl flex flex-col overflow-hidden"
+                        >
+                            {/* Modal header */}
+                            <div className="flex items-center justify-between px-8 py-5 border-b border-gray-100">
+                                <div>
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-[#3C0078]">Student Preview</p>
+                                    <p className="text-sm font-bold text-gray-900 mt-0.5">How students see this course’s assignments</p>
+                                </div>
+                                <button
+                                    onClick={() => setShowStudentPreview(false)}
+                                    className="w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
+                                >
+                                    <X size={16} />
+                                </button>
+                            </div>
+                            {/* Student view component */}
+                            <div className="flex-1 overflow-y-auto">
+                                <StudentCourseAssignmentsView subject={subject} activeCourseId={activeCourseId} />
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Create / Edit Assignment Drawer */}
             {showDrawer && (
@@ -1724,48 +2212,592 @@ function CourseHomeView({ subject, course, loading }) {
   );
 }
 
-function CourseModulesView() {
+function CourseModulesView({ activeCourseId }) {
+  const navigate = useNavigate();
+  const [modules, setModules] = useState([]);
+  const [modulesLoading, setModulesLoading] = useState(false);
+
+  // Fetch modules from backend on mount and when the active course changes
+  useEffect(() => {
+    if (!activeCourseId) return;
+    let mounted = true;
+    setModulesLoading(true);
+    getCourseModules(activeCourseId)
+      .then(data => { if (mounted) setModules(data); })
+      .catch(console.error)
+      .finally(() => { if (mounted) setModulesLoading(false); });
+    return () => { mounted = false; };
+  }, [activeCourseId]);
+
+  const [isAddingModule, setIsAddingModule] = useState(false);
+  const [newModuleTitle, setNewModuleTitle] = useState("");
+  const [isCreatingModule, setIsCreatingModule] = useState(false);
+  const [createModuleError, setCreateModuleError] = useState("");
+  
+  // Section Rename states
+  const [editingModuleId, setEditingModuleId] = useState(null);
+  const [editingModuleTitle, setEditingModuleTitle] = useState("");
+
+  // Sub-item creation states
+  const [addingItemTo, setAddingItemTo] = useState(null); // module ID
+  const [newItemLabel, setNewItemLabel] = useState("");
+  const [newItemType, setNewItemType] = useState("document"); // attachment, link, document
+  const [isNewItemExternal, setIsNewItemExternal] = useState(true);
+
+  // Sub-item Rename states
+  const [editingItemId, setEditingItemId] = useState(null);
+  const [editingItemModuleId, setEditingItemModuleId] = useState(null);
+  const [editingItemLabel, setEditingItemLabel] = useState("");
+
+  const toggleModule = (id) => {
+    setModules(modules.map(mod => mod.id === id ? { ...mod, isOpen: !mod.isOpen } : mod));
+  };
+
+  const areAllCollapsed = modules.every(mod => !mod.isOpen);
+
+  const toggleAll = () => {
+    const targetState = areAllCollapsed;
+    setModules(modules.map(mod => ({ ...mod, isOpen: targetState })));
+  };
+
+  const exportCourseContent = () => {
+    alert("Exporting course content... Your download will begin shortly.");
+  };
+
+  // Section CRUD Handlers
+  const handleAddModule = async () => {
+    if (!newModuleTitle.trim() || !activeCourseId) return;
+    setIsCreatingModule(true);
+    setCreateModuleError("");
+    try {
+      const created = await createModule({
+        courseId: activeCourseId,
+        title: newModuleTitle,
+        isPublished: true,
+        isOpen: true,
+      });
+      setModules(prev => [...prev, { ...created, items: created.items ?? [] }]);
+      setNewModuleTitle("");
+      setIsAddingModule(false);
+      navigate(`/courses/${activeCourseId}/items/${created.id}`);
+    } catch (err) {
+      console.error("Failed to create module:", err);
+      setCreateModuleError(err.message || "Failed to create module. Please try again.");
+    } finally {
+      setIsCreatingModule(false);
+    }
+  };
+
+  const handleRenameModule = async (modId) => {
+    if (!editingModuleTitle.trim()) return;
+    const mod = modules.find(m => m.id === modId);
+    if (!mod) return;
+    // Optimistic update
+    setModules(prev => prev.map(m => m.id === modId ? { ...m, title: editingModuleTitle } : m));
+    setEditingModuleId(null);
+    setEditingModuleTitle("");
+    try {
+      await updateModule(modId, { ...mod, title: editingModuleTitle });
+    } catch (err) {
+      console.error("Failed to rename module:", err);
+      // Revert on failure
+      setModules(prev => prev.map(m => m.id === modId ? { ...m, title: mod.title } : m));
+    }
+  };
+
+  const handleDeleteModule = async (modId, e) => {
+    e.stopPropagation();
+    if (!confirm("Are you sure you want to delete this module section?")) return;
+    setModules(prev => prev.filter(m => m.id !== modId));
+    try {
+      await deleteModule(modId);
+    } catch (err) {
+      console.error("Failed to delete module:", err);
+      // Reload on failure
+      getCourseModules(activeCourseId).then(setModules).catch(console.error);
+    }
+  };
+
+  const handleToggleModulePublish = async (modId, e) => {
+    e.stopPropagation();
+    const mod = modules.find(m => m.id === modId);
+    if (!mod) return;
+    const next = !mod.isPublished;
+    setModules(prev => prev.map(m => m.id === modId ? { ...m, isPublished: next } : m));
+    try {
+      await updateModule(modId, { ...mod, isPublished: next });
+    } catch (err) {
+      console.error("Failed to update module publish state:", err);
+      setModules(prev => prev.map(m => m.id === modId ? { ...m, isPublished: mod.isPublished } : m));
+    }
+  };
+
+  // Sub-item CRUD Handlers
+  const handleAddItem = async (modId) => {
+    if (!newItemLabel.trim()) return;
+    try {
+      const created = await createModuleItem({
+        moduleId: modId,
+        label: newItemLabel,
+        type: newItemType,
+        isPublished: true,
+        isExternal: newItemType === "link" ? isNewItemExternal : false,
+      });
+      setModules(prev => prev.map(mod => {
+        if (mod.id === modId) {
+          return { ...mod, items: [...(mod.items ?? []), created] };
+        }
+        return mod;
+      }));
+      setNewItemLabel("");
+      setAddingItemTo(null);
+    } catch (err) {
+      console.error("Failed to create module item:", err);
+    }
+  };
+
+  const handleRenameItem = async (modId, itemId) => {
+    if (!editingItemLabel.trim()) return;
+    const mod = modules.find(m => m.id === modId);
+    const item = mod?.items?.find(i => i.id === itemId);
+    if (!item) return;
+    // Optimistic update
+    setModules(prev => prev.map(m => {
+      if (m.id === modId) {
+        return { ...m, items: m.items.map(i => i.id === itemId ? { ...i, label: editingItemLabel } : i) };
+      }
+      return m;
+    }));
+    setEditingItemId(null);
+    setEditingItemModuleId(null);
+    setEditingItemLabel("");
+    try {
+      await updateModuleItem(itemId, { ...item, label: editingItemLabel });
+    } catch (err) {
+      console.error("Failed to rename item:", err);
+      setModules(prev => prev.map(m => {
+        if (m.id === modId) {
+          return { ...m, items: m.items.map(i => i.id === itemId ? { ...i, label: item.label } : i) };
+        }
+        return m;
+      }));
+    }
+  };
+
+  const handleDeleteItem = async (modId, itemId) => {
+    if (!confirm("Are you sure you want to remove this item?")) return;
+    setModules(prev => prev.map(m => {
+      if (m.id === modId) return { ...m, items: m.items.filter(i => i.id !== itemId) };
+      return m;
+    }));
+    try {
+      await deleteModuleItem(itemId);
+    } catch (err) {
+      console.error("Failed to delete item:", err);
+      getCourseModules(activeCourseId).then(setModules).catch(console.error);
+    }
+  };
+
+  const handleToggleItemPublish = async (modId, itemId) => {
+    const mod = modules.find(m => m.id === modId);
+    const item = mod?.items?.find(i => i.id === itemId);
+    if (!item) return;
+    const next = !item.isPublished;
+    setModules(prev => prev.map(m => {
+      if (m.id === modId) {
+        return { ...m, items: m.items.map(i => i.id === itemId ? { ...i, isPublished: next } : i) };
+      }
+      return m;
+    }));
+    try {
+      await updateModuleItem(itemId, { ...item, isPublished: next });
+    } catch (err) {
+      console.error("Failed to toggle item publish:", err);
+      setModules(prev => prev.map(m => {
+        if (m.id === modId) {
+          return { ...m, items: m.items.map(i => i.id === itemId ? { ...i, isPublished: item.isPublished } : i) };
+        }
+        return m;
+      }));
+    }
+  };
+
   return (
-    <div className="flex-1 flex h-full overflow-hidden">
-      {/* Third-tier Nav: Modules Accordion */}
-      <div className="flex flex-col h-full border-r border-gray-200 p-8">
-        <h2 className="text-2xl font-bold mb-8">Modules</h2>
-        <ModuleAccordion />
+    <div className="w-full flex flex-col gap-6 py-6 select-none">
+      {/* Loading skeleton */}
+      {modulesLoading && (
+        <div className="flex items-center gap-2 text-xs text-gray-400 font-medium px-1">
+          <Loader size={13} className="animate-spin" />
+          <span>Loading modules...</span>
+        </div>
+      )}
+
+      {/* Top action bar */}
+      <div className="flex items-center justify-between gap-3 shrink-0 px-1">
+        <h2 className="text-lg font-black tracking-tight text-gray-900">Course Modules Manager</h2>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setIsAddingModule(true)}
+            className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold bg-[#3C0078] hover:bg-[#2A0054] text-white rounded-xl transition-all cursor-pointer shadow-sm hover:shadow"
+          >
+            <Plus size={14} />
+            <span>Add Module</span>
+          </button>
+          <button
+            onClick={toggleAll}
+            className="flex items-center justify-center px-4 py-2 text-xs font-bold border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 rounded-xl transition-all cursor-pointer shadow-xs"
+          >
+            {areAllCollapsed ? "Expand all" : "Collapse all"}
+          </button>
+          <button
+            onClick={exportCourseContent}
+            className="flex items-center gap-2 px-4 py-2 text-xs font-bold border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 rounded-xl transition-all cursor-pointer shadow-xs"
+          >
+            <Download size={13} />
+            <span>Export Content</span>
+          </button>
+        </div>
       </div>
 
-      {/* Main Content: Nested View with rounded border from screenshot */}
-      <div className="flex-1 p-8 overflow-y-auto pb-24 ">
-        <div className="bg-white p-12 rounded-[40px] border-2 border-gray-300 shadow-sm relative">
-          <header className="mb-8">
-            <h1 className="text-2xl font-semibold tracking-tight">User Experience Design 300 | Semester 1</h1>
-            <p className="text-lg text-gray-700 mt-1">UX300</p>
-          </header>
-          <div className="w-full h-64 bg-[#D9D9D9] rounded-2xl mb-8"></div>
-          <section>
-            <h3 className="text-lg font-bold mb-4">Course Overview</h3>
-            <div className="grid grid-cols-2 gap-8">
-              <div>
-                <h4 className="font-bold text-xs uppercase tracking-wide">Term 1:</h4>
-                <p className="text-xs leading-relaxed text-gray-800 mt-2">
-                  Inclusive & Neurodiverse UX focuses on building a strong human-centred foundation...
-                </p>
-              </div>
-              <div>
-                                <h4 className="font-bold text-xs uppercase tracking-wide">Term 2:</h4>
-                                <p className="text-xs leading-relaxed text-gray-800 mt-2">
-                                    Inclusive & Neurodiverse UX focuses on building a strong human-centred foundation...
-                                </p>
-                            </div>
-                        </div>
-                    </section>
-                    {/* Expand icon at bottom-right of the screenshot card */}
-                    <div className="absolute bottom-6 right-6 p-2 bg-gray-200 rounded-full hover:bg-gray-300 cursor-pointer">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h6v6" /><path d="M9 21H3v-6" /><path d="M21 3l-7 7" /><path d="M3 21l7-7" /></svg>
-                    </div>
-                </div>
-            </div>
+      {/* Add Module Modal/Form dialog */}
+      {isAddingModule && (
+        <div className="border border-purple-200/50 bg-[#3C0078]/3 p-5 rounded-2xl flex flex-col gap-3">
+          <h4 className="text-xs font-extrabold text-[#3C0078] uppercase tracking-wider">
+            Create New Module Section
+          </h4>
+          <div className="flex gap-3">
+            <input
+              autoFocus
+              type="text"
+              placeholder="e.g. Week 2: Design Systems..."
+              value={newModuleTitle}
+              onChange={(e) => setNewModuleTitle(e.target.value)}
+              className="flex-1 bg-white border border-gray-200 rounded-xl px-4 py-2 text-xs outline-none focus:border-[#3C0078]/40 transition-colors"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleAddModule();
+                if (e.key === "Escape") { setIsAddingModule(false); setCreateModuleError(""); }
+              }}
+            />
+            <button
+              onClick={handleAddModule}
+              disabled={isCreatingModule}
+              className="flex items-center gap-1.5 px-5 py-2 bg-[#3C0078] hover:bg-[#2A0054] disabled:opacity-60 disabled:cursor-not-allowed text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm"
+            >
+              {isCreatingModule && <Loader size={12} className="animate-spin" />}
+              {isCreatingModule ? "Creating..." : "Add Module"}
+            </button>
+            <button
+              onClick={() => { setIsAddingModule(false); setCreateModuleError(""); }}
+              disabled={isCreatingModule}
+              className="px-4 py-2 bg-white border border-gray-200 text-gray-500 rounded-xl hover:bg-gray-50 text-xs font-bold cursor-pointer disabled:opacity-60"
+            >
+              Cancel
+            </button>
+          </div>
+          {createModuleError && (
+            <p className="text-xs text-red-500 font-medium mt-1">{createModuleError}</p>
+          )}
         </div>
-    );
+      )}
+
+      {/* Modules list */}
+      <div className="flex flex-col gap-5">
+        {modules.map((mod) => (
+          <div key={mod.id} className="border border-gray-200 rounded-2xl overflow-hidden shadow-xs bg-white">
+            {/* Header row */}
+            <div 
+              onClick={() => navigate(`/courses/${activeCourseId}/items/${mod.id}`)}
+              className="flex items-center justify-between px-5 py-4 bg-gray-50/80 border-b border-gray-200 cursor-pointer select-none group"
+            >
+              <div className="flex-1 flex items-center gap-3 min-w-0">
+                <span 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleModule(mod.id);
+                  }}
+                  className="text-gray-400 group-hover:text-gray-600 transition-colors shrink-0 p-1 hover:bg-gray-200 rounded-md"
+                >
+                  {mod.isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                </span>
+                
+                {/* Inline Module Rename Panel */}
+                {editingModuleId === mod.id ? (
+                  <div className="flex-1 flex items-center gap-2 max-w-lg" onClick={(e) => e.stopPropagation()}>
+                    <input
+                      autoFocus
+                      type="text"
+                      value={editingModuleTitle}
+                      onChange={(e) => setEditingModuleTitle(e.target.value)}
+                      className="flex-1 px-3 py-1 text-xs border border-purple-300 rounded-lg outline-none"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") handleRenameModule(mod.id);
+                        if (e.key === "Escape") setEditingModuleId(null);
+                      }}
+                    />
+                    <button
+                      onClick={() => handleRenameModule(mod.id)}
+                      className="px-2.5 py-1 bg-green-500 text-white rounded-lg text-[10px] font-bold uppercase tracking-wider cursor-pointer"
+                    >
+                      Save
+                    </button>
+                    <button
+                      onClick={() => setEditingModuleId(null)}
+                      className="px-2.5 py-1 bg-white border border-gray-200 text-gray-500 rounded-lg text-[10px] font-bold uppercase tracking-wider cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 min-w-0">
+                    {mod.prefix && (
+                      <span className="text-sm font-extrabold text-gray-700 shrink-0">
+                        {mod.prefix}
+                      </span>
+                    )}
+                    <h3 className="text-xs font-black tracking-wider text-gray-700 uppercase truncate">
+                      {mod.title}
+                    </h3>
+                    <span 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEditingModuleId(mod.id);
+                        setEditingModuleTitle(mod.title);
+                      }}
+                      className="text-[9px] text-[#3C0078] hover:underline font-bold opacity-0 group-hover:opacity-100 transition-opacity ml-1.5 shrink-0"
+                    >
+                      Rename
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Action buttons */}
+              <div className="flex items-center gap-3.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+                {/* Published Indicator */}
+                <div 
+                  onClick={(e) => handleToggleModulePublish(mod.id, e)}
+                  title={mod.isPublished ? "Published (click to unpublish)" : "Draft (click to publish)"}
+                  className="flex items-center justify-center shrink-0 cursor-pointer"
+                >
+                  {mod.isPublished ? (
+                    <CheckCircle size={15} className="text-green-500 hover:scale-110 transition-transform" />
+                  ) : (
+                    <EyeOff size={15} className="text-gray-400 hover:scale-110 transition-transform" />
+                  )}
+                </div>
+
+                <button
+                  onClick={() => setAddingItemTo(mod.id)}
+                  className="flex items-center gap-1 py-1.5 px-3 rounded-lg text-[10px] font-black uppercase tracking-wider bg-purple-50 text-[#3C0078] border border-purple-100 hover:bg-[#3C0078]/5 transition-all cursor-pointer"
+                >
+                  <Plus size={11} />
+                  <span>Add Item</span>
+                </button>
+                
+                <button
+                  onClick={(e) => handleDeleteModule(mod.id, e)}
+                  className="p-1.5 text-gray-400 hover:text-red-500 rounded-lg hover:bg-gray-100 transition-all cursor-pointer opacity-0 group-hover:opacity-100"
+                  title="Delete Module"
+                >
+                  <Trash2 size={13} />
+                </button>
+              </div>
+            </div>
+
+            {/* Add Item form */}
+            {addingItemTo === mod.id && (
+              <div className="p-4 bg-purple-50/30 border-b border-gray-100 flex flex-col gap-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-[10px] font-black text-[#3C0078] uppercase tracking-wider">
+                    Add Module Item
+                  </h4>
+                  <button 
+                    onClick={() => setAddingItemTo(null)}
+                    className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md cursor-pointer"
+                  >
+                    <X size={12} />
+                  </button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <input
+                    autoFocus
+                    type="text"
+                    placeholder="Item title..."
+                    value={newItemLabel}
+                    onChange={(e) => setNewItemLabel(e.target.value)}
+                    className="md:col-span-2 bg-white border border-gray-200 rounded-xl px-3 py-1.5 text-xs outline-none focus:border-[#3C0078]/40 transition-colors"
+                  />
+                  <select
+                    value={newItemType}
+                    onChange={(e) => setNewItemType(e.target.value)}
+                    className="bg-white border border-gray-200 rounded-xl px-3 py-1.5 text-xs outline-none cursor-pointer focus:border-[#3C0078]/40"
+                  >
+                    <option value="document">Document</option>
+                    <option value="link">Link</option>
+                    <option value="attachment">Attachment</option>
+                  </select>
+                </div>
+                {newItemType === "link" && (
+                  <div className="flex items-center gap-2 mt-1">
+                    <input
+                      type="checkbox"
+                      id="isExternal"
+                      checked={isNewItemExternal}
+                      onChange={(e) => setIsNewItemExternal(e.target.checked)}
+                      className="rounded border-gray-300 text-[#3C0078] focus:ring-[#3C0078]"
+                    />
+                    <label htmlFor="isExternal" className="text-[10px] font-bold text-gray-500 cursor-pointer">
+                      Open in New Window (External Link)
+                    </label>
+                  </div>
+                )}
+                <div className="flex justify-end gap-2 mt-2">
+                  <button
+                    onClick={() => handleAddItem(mod.id)}
+                    className="px-4 py-1.5 bg-[#3C0078] text-white text-[10px] font-bold uppercase tracking-wider rounded-lg hover:bg-[#2A0054] transition-all cursor-pointer"
+                  >
+                    Add Item
+                  </button>
+                  <button
+                    onClick={() => setAddingItemTo(null)}
+                    className="px-3 py-1.5 bg-white border border-gray-200 text-gray-500 text-[10px] font-bold uppercase tracking-wider rounded-lg hover:bg-gray-50 cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Nested items & guidelines editor */}
+            {mod.isOpen && (
+              <div className="flex flex-col">
+                {mod.items.length === 0 ? (
+                  <div className="p-6 text-center text-xs text-gray-400 font-medium bg-gray-50/10">
+                    No items in this module section
+                  </div>
+                ) : (
+                  mod.items.map((item) => (
+                    <div 
+                      key={item.id}
+                      className="flex items-center justify-between py-3.5 px-6 border-b border-gray-100 last:border-b-0 hover:bg-gray-50/40 transition-colors group/item"
+                    >
+                      <div className="flex-1 flex items-center gap-3.5 min-w-0">
+                        {/* Icon based on type */}
+                        <span className="text-gray-400 shrink-0">
+                          {item.type === "attachment" && <Paperclip size={14} />}
+                          {item.type === "document" && <FileText size={14} />}
+                          {item.type === "link" && <LinkIcon size={14} />}
+                        </span>
+
+                        {/* Inline Item Rename Panel */}
+                        {editingItemId === item.id && editingItemModuleId === mod.id ? (
+                          <div className="flex items-center gap-2 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+                            <input
+                              autoFocus
+                              type="text"
+                              value={editingItemLabel}
+                              onChange={(e) => setEditingItemLabel(e.target.value)}
+                              className="flex-1 px-3 py-1 text-xs border border-purple-300 rounded-lg outline-none font-medium"
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") handleRenameItem(mod.id, item.id);
+                                if (e.key === "Escape") {
+                                  setEditingItemId(null);
+                                  setEditingItemModuleId(null);
+                                }
+                              }}
+                            />
+                            <button
+                              onClick={() => handleRenameItem(mod.id, item.id)}
+                              className="px-2.5 py-1 bg-green-500 text-white rounded-lg text-[9px] font-bold uppercase tracking-wider cursor-pointer"
+                            >
+                              Save
+                            </button>
+                            <button
+                              onClick={() => {
+                                setEditingItemId(null);
+                                setEditingItemModuleId(null);
+                              }}
+                              className="px-2.5 py-1 bg-white border border-gray-200 text-gray-500 rounded-lg text-[9px] font-bold uppercase tracking-wider cursor-pointer"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2 min-w-0">
+                            {/* Title link or standard text */}
+                            {item.type === "link" ? (
+                              <a 
+                                href="#"
+                                onClick={(e) => { e.preventDefault(); alert(`Opening link: ${item.label}`); }}
+                                className="text-xs font-bold !text-blue-600 hover:underline flex items-center gap-1.5 min-w-0"
+                              >
+                                <span className="truncate">{item.label}</span>
+                                {item.isExternal && <ExternalLink size={11} className="shrink-0" />}
+                              </a>
+                            ) : item.type === "document" ? (
+                              <span 
+                                className="text-xs font-bold text-gray-700 hover:text-[#3C0078] hover:underline truncate cursor-pointer"
+                                onClick={() => navigate(`/courses/${activeCourseId}/items/${item.id}`)}
+                              >
+                                {item.label}
+                              </span>
+                            ) : (
+                              <span 
+                                className="text-xs font-bold text-gray-700 truncate cursor-pointer hover:text-gray-900"
+                                onClick={() => alert(`Downloading attachment: ${item.label}`)}
+                              >
+                                {item.label}
+                              </span>
+                            )}
+                            
+                            <span 
+                              onClick={() => {
+                                setEditingItemId(item.id);
+                                setEditingItemModuleId(mod.id);
+                                setEditingItemLabel(item.label);
+                              }}
+                              className="text-[9px] text-[#3C0078] hover:underline font-bold opacity-0 group-hover/item:opacity-100 transition-opacity ml-1.5 cursor-pointer shrink-0"
+                            >
+                              Edit
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Right buttons */}
+                      <div className="flex items-center gap-3 shrink-0">
+                        {/* Publish state */}
+                        <div 
+                          onClick={() => handleToggleItemPublish(mod.id, item.id)}
+                          title={item.isPublished ? "Published (click to unpublish)" : "Draft (click to publish)"}
+                          className="flex items-center justify-center shrink-0 cursor-pointer"
+                        >
+                          {item.isPublished ? (
+                            <CheckCircle size={15} className="text-green-500 hover:scale-110 transition-transform shadow-2xs" />
+                          ) : (
+                            <EyeOff size={15} className="text-gray-400 hover:scale-110 transition-transform" />
+                          )}
+                        </div>
+
+                        {/* Remove item button */}
+                        <button
+                          onClick={() => handleDeleteItem(mod.id, item.id)}
+                          className="p-1 text-gray-400 hover:text-red-500 rounded hover:bg-gray-100 transition-all opacity-0 group-hover/item:opacity-100 cursor-pointer shrink-0"
+                          title="Remove Item"
+                        >
+                          <X size={12} />
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 function CourseNotesView({ activeCourseId }) {
@@ -2181,45 +3213,77 @@ export default function TeacherCourses() {
     const isModulesPage = path.endsWith("/modules");
     const isNotesPage = path.endsWith("/notes");
     
+    // Module Item detail: /courses/:courseId/items/:itemId
+    const isItemDetailPage = pathParts[2] === "items" && pathParts.length === 4;
+    const activeItemId = isItemDetailPage ? pathParts[3] : null;
+    
     // Home logic: Strictly defined as the base course page
     // We force Home if exactly on the course ID path or if no other specific sub-page is matched below
-    const isHomePage = !isGradesPage && !isAnnouncementsPage && !isAssignmentsPage && !isAttendancePage && !isModulesPage && !isNotesPage;
+    const isHomePage = !isGradesPage && !isAnnouncementsPage && !isAssignmentsPage && !isAttendancePage && !isModulesPage && !isNotesPage && !isItemDetailPage;
+
+    // Determine active subpage label for the top breadcrumb bar
+    const activeSubpageLabel = React.useMemo(() => {
+        if (isGradesPage) return "Grades";
+        if (isAnnouncementsPage) return "Announcements";
+        if (isAssignmentsPage) return "Assignments";
+        if (isAttendancePage) return "Attendance";
+        if (isModulesPage) return "Modules";
+        if (isNotesPage) return "Notes";
+        if (isItemDetailPage) return "Module Page";
+        return "Home";
+    }, [isGradesPage, isAnnouncementsPage, isAssignmentsPage, isAttendancePage, isModulesPage, isNotesPage, isItemDetailPage]);
 
     return (
-        <div className="flex h-screen overflow-hidden">
-            {/* The global top menu that was previously disappearing */}
-            <Menu />
-            
-            {/* Leftmost Course Navigation Bar */}
-            <div className="flex flex-col h-full py-8 px-4 items-center gap-6 ">
-                <CourseMenu />
+        <div className="flex overflow-hidden gap-4 transition-all duration-300 md:h-[calc(100vh-32px)] md:w-full max-md:h-screen max-md:w-screen max-md:-ml-4 max-md:-mr-4 max-md:-mt-4 bg-transparent">
+            {/* Left Section: Floating Course Secondary Navigation */}
+            <CourseSecondaryNav activeCourseId={activeCourseId || (visibleCourses[0]?.id)} />
 
-                <div className="mt-auto">
-                    <SideMenu />
+            {/* Main Content Area: Floating Island Card */}
+            <div className="flex-1 flex flex-col overflow-hidden transition-all duration-300 md:bg-white/75 md:backdrop-blur-xl md:border md:border-white/20 md:rounded-[28px] md:shadow-lg max-md:bg-white">
+                {/* Course Header Top Bar */}
+                {course && (
+                    <div className="h-14 border-b border-gray-100 bg-white/60 backdrop-blur-md flex items-center justify-between px-8 z-10 shrink-0 select-none">
+                        <div className="flex items-center gap-3">
+                            <span className="px-2.5 py-0.5 rounded-lg text-[10px] font-black text-white shadow-sm" style={{ backgroundColor: course.color }}>
+                                {course.code} {course.number}
+                            </span>
+                            <h2 className="text-sm font-extrabold text-gray-900">{course.subjectName}</h2>
+                            <span className="text-gray-300 text-xs">/</span>
+                            <span className="text-xs font-bold text-gray-500 capitalize">{activeSubpageLabel}</span>
+                        </div>
+
+                        {/* Student View Action Button */}
+                        <button
+                            onClick={() => navigate(`/courses/${activeCourseId}/items/${activeItemId || "102"}?viewAs=student`)}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-xs font-bold text-gray-600 transition-all cursor-pointer shadow-xs hover:border-gray-300"
+                        >
+                            <Eye size={13} />
+                            <span>Student View</span>
+                        </button>
+                    </div>
+                )}
+
+                {/* Scrollable View Content */}
+                <div className="flex-1 overflow-y-auto pt-6 px-8 pb-12">
+                    {isItemDetailPage ? (
+                        <CourseItemView activeCourseId={activeCourseId} activeItemId={activeItemId} isStudentView={false} />
+                    ) : isGradesPage ? (
+                        <CourseGradesView activeCourseId={activeCourseId} />
+                    ) : isAnnouncementsPage ? (
+                        <CourseAnnouncementsView activeCourseId={activeCourseId} />
+                    ) : isAssignmentsPage ? (
+                        <CourseAssignmentsView subject={subject} activeCourseId={activeCourseId} />
+                    ) : isAttendancePage ? (
+                        <CourseAttendanceView />
+                    ) : isModulesPage ? (
+                        <CourseModulesView activeCourseId={activeCourseId} />
+                    ) : isNotesPage ? (
+                        <CourseNotesView activeCourseId={activeCourseId} />
+                    ) : (
+                        <CourseHomeView subject={subject} course={course} loading={loading} />
+                    )}
                 </div>
             </div>
-
-      {/* Middle Section: Second Navigation Bar for course-internal links */}
-      <div className="flex flex-col h-full py-1 justify-center">
-        <CourseSecondaryNav activeCourseId={activeCourseId || (visibleCourses[0]?.id)} />
-      </div>
-
-            {/* Main Content Area */}
-            {isGradesPage ? (
-                <CourseGradesView activeCourseId={activeCourseId} />
-            ) : isAnnouncementsPage ? (
-                <CourseAnnouncementsView activeCourseId={activeCourseId} />
-            ) : isAssignmentsPage ? (
-                <CourseAssignmentsView subject={subject} />
-            ) : isAttendancePage ? (
-                <CourseAttendanceView />
-            ) : isModulesPage ? (
-                <CourseModulesView />
-            ) : isNotesPage ? (
-                <CourseNotesView activeCourseId={activeCourseId} />
-            ) : (
-                <CourseHomeView subject={subject} course={course} loading={loading} />
-            )}
         </div>
     );
 }

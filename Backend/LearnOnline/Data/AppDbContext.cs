@@ -38,5 +38,9 @@ namespace LearnOnline.Data
 
         // Announcements
         public DbSet<Announcement> Announcements { get; set; }
+
+        // Course Modules (sections and nested items on the Modules page)
+        public DbSet<CourseModule> CourseModules { get; set; }
+        public DbSet<CourseModuleItem> CourseModuleItems { get; set; }
     }
 }
