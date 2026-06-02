@@ -42,6 +42,20 @@ export const courseService = {
   },
 
   /**
+   * Updates an existing course by ID.
+   * @param {string} id - The GUID of the course
+   * @param {Object} courseData - Fields to update (Term, Year, Capacity, SubjectId, TeacherId)
+   */
+  async updateCourse(id, courseData) {
+    const res = await fetch(`${API_BASE}/Course/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(courseData)
+    });
+    return handleResponse(res);
+  },
+
+  /**
    * Deletes a course by its unique ID.
    * @param {string} id - The GUID of the course
    */
