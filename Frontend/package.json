@@ -11,7 +11,7 @@
     "preview": "vite preview",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage",
+    "test:coverage": "jest --coverage && start ..\\reports\\frontend\\index.html",
     "electron:dev": "concurrently \"vite\" \"wait-on http://localhost:5200 && cross-env NODE_ENV=development electron .\"",
     "electron:build": "vite build && electron-builder",
     "electron:preview": "electron ."
@@ -49,8 +49,11 @@
     "@types/react-dom": "^19.2.2",
     "@vitejs/plugin-react": "^5.1.0",
     "babel-jest": "^30.4.1",
-    "babel-plugin-transform-import-meta": "^2.3.3",
     "baseline-browser-mapping": "^2.10.21",
+    "concurrently": "^9.1.2",
+    "cross-env": "^7.0.3",
+    "electron": "^36.3.1",
+    "electron-builder": "^26.0.12",
     "eslint": "^9.39.1",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",
@@ -60,10 +63,6 @@
     "jest-environment-jsdom": "^30.4.1",
     "typescript": "^6.0.3",
     "vite": "^7.2.2",
-    "concurrently": "^9.1.2",
-    "cross-env": "^7.0.3",
-    "electron": "^36.3.1",
-    "electron-builder": "^26.0.12",
     "wait-on": "^8.0.3"
   },
   "build": {
