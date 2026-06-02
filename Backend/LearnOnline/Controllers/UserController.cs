@@ -208,7 +208,6 @@ namespace LearnOnline.Controllers
             user.Email = email;
             user.FirstName = updated.FirstName.Trim();
             user.LastName = updated.LastName.Trim();
-            user.Role = updated.Role;
             user.ProfileImageUrl = updated.ProfileImageUrl ?? user.ProfileImageUrl;
             user.UpdatedAt = DateTime.UtcNow;
 
