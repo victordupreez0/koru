@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { ChevronDown, ChevronRight, Plus, Trash2, X } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 
@@ -7,35 +7,38 @@ import { useAuth } from "../contexts/AuthContext";
  * 
  * A collapsible navigation list used in the Modules section.
  * Each section (Overview, Resources, Week 1, etc.) can be expanded to show sub-items.
+ * Styled to match CourseSecondaryNav.
  */
 function AccordionItem({ title, children, defaultOpen = false, onRemove, isTeacher }) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
-    <div className="border-b border-black group">
+    <div className="group">
       <div className="flex items-center">
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="flex-1 flex items-center justify-between py-4 px-2 text-left font-bold transition-colors hover:bg-gray-100"
+          className={`flex-1 flex items-center justify-between py-2.5 px-4 text-left font-bold transition-all duration-200 rounded-xl mx-2 text-sm ${
+            isOpen ? "text-[#3C0078]" : "text-gray-500 hover:bg-purple-50"
+          }`}
         >
           <span className="flex items-center gap-2">
-            {isOpen ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
             {title}
           </span>
+          {isOpen ? <ChevronDown size={14} className="opacity-50" /> : <ChevronRight size={14} className="opacity-50" />}
         </button>
         {isTeacher && (
           <button
             onClick={onRemove}
-            className="p-3 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
+            className="p-2 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
             title="Remove Section"
           >
-            <Trash2 size={16} />
+            <Trash2 size={14} />
           </button>
         )}
       </div>
       {isOpen && (
-        <div className="bg-gray-100/50">
-          <ul className="flex flex-col">
+        <div className="mt-1 mb-2">
+          <ul className="flex flex-col gap-0.5">
             {children}
           </ul>
         </div>
@@ -47,7 +50,11 @@ function AccordionItem({ title, children, defaultOpen = false, onRemove, isTeach
 function SubNavItem({ label, isActive, onClick, onRemove, isTeacher }) {
   return (
     <li
-      className={`group flex items-center justify-between px-4 py-2 text-[13px] transition-colors hover:bg-gray-200 cursor-pointer ${isActive ? "bg-gray-200 font-bold border-l-4 border-black" : ""}`}
+      className={`group flex items-center justify-between px-4 py-1.5 text-xs transition-colors mx-4 rounded-lg cursor-pointer ${
+        isActive 
+          ? "bg-[#3C0078] text-white font-bold shadow-sm" 
+          : "text-gray-500 hover:text-[#3C0078] hover:bg-purple-100"
+      }`}
       onClick={onClick}
     >
       <span className="truncate">{label}</span>
@@ -57,15 +64,28 @@ function SubNavItem({ label, isActive, onClick, onRemove, isTeacher }) {
             e.stopPropagation();
             onRemove();
           }}
-          className="p-1 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
+          className={`p-1 opacity-0 group-hover:opacity-100 transition-all ${
+            isActive ? "text-white/70 hover:text-white" : "text-gray-400 hover:text-red-500"
+          }`}
           title="Remove Item"
         >
-          <X size={14} />
+          <X size={12} />
         </button>
       )}
     </li>
   );
 }
+
+const MODULE_ACCORDION_KEY = "module_accordion_items";
+
+const DEFAULT_ITEMS = [
+  { id: 1, title: "Overview", subItems: ["Semester Overview"], defaultOpen: true },
+  { id: 2, title: "Resources", subItems: ["Open Window Library", "Academic Rules", "Study Guide", "Prescribed Reading"], defaultOpen: true },
+  { id: 3, title: "Week 1", subItems: ["Practical", "Theory"], defaultOpen: true },
+  { id: 4, title: "Week 2", subItems: [], defaultOpen: false },
+  { id: 5, title: "Week 3", subItems: [], defaultOpen: false },
+  { id: 6, title: "Week 4", subItems: [], defaultOpen: false },
+];
 
 export default function ModuleAccordion() {
   const { role } = useAuth();
@@ -73,17 +93,20 @@ export default function ModuleAccordion() {
   const [activeItem, setActiveItem] = useState("Semester Overview");
   const [isAddingSection, setIsAddingSection] = useState(false);
   const [newSectionTitle, setNewSectionTitle] = useState("");
-  const [addingSubItemTo, setAddingSubItemTo] = useState(null); // Track which section is adding an item
+  const [addingSubItemTo, setAddingSubItemTo] = useState(null); 
   const [newSubItemLabel, setNewSubItemLabel] = useState("");
 
-  const [items, setItems] = useState([
-    { id: 1, title: "Overview", subItems: ["Semester Overview"], defaultOpen: true },
-    { id: 2, title: "Resources", subItems: ["Open Window Library", "Academic Rules", "Study Guide", "Prescribed Reading"], defaultOpen: true },
-    { id: 3, title: "Week 1", subItems: ["Practical", "Theory"], defaultOpen: true },
-    { id: 4, title: "Week 2", subItems: [], defaultOpen: false },
-    { id: 5, title: "Week 3", subItems: [], defaultOpen: false },
-    { id: 6, title: "Week 4", subItems: [], defaultOpen: false },
-  ]);
+  const [items, setItems] = useState(() => {
+    try {
+      const saved = localStorage.getItem(MODULE_ACCORDION_KEY);
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return DEFAULT_ITEMS;
+  });
+
+  useEffect(() => {
+    localStorage.setItem(MODULE_ACCORDION_KEY, JSON.stringify(items));
+  }, [items]);
 
   const removeSection = (id) => {
     setItems(items.filter(item => item.id !== id));
@@ -96,6 +119,14 @@ export default function ModuleAccordion() {
       }
       return item;
     }));
+  };
+
+  const addSection = () => {
+    if (newSectionTitle.trim()) {
+      setItems([...items, { id: Date.now(), title: newSectionTitle, subItems: [], defaultOpen: true }]);
+      setNewSectionTitle("");
+      setIsAddingSection(false);
+    }
   };
 
   const addSubItem = (sectionId) => {
@@ -111,76 +142,63 @@ export default function ModuleAccordion() {
     }
   };
 
-  const addSection = () => {
-    if (newSectionTitle.trim()) {
-      setItems([...items, {
-        id: Date.now(),
-        title: newSectionTitle,
-        subItems: [],
-        defaultOpen: true
-      }]);
-      setNewSectionTitle("");
-      setIsAddingSection(false);
-    }
-  };
-
   return (
-    <div className="w-56 flex flex-col border-t border-black select-none">
-      {items.map((section) => (
-        <AccordionItem 
-          key={section.id} 
-          title={section.title} 
-          defaultOpen={section.defaultOpen}
-          onRemove={() => removeSection(section.id)}
+    <div className="flex flex-col gap-1 overflow-hidden bg-white/50 border border-1 border-gray-100 shadow-xl rounded-3xl min-w-[220px] max-h-[80vh] overflow-y-auto py-4 scrollbar-hide">
+      {items.map((item) => (
+        <AccordionItem
+          key={item.id}
+          title={item.title}
+          defaultOpen={item.defaultOpen}
           isTeacher={isTeacher}
+          onRemove={() => removeSection(item.id)}
         >
-          {section.subItems.map((subItem) => (
+          {item.subItems.map((subItem) => (
             <SubNavItem
               key={subItem}
               label={subItem}
               isActive={activeItem === subItem}
-              onClick={() => setActiveItem(subItem)}
-              onRemove={() => removeSubItem(section.id, subItem)}
               isTeacher={isTeacher}
+              onClick={() => setActiveItem(subItem)}
+              onRemove={() => removeSubItem(item.id, subItem)}
             />
           ))}
           {isTeacher && (
-            <div className="px-4 py-2 bg-gray-50/50">
-              {addingSubItemTo === section.id ? (
-                <div className="flex flex-col gap-2">
+            <div className="px-4 py-1">
+              {addingSubItemTo === item.id ? (
+                <div className="flex flex-col gap-1.5">
                   <input
                     autoFocus
                     type="text"
                     placeholder="Item name..."
-                    className="bg-white border border-black/10 rounded-lg px-3 py-1.5 text-[11px] outline-none focus:border-black transition-colors"
+                    className="w-full bg-white/80 border border-black/10 rounded-lg px-3 py-1.5 text-[10px] outline-none focus:border-black transition-colors"
                     value={newSubItemLabel}
                     onChange={(e) => setNewSubItemLabel(e.target.value)}
                     onKeyDown={(e) => {
-                      if (e.key === "Enter") addSubItem(section.id);
+                      if (e.key === "Enter") addSubItem(item.id);
                       if (e.key === "Escape") setAddingSubItemTo(null);
                     }}
                   />
-                  <div className="flex gap-1 justify-end">
+                  <div className="flex gap-1 mb-2">
                     <button
-                      onClick={() => addSubItem(section.id)}
-                      className="px-3 py-1 bg-[#3C0078] text-white text-[9px] font-bold uppercase tracking-widest rounded-md hover:bg-[#2A0054] transition-colors"
+                      onClick={() => addSubItem(item.id)}
+                      className="flex-1 py-1 bg-[#3C0078] text-white text-[9px] font-bold uppercase tracking-widest rounded-md hover:bg-[#2A0054] transition-all"
                     >
                       Add
                     </button>
                     <button
                       onClick={() => setAddingSubItemTo(null)}
-                      className="px-2 py-1 bg-gray-200 text-gray-500 rounded-md hover:bg-gray-300 transition-colors"
+                      className="p-1 bg-gray-100 text-gray-500 rounded-md hover:bg-gray-200"
                     >
-                      <X size={10} />
+                      <X size={12} />
                     </button>
                   </div>
                 </div>
               ) : (
                 <button
-                  onClick={() => setAddingSubItemTo(section.id)}
-                  className="w-full flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-[#3C0078] hover:text-[#2A0054] transition-colors"
+                  onClick={() => setAddingSubItemTo(item.id)}
+                  className="w-full flex items-center justify-center gap-1.5 py-2 border border-dashed border-black/10 rounded-lg text-[9px] font-bold uppercase tracking-[0.1em] text-gray-400 hover:border-[#3C0078]/30 hover:text-[#3C0078] transition-all mb-1"
                 >
-                  <Plus size={12} /> Add Item
+                  <Plus size={10} /> Add Item
                 </button>
               )}
             </div>
@@ -189,39 +207,42 @@ export default function ModuleAccordion() {
       ))}
 
       {isTeacher && (
-        <div className="mt-4">
+        <div className="mt-4 px-4 border-t border-gray-100 pt-4">
           {isAddingSection ? (
-            <div className="flex flex-col gap-2 p-2">
+            <div className="flex flex-col gap-2">
               <input
                 autoFocus
                 type="text"
                 placeholder="Section name..."
-                className="bg-gray-50 border border-black/10 rounded-lg px-3 py-2 text-xs outline-none focus:border-black transition-colors"
+                className="w-full bg-gray-50 border border-black/10 rounded-lg px-3 py-2 text-xs outline-none focus:border-black transition-colors"
                 value={newSectionTitle}
                 onChange={(e) => setNewSectionTitle(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && addSection()}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") addSection();
+                  if (e.key === "Escape") setIsAddingSection(false);
+                }}
               />
               <div className="flex gap-1">
                 <button
                   onClick={addSection}
-                  className="flex-1 py-2 bg-black text-white text-[10px] font-bold uppercase tracking-widest rounded-lg hover:bg-gray-800 transition-colors"
+                  className="flex-1 py-1.5 bg-[#3C0078] text-white text-[10px] font-bold uppercase tracking-widest rounded-lg hover:bg-[#2A0054] transition-colors"
                 >
                   Add
                 </button>
                 <button
                   onClick={() => setIsAddingSection(false)}
-                  className="px-3 py-2 bg-gray-100 text-gray-500 text-[10px] font-bold uppercase tracking-widest rounded-lg hover:bg-gray-200 transition-colors"
+                  className="p-1.5 bg-gray-100 text-gray-500 rounded-lg hover:bg-gray-200"
                 >
-                  <X size={12} />
+                  <X size={14} />
                 </button>
               </div>
             </div>
           ) : (
             <button
               onClick={() => setIsAddingSection(true)}
-              className="w-full flex items-center justify-center gap-2 py-4 border-2 border-dashed border-black/10 rounded-2xl text-[10px] font-bold uppercase tracking-widest text-gray-400 hover:border-black/30 hover:text-black transition-all"
+              className="w-full flex items-center justify-center gap-2 py-3 border-2 border-dashed border-black/10 rounded-xl text-[10px] font-bold uppercase tracking-widest text-gray-400 hover:border-black/30 hover:text-black transition-all"
             >
-              <Plus size={16} /> Add Section
+              <Plus size={14} /> Add Section
             </button>
           )}
         </div>
