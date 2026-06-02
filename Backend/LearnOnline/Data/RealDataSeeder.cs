@@ -103,11 +103,16 @@ namespace LearnOnline.Data
         {
             context.Database.EnsureCreated();
 
-            // Run-once guard - only skip if THIS seeder's data is already present
-            // (detected by the presence of devteacher@learnonline.co.za which only this seeder creates)
-            if (context.Users.Any(u => u.Email == "devteacher@learnonline.co.za") &&
-                context.Users.Count(u => u.Role == UserRole.student) > 100)
-                return;
+            // Run-once guard - only skip if THIS seeder's data is already present AND correct.
+            // Verify devteacher exists, >100 students exist, AND DV300 is actually assigned to devteacher.
+            var existingDevTeacher = context.Users.FirstOrDefault(u => u.Email == "devteacher@learnonline.co.za");
+            if (existingDevTeacher != null && context.Users.Count(u => u.Role == UserRole.student) > 100)
+            {
+                var dv300OK = context.Courses
+                    .Include(c => c.Subject)
+                    .Any(c => c.Subject.Code == "DV300" && c.TeacherId == existingDevTeacher.Id);
+                if (dv300OK) return;
+            }
 
             // Rebuild Announcements table (prevents schema drift across restarts)
             context.Database.ExecuteSqlRaw(@"DROP TABLE IF EXISTS ""Announcements"";");
@@ -707,6 +712,7 @@ namespace LearnOnline.Data
             context.Database.ExecuteSqlRaw(@"DELETE FROM ""Submissions"";");
             context.Database.ExecuteSqlRaw(@"DELETE FROM ""Assignments"";");
             context.Database.ExecuteSqlRaw(@"DELETE FROM ""Events"";");
+            context.Database.ExecuteSqlRaw(@"DELETE FROM ""TodoItems"";");
             context.Database.ExecuteSqlRaw(@"DELETE FROM ""CourseModuleItems"";");
             context.Database.ExecuteSqlRaw(@"DELETE FROM ""CourseModules"";");
             context.Database.ExecuteSqlRaw(@"DELETE FROM ""Notes"";");
