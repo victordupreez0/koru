@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
 import { checkIn } from "../services/checkInService";
 import { useAuth } from "../contexts/AuthContext";
@@ -51,7 +52,7 @@ export default function CheckInModal({ courseName, onClose }) {
         }
     };
 
-    return (
+    return createPortal(
         <div
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4"
             onClick={onClose}
@@ -126,6 +127,7 @@ export default function CheckInModal({ courseName, onClose }) {
                     )}
                 </div>
             </motion.div>
-        </div>
+        </div>,
+        document.body
     );
 }

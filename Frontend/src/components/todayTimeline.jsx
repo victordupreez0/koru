@@ -12,24 +12,32 @@ import { getAvailableSessionsForStudent } from "../services/checkInService";
 import { useAuth } from "../contexts/AuthContext";
 
 function mapBackendEventToTimeline(evt) {
-  const startDate = new Date(evt.startTime);
-  const endDate   = new Date(evt.endTime);
+  // Normalise keys – backend may return PascalCase (model) or camelCase (anonymous projection)
+  const startTime   = evt.startTime   ?? evt.StartTime;
+  const endTime     = evt.endTime     ?? evt.EndTime;
+  const courseId    = evt.courseId    ?? evt.CourseId;
+  const title       = evt.title       ?? evt.Title       ?? "";
+  const description = evt.description ?? evt.Description ?? "";
+  const createdBy   = evt.createdBy   ?? evt.CreatedBy;
+
+  const startDate = new Date(startTime);
+  const endDate   = new Date(endTime);
   const durationMinutes = Math.round((endDate - startDate) / 60000);
 
-  let subtitle = evt.description || "";
+  let subtitle = description;
   let location = "TBA";
-  if (evt.description?.includes("|")) {
-    const parts = subtitle.split("|");
+  if (description.includes("|")) {
+    const parts = description.split("|");
     subtitle = parts[0];
     location = parts[1] || "TBA";
   }
 
   return {
-    id:         evt.id,
-    courseId:   evt.courseId,
-    title:      evt.title,
+    id:         evt.id ?? evt.Id,
+    courseId,
+    title,
     subtitle,
-    lecturer:   evt.createdBy || "Unknown",
+    lecturer:   createdBy || "Unknown",
     duration:   `${durationMinutes}min`,
     location,
     startHour:  startDate.getHours(),
@@ -139,8 +147,8 @@ export default function TodayTimeline() {
     if (!user?.userId || isTeacher) return;
     const poll = () =>
       getAvailableSessionsForStudent(user.userId)
-        .then(setAvailable)
-        .catch(() => {});
+        .then(sessions => setAvailable(sessions ?? []))
+        .catch(err => console.warn("Check-in poll failed:", err));
     poll();
     const id = setInterval(poll, 5000);
     return () => clearInterval(id);

@@ -16,35 +16,108 @@ namespace LearnOnline.Controllers
 
         // POST /api/CheckIn/sessions – teacher opens (or retrieves existing) session
         [HttpPost("sessions")]
-        public async Task<ActionResult<object>> OpenSession([FromBody] OpenSessionDto dto)
+        public async Task<ActionResult<object>> OpenSession([FromBody] OpenSessionDto? dto)
         {
-            var existing = await _context.CheckInSessions
-                .FirstOrDefaultAsync(s => s.CourseId == dto.CourseId && s.IsOpen);
-
-            if (existing != null)
-                return Ok(MapSession(existing));
-
-            var session = new CheckInSession
+            try
             {
-                Code        = _rng.Next(1000, 9999).ToString(),
-                CourseId    = dto.CourseId,
-                TeacherId   = dto.TeacherId,
-                Date        = DateTime.UtcNow.Date,
-                SessionType = dto.SessionType ?? "Lecture",
-            };
-            _context.CheckInSessions.Add(session);
-            await _context.SaveChangesAsync();
-            return Ok(MapSession(session));
+                if (dto == null)
+                    return BadRequest(new { message = "Request body is missing." });
+                if (string.IsNullOrWhiteSpace(dto.CourseId))
+                    return BadRequest(new { message = "CourseId is required." });
+                if (string.IsNullOrWhiteSpace(dto.TeacherId))
+                    return BadRequest(new { message = "TeacherId is required." });
+
+                var courseExists = await _context.Courses.AnyAsync(c => c.Id == dto.CourseId);
+                if (!courseExists)
+                    return BadRequest(new { message = $"Course not found: {dto.CourseId}" });
+
+                // Return existing open session if one is already running
+                var existing = await _context.CheckInSessions
+                    .FirstOrDefaultAsync(s => s.CourseId == dto.CourseId && s.IsOpen);
+
+                if (existing != null)
+                    return Ok(MapSession(existing));
+
+                // Reopen today's closed session (same code, remove auto-absent records)
+                var today = DateTime.UtcNow.Date;
+                var todayClosed = await _context.CheckInSessions
+                    .Where(s => s.CourseId == dto.CourseId && !s.IsOpen && s.Date == today)
+                    .OrderByDescending(s => s.OpenedAt)
+                    .FirstOrDefaultAsync();
+
+                if (todayClosed != null)
+                {
+                    todayClosed.IsOpen   = true;
+                    todayClosed.ClosedAt = null;
+
+                    // Remove the auto-absent records so those students can check in again
+                    var autoAbsent = await _context.Attendances
+                        .Where(a => a.CheckInSessionId == todayClosed.Id && a.Status == "Absent")
+                        .ToListAsync();
+                    _context.Attendances.RemoveRange(autoAbsent);
+
+                    await _context.SaveChangesAsync();
+                    return Ok(MapSession(todayClosed));
+                }
+
+                // No session today — create a brand new one
+                var session = new CheckInSession
+                {
+                    Code        = _rng.Next(1000, 9999).ToString(),
+                    CourseId    = dto.CourseId,
+                    TeacherId   = dto.TeacherId,
+                    Date        = DateTime.UtcNow.Date,
+                    SessionType = dto.SessionType ?? "Lecture",
+                };
+                _context.CheckInSessions.Add(session);
+                await _context.SaveChangesAsync();
+                return Ok(MapSession(session));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.InnerException?.Message ?? ex.Message });
+            }
         }
 
-        // PUT /api/CheckIn/sessions/{id}/close – teacher closes session
+        // PUT /api/CheckIn/sessions/{id}/close – teacher closes session and marks no-shows absent
         [HttpPut("sessions/{id}/close")]
         public async Task<IActionResult> CloseSession(string id)
         {
             var session = await _context.CheckInSessions.FindAsync(id);
             if (session == null) return NotFound();
+
             session.IsOpen   = false;
             session.ClosedAt = DateTime.UtcNow;
+
+            // Find students who were enrolled but never checked in
+            var checkedInIds = await _context.Attendances
+                .Where(a => a.CheckInSessionId == id)
+                .Select(a => a.StudentId)
+                .ToListAsync();
+
+            var absentStudents = await _context.Enrollments
+                .Where(e => e.CourseId == session.CourseId &&
+                            e.Status == "Active" &&
+                            !checkedInIds.Contains(e.StudentId))
+                .Select(e => e.StudentId)
+                .ToListAsync();
+
+            foreach (var studentId in absentStudents)
+            {
+                _context.Attendances.Add(new Attendance
+                {
+                    CourseId         = session.CourseId,
+                    StudentId        = studentId,
+                    Date             = session.Date,
+                    Status           = "Absent",
+                    SessionType      = session.SessionType,
+                    Time             = session.ClosedAt?.ToString("HH:mm"),
+                    RecordedById     = session.TeacherId,
+                    CheckInSessionId = session.Id,
+                    RecordedAt       = DateTime.UtcNow,
+                });
+            }
+
             await _context.SaveChangesAsync();
             return NoContent();
         }
