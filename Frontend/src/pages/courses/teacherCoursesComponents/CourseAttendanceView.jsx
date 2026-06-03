@@ -1,5 +1,5 @@
 import React from "react";
-import { Folder, CheckCircle, Filter } from "lucide-react";
+import { Folder, CheckCircle, Filter } from "@solar-icons/react";
 import { motion } from "framer-motion";
 import AttendanceChart from "../../../components/UI/attendanceChart";
 import { staggerContainer, slideUp, scaleIn, STUDENT_GRADES_DATA } from "./constants";

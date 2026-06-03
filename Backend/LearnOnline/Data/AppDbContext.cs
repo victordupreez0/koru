@@ -45,5 +45,8 @@ namespace LearnOnline.Data
 
         // Teacher to-do items (self-created or admin-assigned)
         public DbSet<TodoItem> TodoItems { get; set; }
+
+        // Attendance records (per-student, per-session)
+        public DbSet<Attendance> Attendances { get; set; }
     }
 }
