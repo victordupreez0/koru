@@ -2,7 +2,6 @@ import React, { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useCourses } from "../../contexts/CoursesContext";
 import CourseSecondaryNav from "../../components/courseSecondaryNav";
-import { Eye } from "lucide-react";
 import CourseItemView from "./CourseItemView";
 import {
     CourseAnnouncementsView,
@@ -78,13 +77,6 @@ export default function TeacherCourses() {
                             <span className="text-gray-300 text-xs">/</span>
                             <span className="text-xs font-bold text-gray-500 capitalize">{activeSubpageLabel}</span>
                         </div>
-                        <button
-                            onClick={() => navigate(`/courses/${activeCourseId}/items/${activeItemId || "102"}?viewAs=student`)}
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-xs font-bold text-gray-600 transition-all cursor-pointer shadow-xs hover:border-gray-300"
-                        >
-                            <Eye size={13} />
-                            <span>Student View</span>
-                        </button>
                     </div>
                 )}
 
@@ -98,7 +90,7 @@ export default function TeacherCourses() {
                     ) : isAssignmentsPage ? (
                         <CourseAssignmentsView subject={subject} activeCourseId={activeCourseId} />
                     ) : isAttendancePage ? (
-                        <CourseAttendanceView />
+                        <CourseAttendanceView activeCourseId={activeCourseId} />
                     ) : isModulesPage ? (
                         <CourseModulesView activeCourseId={activeCourseId} />
                     ) : isNotesPage ? (

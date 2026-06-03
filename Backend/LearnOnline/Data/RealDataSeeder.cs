@@ -111,7 +111,7 @@ namespace LearnOnline.Data
                 var dv300OK = context.Courses
                     .Include(c => c.Subject)
                     .Any(c => c.Subject.Code == "DV300" && c.TeacherId == existingDevTeacher.Id);
-                if (dv300OK) return;
+                if (dv300OK && context.Attendances.Any()) return;
             }
 
             // Rebuild Announcements table (prevents schema drift across restarts)
@@ -366,6 +366,16 @@ namespace LearnOnline.Data
             SeedGradedWork(context, devStudentList, vc200A2, allen.Id,   2, "VC200");
             SeedGradedWork(context, devStudentList, vc300A1, karl.Id,    1, "VC300");
             SeedGradedWork(context, devStudentList, vc300A2, karl.Id,    2, "VC300");
+            context.SaveChanges();
+
+            // ─── 5b. Attendance (12 weekly sessions per course, Feb–May 2026) ──────
+            SeedAttendance(context, dv100.Id, talya.Id,      dv100Students, devStudent);
+            SeedAttendance(context, dv200.Id, tsungai.Id,    dv200Students, devStudent);
+            SeedAttendance(context, dv300.Id, devTeacher.Id, dv300Students, devStudent);
+            SeedAttendance(context, cc200.Id, william.Id,    cc200Students, devStudent);
+            SeedAttendance(context, cc300.Id, william.Id,    cc300Students, devStudent);
+            SeedAttendance(context, vc200.Id, allen.Id,      vc200Students, devStudent);
+            SeedAttendance(context, vc300.Id, karl.Id,       vc300Students, devStudent);
             context.SaveChanges();
 
             // ─── 6. Announcements (12-15 per course, dating back to Feb 2026) ────
@@ -711,6 +721,8 @@ namespace LearnOnline.Data
             context.Database.ExecuteSqlRaw(@"DELETE FROM ""Grades"";");
             context.Database.ExecuteSqlRaw(@"DELETE FROM ""Submissions"";");
             context.Database.ExecuteSqlRaw(@"DELETE FROM ""Assignments"";");
+            context.Database.ExecuteSqlRaw(@"DELETE FROM ""Attendances"";");
+            context.Database.ExecuteSqlRaw(@"DELETE FROM ""CheckInSessions"";");
             context.Database.ExecuteSqlRaw(@"DELETE FROM ""Events"";");
             context.Database.ExecuteSqlRaw(@"DELETE FROM ""TodoItems"";");
             context.Database.ExecuteSqlRaw(@"DELETE FROM ""CourseModuleItems"";");
@@ -857,6 +869,53 @@ namespace LearnOnline.Data
                     Content      = CalcFeedback(points, maxPts),
                     CreatedAt    = gradedAt.AddHours(i % 48)
                 });
+            }
+        }
+
+        private static void SeedAttendance(AppDbContext context,
+            string courseId, string teacherId, List<User> students, User devStudent)
+        {
+            var sessionTypes = new[] {
+                "Lecture", "Lecture", "Tutorial", "Lecture",  "Practical",
+                "Lecture", "Tutorial", "Lecture",  "Lecture",  "Practical",
+                "Tutorial", "Lecture"
+            };
+            var times = new Dictionary<string, string>
+            {
+                ["Lecture"]   = "09:00",
+                ["Tutorial"]  = "14:00",
+                ["Practical"] = "11:00"
+            };
+            var startDate = new DateTime(2026, 2, 9, 0, 0, 0, DateTimeKind.Utc);
+            var all = new List<User>(students) { devStudent };
+
+            for (int s = 0; s < sessionTypes.Length; s++)
+            {
+                var date        = startDate.AddDays(s * 7);
+                var sessionType = sessionTypes[s];
+                var time        = times[sessionType];
+
+                for (int i = 0; i < all.Count; i++)
+                {
+                    var roll = (i * 3 + s * 7) % 20;
+                    string status = roll switch
+                    {
+                        3 or 13 => "Absent",
+                        7       => "Late",
+                        _       => "Present"
+                    };
+                    context.Attendances.Add(new Attendance
+                    {
+                        CourseId    = courseId,
+                        StudentId   = all[i].Id,
+                        Date        = date,
+                        Status      = status,
+                        SessionType = sessionType,
+                        Time        = time,
+                        RecordedById = teacherId,
+                        RecordedAt  = date.AddHours(2)
+                    });
+                }
             }
         }
 

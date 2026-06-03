@@ -30,7 +30,11 @@ builder.Services.AddOpenApi();
 builder.Services.AddHttpClient();
 
 // Register the EF Core database context with the PostgreSQL connection string
-builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("LearnOnlineDb")));
+// PendingModelChangesWarning is suppressed because migrations in this project use raw SQL
+// and intentionally don't update the EF snapshot.
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("LearnOnlineDb"))
+           .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning)));
 
 var app = builder.Build();
 
