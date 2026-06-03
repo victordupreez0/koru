@@ -88,16 +88,22 @@ export default function CourseItemView({ activeCourseId, activeItemId, isStudent
         getCourseModules(activeCourseId)
             .then(mods => {
                 const flat = [];
-                for (const mod of mods) {
-                    flat.push({ id: mod.id, label: mod.title, type: "document" });
-                    for (const item of (mod.items ?? [])) {
+                const filteredMods = isStudentView
+                    ? (mods ?? []).filter(m => m.isPublished)
+                    : (mods ?? []);
+
+                for (const mod of filteredMods) {
+                    const items = isStudentView
+                        ? (mod.items ?? []).filter(i => i.isPublished)
+                        : (mod.items ?? []);
+                    for (const item of items) {
                         flat.push({ id: item.id, label: item.label, type: item.type, isExternal: item.isExternal });
                     }
                 }
                 setAllItems(flat);
             })
             .catch(console.error);
-    }, [activeCourseId]);
+    }, [activeCourseId, isStudentView]);
 
     // Compute Previous and Next items from the live course modules list
     const { prevItem, nextItem } = useMemo(() => {
@@ -323,9 +329,13 @@ export default function CourseItemView({ activeCourseId, activeItemId, isStudent
             {/* Top Editor controls and Toggles */}
             <div className="flex items-center justify-between border-b border-gray-100 pb-4 mb-6 shrink-0">
                 <div className="flex items-center gap-2">
-                    <span className="text-xs font-black uppercase tracking-wider px-2 py-0.5 rounded bg-gray-100 text-gray-600">
-                        Module Document Item
-                    </span>
+                    <button
+                        onClick={() => navigate(`/courses/${activeCourseId}/modules${window.location.search}`)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-xs font-bold text-gray-600 transition-all cursor-pointer shadow-2xs hover:border-gray-300"
+                    >
+                        <ArrowLeft size={13} className="text-gray-500" />
+                        <span>Back to Modules</span>
+                    </button>
                 </div>
                 
                 {/* Save alert toast */}

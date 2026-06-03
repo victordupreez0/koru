@@ -56,6 +56,16 @@ namespace LearnOnline.Controllers
             return enrollments;
         }
 
+        // GET /api/Enrollment/course/{courseId} – return all active enrollments with student info
+        [HttpGet("course/{courseId}")]
+        public async Task<ActionResult<IEnumerable<Enrollment>>> GetByCourse(string courseId)
+        {
+            return await _context.Enrollments
+                .Include(e => e.Student)
+                .Where(e => e.CourseId == courseId && e.Status == "Active")
+                .ToListAsync();
+        }
+
         // GET /api/Enrollment/course/{courseId}/count – return count of active students in a course
         [HttpGet("course/{courseId}/count")]
         public async Task<ActionResult<int>> GetCourseStudentCount(string courseId)

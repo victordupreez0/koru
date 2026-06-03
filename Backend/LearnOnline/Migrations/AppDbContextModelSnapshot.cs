@@ -114,6 +114,51 @@ namespace TodoApi.Migrations
                     b.ToTable("Assignments");
                 });
 
+            modelBuilder.Entity("LearnOnline.Models.Attendance", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<string>("CourseId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("RecordedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("RecordedById")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("SessionType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("StudentId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Time")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CourseId");
+
+                    b.HasIndex("RecordedById");
+
+                    b.HasIndex("StudentId");
+
+                    b.ToTable("Attendances");
+                });
+
             modelBuilder.Entity("LearnOnline.Models.Class", b =>
                 {
                     b.Property<string>("Id")
@@ -651,6 +696,33 @@ namespace TodoApi.Migrations
                         .IsRequired();
 
                     b.Navigation("Course");
+                });
+
+            modelBuilder.Entity("LearnOnline.Models.Attendance", b =>
+                {
+                    b.HasOne("LearnOnline.Models.Course", "Course")
+                        .WithMany()
+                        .HasForeignKey("CourseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("LearnOnline.Models.User", "RecordedBy")
+                        .WithMany()
+                        .HasForeignKey("RecordedById")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("LearnOnline.Models.User", "Student")
+                        .WithMany()
+                        .HasForeignKey("StudentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Course");
+
+                    b.Navigation("RecordedBy");
+
+                    b.Navigation("Student");
                 });
 
             modelBuilder.Entity("LearnOnline.Models.Class", b =>
