@@ -18,10 +18,10 @@ export default function AssignmentsProgress() {
   const [loading, setLoading] = useState(true);
 
   const getRankAndState = (dbAssignment, submissions) => {
-    if (dbAssignment.isClosed) return { rank: 3, uiState: 'Closed', isCompleted: false };
-
     const submitted = submissions.some(s => s.assignmentId === dbAssignment.id);
     if (submitted) return { rank: 4, uiState: 'Submitted', isCompleted: true };
+
+    if (dbAssignment.isClosed) return { rank: 3, uiState: 'Closed', isCompleted: false };
 
     const now = new Date();
     const due = new Date(dbAssignment.dueDate);

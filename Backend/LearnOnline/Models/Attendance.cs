@@ -39,5 +39,10 @@ namespace LearnOnline.Models
 
         [ForeignKey("RecordedById")]
         public User? RecordedBy { get; set; }
+
+        public string? CheckInSessionId { get; set; }
+
+        [ForeignKey("CheckInSessionId")]
+        public CheckInSession? CheckInSession { get; set; }
     }
 }

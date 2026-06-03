@@ -48,5 +48,8 @@ namespace LearnOnline.Data
 
         // Attendance records (per-student, per-session)
         public DbSet<Attendance> Attendances { get; set; }
+
+        // Live check-in sessions (teacher opens, students join with code)
+        public DbSet<CheckInSession> CheckInSessions { get; set; }
     }
 }

@@ -125,7 +125,7 @@ export default function StudentCourses() {
                     ) : isAssignmentsPage ? (
                         <CourseAssignmentsView subject={subject} activeCourseId={activeCourseId} />
                     ) : isAttendancePage ? (
-                        <CourseAttendanceView />
+                        <CourseAttendanceView activeCourseId={activeCourseId} />
                     ) : isModulesPage ? (
                         <CourseModulesView activeCourseId={activeCourseId} />
                     ) : isNotesPage ? (
