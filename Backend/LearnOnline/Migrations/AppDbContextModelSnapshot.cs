@@ -99,6 +99,12 @@ namespace TodoApi.Migrations
                     b.Property<string>("QuizQuestionsJson")
                         .HasColumnType("text");
 
+                    b.Property<string>("ExternalToolName")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ExternalToolUrl")
+                        .HasColumnType("text");
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("text");
