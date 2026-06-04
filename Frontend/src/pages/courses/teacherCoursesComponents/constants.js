@@ -139,7 +139,6 @@ export const EXTERNAL_TOOLS = [
     {
         id: "google",
         name: "Google Assignments",
-        description: "Originality checking & grade sync via Google Workspace",
         icon: "G",
         color: "#4285F4",
         bg: "bg-[#4285F4]/10",
@@ -148,7 +147,6 @@ export const EXTERNAL_TOOLS = [
     {
         id: "microsoft",
         name: "Microsoft Teams",
-        description: "Assignments integrated with Microsoft 365 & Teams",
         icon: "M",
         color: "#0078D4",
         bg: "bg-[#0078D4]/10",
@@ -157,7 +155,6 @@ export const EXTERNAL_TOOLS = [
     {
         id: "turnitin",
         name: "Turnitin",
-        description: "Academic integrity & AI writing detection",
         icon: "T",
         color: "#E63946",
         bg: "bg-[#E63946]/10",
