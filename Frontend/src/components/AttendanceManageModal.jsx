@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { getActiveSession, openSession, getSessionStatus, closeSession } from "../services/checkInService";
+import { getActiveSession, openSession, getSessionStatus, closeSession, markStudentPresent } from "../services/checkInService";
+
+const LATE_KEY      = "checkin_lateAfterMinutes";
+const AUTOCLOSE_KEY = "checkin_autoCloseMinutes";
 
 export default function AttendanceManageModal({ courseId, teacherId, sessionType, courseName, onClose }) {
     const [session, setSession]   = useState(null);
@@ -9,6 +12,24 @@ export default function AttendanceManageModal({ courseId, teacherId, sessionType
     const [isOpen, setIsOpen]     = useState(false);
     const [toggling, setToggling] = useState(false);
     const [error, setError]       = useState(null);
+
+    // Settings — persisted to localStorage
+    const [lateAfterMin,  setLateAfterMin]  = useState(() => localStorage.getItem(LATE_KEY)      || "");
+    const [autoCloseMin,  setAutoCloseMin]  = useState(() => localStorage.getItem(AUTOCLOSE_KEY) || "");
+
+    const saveLate = (val) => { setLateAfterMin(val);  localStorage.setItem(LATE_KEY,      val); };
+    const saveAutoClose = (val) => { setAutoCloseMin(val); localStorage.setItem(AUTOCLOSE_KEY, val); };
+
+    const lateNum      = lateAfterMin  ? parseInt(lateAfterMin)  : null;
+    const autoCloseNum = autoCloseMin  ? parseInt(autoCloseMin)  : null;
+
+    const handleMarkPresent = async (studentId) => {
+        if (!session?.id) return;
+        try {
+            await markStudentPresent(session.id, studentId);
+            getSessionStatus(session.id).then(setStatus).catch(() => {});
+        } catch {}
+    };
 
     // On mount: check if a session is already active
     useEffect(() => {
@@ -35,7 +56,7 @@ export default function AttendanceManageModal({ courseId, teacherId, sessionType
                 await closeSession(session.id);
                 setIsOpen(false);
             } else {
-                const s = await openSession(courseId, teacherId, sessionType);
+                const s = await openSession(courseId, teacherId, sessionType, lateNum, autoCloseNum);
                 setSession(s);
                 setStatus(null);
                 setIsOpen(true);
@@ -46,6 +67,15 @@ export default function AttendanceManageModal({ courseId, teacherId, sessionType
             setToggling(false);
         }
     };
+
+    // When settings change while a session is already open, push the update immediately
+    useEffect(() => {
+        if (!isOpen || !session?.id) return;
+        openSession(courseId, teacherId, sessionType, lateNum, autoCloseNum)
+            .then(s => setSession(s))
+            .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [lateNum, autoCloseNum]);
 
     const pct = status
         ? Math.round((status.checkedIn.length / Math.max(status.totalEnrolled, 1)) * 100)
@@ -79,6 +109,44 @@ export default function AttendanceManageModal({ courseId, teacherId, sessionType
                 </div>
 
                 <div className="px-7 py-6 space-y-6">
+
+                    {/* Session settings */}
+                    <div className="flex gap-3">
+                        <div className="flex-1">
+                            <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 block mb-1.5">
+                                Late After
+                            </label>
+                            <select
+                                value={lateAfterMin}
+                                onChange={e => saveLate(e.target.value)}
+                                className="w-full text-xs font-semibold bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 focus:outline-none focus:border-[#3C0078] transition-colors"
+                            >
+                                <option value="">No threshold</option>
+                                <option value="5">5 minutes</option>
+                                <option value="10">10 minutes</option>
+                                <option value="15">15 minutes</option>
+                                <option value="20">20 minutes</option>
+                                <option value="30">30 minutes</option>
+                            </select>
+                        </div>
+                        <div className="flex-1">
+                            <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 block mb-1.5">
+                                Auto-Close
+                            </label>
+                            <select
+                                value={autoCloseMin}
+                                onChange={e => saveAutoClose(e.target.value)}
+                                className="w-full text-xs font-semibold bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 focus:outline-none focus:border-[#3C0078] transition-colors"
+                            >
+                                <option value="">None</option>
+                                <option value="15">After 15 min</option>
+                                <option value="30">After 30 min</option>
+                                <option value="45">After 45 min</option>
+                                <option value="60">After 60 min</option>
+                                <option value="90">After 90 min</option>
+                            </select>
+                        </div>
+                    </div>
 
                     {/* Toggle row */}
                     <div className="flex items-center justify-between bg-gray-50 rounded-2xl px-5 py-4">
@@ -203,11 +271,24 @@ export default function AttendanceManageModal({ courseId, teacherId, sessionType
                                     {status.notCheckedIn.length === 0 ? (
                                         <p className="text-xs text-gray-400 italic">All in! 🎉</p>
                                     ) : status.notCheckedIn.map(s => (
-                                        <div key={s.studentId} className="flex items-center gap-2 bg-gray-50 rounded-xl px-3 py-2">
+                                        <div key={s.studentId} className="flex items-center gap-2 bg-gray-50 rounded-xl px-3 py-2 group/row">
                                             <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-[9px] font-black text-gray-400 shrink-0">
                                                 {s.name.split(" ").map(n => n[0]).join("").slice(0, 2)}
                                             </div>
-                                            <span className="text-xs font-semibold text-gray-400 truncate">{s.name}</span>
+                                            <span className="text-xs font-semibold text-gray-400 truncate flex-1">{s.name}</span>
+                                            <div className="relative shrink-0">
+                                                <button
+                                                    onClick={() => handleMarkPresent(s.studentId)}
+                                                    className="w-6 h-6 rounded-full bg-gray-200 hover:bg-green-500 flex items-center justify-center transition-all opacity-0 group-hover/row:opacity-100"
+                                                >
+                                                    <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                                    </svg>
+                                                </button>
+                                                <span className="pointer-events-none absolute right-full mr-2 top-1/2 -translate-y-1/2 bg-gray-800 text-white text-[9px] font-bold px-2 py-1 rounded-lg whitespace-nowrap opacity-0 group-hover/row:opacity-100 transition-opacity">
+                                                    Mark Present
+                                                </span>
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
@@ -219,6 +300,11 @@ export default function AttendanceManageModal({ courseId, teacherId, sessionType
                         <p className="text-xs text-gray-400 text-center">Loading roster…</p>
                     )}
 
+                    {isOpen && session?.autoCloseAt && (
+                        <p className="text-[10px] text-center font-semibold text-orange-400">
+                            Auto-closes at {new Date(session.autoCloseAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                        </p>
+                    )}
                     {isOpen && (
                         <p className="text-[10px] text-gray-400 text-center">Roster updates every 5 seconds</p>
                     )}

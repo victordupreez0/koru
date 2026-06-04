@@ -6,11 +6,11 @@ async function handle(res) {
     return data;
 }
 
-export async function openSession(courseId, teacherId, sessionType = "Lecture") {
+export async function openSession(courseId, teacherId, sessionType = "Lecture", lateAfterMinutes = null, autoCloseMinutes = null) {
     return handle(await fetch(`${API_BASE}/CheckIn/sessions`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ courseId, teacherId, sessionType }),
+        body: JSON.stringify({ courseId, teacherId, sessionType, lateAfterMinutes, autoCloseMinutes }),
     }));
 }
 
@@ -34,6 +34,13 @@ export async function getActiveSession(courseId) {
 
 export async function getAvailableSessionsForStudent(studentId) {
     return handle(await fetch(`${API_BASE}/CheckIn/sessions/available/${encodeURIComponent(studentId)}`));
+}
+
+export async function markStudentPresent(sessionId, studentId) {
+    return handle(await fetch(
+        `${API_BASE}/CheckIn/sessions/${encodeURIComponent(sessionId)}/mark/${encodeURIComponent(studentId)}`,
+        { method: "POST" }
+    ));
 }
 
 export async function checkIn(code, studentId) {

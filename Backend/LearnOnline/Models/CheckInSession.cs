@@ -33,6 +33,12 @@ namespace LearnOnline.Models
 
         public DateTime? ClosedAt { get; set; }
 
+        // Minutes after opening before students are marked Late instead of Present (null = no threshold)
+        public int? LateAfterMinutes { get; set; }
+
+        // Automatically close the session at this UTC time (null = manual close only)
+        public DateTime? AutoCloseAt { get; set; }
+
         public ICollection<Attendance> Attendances { get; set; } = new List<Attendance>();
     }
 }

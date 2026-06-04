@@ -31,14 +31,23 @@ namespace LearnOnline.Controllers
                 if (!courseExists)
                     return BadRequest(new { message = $"Course not found: {dto.CourseId}" });
 
-                // Return existing open session if one is already running
+                var autoCloseAt = dto.AutoCloseMinutes.HasValue
+                    ? DateTime.UtcNow.AddMinutes(dto.AutoCloseMinutes.Value)
+                    : (DateTime?)null;
+
+                // Return existing open session, updating settings in case they changed
                 var existing = await _context.CheckInSessions
                     .FirstOrDefaultAsync(s => s.CourseId == dto.CourseId && s.IsOpen);
 
                 if (existing != null)
+                {
+                    existing.LateAfterMinutes = dto.LateAfterMinutes;
+                    existing.AutoCloseAt      = autoCloseAt;
+                    await _context.SaveChangesAsync();
                     return Ok(MapSession(existing));
+                }
 
-                // Reopen today's closed session (same code, remove auto-absent records)
+                // Reopen today's closed session (same code, reset absent records, apply new settings)
                 var today = DateTime.UtcNow.Date;
                 var todayClosed = await _context.CheckInSessions
                     .Where(s => s.CourseId == dto.CourseId && !s.IsOpen && s.Date == today)
@@ -47,10 +56,11 @@ namespace LearnOnline.Controllers
 
                 if (todayClosed != null)
                 {
-                    todayClosed.IsOpen   = true;
-                    todayClosed.ClosedAt = null;
+                    todayClosed.IsOpen           = true;
+                    todayClosed.ClosedAt         = null;
+                    todayClosed.LateAfterMinutes  = dto.LateAfterMinutes;
+                    todayClosed.AutoCloseAt       = autoCloseAt;
 
-                    // Remove the auto-absent records so those students can check in again
                     var autoAbsent = await _context.Attendances
                         .Where(a => a.CheckInSessionId == todayClosed.Id && a.Status == "Absent")
                         .ToListAsync();
@@ -63,11 +73,13 @@ namespace LearnOnline.Controllers
                 // No session today — create a brand new one
                 var session = new CheckInSession
                 {
-                    Code        = _rng.Next(1000, 9999).ToString(),
-                    CourseId    = dto.CourseId,
-                    TeacherId   = dto.TeacherId,
-                    Date        = DateTime.UtcNow.Date,
-                    SessionType = dto.SessionType ?? "Lecture",
+                    Code             = _rng.Next(1000, 9999).ToString(),
+                    CourseId         = dto.CourseId,
+                    TeacherId        = dto.TeacherId,
+                    Date             = DateTime.UtcNow.Date,
+                    SessionType      = dto.SessionType ?? "Lecture",
+                    LateAfterMinutes = dto.LateAfterMinutes,
+                    AutoCloseAt      = autoCloseAt,
                 };
                 _context.CheckInSessions.Add(session);
                 await _context.SaveChangesAsync();
@@ -169,6 +181,41 @@ namespace LearnOnline.Controllers
             var session = await _context.CheckInSessions.FindAsync(id);
             if (session == null) return NotFound();
 
+            // Auto-close if the scheduled time has passed
+            if (session.IsOpen && session.AutoCloseAt.HasValue && DateTime.UtcNow >= session.AutoCloseAt.Value)
+            {
+                session.IsOpen   = false;
+                session.ClosedAt = session.AutoCloseAt;
+
+                var checkedIds = await _context.Attendances
+                    .Where(a => a.CheckInSessionId == id)
+                    .Select(a => a.StudentId)
+                    .ToListAsync();
+
+                var absentStudents = await _context.Enrollments
+                    .Where(e => e.CourseId == session.CourseId &&
+                                e.Status == "Active" &&
+                                !checkedIds.Contains(e.StudentId))
+                    .Select(e => e.StudentId)
+                    .ToListAsync();
+
+                foreach (var sid in absentStudents)
+                    _context.Attendances.Add(new Attendance
+                    {
+                        CourseId         = session.CourseId,
+                        StudentId        = sid,
+                        Date             = session.Date,
+                        Status           = "Absent",
+                        SessionType      = session.SessionType,
+                        Time             = session.ClosedAt?.ToString("HH:mm"),
+                        RecordedById     = session.TeacherId,
+                        CheckInSessionId = session.Id,
+                        RecordedAt       = DateTime.UtcNow,
+                    });
+
+                await _context.SaveChangesAsync();
+            }
+
             var enrolled = await _context.Enrollments
                 .Include(e => e.Student)
                 .Where(e => e.CourseId == session.CourseId && e.Status == "Active")
@@ -214,6 +261,34 @@ namespace LearnOnline.Controllers
             });
         }
 
+        // POST /api/CheckIn/sessions/{id}/mark/{studentId} – teacher manually marks a student present
+        [HttpPost("sessions/{id}/mark/{studentId}")]
+        public async Task<ActionResult<object>> MarkPresent(string id, string studentId)
+        {
+            var session = await _context.CheckInSessions.FindAsync(id);
+            if (session == null) return NotFound(new { message = "Session not found." });
+            if (!session.IsOpen)  return BadRequest(new { message = "Session is closed." });
+
+            var alreadyIn = await _context.Attendances.AnyAsync(
+                a => a.CheckInSessionId == id && a.StudentId == studentId);
+            if (alreadyIn) return BadRequest(new { message = "Already marked present." });
+
+            _context.Attendances.Add(new Attendance
+            {
+                CourseId         = session.CourseId,
+                StudentId        = studentId,
+                Date             = session.Date,
+                Status           = "Present",
+                SessionType      = session.SessionType,
+                Time             = DateTime.UtcNow.ToString("HH:mm"),
+                RecordedById     = session.TeacherId,
+                CheckInSessionId = session.Id,
+                RecordedAt       = DateTime.UtcNow,
+            });
+            await _context.SaveChangesAsync();
+            return Ok(new { message = "Marked present." });
+        }
+
         // POST /api/CheckIn/checkin – student submits code
         [HttpPost("checkin")]
         public async Task<ActionResult<object>> CheckIn([FromBody] CheckInDto dto)
@@ -235,12 +310,17 @@ namespace LearnOnline.Controllers
             if (alreadyIn)
                 return BadRequest(new { message = "Already checked in." });
 
+            var minutesSinceOpen = (DateTime.UtcNow - session.OpenedAt).TotalMinutes;
+            var status = session.LateAfterMinutes.HasValue && minutesSinceOpen > session.LateAfterMinutes.Value
+                ? "Late"
+                : "Present";
+
             var record = new Attendance
             {
                 CourseId         = session.CourseId,
                 StudentId        = dto.StudentId,
                 Date             = session.Date,
-                Status           = "Present",
+                Status           = status,
                 SessionType      = session.SessionType,
                 Time             = DateTime.UtcNow.ToString("HH:mm"),
                 RecordedById     = dto.StudentId,
@@ -250,20 +330,26 @@ namespace LearnOnline.Controllers
             _context.Attendances.Add(record);
             await _context.SaveChangesAsync();
 
-            return Ok(new { message = "Checked in successfully.", attendanceId = record.Id });
+            return Ok(new { message = "Checked in successfully.", status, attendanceId = record.Id });
         }
 
         private static object MapSession(CheckInSession s) => new
         {
-            s.Id, s.Code, s.CourseId, s.SessionType, s.IsOpen, s.OpenedAt
+            s.Id, s.Code, s.CourseId, s.SessionType,
+            s.IsOpen, s.OpenedAt, s.ClosedAt,
+            s.LateAfterMinutes, s.AutoCloseAt
         };
     }
 
     public class OpenSessionDto
     {
-        public string CourseId   { get; set; } = null!;
-        public string TeacherId  { get; set; } = null!;
-        public string? SessionType { get; set; }
+        public string CourseId        { get; set; } = null!;
+        public string TeacherId       { get; set; } = null!;
+        public string? SessionType    { get; set; }
+        // Minutes after opening before check-ins are marked Late (null = never)
+        public int? LateAfterMinutes  { get; set; }
+        // Auto-close the session this many minutes from now (null = manual only)
+        public int? AutoCloseMinutes  { get; set; }
     }
 
     public class CheckInDto

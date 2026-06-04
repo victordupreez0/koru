@@ -98,6 +98,11 @@ using (var scope = app.Services.CreateScope())
             ON CONFLICT DO NOTHING;
             INSERT INTO ""__EFMigrationsHistory"" (""MigrationId"", ""ProductVersion"")
             VALUES ('20260603120000_AddCheckInSession', '9.0.3')
+            ON CONFLICT DO NOTHING;
+            ALTER TABLE ""CheckInSessions"" ADD COLUMN IF NOT EXISTS ""LateAfterMinutes"" integer NULL;
+            ALTER TABLE ""CheckInSessions"" ADD COLUMN IF NOT EXISTS ""AutoCloseAt"" timestamp with time zone NULL;
+            INSERT INTO ""__EFMigrationsHistory"" (""MigrationId"", ""ProductVersion"")
+            VALUES ('20260603140000_AddCheckInSessionSettings', '9.0.3')
             ON CONFLICT DO NOTHING;";
         cmd.ExecuteNonQuery();
     }
