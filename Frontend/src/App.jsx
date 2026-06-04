@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { HashRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "./contexts/AuthContext";
 
 // Page components – rendered based on the current route
@@ -33,7 +33,7 @@ function App() {
   }, [role]);
 
   return (
-    <BrowserRouter>
+    <HashRouter>
       <RouteSpeechAnnouncer />
       <ClickSpark
         sparkColor="#3C0078"
@@ -45,8 +45,8 @@ function App() {
         {/* Unified left sidebar – rendered once, visible on all protected routes */}
         <AppSidebar />
 
-        {/* Main content area – offset for the 76px sidebar */}
-        <main className={isIframeMode ? "" : "pt-6 pl-[92px] pr-8"}>
+        {/* Main content area – offset for the floating 80px sidebar (16px margin + 80px width + 16px gap) */}
+        <main className={isIframeMode ? "" : "py-4 pl-[112px] pr-4 min-h-screen transition-all duration-300"}>
           <Routes>
             {/* Public routes – landing & role-specific login portals */}
             <Route path="/" element={<Onboarding />} />
@@ -72,7 +72,7 @@ function App() {
           </Routes>
         </main>
       </ClickSpark>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
 

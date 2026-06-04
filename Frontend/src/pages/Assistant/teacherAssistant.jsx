@@ -33,12 +33,12 @@ export default function TeacherAssistant() {
     };
 
     return (
-        <div className="h-screen overflow-hidden -ml-4 -mr-8 -mt-6 flex flex-col bg-transparent text-slate-900">
+        <div className="flex flex-col overflow-hidden transition-all duration-300 md:h-[calc(100vh-32px)] md:w-full md:bg-white/55 md:backdrop-blur-xl md:border md:border-white/20 md:rounded-[28px] md:shadow-lg max-md:h-screen max-md:w-screen max-md:-ml-4 max-md:-mr-4 max-md:-mt-4 max-md:bg-transparent text-slate-900 relative">
             {/* Reusable breadcrumb header top bar */}
             <HeaderTopBar />
 
             {/* Orb Background */}
-            <div className="fixed inset-0 w-full h-full -z-10 bg-gradient-to-br from-[#F3ebff] via-[#fff1e7] to-[#e6f4ff]">
+            <div className="absolute inset-0 w-full h-full -z-10 bg-gradient-to-br from-[#F3ebff] via-[#fff1e7] to-[#e6f4ff] md:rounded-[28px] overflow-hidden">
                 <div className="w-full h-full opacity-60">
                     <Orb hoverIntensity={2} rotateOnHover={true} hue={0} forceHoverState={false} backgroundColor="#F3ebff" />
                 </div>

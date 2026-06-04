@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Background from "../assets/backgrounds/Background.png";
-import Logo from "../assets/Logo.png";
 import AuthInput from "../components/UI/authInput";
 import GoogleAuthButton from "../components/UI/googleAuthButton";
 import { GraduationCap } from "lucide-react";
