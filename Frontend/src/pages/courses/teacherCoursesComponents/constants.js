@@ -77,36 +77,12 @@ export const ASSIGNMENT_TYPES = [
         description: "Multiple choice, essay, and matching questions with automatic or manual grading.",
     },
     {
-        id: "discussion",
-        label: "Graded Discussion",
-        icon: MessageSquare,
-        color: "#14B8A6",
-        bg: "bg-[#14B8A6]/10",
-        description: "Interactive forum where students earn grades through participation and responses.",
-    },
-    {
-        id: "peer",
-        label: "Peer Review",
-        icon: Users,
-        color: "#F59E0B",
-        bg: "bg-[#F59E0B]/10",
-        description: "Students assess each other's work; can be anonymous or reveal reviewer names.",
-    },
-    {
         id: "external",
         label: "External Tool (LTI)",
         icon: ExternalLink,
         color: "#6366F1",
         bg: "bg-[#6366F1]/10",
         description: "Integrates Turnitin, Google Assignments, Microsoft 365, and other outside platforms.",
-    },
-    {
-        id: "ungraded",
-        label: "Non-Submission / Ungraded",
-        icon: ClipboardList,
-        color: "#64748B",
-        bg: "bg-[#64748B]/10",
-        description: "In-class tasks, attendance, or reading assignments that don't require an online turn-in.",
     },
 ];
 
