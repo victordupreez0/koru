@@ -1,9 +1,4 @@
-export const GRADES_DATA = [
-    { id: 1, name: "Project 1: Research & Discovery", weight: "20%", grade: "85%", status: "Graded", date: "Mar 12, 2026" },
-    { id: 2, name: "Project 2: Wireframes & Prototyping", weight: "30%", grade: "78%", status: "Graded", date: "Apr 05, 2026" },
-    { id: 3, name: "Mid-Term UI Audit", weight: "10%", grade: "92%", status: "Graded", date: "Apr 15, 2026" },
-    { id: 4, name: "Final Case Study Delivery", weight: "40%", grade: "-", status: "Pending", date: "Expected June" },
-];
+import { FileText, HelpCircle, MessageSquare, Users, ExternalLink, ClipboardList } from "lucide-react";
 
 export const ANNOUNCEMENTS_DATA = [
     {
@@ -50,21 +45,19 @@ export const ATTENDANCE_LOGS = [
 ];
 
 export const staggerContainer = {
-    hidden: { opacity: 1 },
-    visible: { opacity: 1, transition: { staggerChildren: 0 } }
+    hidden: { opacity: 0 },
+    visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
 };
 
 export const slideUp = {
-    hidden: { opacity: 1, y: 0 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0 } }
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } }
 };
 
 export const scaleIn = {
-    hidden: { opacity: 1, scale: 1 },
-    visible: { opacity: 1, scale: 1, transition: { duration: 0 } }
+    hidden: { opacity: 0, scale: 0.95 },
+    visible: { opacity: 1, scale: 1, transition: { duration: 0.4, ease: "easeOut" } }
 };
-
-import { FileText, HelpCircle, MessageSquare, Users, ExternalLink, ClipboardList } from "lucide-react";
 
 export const ASSIGNMENT_TYPES = [
     {

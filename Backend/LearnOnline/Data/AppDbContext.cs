@@ -42,5 +42,14 @@ namespace LearnOnline.Data
         // Course Modules (sections and nested items on the Modules page)
         public DbSet<CourseModule> CourseModules { get; set; }
         public DbSet<CourseModuleItem> CourseModuleItems { get; set; }
+
+        // Teacher to-do items (self-created or admin-assigned)
+        public DbSet<TodoItem> TodoItems { get; set; }
+
+        // Attendance records (per-student, per-session)
+        public DbSet<Attendance> Attendances { get; set; }
+
+        // Live check-in sessions (teacher opens, students join with code)
+        public DbSet<CheckInSession> CheckInSessions { get; set; }
     }
 }

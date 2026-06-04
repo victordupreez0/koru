@@ -90,14 +90,10 @@ export default function CourseModulesView({ activeCourseId }) {
           <div key={mod.id} className="border border-gray-200 rounded-2xl overflow-hidden shadow-xs bg-white">
             {/* Header row */}
             <div 
-              onClick={() => navigate(`/courses/${activeCourseId}/items/${mod.id}?viewAs=student`)}
+              onClick={() => toggleModule(mod.id)}
               className="flex items-center gap-3 px-5 py-4 bg-gray-50/80 border-b border-gray-200 cursor-pointer select-none group"
             >
               <span 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  toggleModule(mod.id);
-                }}
                 className="text-gray-400 group-hover:text-gray-600 transition-colors shrink-0 p-1 hover:bg-gray-200 rounded-md"
               >
                 {mod.isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}

@@ -1,10 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  Plus, Search, Users, BookOpen, Clock, 
-  TrendingUp, CheckCircle, X, Bell
-} from "lucide-react";
-
+import { Plus, Search, Users, BookOpen, TrendingUp } from "lucide-react";
+import { courseService, userService, subjectService } from "../../services/adminService";
 
 // Modularized Components
 import {
@@ -19,7 +16,6 @@ export default function AdminCourses() {
   const [courses, setCourses] = useState([]);
   const [teachers, setTeachers] = useState([]);
   const [subjects, setSubjects] = useState([]);
-  const [enrollments, setEnrollments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   
   const [search, setSearch] = useState("");
@@ -47,70 +43,16 @@ export default function AdminCourses() {
   const fetchInitialData = async () => {
     setIsLoading(true);
     try {
-      const fetchedSubjects = [
-        { id: "s1", name: "User Experience Design 300", code: "UX300", description: "Inclusive & Neurodiverse UX foundation course." },
-        { id: "s2", name: "Development 300", code: "DV300", description: "Advanced Full-Stack Engineering and Architecture." },
-        { id: "s3", name: "Visual Culture 300", code: "VC300", description: "Exploration of visual systems, semiotics, and interactive media aesthetics." }
-      ];
-
-      const fetchedTeachers = [
-        { id: "t1", firstName: "Dev", lastName: "Teacher", email: "devteacher@learnonline.co.za", role: "teacher" },
-        { id: "t2", firstName: "Sarah", lastName: "Smith", email: "sarah@learnonline.co.za", role: "teacher" }
-      ];
-
-      const fetchedCourses = [
-        { 
-          id: "c1", 
-          subjectId: "s1", 
-          teacherId: "t1", 
-          term: "Term 1", 
-          year: 2026, 
-          capacity: 150,
-          status: "Active",
-          degree: "UX Design Degree",
-          description: "This comprehensive course covers the principles of User Experience Design, focusing on inclusive and neurodiverse foundations to create accessible products for all users.",
-          subject: fetchedSubjects[0],
-          teacher: fetchedTeachers[0]
-        },
-        { 
-          id: "c2", 
-          subjectId: "s2", 
-          teacherId: "t1", 
-          term: "Term 1", 
-          year: 2026, 
-          capacity: 150,
-          status: "Active",
-          degree: "Software Engineering Degree",
-          description: "Advanced Full-Stack Engineering and Architecture. Explore modern web technologies, database management, and scalable system design.",
-          subject: fetchedSubjects[1],
-          teacher: fetchedTeachers[0]
-        },
-        { 
-          id: "c3", 
-          subjectId: "s3", 
-          teacherId: "t2", 
-          term: "Term 1", 
-          year: 2026, 
-          capacity: 150,
-          status: "Active",
-          degree: "Visual Arts Degree",
-          description: "Exploration of visual systems, semiotics, and interactive media aesthetics. Understand the cultural impact of visual communication.",
-          subject: fetchedSubjects[2],
-          teacher: fetchedTeachers[1]
-        }
-      ];
-
-      const fetchedEnrollments = [
-        { id: "e1", studentId: "std1", courseId: "c1", status: "Active" },
-        { id: "e2", studentId: "std1", courseId: "c2", status: "Active" },
-        { id: "e3", studentId: "std1", courseId: "c3", status: "Active" }
-      ];
+      const [fetchedCourses, fetchedTeachers, fetchedSubjects] = await Promise.all([
+        courseService.getAllCourses(),
+        userService.getTeachers(),
+        subjectService.getSubjects(),
+      ]);
 
       setCourses(fetchedCourses);
       setTeachers(fetchedTeachers);
       setSubjects(fetchedSubjects);
-      setEnrollments(fetchedEnrollments);
-      
+
       if (fetchedSubjects.length > 0 && fetchedTeachers.length > 0) {
         setNewCourseForm(prev => ({
           ...prev,
@@ -119,24 +61,22 @@ export default function AdminCourses() {
         }));
       }
     } catch (error) {
-      console.error("Failed to load mock data:", error);
+      console.error("Failed to load course registry data:", error);
     } finally {
       setIsLoading(false);
     }
   };
 
   const stats = useMemo(() => {
-    const totalEnrolled = enrollments.length;
     const totalCapacity = courses.reduce((sum, c) => sum + (c.capacity || 0), 0);
-    const avgEnrolment = totalCapacity > 0 ? Math.round((totalEnrolled / totalCapacity) * 100) : 0;
-    
+    const avgCapacity = courses.length > 0 ? Math.round(totalCapacity / courses.length) : 0;
+
     return {
       registryCount: courses.length,
       facultyCount: teachers.length,
-      avgEnrolment: `${avgEnrolment}%`,
-      health: "98%"
+      avgCapacity,
     };
-  }, [courses, teachers, enrollments]);
+  }, [courses, teachers]);
 
   const handleViewCourse = (course) => {
     setSelectedCourse(course);
@@ -146,21 +86,17 @@ export default function AdminCourses() {
 
   const handleCreateCourse = async () => {
     try {
-      const subject = subjects.find(s => s.id === newCourseForm.subjectId);
-      const teacher = teachers.find(t => t.id === newCourseForm.teacherId);
-
-      const newCourse = {
-        id: Math.random().toString(36).substr(2, 9),
-        ...newCourseForm,
+      const payload = {
+        subjectId: newCourseForm.subjectId,
+        teacherId: newCourseForm.teacherId,
+        term: newCourseForm.term,
         year: parseInt(newCourseForm.year),
         capacity: parseInt(newCourseForm.capacity),
-        subject,
-        teacher
       };
-
-      setCourses(prev => [...prev, newCourse]);
+      await courseService.createCourse(payload);
       setShowCreate(false);
-      setNewCourseForm({ ...newCourseForm, capacity: 50 });
+      setNewCourseForm(prev => ({ ...prev, capacity: 50 }));
+      await fetchInitialData();
     } catch (error) {
       alert("Error creating course: " + error.message);
     }
@@ -168,12 +104,16 @@ export default function AdminCourses() {
 
   const handleSaveEdit = async () => {
     try {
-      const updatedCourses = courses.map(c => 
-        c.id === editForm.id ? { ...editForm, year: parseInt(editForm.year), capacity: parseInt(editForm.capacity) } : c
-      );
-      setCourses(updatedCourses);
+      await courseService.updateCourse(editForm.id, {
+        subjectId: editForm.subjectId,
+        teacherId: editForm.teacherId,
+        term: editForm.term,
+        year: parseInt(editForm.year),
+        capacity: parseInt(editForm.capacity),
+      });
       setSelectedCourse(null);
       setIsEditing(false);
+      await fetchInitialData();
     } catch (error) {
       alert("Error updating course: " + error.message);
     }
@@ -182,8 +122,9 @@ export default function AdminCourses() {
   const handleDeleteCourse = async (id) => {
     if (!window.confirm("Are you sure you want to delete this course?")) return;
     try {
-      setCourses(prev => prev.filter(c => c.id !== id));
+      await courseService.deleteCourse(id);
       setSelectedCourse(null);
+      await fetchInitialData();
     } catch (error) {
       alert("Failed to delete: " + error.message);
     }
@@ -229,11 +170,10 @@ export default function AdminCourses() {
             </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <StatCard label="Total Registry" value={stats.registryCount} icon={BookOpen} accent trend="+0" />
             <StatCard label="Faculty Strength" value={stats.facultyCount} icon={Users} trend="Active" />
-            <StatCard label="Avg Enrolment" value={stats.avgEnrolment} icon={TrendingUp} trend="Steady" />
-            <StatCard label="Registry Health" value={stats.health} icon={CheckCircle} trend="Target" />
+            <StatCard label="Avg Capacity" value={stats.avgCapacity} icon={TrendingUp} trend="Per Course" />
         </div>
 
         <div className="flex flex-wrap items-center gap-4">

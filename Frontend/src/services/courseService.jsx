@@ -29,3 +29,31 @@ export async function getTeacherCourses(teacherId) {
 
   return handleResponse(res);
 }
+
+// GET /api/Course/{id} – fetch a course detail (includes subject and teacher)
+export async function getCourseById(courseId) {
+  const res = await fetch(`${API_BASE}/Course/${encodeURIComponent(courseId)}`, {
+    method: "GET",
+    headers: { "Content-Type": "application/json" }
+  });
+  return handleResponse(res);
+}
+
+// GET /api/Course/{id}/lecturers – fetch all lecturers for a course
+export async function getCourseLecturers(courseId) {
+  const res = await fetch(`${API_BASE}/Course/${encodeURIComponent(courseId)}/lecturers`, {
+    method: "GET",
+    headers: { "Content-Type": "application/json" }
+  });
+  return handleResponse(res);
+}
+
+// PUT /api/Course/{id}/content – update the homepage content for a course
+export async function updateCourseContent(courseId, content) {
+  const res = await fetch(`${API_BASE}/Course/${encodeURIComponent(courseId)}/content`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ content })
+  });
+  return handleResponse(res);
+}

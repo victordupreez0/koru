@@ -17,7 +17,8 @@ export function CourseColumn({
   filteredCourses,
   selectedCourseId,
   handleSelectCourse,
-  lecturers
+  lecturers,
+  subjects
 }) {
   return (
     <div className="flex flex-col bg-white/80 border-1 border-gray-200 rounded-3xl drop-shadow-xl p-4 min-h-0">
@@ -40,6 +41,7 @@ export function CourseColumn({
           {isAddingCourse && selectedLecturer && (
             <AddCourseForm
               lecturerName={selectedLecturer.name}
+              subjects={subjects || []}
               onSave={handleSaveCourse}
               onCancel={() => setIsAddingCourse(false)}
             />

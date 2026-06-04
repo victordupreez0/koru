@@ -48,8 +48,6 @@ export default function CourseSecondaryNav({ activeCourseId, hideNav }) {
     const isTeacher = role === "teacher";
     
     const [navItems, setNavItems] = useState(INITIAL_NAV_ITEMS);
-    const [isAdding, setIsAdding] = useState(false);
-    const [newItemLabel, setNewItemLabel] = useState("");
     const [isPublished, setIsPublished] = useState(true);
 
     // Fetch active course details
@@ -57,15 +55,6 @@ export default function CourseSecondaryNav({ activeCourseId, hideNav }) {
 
     // Generate base link
     const queryAppend = hideNav ? "?hideNav=true" : "";
-
-    const addItem = () => {
-        if (newItemLabel.trim()) {
-            const suffix = newItemLabel.toLowerCase().replace(/\s+/g, '-');
-            setNavItems([...navItems, { label: newItemLabel, pathSuffix: suffix }]);
-            setNewItemLabel("");
-            setIsAdding(false);
-        }
-    };
 
     const removeItem = (label) => {
         setNavItems(navItems.filter(item => item.label !== label));
@@ -186,87 +175,24 @@ export default function CourseSecondaryNav({ activeCourseId, hideNav }) {
                     </AnimatePresence>
                 </ul>
 
-                {/* Add Link Option for Teachers */}
-                {isTeacher && (
-                    <div className="mt-4 px-6 shrink-0">
-                        {isAdding ? (
-                            <div className="flex flex-col gap-2 p-3 bg-gray-50 border border-gray-100 rounded-2xl">
-                                <input
-                                    autoFocus
-                                    type="text"
-                                    placeholder="Link name..."
-                                    className="w-full bg-white border border-gray-200 rounded-xl px-3 py-1.5 text-xs outline-none focus:border-[#3C0078]/40 transition-colors"
-                                    value={newItemLabel}
-                                    onChange={(e) => setNewItemLabel(e.target.value)}
-                                    onKeyDown={(e) => {
-                                        if (e.key === "Enter") addItem();
-                                        if (e.key === "Escape") setIsAdding(false);
-                                    }}
-                                />
-                                <div className="flex gap-1.5">
-                                    <button
-                                        onClick={addItem}
-                                        className="flex-1 py-1.5 bg-[#3C0078] hover:bg-[#2A0054] text-white text-[10px] font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-sm hover:shadow"
-                                    >
-                                        Add
-                                    </button>
-                                    <button
-                                        onClick={() => setIsAdding(false)}
-                                        className="p-1.5 bg-white border border-gray-200 text-gray-400 hover:text-gray-600 rounded-xl transition-all cursor-pointer shadow-xs"
-                                    >
-                                        <X size={13} />
-                                    </button>
-                                </div>
-                            </div>
-                        ) : (
-                            <button
-                                onClick={() => setIsAdding(true)}
-                                className="w-full flex items-center justify-center gap-1.5 py-2.5 border border-dashed border-gray-200 hover:border-[#3C0078]/40 hover:bg-[#3C0078]/5 rounded-xl text-[10px] font-bold uppercase tracking-wider text-gray-400 hover:text-[#3C0078] transition-all cursor-pointer"
-                            >
-                                <Plus size={12} />
-                                <span>Add Page</span>
-                            </button>
-                        )}
-                    </div>
-                )}
+
             </div>
 
             {/* Teacher controls footer */}
             {isTeacher && (
                 <div className="p-4 border-t border-gray-100 flex flex-col gap-3 bg-gray-50/50 shrink-0">
-                    <div className="flex flex-col gap-1 px-2">
-                        <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none">
-                            Course Controls
-                        </span>
-                        
-                        {/* Course Status Toggle */}
-                        <div className="flex items-center justify-between mt-2.5">
-                            <span className="text-[10px] font-bold text-gray-500">Course Status</span>
-                            <button
-                                onClick={() => setIsPublished(!isPublished)}
-                                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer shadow-xs
-                                    ${isPublished 
-                                        ? "bg-green-50 text-green-600 border border-green-200/50 hover:bg-green-100/50" 
-                                        : "bg-amber-50 text-amber-600 border border-amber-200/50 hover:bg-amber-100/50"
-                                    }`}
-                            >
-                                <span className={`w-1.5 h-1.5 rounded-full ${isPublished ? "bg-green-500 animate-pulse" : "bg-amber-500"}`} />
-                                <span>{isPublished ? "Published" : "Draft"}</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Quick Module Shortcut Button */}
-                    <div className="flex flex-col mt-1">
+                    <div className="flex items-center justify-between px-2">
+                        <span className="text-[10px] font-bold text-gray-500">Course Status</span>
                         <button
-                            onClick={() => {
-                                // Direct page navigation to modules page
-                                window.location.href = `/courses/${activeCourseId}/modules`;
-                            }}
-                            className="flex items-center justify-center gap-2 w-full py-2 px-3 rounded-xl text-[10px] font-extrabold uppercase tracking-wider border border-dashed border-gray-200 bg-white hover:border-[#3C0078]/30 hover:bg-[#3C0078]/5 hover:text-[#3C0078] text-gray-500 transition-all cursor-pointer shadow-xs"
+                            onClick={() => setIsPublished(!isPublished)}
+                            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer shadow-xs
+                                ${isPublished 
+                                    ? "bg-green-50 text-green-600 border border-green-200/50 hover:bg-green-100/50" 
+                                    : "bg-amber-50 text-amber-600 border border-amber-200/50 hover:bg-amber-100/50"
+                                }`}
                         >
-                            <Plus size={11} />
-                            <span>Add New Module</span>
+                            <span className={`w-1.5 h-1.5 rounded-full ${isPublished ? "bg-green-500 animate-pulse" : "bg-amber-500"}`} />
+                            <span>{isPublished ? "Published" : "Draft"}</span>
                         </button>
                     </div>
                 </div>

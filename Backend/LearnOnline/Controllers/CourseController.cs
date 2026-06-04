@@ -45,6 +45,7 @@ namespace LearnOnline.Controllers
         {
             var courses = await _context.Courses
                 .Include(c => c.Subject)
+                .Include(c => c.Teacher)
                 .Where(c => c.TeacherId == teacherId)
                 .ToListAsync();
             return courses;
@@ -87,6 +88,52 @@ namespace LearnOnline.Controllers
             _context.Courses.Remove(course);
             await _context.SaveChangesAsync();
             return NoContent();
+        }
+
+        // PUT /api/Course/{id}/content – save the NovelEditor page content for a course's homepage
+        [HttpPut("{id}/content")]
+        public async Task<IActionResult> UpdateContent(string id, [FromBody] ContentUpdateRequest request)
+        {
+            var course = await _context.Courses.FindAsync(id);
+            if (course == null) return NotFound();
+
+            course.Content = request.Content;
+            await _context.SaveChangesAsync();
+            return NoContent();
+        }
+
+        // GET /api/Course/{id}/lecturers – return all lecturers for a course
+        [HttpGet("{id}/lecturers")]
+        public async Task<ActionResult<IEnumerable<User>>> GetLecturers(string id)
+        {
+            var course = await _context.Courses
+                .Include(c => c.Teacher)
+                .FirstOrDefaultAsync(c => c.Id == id);
+            if (course == null) return NotFound();
+
+            var lecturers = new List<User>();
+            if (course.Teacher != null)
+            {
+                lecturers.Add(course.Teacher);
+            }
+
+            var announcementLecturers = await _context.Announcements
+                .Where(a => a.CourseId == id)
+                .Include(a => a.Lecturer)
+                .Select(a => a.Lecturer)
+                .Where(l => l != null)
+                .Distinct()
+                .ToListAsync();
+
+            foreach (var al in announcementLecturers)
+            {
+                if (al != null && !lecturers.Any(l => l.Id == al.Id))
+                {
+                    lecturers.Add(al);
+                }
+            }
+
+            return lecturers;
         }
     }
 }

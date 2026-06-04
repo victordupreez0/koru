@@ -381,19 +381,21 @@ export default function SettingsPage() {
                           <div className="sm:col-span-2">
                             <AuthInput label="Email address" name="email" type="email" value={profileForm.email} onChange={handleProfileChange} labelClassName={pageClasses.label} className={pageClasses.input} required />
                           </div>
-                          <label className="sm:col-span-2 flex flex-col gap-2">
-                            <span className={pageClasses.label}>Role</span>
-                            <select
-                              name="role"
-                              value={profileForm.role}
-                              onChange={handleProfileChange}
-                              className={pageClasses.select}
-                            >
-                              <option value="student">Student</option>
-                              <option value="teacher">Teacher</option>
-                              <option value="admin">Admin</option>
-                            </select>
-                          </label>
+                          {session?.role?.toLowerCase() === "admin" && (
+                            <label className="sm:col-span-2 flex flex-col gap-2">
+                              <span className={pageClasses.label}>Role</span>
+                              <select
+                                name="role"
+                                value={profileForm.role}
+                                onChange={handleProfileChange}
+                                className={pageClasses.select}
+                              >
+                                <option value="student">Student</option>
+                                <option value="teacher">Teacher</option>
+                                <option value="admin">Admin</option>
+                              </select>
+                            </label>
+                          )}
                         </div>
 
                         {profileError ? <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs font-semibold text-red-700 shadow-3xs">{profileError}</div> : null}
