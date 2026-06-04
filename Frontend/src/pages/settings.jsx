@@ -379,7 +379,17 @@ export default function SettingsPage() {
                           <AuthInput label="First name" name="firstName" value={profileForm.firstName} onChange={handleProfileChange} labelClassName={pageClasses.label} className={pageClasses.input} required />
                           <AuthInput label="Last name" name="lastName" value={profileForm.lastName} onChange={handleProfileChange} labelClassName={pageClasses.label} className={pageClasses.input} required />
                           <div className="sm:col-span-2">
-                            <AuthInput label="Email address" name="email" type="email" value={profileForm.email} onChange={handleProfileChange} labelClassName={pageClasses.label} className={pageClasses.input} required />
+                            <AuthInput
+                              label="Email address"
+                              name="email"
+                              type="email"
+                              value={profileForm.email}
+                              onChange={handleProfileChange}
+                              labelClassName={pageClasses.label}
+                              className={`${pageClasses.input} disabled:bg-gray-100 disabled:text-gray-400 disabled:border-gray-200 disabled:cursor-not-allowed`}
+                              disabled
+                              required
+                            />
                           </div>
                           {session?.role?.toLowerCase() === "admin" && (
                             <label className="sm:col-span-2 flex flex-col gap-2">

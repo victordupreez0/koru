@@ -618,9 +618,14 @@ namespace TodoApi.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("SharedByTeacherId")
+                        .HasColumnType("text");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CreatedByAdminId");
+
+                    b.HasIndex("SharedByTeacherId");
 
                     b.HasIndex("TeacherId");
 
@@ -927,6 +932,10 @@ namespace TodoApi.Migrations
                         .WithMany()
                         .HasForeignKey("CreatedByAdminId");
 
+                    b.HasOne("LearnOnline.Models.User", "SharedByTeacher")
+                        .WithMany()
+                        .HasForeignKey("SharedByTeacherId");
+
                     b.HasOne("LearnOnline.Models.User", "Teacher")
                         .WithMany()
                         .HasForeignKey("TeacherId")
@@ -934,6 +943,8 @@ namespace TodoApi.Migrations
                         .IsRequired();
 
                     b.Navigation("CreatedByAdmin");
+
+                    b.Navigation("SharedByTeacher");
 
                     b.Navigation("Teacher");
                 });

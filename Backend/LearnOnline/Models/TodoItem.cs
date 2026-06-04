@@ -38,5 +38,11 @@ namespace LearnOnline.Models
 
         [ForeignKey("CreatedByAdminId")]
         public User? CreatedByAdmin { get; set; }
+
+        // Set when a co-lecturer shared this todo with the teacher
+        public string? SharedByTeacherId { get; set; }
+
+        [ForeignKey("SharedByTeacherId")]
+        public User? SharedByTeacher { get; set; }
     }
 }

@@ -27,6 +27,7 @@ const theme = {
     checkbox: "border-[#3C0078] bg-[#3C0078]",
     checkboxHover: "hover:border-[#3C0078]",
     badge: "bg-[#3C0078]/10 text-[#3C0078]",
+    dot: "bg-[#3C0078]",
   },
   admin: {
     icon: "bg-[#FF8731]/10",
@@ -34,6 +35,15 @@ const theme = {
     checkbox: "border-[#FF8731] bg-[#FF8731]",
     checkboxHover: "hover:border-[#FF8731]",
     badge: "bg-[#FF8731]/10 text-[#FF8731]",
+    dot: "bg-[#FF8731]",
+  },
+  shared: {
+    icon: "bg-emerald-50",
+    iconText: "text-emerald-600",
+    checkbox: "border-emerald-500 bg-emerald-500",
+    checkboxHover: "hover:border-emerald-500",
+    badge: "bg-emerald-50 text-emerald-700",
+    dot: "bg-emerald-500",
   },
 };
 
@@ -55,7 +65,7 @@ export default function TeacherTodoProgress() {
   const [isAdding, setIsAdding] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newDue, setNewDue] = useState("");
-  const [newCourse, setNewCourse] = useState("");
+  const [shareMode, setShareMode] = useState(false);
   const [loading, setLoading] = useState(true);
 
   // Fetch todos on mount
@@ -107,8 +117,8 @@ export default function TeacherTodoProgress() {
       const created = await createTodo({
         title: newTitle.trim(),
         dueDate: newDue ? formatDueDate(newDue) : null,
-        courseCode: newCourse.trim() || null,
         teacherId: user.userId,
+        sharedWithCoLecturers: shareMode,
       });
       setTodos((prev) => [...prev, created]);
     } catch (err) {
@@ -116,7 +126,7 @@ export default function TeacherTodoProgress() {
     }
     setNewTitle("");
     setNewDue("");
-    setNewCourse("");
+    setShareMode(false);
     setIsAdding(false);
   }
 
@@ -157,31 +167,49 @@ export default function TeacherTodoProgress() {
                 value={newTitle}
                 onChange={(e) => setNewTitle(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleAdd()}
-                className="text-sm border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-[#3C0078] transition-colors"
+                className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-[#3C0078] transition-colors"
               />
-              <div className="flex gap-2">
-                <input
-                  type="datetime-local"
-                  value={newDue}
-                  onChange={(e) => setNewDue(e.target.value)}
-                  className="flex-1 text-sm border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-[#3C0078] transition-colors"
-                />
-                <input
-                  type="text"
-                  placeholder="Course code"
-                  value={newCourse}
-                  onChange={(e) => setNewCourse(e.target.value)}
-                  className="w-28 text-sm border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-[#3C0078] transition-colors"
-                />
+              <input
+                type="datetime-local"
+                value={newDue}
+                onChange={(e) => setNewDue(e.target.value)}
+                className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-[#3C0078] transition-colors"
+              />
+              {/* Segmented share selector */}
+              <div className="flex rounded-lg border border-gray-200 overflow-hidden text-xs font-semibold">
+                <button
+                  type="button"
+                  onClick={() => setShareMode(false)}
+                  className={`flex-1 py-2 transition-colors ${
+                    !shareMode
+                      ? "bg-[#3C0078] text-white"
+                      : "bg-white text-gray-500 hover:bg-gray-50"
+                  }`}
+                >
+                  Just me
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShareMode(true)}
+                  className={`flex-1 py-2 border-l border-gray-200 transition-colors ${
+                    shareMode
+                      ? "bg-[#3C0078] text-white"
+                      : "bg-white text-gray-500 hover:bg-gray-50"
+                  }`}
+                >
+                  Share with co-lecturers
+                </button>
               </div>
               <div className="flex gap-2 justify-end">
                 <button
+                  type="button"
                   onClick={() => setIsAdding(false)}
                   className="px-3 py-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
+                  type="button"
                   onClick={handleAdd}
                   className="px-4 py-1.5 text-xs font-bold text-white bg-[#3C0078] rounded-lg hover:bg-[#2a0055] transition-colors"
                 >
@@ -201,7 +229,8 @@ export default function TeacherTodoProgress() {
         <AnimatePresence>
           {todos.map((todo) => {
             const isAdminTodo = !!todo.createdByAdminId;
-            const colors = isAdminTodo ? theme.admin : theme.teacher;
+            const isSharedTodo = !!todo.sharedByTeacherId;
+            const colors = isAdminTodo ? theme.admin : isSharedTodo ? theme.shared : theme.teacher;
             const IconComp = MdEditNote;
             return (
               <motion.div
@@ -223,10 +252,10 @@ export default function TeacherTodoProgress() {
                       className={`w-5 h-5 ${todo.isCompleted ? "text-gray-400" : colors.iconText}`}
                     />
                   </div>
-                  {/* Colored dot indicates source: purple = self, orange = admin */}
+                  {/* Colored dot indicates source: purple = self, orange = admin, green = shared */}
                   <span
                     className={`absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 border-white
-                      ${todo.isCompleted ? "bg-gray-300" : isAdminTodo ? "bg-[#FF8731]" : "bg-[#3C0078]"}`}
+                      ${todo.isCompleted ? "bg-gray-300" : colors.dot}`}
                   />
                 </div>
 
@@ -247,6 +276,11 @@ export default function TeacherTodoProgress() {
                     {isAdminTodo && todo.createdByAdminName && (
                       <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${colors.badge}`}>
                         {todo.createdByAdminName}
+                      </span>
+                    )}
+                    {isSharedTodo && todo.sharedByTeacherName && (
+                      <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${colors.badge}`}>
+                        {todo.sharedByTeacherName}
                       </span>
                     )}
                   </p>
