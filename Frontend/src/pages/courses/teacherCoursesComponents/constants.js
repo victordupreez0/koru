@@ -135,6 +135,36 @@ export const GRADE_DISPLAY_OPTIONS = ["Percentage", "Points", "Letter Grade", "C
 export const SUBMISSION_TYPE_OPTIONS = ["Online", "On Paper", "External Tool", "No Submission"];
 export const ASSIGN_TO_OPTIONS = ["Everyone", "Specific Section", "Individual Students"];
 
+export const EXTERNAL_TOOLS = [
+    {
+        id: "google",
+        name: "Google Assignments",
+        description: "Originality checking & grade sync via Google Workspace",
+        icon: "G",
+        color: "#4285F4",
+        bg: "bg-[#4285F4]/10",
+        baseUrl: "https://assignments.google.com",
+    },
+    {
+        id: "microsoft",
+        name: "Microsoft Teams",
+        description: "Assignments integrated with Microsoft 365 & Teams",
+        icon: "M",
+        color: "#0078D4",
+        bg: "bg-[#0078D4]/10",
+        baseUrl: "https://teams.microsoft.com",
+    },
+    {
+        id: "turnitin",
+        name: "Turnitin",
+        description: "Academic integrity & AI writing detection",
+        icon: "T",
+        color: "#E63946",
+        bg: "bg-[#E63946]/10",
+        baseUrl: "https://www.turnitin.com",
+    },
+];
+
 export const STUDENT_GRADES_DATA = [
     { id: 1, name: "Alice Johnson", email: "alice.j@student.ac.za", attendance: "95%", avgGrade: "88%", status: "Good", avatar: "AJ" },
     { id: 2, name: "Bob Smith", email: "bob.s@student.ac.za", attendance: "82%", avgGrade: "74%", status: "At Risk", avatar: "BS" },

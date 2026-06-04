@@ -1,5 +1,5 @@
 import React from "react";
-import { Plus, X, Eye, EyeOff, Edit2, Trash2, ChevronDown, ChevronRight, FileText, HelpCircle, MessageSquare, Users, ExternalLink, ClipboardList, Check, Loader } from "lucide-react";
+import { Plus, X, Eye, EyeOff, Edit2, Trash2, ChevronDown, ChevronRight, FileText, HelpCircle, MessageSquare, Users, ExternalLink, ClipboardList, Check, Loader, BookOpen } from "lucide-react";
 import { Folder } from "@solar-icons/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getCourseAssignments, createAssignment, updateAssignment, deleteAssignment, closeAssignment } from "../../../services/assignmentService";
@@ -7,7 +7,7 @@ import { getAssignmentGrades, createGrade, updateGrade, releaseAssignmentGrades 
 import { getCourseSubmissions, getAssignmentSubmissions, updateSubmission } from "../../../services/submissionService";
 import { getCourseStudentCount } from "../../../services/enrollmentService";
 import { useAuth } from "../../../contexts/AuthContext";
-import { staggerContainer, slideUp, ASSIGNMENT_TYPES, GRADE_DISPLAY_OPTIONS } from "./constants";
+import { staggerContainer, slideUp, ASSIGNMENT_TYPES, GRADE_DISPLAY_OPTIONS, EXTERNAL_TOOLS } from "./constants";
 
 function AssignmentTypeIcon({ type, size = 18 }) {
     const found = ASSIGNMENT_TYPES.find(t => t.id === type);
@@ -32,6 +32,8 @@ function CreateAssignmentDrawer({ onClose, onSave, initialData }) {
         closeDate: initialData?.closeDate ? new Date(initialData.closeDate).toISOString().slice(0,16) : "",
         dueDate: initialData?.dueDate ? new Date(initialData.dueDate).toISOString().slice(0,16) : "",
         allowMultipleAttempts: initialData?.allowMultipleAttempts ?? true,
+        externalToolName: initialData?.externalToolName ?? "",
+        externalToolUrl: initialData?.externalToolUrl ?? "",
         id: initialData?.id ?? null,
         submissions: initialData?.submissions ?? 0,
         totalStudents: initialData?.totalStudents ?? 0,
@@ -56,6 +58,8 @@ function CreateAssignmentDrawer({ onClose, onSave, initialData }) {
             ...form,
             maxPoints: form.points,
             quizQuestionsJson: form.type === "quiz" && quizQuestions.length > 0 ? JSON.stringify(quizQuestions) : null,
+            externalToolName: form.type === "external" ? (form.externalToolName || null) : null,
+            externalToolUrl: form.type === "external" ? (form.externalToolUrl || null) : null,
         };
         onSave(payload);
     };
@@ -188,6 +192,50 @@ function CreateAssignmentDrawer({ onClose, onSave, initialData }) {
                             </div>
                         </div>
                     </div>
+
+                    {form.type === "external" && (
+                        <div>
+                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3 block">External Tool</label>
+                            <div className="grid grid-cols-2 gap-3 mb-4">
+                                {EXTERNAL_TOOLS.map(tool => (
+                                    <button
+                                        key={tool.id}
+                                        type="button"
+                                        onClick={() => {
+                                            handleChange("externalToolName", tool.name);
+                                            if (!form.externalToolUrl) handleChange("externalToolUrl", tool.baseUrl);
+                                        }}
+                                        className={`flex items-center gap-3 p-4 rounded-2xl border-2 text-left transition-all ${
+                                            form.externalToolName === tool.name
+                                                ? "border-[#6366F1] bg-[#6366F1]/5"
+                                                : "border-gray-100 hover:border-gray-200 bg-gray-50"
+                                        }`}
+                                    >
+                                        <span
+                                            className={`w-10 h-10 rounded-xl ${tool.bg} flex items-center justify-center text-base font-black shrink-0`}
+                                            style={{ color: tool.color }}
+                                        >
+                                            {tool.icon}
+                                        </span>
+                                        <div className="min-w-0">
+                                            <p className={`text-xs font-bold leading-tight truncate ${
+                                                form.externalToolName === tool.name ? "text-[#6366F1]" : "text-gray-700"
+                                            }`}>{tool.name}</p>
+                                            <p className="text-[10px] text-gray-400 leading-tight mt-0.5">{tool.description}</p>
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2 block">Tool URL / Launch Link</label>
+                            <input
+                                type="url"
+                                placeholder="https://..."
+                                value={form.externalToolUrl}
+                                onChange={e => handleChange("externalToolUrl", e.target.value)}
+                                className="w-full bg-gray-50 rounded-2xl px-5 py-4 text-gray-900 font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-[#6366F1]/20 border border-transparent transition-all"
+                            />
+                        </div>
+                    )}
 
                     {form.type === "quiz" && (
                         <div>
@@ -510,7 +558,185 @@ function TeacherSubmissionReview({ assignment, onBack }) {
     );
 }
 
-function AssignmentGroupRow({ group, onTogglePublish, onDelete, onEdit, onClose, onView }) {
+function AssignmentPreviewDrawer({ assignment, onClose }) {
+    const typeInfo = ASSIGNMENT_TYPES.find(t => t.id === assignment.type);
+    const Icon = typeInfo?.icon || FileText;
+
+    const quizQuestions = React.useMemo(() => {
+        if (assignment.type !== "quiz" || !assignment.quizQuestionsJson) return [];
+        try { return JSON.parse(assignment.quizQuestionsJson); } catch { return []; }
+    }, [assignment]);
+
+    const externalTool = assignment.externalToolName
+        ? EXTERNAL_TOOLS.find(t => t.name === assignment.externalToolName)
+        : null;
+
+    return (
+        <AnimatePresence>
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100]"
+                onClick={onClose}
+            />
+            <motion.div
+                initial={{ x: "100%" }}
+                animate={{ x: 0 }}
+                exit={{ x: "100%" }}
+                transition={{ type: "spring", damping: 28, stiffness: 220 }}
+                className="fixed right-0 top-0 bottom-0 z-[101] w-full max-w-xl bg-white shadow-2xl flex flex-col overflow-hidden"
+                style={{ borderRadius: "40px 0 0 40px" }}
+            >
+                <div className="flex justify-between items-center px-10 py-8 border-b border-gray-100 shrink-0">
+                    <div>
+                        <div className="flex items-center gap-3 mb-1">
+                            <h2 className="text-2xl font-bold text-gray-900">Assignment Preview</h2>
+                            <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-[#3C0078]/10 text-[#3C0078]">Student View</span>
+                        </div>
+                        <p className="text-sm text-gray-400">This is what students see</p>
+                    </div>
+                    <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-500">
+                        <X size={22} />
+                    </button>
+                </div>
+
+                <div className="flex-1 overflow-y-auto px-10 py-8 space-y-7">
+                    <div className="bg-[#3C0078]/5 rounded-[28px] p-6">
+                        <div className="flex items-start gap-4">
+                            <span className={`inline-flex items-center justify-center w-12 h-12 rounded-2xl ${typeInfo?.bg || "bg-gray-100"} shrink-0`}>
+                                <Icon size={22} style={{ color: typeInfo?.color || "#64748B" }} />
+                            </span>
+                            <div className="flex-1 min-w-0">
+                                <h1 className="text-xl font-bold text-gray-900 leading-tight">{assignment.title}</h1>
+                                <div className="flex items-center gap-3 mt-2 flex-wrap">
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">{typeInfo?.label}</span>
+                                    {assignment.points != null && (
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-[#3C0078]">{assignment.points} pts</span>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {(assignment.openDate || assignment.dueDate || assignment.closeDate) && (
+                        <div>
+                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3 block">Timeline</label>
+                            <div className="bg-gray-50 rounded-[24px] p-5 space-y-3">
+                                {assignment.openDate && (
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-xs font-bold text-gray-500">Opens</span>
+                                        <span className="text-xs text-green-600 font-semibold">{new Date(assignment.openDate).toLocaleString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
+                                    </div>
+                                )}
+                                {assignment.dueDate && (
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-xs font-bold text-gray-500">Due Date</span>
+                                        <span className="text-xs text-orange-500 font-semibold">{new Date(assignment.dueDate).toLocaleString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
+                                    </div>
+                                )}
+                                {assignment.closeDate && (
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-xs font-bold text-gray-500">Closes</span>
+                                        <span className="text-xs text-red-500 font-semibold">{new Date(assignment.closeDate).toLocaleString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {assignment.description && (
+                        <div>
+                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3 block">Instructions</label>
+                            <div className="bg-gray-50 rounded-[24px] p-5 text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
+                                {assignment.description}
+                            </div>
+                        </div>
+                    )}
+
+                    {assignment.type === "external" && (
+                        <div>
+                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3 block">External Tool</label>
+                            {assignment.externalToolName || assignment.externalToolUrl ? (
+                                <div className="bg-gray-50 rounded-[24px] p-5 flex items-center gap-4">
+                                    {externalTool ? (
+                                        <span
+                                            className={`w-12 h-12 rounded-2xl ${externalTool.bg} flex items-center justify-center text-lg font-black shrink-0`}
+                                            style={{ color: externalTool.color }}
+                                        >
+                                            {externalTool.icon}
+                                        </span>
+                                    ) : (
+                                        <span className="w-12 h-12 rounded-2xl bg-[#6366F1]/10 flex items-center justify-center shrink-0">
+                                            <ExternalLink size={20} style={{ color: "#6366F1" }} />
+                                        </span>
+                                    )}
+                                    <div className="flex-1 min-w-0">
+                                        <p className="font-bold text-gray-900">{assignment.externalToolName || "External Tool"}</p>
+                                        {assignment.externalToolUrl && (
+                                            <p className="text-xs text-gray-400 truncate mt-0.5">{assignment.externalToolUrl}</p>
+                                        )}
+                                    </div>
+                                    {assignment.externalToolUrl && (
+                                        <a
+                                            href={assignment.externalToolUrl}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl bg-[#6366F1]/10 text-[#6366F1] text-xs font-bold hover:bg-[#6366F1]/20 transition-colors"
+                                        >
+                                            <ExternalLink size={13} /> Launch
+                                        </a>
+                                    )}
+                                </div>
+                            ) : (
+                                <p className="text-xs text-gray-400 bg-gray-50 rounded-2xl px-5 py-4">No external tool configured.</p>
+                            )}
+                        </div>
+                    )}
+
+                    {assignment.type === "quiz" && quizQuestions.length > 0 && (
+                        <div>
+                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3 block">Quiz Questions ({quizQuestions.length})</label>
+                            <div className="space-y-4">
+                                {quizQuestions.map((q, qi) => (
+                                    <div key={qi} className="bg-gray-50 rounded-[24px] p-5 space-y-3">
+                                        <div className="flex items-start gap-3">
+                                            <span className="w-6 h-6 rounded-full bg-[#FF8731]/20 text-[#FF8731] text-[10px] font-black flex items-center justify-center shrink-0 mt-0.5">{qi + 1}</span>
+                                            <p className="text-sm text-gray-900 font-semibold flex-1">{q.question || <span className="text-gray-400 italic">No question text</span>}</p>
+                                        </div>
+                                        <div className="space-y-2 pl-9">
+                                            {q.options?.map((opt, oi) => (
+                                                <div key={oi} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm ${
+                                                    q.correctAnswer === oi ? "bg-green-50 text-green-700 font-semibold" : "bg-white text-gray-600"
+                                                }`}>
+                                                    <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                                                        q.correctAnswer === oi ? "border-green-500 bg-green-500" : "border-gray-300"
+                                                    }`}>
+                                                        {q.correctAnswer === oi && <span className="w-2 h-2 rounded-full bg-white" />}
+                                                    </span>
+                                                    {opt || <span className="text-gray-400 italic">Empty option</span>}
+                                                    {q.correctAnswer === oi && <span className="ml-auto text-[10px] font-black uppercase tracking-widest text-green-600">Correct</span>}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                <div className="px-10 py-6 border-t border-gray-100 shrink-0">
+                    <button onClick={onClose} className="w-full py-4 rounded-2xl border-2 border-gray-200 text-gray-700 font-bold text-xs uppercase tracking-widest hover:bg-gray-50 transition-all">
+                        Close Preview
+                    </button>
+                </div>
+            </motion.div>
+        </AnimatePresence>
+    );
+}
+
+function AssignmentGroupRow({ group, onTogglePublish, onDelete, onEdit, onClose, onView, onPreview }) {
     const [expanded, setExpanded] = React.useState(true);
 
     return (
@@ -572,6 +798,10 @@ function AssignmentGroupRow({ group, onTogglePublish, onDelete, onEdit, onClose,
                                         </div>
                                     </div>
 
+                                    <button onClick={() => onPreview(item)} className="shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-50 text-gray-500 font-bold text-[10px] uppercase tracking-widest hover:bg-gray-100 transition-all" title="Preview assignment">
+                                        <BookOpen size={14} /> Preview
+                                    </button>
+
                                     <button onClick={() => onView(item)} className="shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl bg-[#3C0078]/5 text-[#3C0078] font-bold text-[10px] uppercase tracking-widest hover:bg-[#3C0078]/10 transition-all" title="Review submissions">
                                         <Users size={14} /> Review
                                     </button>
@@ -614,6 +844,7 @@ export function CourseAssignmentsView({ subject, activeCourseId }) {
     const [activeTypeFilter, setActiveTypeFilter] = React.useState("all");
     const [saving, setSaving] = React.useState(false);
     const [reviewingAssignment, setReviewingAssignment] = React.useState(null);
+    const [previewingAssignment, setPreviewingAssignment] = React.useState(null);
 
     const loadData = React.useCallback(async () => {
         if (!activeCourseId) return;
@@ -692,6 +923,8 @@ export function CourseAssignmentsView({ subject, activeCourseId }) {
                 isClosed: false,
                 allowMultipleAttempts: formData.allowMultipleAttempts ?? true,
                 quizQuestionsJson: formData.quizQuestionsJson ?? null,
+                externalToolName: formData.externalToolName ?? null,
+                externalToolUrl: formData.externalToolUrl ?? null,
             };
             if (editingAssignment) {
                 await updateAssignment(editingAssignment.id, { ...payload, id: editingAssignment.id });
@@ -810,6 +1043,7 @@ export function CourseAssignmentsView({ subject, activeCourseId }) {
                             onEdit={handleEdit}
                             onClose={handleClose}
                             onView={(item) => setReviewingAssignment(item)}
+                            onPreview={(item) => setPreviewingAssignment(item)}
                         />
                     ))
                 )}
@@ -820,6 +1054,13 @@ export function CourseAssignmentsView({ subject, activeCourseId }) {
                     onClose={() => { setShowDrawer(false); setEditingAssignment(null); }}
                     onSave={handleSave}
                     initialData={editingAssignment}
+                />
+            )}
+
+            {previewingAssignment && (
+                <AssignmentPreviewDrawer
+                    assignment={previewingAssignment}
+                    onClose={() => setPreviewingAssignment(null)}
                 />
             )}
         </motion.div>

@@ -119,6 +119,8 @@ namespace LearnOnline.Controllers
             assignment.IsClosed = updated.IsClosed;
             assignment.AllowMultipleAttempts = updated.AllowMultipleAttempts;
             assignment.QuizQuestionsJson = updated.QuizQuestionsJson;
+            assignment.ExternalToolName = updated.ExternalToolName;
+            assignment.ExternalToolUrl = updated.ExternalToolUrl;
 
             await _context.SaveChangesAsync();
             return NoContent();
