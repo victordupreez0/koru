@@ -252,13 +252,15 @@ export default function SettingsPage() {
   }, [activeTab]);
 
   return (
-    <div data-tts-root="true" className={`h-screen overflow-hidden -ml-4 -mr-8 -mt-6 bg-gray-50/10 ${settings.font === "OpenDyslexic" ? "dyslexic-font" : ""} ${pageClasses.wrapper}`}>
-      <div className="flex h-full">
-        {/* Left Section: Full-Height Settings Secondary Navigation (Matching Courses) */}
+    <div data-tts-root="true" className={`flex overflow-hidden gap-4 transition-all duration-300 md:h-[calc(100vh-32px)] md:w-full max-md:h-screen max-md:w-screen max-md:-ml-4 max-md:-mr-4 max-md:-mt-4 bg-transparent ${settings.font === "OpenDyslexic" ? "dyslexic-font" : ""} ${pageClasses.wrapper}`}>
+      <div className="flex h-full w-full gap-4 overflow-hidden">
+        {/* Left Section: Floating Settings Secondary Navigation (Matching Courses) */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
-          className="h-full w-64 bg-white/80 backdrop-blur-md border-r border-gray-200/50 flex flex-col shrink-0"
+          className="flex flex-col shrink-0 transition-all duration-300
+            md:h-full md:w-64 md:bg-white/70 md:backdrop-blur-xl md:border md:border-white/20 md:rounded-[28px] md:shadow-lg md:overflow-hidden
+            max-md:h-full max-md:w-64 max-md:bg-white/80 max-md:backdrop-blur-md max-md:border-r max-md:border-gray-200/50"
         >
           {/* Settings Sidebar Header Info */}
           <div className="px-6 pt-6 pb-5 border-b border-gray-100 flex flex-col gap-2 shrink-0 select-none">
@@ -340,8 +342,8 @@ export default function SettingsPage() {
           </div>
         </motion.div>
 
-        {/* Right Section: Main Content Area */}
-        <div className="flex-1 flex flex-col overflow-hidden bg-white">
+        {/* Right Section: Main Content Area: Floating Island Card */}
+        <div className="flex-1 flex flex-col overflow-hidden transition-all duration-300 md:bg-white/75 md:backdrop-blur-xl md:border md:border-white/20 md:rounded-[28px] md:shadow-lg max-md:bg-white">
           {/* Header Top Bar */}
           <div className="h-14 border-b border-gray-100 bg-white/60 backdrop-blur-md flex items-center justify-between px-8 z-10 shrink-0 select-none">
             <div className="flex items-center gap-3">
@@ -354,7 +356,7 @@ export default function SettingsPage() {
           </div>
 
           {/* Scrollable View Content */}
-          <div className="flex-1 overflow-y-auto pt-8 px-8 pb-12 bg-white">
+          <div className="flex-1 overflow-y-auto pt-8 px-8 pb-12">
             <div className="w-full flex flex-col gap-6">
               <AnimatePresence mode="wait">
                 <motion.div
