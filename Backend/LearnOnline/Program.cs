@@ -103,7 +103,12 @@ using (var scope = app.Services.CreateScope())
             ALTER TABLE ""CheckInSessions"" ADD COLUMN IF NOT EXISTS ""AutoCloseAt"" timestamp with time zone NULL;
             INSERT INTO ""__EFMigrationsHistory"" (""MigrationId"", ""ProductVersion"")
             VALUES ('20260603140000_AddCheckInSessionSettings', '9.0.3')
-            ON CONFLICT DO NOTHING;";
+            ON CONFLICT DO NOTHING;
+            -- Ensure IsVisible/Degree columns exist (in case Rikus's migration hasn't run yet),
+            -- then flip all existing courses to published so the Courses page isn't empty.
+            ALTER TABLE ""Courses"" ADD COLUMN IF NOT EXISTS ""IsVisible"" boolean NOT NULL DEFAULT FALSE;
+            ALTER TABLE ""Courses"" ADD COLUMN IF NOT EXISTS ""Degree"" text NULL;
+            UPDATE ""Courses"" SET ""IsVisible"" = TRUE WHERE ""IsVisible"" = FALSE;";
         cmd.ExecuteNonQuery();
     }
     conn.Close();
