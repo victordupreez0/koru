@@ -30,8 +30,8 @@ export default function CourseAnnouncementsView({ activeCourseId }) {
     const selectedAnnouncement = announcements.find(a => a.id === selectedId);
 
     return (
-        <motion.div className="flex-1 p-8 overflow-y-auto" initial="hidden" animate="visible" variants={staggerContainer}>
-            <motion.header variants={slideUp} className="mb-12">
+        <motion.div className="flex-1 overflow-y-auto" initial="hidden" animate="visible" variants={staggerContainer}>
+            <motion.header variants={slideUp} className="mb-6">
                 <h1 className="text-3xl font-semibold tracking-tight">Announcements</h1>
                 <p className="text-gray-500 mt-2">Latest updates from your lecturers</p>
             </motion.header>
@@ -42,7 +42,7 @@ export default function CourseAnnouncementsView({ activeCourseId }) {
                         key={post.id}
                         onClick={() => setSelectedId(post.id)}
                         variants={slideUp}
-                        className="bg-white p-8 rounded-[38px] border border-gray-100 shadow-sm hover:shadow-xl transition-all cursor-pointer relative overflow-hidden group"
+                        className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl transition-all cursor-pointer relative overflow-hidden group"
                     >
                         <div
                             className="absolute left-0 top-0 bottom-0 w-1.5"
@@ -91,15 +91,15 @@ export default function CourseAnnouncementsView({ activeCourseId }) {
                                 animate={{ opacity: 1, scale: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 0.9, y: 20 }}
                                 transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                                className="bg-white w-full max-w-2xl rounded-[48px] shadow-2xl relative overflow-hidden pointer-events-auto"
+                                className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl relative overflow-hidden pointer-events-auto"
                             >
                                 <div
                                     className="absolute left-0 top-0 bottom-0 w-3"
                                     style={{ backgroundColor: selectedAnnouncement.color }}
                                 />
 
-                                <div className="p-12">
-                                    <div className="flex justify-between items-start mb-10">
+                                <div className="p-8">
+                                    <div className="flex justify-between items-start mb-6">
                                         <div className="flex items-center gap-4">
                                             <span className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest text-white" style={{ backgroundColor: selectedAnnouncement.color }}>
                                                 {selectedAnnouncement.label}
@@ -123,7 +123,7 @@ export default function CourseAnnouncementsView({ activeCourseId }) {
                                         {selectedAnnouncement.title}
                                     </h2>
 
-                                    <div className="flex items-center gap-3 mb-10 pb-10 border-b border-gray-100">
+                                    <div className="flex items-center gap-3 mb-6 pb-6 border-b border-gray-100">
                                         <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-[#3C0078]">
                                             <User size={20} />
                                         </div>
@@ -142,7 +142,7 @@ export default function CourseAnnouncementsView({ activeCourseId }) {
                                         </p>
                                     </div>
 
-                                    <div className="mt-12 flex items-center justify-between">
+                                    <div className="mt-8 flex items-center justify-between">
                                         <button
                                             onClick={() => setSelectedId(null)}
                                             className="px-8 py-3 rounded-2xl bg-[#3C0078]/5 text-[#3C0078] font-bold text-xs uppercase tracking-widest hover:bg-[#3C0078] hover:text-white transition-all"

@@ -113,7 +113,7 @@ export default function StudentCourses() {
                 )}
 
                 {/* Scrollable View Content */}
-                <div className="flex-1 overflow-y-auto pt-6 px-8 pb-12">
+                <div className="flex-1 overflow-y-auto pt-4 px-6 pb-8">
                     {isItemDetailPage ? (
                         <CourseItemView activeCourseId={activeCourseId} activeItemId={activeItemId} isStudentView={true} />
                     ) : isAssignmentDetailPage ? (

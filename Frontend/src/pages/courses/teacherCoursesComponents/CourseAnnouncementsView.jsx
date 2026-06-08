@@ -40,8 +40,8 @@ export function CourseAnnouncementsView() {
     };
 
     return (
-        <motion.div className="flex-1 p-8 overflow-y-auto" initial="hidden" animate="visible" variants={staggerContainer}>
-            <motion.header variants={slideUp} className="mb-12 flex justify-between items-end">
+        <motion.div className="flex-1 overflow-y-auto" initial="hidden" animate="visible" variants={staggerContainer}>
+            <motion.header variants={slideUp} className="mb-6 flex justify-between items-end">
                 <div>
                     <h1 className="text-3xl font-semibold tracking-tight">Announcements</h1>
                     <p className="text-gray-500 mt-2">Latest updates from your lecturers</p>
@@ -64,7 +64,7 @@ export function CourseAnnouncementsView() {
                             initial={{ opacity: 0, y: -20, height: 0 }}
                             animate={{ opacity: 1, y: 0, height: "auto" }}
                             exit={{ opacity: 0, y: -20, height: 0 }}
-                            className="bg-white p-8 rounded-[38px] border-2 border-dashed border-[#3C0078]/20 shadow-sm mb-12 overflow-hidden"
+                            className="bg-white p-6 rounded-3xl border-2 border-dashed border-[#3C0078]/20 shadow-sm mb-6 overflow-hidden"
                         >
                             <div className="flex justify-between items-center mb-8">
                                 <h3 className="text-xl font-bold text-gray-900 italic">Drafting New Announcement</h3>
@@ -136,7 +136,7 @@ export function CourseAnnouncementsView() {
                             layoutId={`ann_container_${post.id}`}
                             onClick={() => setSelectedId(post.id)}
                             variants={slideUp} 
-                            className="bg-white p-8 rounded-[38px] border border-gray-100 shadow-sm hover:shadow-xl transition-all cursor-pointer relative overflow-hidden group"
+                            className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl transition-all cursor-pointer relative overflow-hidden group"
                         >
                             <motion.div 
                                 layoutId={`ann_stripe_${post.id}`}
@@ -183,7 +183,7 @@ export function CourseAnnouncementsView() {
                         <div className="fixed inset-0 z-[101] flex items-center justify-center p-4 pointer-events-none">
                             <motion.div
                                 layoutId={`ann_container_${selectedId}`}
-                                className="bg-white w-full max-w-2xl rounded-[48px] shadow-2xl relative overflow-hidden pointer-events-auto"
+                                className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl relative overflow-hidden pointer-events-auto"
                                 transition={{ type: "spring", damping: 25, stiffness: 200 }}
                             >
                                 <motion.div 
@@ -192,8 +192,8 @@ export function CourseAnnouncementsView() {
                                     style={{ backgroundColor: selectedAnnouncement.color }} 
                                 />
                                 
-                                <div className="p-12">
-                                    <div className="flex justify-between items-start mb-10">
+                                <div className="p-8">
+                                    <div className="flex justify-between items-start mb-6">
                                         <motion.div layoutId={`ann_meta_${selectedId}`} className="flex items-center gap-4">
                                             <span className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest text-white" style={{ backgroundColor: selectedAnnouncement.color }}>
                                                 {selectedAnnouncement.label}
@@ -220,7 +220,7 @@ export function CourseAnnouncementsView() {
                                         {selectedAnnouncement.title}
                                     </motion.h2>
 
-                                    <motion.div layoutId={`ann_author_${selectedId}`} className="flex items-center gap-3 mb-10 pb-10 border-b border-gray-100">
+                                    <motion.div layoutId={`ann_author_${selectedId}`} className="flex items-center gap-3 mb-6 pb-6 border-b border-gray-100">
                                         <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-[#3C0078]">
                                             <User size={20} />
                                         </div>
@@ -248,7 +248,7 @@ export function CourseAnnouncementsView() {
                                         initial={{ opacity: 0, y: 10 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ delay: 0.3 }}
-                                        className="mt-12 flex items-center justify-between"
+                                        className="mt-8 flex items-center justify-between"
                                     >
                                         <button 
                                             onClick={() => setSelectedId(null)}

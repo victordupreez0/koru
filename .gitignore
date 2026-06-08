@@ -6,3 +6,9 @@ node_modules
 *.env.*
 .DS_Store
 
+# .NET / C# ignores
+[Bb]in/
+[Oo]bj/
+*.user
+*.suo
+.vs/

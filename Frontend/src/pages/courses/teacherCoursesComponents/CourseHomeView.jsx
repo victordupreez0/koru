@@ -72,8 +72,8 @@ export function CourseHomeView({ subject, course, loading }) {
   const courseImage = subject?.imageUrl || sampleImg;
 
   return (
-    <div className="flex-1 flex flex-col p-12 overflow-y-auto scrollbar-hide">
-      <header className="mb-12">
+    <div className="flex-1 flex flex-col overflow-y-auto scrollbar-hide">
+      <header className="mb-6">
         <h1 className="text-4xl font-semibold tracking-tight">
           {loading ? "Loading course details..." : `${subject?.name || "Unknown"} | ${course?.term || ""}`}
         </h1>
@@ -81,8 +81,8 @@ export function CourseHomeView({ subject, course, loading }) {
       </header>
 
       {/* Left column – course overview with todo, next class & announcements */}
-      <main className="space-y-24 w-full flex flex-col items-center">
-        <div className="w-full h-[250px] rounded-xl shadow-sm overflow-hidden">
+      <main className="space-y-12 w-full flex flex-col items-center">
+        <div className="w-full h-[300px] rounded-3xl shadow-sm overflow-hidden">
           <img 
             src={courseImage} 
             alt={subject?.name} 
@@ -90,10 +90,10 @@ export function CourseHomeView({ subject, course, loading }) {
           />
         </div>
         
-        <div className="w-full max-w-6xl space-y-24">
+        <div className="w-full max-w-6xl space-y-12">
           <section>
-            <h2 className="text-3xl font-bold mb-12 tracking-tight">Course Overview</h2>
-            <div className="flex flex-col md:flex-row gap-24 items-stretch">
+            <h2 className="text-3xl font-bold mb-6 tracking-tight">Course Overview</h2>
+            <div className="flex flex-col md:flex-row gap-12 items-stretch">
               <div className="flex-1 flex flex-col justify-between">
                 <div>
                   <h3 className="font-bold text-xs mb-6 uppercase tracking-[0.2em] text-[#3C0078] border-b-2 border-[#3C0078] inline-block pb-1">
@@ -110,7 +110,7 @@ export function CourseHomeView({ subject, course, loading }) {
                 </div>
               </div>
 
-              <div className="flex-1 flex flex-col justify-between border-l border-gray-100 pl-24">
+              <div className="flex-1 flex flex-col justify-between border-l border-gray-100 pl-12">
                 <div>
                   <h3 className="font-bold text-xs mb-6 uppercase tracking-[0.2em] text-[#3C0078] border-b-2 border-[#3C0078] inline-block pb-1">
                     Term 2
@@ -128,7 +128,7 @@ export function CourseHomeView({ subject, course, loading }) {
             </div>
           </section>
 
-          <section className="w-full pt-20 pb-20 border-t border-gray-100/50">
+          <section className="w-full pt-10 pb-10 border-t border-gray-100/50">
             <div className="flex flex-col lg:flex-row items-center relative">
               
               {/* Universal Edit Button - Top Right of the Image/Text block */}
@@ -167,7 +167,7 @@ export function CourseHomeView({ subject, course, loading }) {
 
               {/* Column 2: Lecturer Details & Buttons - Tightened gap with Image */}
               <div className="w-full lg:w-2/5 flex flex-col items-start text-left lg:border-l border-gray-100 lg:pl-12 ml-[-1%]">
-                <div className="mb-10 w-full">
+                <div className="mb-6 w-full">
                   <span className="text-[12px] font-black uppercase tracking-[0.4em] text-[#3C0078] mb-3 block">Module Head</span>
                   {isEditing ? (
                     <input
@@ -192,7 +192,7 @@ export function CourseHomeView({ subject, course, loading }) {
                   )}
                 </div>
 
-                <div className="flex flex-col gap-4 w-full">
+                <div className="flex flex-col gap-3 w-full">
                   <div className="relative w-full">
                     <button 
                       type="button"

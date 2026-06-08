@@ -10,8 +10,8 @@ export function CourseModulesView() {
       </div>
 
       {/* Main Content: Nested View with rounded border from screenshot */}
-      <div className="flex-1 p-8 overflow-y-auto pb-24 ">
-        <div className="bg-white p-12 rounded-[40px] border-2 border-gray-300 shadow-sm relative">
+      <div className="flex-1 overflow-y-auto pb-24 ">
+        <div className="bg-white p-6 rounded-3xl border-2 border-gray-300 shadow-sm relative">
           <header className="mb-8">
             <h1 className="text-2xl font-semibold tracking-tight">User Experience Design 300 | Semester 1</h1>
             <p className="text-lg text-gray-700 mt-1">UX300</p>
