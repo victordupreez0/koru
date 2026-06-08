@@ -144,7 +144,7 @@ export const subjectService = {
 };
 
 /**
- * Enrollment Service - For bulk enrollments and loading registry stats.
+ * Enrollment Service - For reading and creating student enrollments.
  */
 export const enrollmentService = {
   async getAllEnrollments() {
@@ -155,24 +155,15 @@ export const enrollmentService = {
     return handleResponse(res);
   },
 
+  async getAll() {
+    return this.getAllEnrollments();
+  },
+
   async bulkEnrollStudents(courseId, studentIds) {
     const res = await fetch(`${API_BASE}/Enrollment/course/${courseId}/students`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(studentIds)
-    });
-    return handleResponse(res);
-  }
-};
-
-/**
- * Enrollment Service - For reading and creating student enrollments.
- */
-export const enrollmentService = {
-  async getAll() {
-    const res = await fetch(`${API_BASE}/Enrollment`, {
-      method: "GET",
-      headers: { "Content-Type": "application/json" }
     });
     return handleResponse(res);
   },
