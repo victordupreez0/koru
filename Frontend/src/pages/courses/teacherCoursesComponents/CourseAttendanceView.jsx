@@ -2,12 +2,20 @@ import React, { useState, useEffect } from "react";
 import { Folder, CheckCircle, Filter } from "@solar-icons/react";
 import { motion } from "framer-motion";
 import AttendanceChart from "../../../components/UI/attendanceChart";
-import { getCourseAttendance } from "../../../services/attendanceService";
+import { getCourseAttendance, updateAttendanceRecord } from "../../../services/attendanceService";
+import StudentAttendanceDetailModal from "../../../components/StudentAttendanceDetailModal";
 import { staggerContainer, slideUp, scaleIn } from "./constants";
 
 export function CourseAttendanceView({ activeCourseId }) {
     const [records, setRecords] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [selectedStudent, setSelectedStudent] = useState(null);
+
+    const handleUpdateStatus = async (recordId, newStatus) => {
+        await updateAttendanceRecord(recordId, newStatus);
+        setRecords(prev => prev.map(rec => rec.id === recordId ? { ...rec, status: newStatus } : rec));
+    };
+
 
     useEffect(() => {
         if (!activeCourseId) return;
@@ -198,7 +206,10 @@ export function CourseAttendanceView({ activeCourseId }) {
                                             </span>
                                         </td>
                                         <td className="px-10 py-6 text-right">
-                                            <button className="px-5 py-2 rounded-xl border border-gray-100 text-[10px] font-black uppercase tracking-[0.15em] text-gray-400 group-hover:bg-[#3C0078] group-hover:text-white group-hover:border-[#3C0078] transition-all whitespace-nowrap shadow-sm">
+                                            <button
+                                                onClick={() => setSelectedStudent(student)}
+                                                className="px-5 py-2 rounded-xl border border-gray-100 text-[10px] font-black uppercase tracking-[0.15em] text-gray-400 group-hover:bg-[#3C0078] group-hover:text-white group-hover:border-[#3C0078] transition-all whitespace-nowrap shadow-sm"
+                                            >
                                                 View Student
                                             </button>
                                         </td>
@@ -209,6 +220,14 @@ export function CourseAttendanceView({ activeCourseId }) {
                     </table>
                 )}
             </motion.div>
+
+            <StudentAttendanceDetailModal
+                isOpen={!!selectedStudent}
+                onClose={() => setSelectedStudent(null)}
+                student={selectedStudent}
+                records={records}
+                onUpdateStatus={handleUpdateStatus}
+            />
         </motion.div>
     );
 }

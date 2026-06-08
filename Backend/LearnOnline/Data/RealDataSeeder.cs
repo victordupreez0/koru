@@ -1,4 +1,4 @@
-﻿using LearnOnline.Models;
+using LearnOnline.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace LearnOnline.Data
@@ -111,7 +111,8 @@ namespace LearnOnline.Data
                 var dv300OK = context.Courses
                     .Include(c => c.Subject)
                     .Any(c => c.Subject.Code == "DV300" && c.TeacherId == existingDevTeacher.Id);
-                if (dv300OK && context.Attendances.Any()) return;
+                var hasUngradedWork = context.Assignments.Any(a => a.Title == "Interactive Website Project");
+                if (dv300OK && context.Attendances.Any() && hasUngradedWork) return;
             }
 
             // Rebuild Announcements table (prevents schema drift across restarts)
@@ -225,6 +226,10 @@ namespace LearnOnline.Data
                 "Interactive Form Validation App",
                 "Build a multi-step registration form with real-time client-side validation, accessible error messaging, and an animated confirmation screen using JavaScript and CSS transitions.",
                 50, SA(5, 26), SA(6, 14), false);
+            var dv100Ungraded = MakeAssignment(context, dv100.Id,
+                "Interactive Website Project",
+                "Create a multi-page interactive website showcasing dynamic visual elements, API fetches, and form inputs.",
+                100, SA(5, 10), SA(6, 12), false);
 
             // DV200
             var dv200A1 = MakeAssignment(context, dv200.Id,
@@ -243,6 +248,10 @@ namespace LearnOnline.Data
                 "Authentication System Implementation",
                 "Extend your CRUD application with JWT-based authentication: registration, login, protected routes, refresh tokens, and a user profile page with avatar upload.",
                 50, SA(5, 26), SA(6, 16), false);
+            var dv200Ungraded = MakeAssignment(context, dv200.Id,
+                "React Native Mobile App",
+                "Build a mobile app with React Native including navigation, list views, and details page.",
+                100, SA(5, 10), SA(6, 12), false);
 
             // DV300
             var dv300A1 = MakeAssignment(context, dv300.Id,
@@ -261,6 +270,10 @@ namespace LearnOnline.Data
                 "Full-Stack Application - Sprint 2",
                 "Complete the full feature set of your term project, implement automated testing for all critical paths, record a 5-minute walkthrough video, and present a live demo to the class.",
                 100, SA(5, 26), SA(6, 13), false);
+            var dv300Ungraded = MakeAssignment(context, dv300.Id,
+                "Cloud Deployment Sprints",
+                "Document cloud deployment strategies, CI/CD pipelines, and scale systems.",
+                100, SA(5, 10), SA(6, 12), false);
 
             // CC200
             var cc200A1 = MakeAssignment(context, cc200.Id,
@@ -279,6 +292,10 @@ namespace LearnOnline.Data
                 "Brand Identity System Draft",
                 "Design the foundational brand identity for a fictitious company: primary and secondary logos, colour palette with hex values, typeface selection with rationale, and a one-page brand style guide.",
                 50, SA(5, 26), SA(6, 12), false);
+            var cc200Ungraded = MakeAssignment(context, cc200.Id,
+                "Brand Visual Guidelines",
+                "Develop standard brand guidelines for typography, colors, and layout constraints.",
+                100, SA(5, 10), SA(6, 12), false);
 
             // CC300
             var cc300A1 = MakeAssignment(context, cc300.Id,
@@ -297,6 +314,10 @@ namespace LearnOnline.Data
                 "Interactive Installation Brief",
                 "Submit a detailed written brief (1500 words + visual references) for your end-of-year interactive installation. Include concept rationale, technical specifications, floor plan, and visitor experience flow.",
                 50, SA(5, 26), SA(6, 16), false);
+            var cc300Ungraded = MakeAssignment(context, cc300.Id,
+                "Generative Audio Art Piece",
+                "Code an interactive generative sound generator using p5.sound library.",
+                100, SA(5, 10), SA(6, 12), false);
 
             // VC200
             var vc200A1 = MakeAssignment(context, vc200.Id,
@@ -315,6 +336,10 @@ namespace LearnOnline.Data
                 "Visual Narrative Board",
                 "Create a 10-panel visual narrative using a combination of photography, illustration, and text. The narrative must be fully legible to a viewer without any accompanying caption or explanation.",
                 50, SA(5, 26), SA(6, 15), false);
+            var vc200Ungraded = MakeAssignment(context, vc200.Id,
+                "Photojournalism Portfolio",
+                "Submit a photojournalism sequence of 8 edited photos responding to a local news theme.",
+                100, SA(5, 10), SA(6, 12), false);
 
             // VC300
             var vc300A1 = MakeAssignment(context, vc300.Id,
@@ -333,6 +358,10 @@ namespace LearnOnline.Data
                 "Final Visual Culture Presentation",
                 "Deliver a 10-minute in-class presentation on a self-chosen visual culture topic. Submit your slide deck and a 300-word abstract one week before your allocated presentation slot.",
                 50, SA(5, 26), SA(6, 14), false);
+            var vc300Ungraded = MakeAssignment(context, vc300.Id,
+                "Semiotics and Visual Analysis Critique",
+                "Write a critique of digital interface semantics using Barthes' framework.",
+                100, SA(5, 10), SA(6, 12), false);
 
             context.SaveChanges();
 
@@ -366,6 +395,16 @@ namespace LearnOnline.Data
             SeedGradedWork(context, devStudentList, vc200A2, allen.Id,   2, "VC200");
             SeedGradedWork(context, devStudentList, vc300A1, karl.Id,    1, "VC300");
             SeedGradedWork(context, devStudentList, vc300A2, karl.Id,    2, "VC300");
+            context.SaveChanges();
+
+            // Seed ungraded work submitted by half of the students (including devStudent)
+            SeedUngradedWork(context, dv100Students, devStudent, dv100Ungraded, "DV100");
+            SeedUngradedWork(context, dv200Students, devStudent, dv200Ungraded, "DV200");
+            SeedUngradedWork(context, dv300Students, devStudent, dv300Ungraded, "DV300");
+            SeedUngradedWork(context, cc200Students, devStudent, cc200Ungraded, "CC200");
+            SeedUngradedWork(context, cc300Students, devStudent, cc300Ungraded, "CC300");
+            SeedUngradedWork(context, vc200Students, devStudent, vc200Ungraded, "VC200");
+            SeedUngradedWork(context, vc300Students, devStudent, vc300Ungraded, "VC300");
             context.SaveChanges();
 
             // ─── 5b. Attendance (12 weekly sessions per course, Feb–May 2026) ──────
@@ -869,6 +908,55 @@ namespace LearnOnline.Data
                     Content      = CalcFeedback(points, maxPts),
                     CreatedAt    = gradedAt.AddHours(i % 48)
                 });
+            }
+        }
+
+        private static void SeedUngradedWork(AppDbContext context, List<User> students, User devStudent,
+            Assignment assignment, string courseCode)
+        {
+            var dueDate = assignment.DueDate!.Value;
+            var submittedAt = dueDate.AddDays(-2);
+
+            // Get all enrolled students
+            var allCourseStudents = students.Concat(new[] { devStudent }).ToList();
+
+            // We want half of them to submit.
+            // Let's ensure devStudent is one of them.
+            // Let's say we select devStudent, and then every 2nd student from the rest.
+            int countToSubmit = allCourseStudents.Count / 2;
+            if (countToSubmit < 1) countToSubmit = 1;
+
+            var submitters = new List<User> { devStudent };
+            var remainingStudents = students.Where(s => s.Id != devStudent.Id).ToList();
+
+            for (int i = 0; i < remainingStudents.Count && submitters.Count < countToSubmit; i++)
+            {
+                if (i % 2 == 0)
+                {
+                    submitters.Add(remainingStudents[i]);
+                }
+            }
+
+            // If we still need more to reach half (due to rounding/odd numbers)
+            for (int i = 0; i < remainingStudents.Count && submitters.Count < countToSubmit; i++)
+            {
+                if (!submitters.Contains(remainingStudents[i]))
+                {
+                    submitters.Add(remainingStudents[i]);
+                }
+            }
+
+            foreach (var student in submitters)
+            {
+                var submission = new Submission
+                {
+                    AssignmentId = assignment.Id,
+                    StudentId    = student.Id,
+                    SubmittedAt  = submittedAt,
+                    Status       = "Submitted",
+                    FileUrl      = $"/uploads/{courseCode.ToLower()}/{ToSlug(assignment.Title)}/{student.Id}.pdf"
+                };
+                context.Submissions.Add(submission);
             }
         }
 

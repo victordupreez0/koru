@@ -570,7 +570,8 @@ export default function Profile({ publicRoute = false }) {
                                 value={profile.header.email}
                                 onChange={(e) => updateProfile("header.email", e.target.value)}
                                 placeholder="Email address"
-                                className={pageClasses.input}
+                                className={`${pageClasses.input} disabled:bg-gray-100 disabled:text-gray-400 disabled:border-gray-200 disabled:cursor-not-allowed`}
+                                disabled
                               />
                             </div>
                             <div className="sm:col-span-2">
