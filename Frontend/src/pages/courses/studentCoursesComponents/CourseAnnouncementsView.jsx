@@ -2,12 +2,14 @@ import React, { useState, useEffect } from "react";
 import { Bell, CloseSquare, Letter, User } from "@solar-icons/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { staggerContainer, slideUp } from "./constants";
-import { getCourseAnnouncements } from "../../../services/announcementService";
+import { getCourseAnnouncements, markAnnouncementAsRead, markAllAnnouncementsAsRead } from "../../../services/announcementService";
+import { useAuth } from "../../../contexts/AuthContext";
 
 export default function CourseAnnouncementsView({ activeCourseId }) {
     const [selectedId, setSelectedId] = useState(null);
     const [announcements, setAnnouncements] = useState([]);
     const [loading, setLoading] = useState(true);
+    const { user } = useAuth();
 
     useEffect(() => {
         let mounted = true;
@@ -15,7 +17,7 @@ export default function CourseAnnouncementsView({ activeCourseId }) {
             if (!activeCourseId) return;
             try {
                 setLoading(true);
-                const data = await getCourseAnnouncements(activeCourseId);
+                const data = await getCourseAnnouncements(activeCourseId, user?.userId);
                 if (mounted) setAnnouncements(data || []);
             } catch (err) {
                 console.error("Failed to load announcements:", err);
@@ -25,143 +27,194 @@ export default function CourseAnnouncementsView({ activeCourseId }) {
         }
         fetchAnnouncements();
         return () => { mounted = false; };
-    }, [activeCourseId]);
+    }, [activeCourseId, user?.userId]);
 
     const selectedAnnouncement = announcements.find(a => a.id === selectedId);
 
+    const handleSelectAnnouncement = async (post) => {
+        setSelectedId(post.id);
+        if (user?.userId && !post.isRead) {
+            // Optimistic local state update
+            setAnnouncements(prev => prev.map(a => a.id === post.id ? { ...a, isRead: true } : a));
+            try {
+                await markAnnouncementAsRead(post.id, user.userId);
+            } catch (err) {
+                console.error("Failed to mark announcement as read:", err);
+            }
+        }
+    };
+
+    const handleMarkAllRead = async () => {
+        if (!activeCourseId || !user?.userId) return;
+        // Optimistic local state update
+        setAnnouncements(prev => prev.map(a => ({ ...a, isRead: true })));
+        try {
+            await markAllAnnouncementsAsRead(activeCourseId, user.userId);
+        } catch (err) {
+            console.error("Failed to mark all announcements as read:", err);
+        }
+    };
+
     return (
-        <motion.div className="flex-1 overflow-y-auto" initial="hidden" animate="visible" variants={staggerContainer}>
-            <motion.header variants={slideUp} className="mb-6">
-                <h1 className="text-3xl font-semibold tracking-tight">Announcements</h1>
-                <p className="text-gray-500 mt-2">Latest updates from your lecturers</p>
+        <motion.div className="flex-1 flex flex-col overflow-hidden h-full" initial="hidden" animate="visible" variants={staggerContainer}>
+            <motion.header variants={slideUp} className="mb-6 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 shrink-0">
+                <div>
+                    <h1 className="text-3xl font-semibold tracking-tight">Announcements</h1>
+                    <p className="text-gray-500 mt-2">Latest updates from your lecturers</p>
+                </div>
+                {announcements.some(a => !a.isRead) && (
+                    <button
+                        onClick={handleMarkAllRead}
+                        className="px-6 py-2.5 rounded-2xl bg-[#3C0078]/5 text-[#3C0078] font-bold text-xs uppercase tracking-widest hover:bg-[#3C0078] hover:text-white transition-all self-start sm:self-auto"
+                    >
+                        Mark All as Read
+                    </button>
+                )}
             </motion.header>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-6xl">
-                {announcements.map((post) => (
-                    <motion.div
-                        key={post.id}
-                        onClick={() => setSelectedId(post.id)}
-                        variants={slideUp}
-                        className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl transition-all cursor-pointer relative overflow-hidden group"
-                    >
-                        <div
-                            className="absolute left-0 top-0 bottom-0 w-1.5"
-                            style={{ backgroundColor: post.color }}
-                        />
-                        <div className="flex justify-between items-start mb-6">
-                            <div className="flex items-center gap-3">
-                                <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider text-white" style={{ backgroundColor: post.color }}>{post.label}</span>
-                                <span className="text-sm text-gray-400">{post.datePosted ? new Date(post.datePosted).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : (post.date || "")}</span>
-                            </div>
-                            <div className="text-gray-200">
-                                <Bell size={24} />
-                            </div>
-                        </div>
-                        <h2
-                            className="text-2xl font-bold text-gray-900 group-hover:text-[#3C0078] transition-colors leading-tight"
-                        >
-                            {post.title}
-                        </h2>
-                        <div>
-                            <p className="text-xs font-bold uppercase tracking-widest text-[#3C0078] mt-2 opacity-60">Posted by {post.lecturer?.name || post.lecturer || "Lecturer"}</p>
-                        </div>
-                        <p className="text-gray-500 mt-4 leading-relaxed line-clamp-2">
-                            {post.preview}
-                        </p>
-                    </motion.div>
-                ))}
-            </div>
-
-            <AnimatePresence>
-                {selectedId && selectedAnnouncement && (
-                    <>
-                        {/* Overlay backdrop */}
+            {/* Split layout container */}
+            <div className="flex-1 flex flex-row gap-6 min-h-0 overflow-hidden relative">
+                {/* Left Column: List (Shrinks when an item is selected) */}
+                <div 
+                    className={`${
+                        selectedId ? "hidden lg:flex" : "flex"
+                    } flex-col gap-4 overflow-y-auto pr-2 transition-all duration-300 ${
+                        selectedId ? "w-full lg:w-[45%] lg:shrink-0" : "w-full"
+                    }`}
+                >
+                    {announcements.map((post) => (
                         <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            onClick={() => setSelectedId(null)}
-                            className="fixed inset-0 bg-black/40 backdrop-blur-md z-[100]"
-                        />
+                            key={post.id}
+                            onClick={() => handleSelectAnnouncement(post)}
+                            variants={slideUp}
+                            className={`p-5 rounded-2xl border transition-all cursor-pointer relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-4 group shrink-0 ${
+                                selectedId === post.id 
+                                    ? "bg-[#3C0078]/5 border-[#3C0078]/30 shadow-md" 
+                                    : "bg-white border-gray-100 shadow-sm hover:shadow-md"
+                            }`}
+                        >
 
-                        {/* Modal container */}
-                        <div className="fixed inset-0 z-[101] flex items-center justify-center p-4 pointer-events-none">
-                            <motion.div
-                                initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                                animate={{ opacity: 1, scale: 1, y: 0 }}
-                                exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                                transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                                className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl relative overflow-hidden pointer-events-auto"
-                            >
-                                <div
-                                    className="absolute left-0 top-0 bottom-0 w-3"
-                                    style={{ backgroundColor: selectedAnnouncement.color }}
-                                />
-
-                                <div className="p-8">
-                                    <div className="flex justify-between items-start mb-6">
-                                        <div className="flex items-center gap-4">
-                                            <span className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest text-white" style={{ backgroundColor: selectedAnnouncement.color }}>
-                                                {selectedAnnouncement.label}
-                                            </span>
-                                            <span className="text-sm font-medium text-gray-400">{selectedAnnouncement.datePosted ? new Date(selectedAnnouncement.datePosted).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : (selectedAnnouncement.date || "")}</span>
-                                        </div>
-                                        <div className="flex gap-2">
-                                            <div className="text-gray-100 hidden md:block">
-                                                <Bell size={32} />
-                                            </div>
-                                            <button
-                                                onClick={(e) => { e.stopPropagation(); setSelectedId(null); }}
-                                                className="w-12 h-12 flex items-center justify-center rounded-full bg-gray-50 text-gray-400 hover:bg-gray-100 hover:text-gray-900 transition-colors"
-                                            >
-                                                <CloseSquare size={24} />
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <h2 className="text-4xl font-black text-gray-900 leading-tight mb-4">
-                                        {selectedAnnouncement.title}
-                                    </h2>
-
-                                    <div className="flex items-center gap-3 mb-6 pb-6 border-b border-gray-100">
-                                        <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-[#3C0078]">
-                                            <User size={20} />
-                                        </div>
-                                        <div>
-                                            <p className="text-xs font-black uppercase tracking-widest text-gray-400">Published By</p>
-                                            <p className="font-bold text-[#3C0078]">{selectedAnnouncement.lecturer?.name || selectedAnnouncement.lecturer || "Lecturer"}</p>
-                                        </div>
-                                    </div>
-
-                                    <div className="prose prose-purple max-w-none">
-                                        <p className="text-xl leading-relaxed text-gray-600 mb-6 font-medium">
-                                            {selectedAnnouncement.preview}
-                                        </p>
-                                        <p className="text-gray-500 leading-relaxed text-lg">
-                                            Please make sure to check the attached documents in the resources section if any are mentioned. If you have any follow-up questions regarding this announcement, feel free to reach out to the lecturer during office hours or post in the discussion forum.
-                                        </p>
-                                    </div>
-
-                                    <div className="mt-8 flex items-center justify-between">
-                                        <button
-                                            onClick={() => setSelectedId(null)}
-                                            className="px-8 py-3 rounded-2xl bg-[#3C0078]/5 text-[#3C0078] font-bold text-xs uppercase tracking-widest hover:bg-[#3C0078] hover:text-white transition-all"
-                                        >
-                                            Back to list
-                                        </button>
-                                        <div className="flex gap-4">
-                                            <button className="flex items-center gap-2 text-gray-400 hover:text-[#3C0078] transition-colors">
-                                                <Letter size={18} />
-                                                <span className="text-xs font-bold uppercase tracking-widest">Share</span>
-                                            </button>
-                                        </div>
-                                    </div>
+                            {/* Left & Middle detail content */}
+                            <div className="flex flex-1 items-start gap-4 pl-2 min-w-0">
+                                {/* Icon avatar */}
+                                <div 
+                                    className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 mt-0.5"
+                                    style={{ 
+                                        backgroundColor: selectedId === post.id ? "#3C007820" : "#3C007815", 
+                                        color: "#3C0078" 
+                                    }}
+                                >
+                                    <Bell size={20} />
                                 </div>
-                            </motion.div>
-                        </div>
-                    </>
-                )}
-            </AnimatePresence>
+
+                                {/* Title, author, preview */}
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                        <h2 className={`text-lg leading-snug group-hover:text-[#3C0078] transition-colors ${!post.isRead ? "font-extrabold text-black" : "font-bold text-gray-800"}`}>
+                                            {post.title}
+                                        </h2>
+                                        {!post.isRead && (
+                                            <span className="flex h-2.5 w-2.5 shrink-0 relative">
+                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 bg-[#3C0078]"></span>
+                                                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#3C0078]"></span>
+                                            </span>
+                                        )}
+                                    </div>
+                                    <p className="text-gray-500 text-sm leading-relaxed line-clamp-1">
+                                        {post.preview}
+                                    </p>
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-[#3C0078] mt-1.5 opacity-70">
+                                        Posted by {post.lecturerName || post.lecturer?.name || post.lecturer || "Lecturer"}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Right tags and details */}
+                            <div className="flex md:flex-col items-center md:items-end justify-between md:justify-center gap-2 pl-6 md:pl-0 shrink-0 self-stretch md:self-auto border-t md:border-t-0 pt-3 md:pt-0 border-gray-50">
+                                <span 
+                                    className="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider text-white select-none shrink-0" 
+                                    style={{ backgroundColor: post.color }}
+                                >
+                                    {post.label}
+                                </span>
+                                <span className="text-xs text-gray-400 font-semibold">
+                                    {post.datePosted 
+                                        ? new Date(post.datePosted).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) 
+                                        : (post.date || "")}
+                                </span>
+                            </div>
+                        </motion.div>
+                    ))}
+                </div>
+
+                {/* Right Column: Detail Panel */}
+                <AnimatePresence mode="wait">
+                    {selectedId && selectedAnnouncement && (
+                        <motion.div
+                            initial={{ opacity: 0, x: 50 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: 50 }}
+                            transition={{ type: "spring", damping: 30, stiffness: 250 }}
+                            className={`${
+                                selectedId ? "flex" : "hidden lg:flex"
+                            } flex-1 w-full lg:w-[55%] bg-white border border-gray-100 rounded-3xl p-8 flex flex-col shadow-sm overflow-y-auto`}
+                        >
+                            <div className="flex justify-between items-start mb-6">
+                                <div className="flex items-center gap-4">
+                                    <span className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest text-white animate-fade-in" style={{ backgroundColor: selectedAnnouncement.color }}>
+                                        {selectedAnnouncement.label}
+                                    </span>
+                                    <span className="text-sm font-medium text-gray-400">{selectedAnnouncement.datePosted ? new Date(selectedAnnouncement.datePosted).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : (selectedAnnouncement.date || "")}</span>
+                                </div>
+                                <button
+                                    onClick={() => setSelectedId(null)}
+                                    className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-50 text-gray-400 hover:bg-gray-100 hover:text-gray-900 transition-colors"
+                                >
+                                    <CloseSquare size={22} />
+                                </button>
+                            </div>
+
+                            <h2 className="text-3xl font-black text-gray-900 leading-tight mb-4">
+                                {selectedAnnouncement.title}
+                            </h2>
+
+                            <div className="flex items-center gap-3 mb-6 pb-6 border-b border-gray-100">
+                                <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-[#3C0078]">
+                                    <User size={20} />
+                                </div>
+                                <div>
+                                    <p className="text-xs font-black uppercase tracking-widest text-gray-400">Published By</p>
+                                    <p className="font-bold text-[#3C0078]">{selectedAnnouncement.lecturerName || selectedAnnouncement.lecturer?.name || selectedAnnouncement.lecturer || "Lecturer"}</p>
+                                </div>
+                            </div>
+
+                            <div className="prose prose-purple max-w-none flex-1">
+                                <p className="text-lg leading-relaxed text-gray-600 mb-6 font-medium">
+                                    {selectedAnnouncement.preview}
+                                </p>
+                                <p className="text-gray-400 leading-relaxed text-sm">
+                                    Please make sure to check the attached documents in the resources section if any are mentioned. If you have any follow-up questions regarding this announcement, feel free to reach out to the lecturer during office hours or post in the discussion forum.
+                                </p>
+                            </div>
+
+                            <div className="mt-8 pt-6 border-t border-gray-100 flex items-center justify-between shrink-0">
+                                <button
+                                    onClick={() => setSelectedId(null)}
+                                    className="px-6 py-2.5 rounded-2xl bg-[#3C0078]/5 text-[#3C0078] font-bold text-xs uppercase tracking-widest hover:bg-[#3C0078] hover:text-white transition-all"
+                                >
+                                    Close Details
+                                </button>
+                                <div className="flex gap-4">
+                                    <button className="flex items-center gap-2 text-gray-400 hover:text-[#3C0078] transition-colors">
+                                        <Letter size={18} />
+                                        <span className="text-xs font-bold uppercase tracking-widest">Share</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </div>
         </motion.div>
     );
 }

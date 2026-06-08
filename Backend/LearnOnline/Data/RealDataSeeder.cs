@@ -11,23 +11,6 @@ namespace LearnOnline.Data
         {
             context.Database.EnsureCreated();
 
-            // Rebuild Announcements table to prevent schema drift
-            context.Database.ExecuteSqlRaw(@"DROP TABLE IF EXISTS ""Announcements"";");
-            context.Database.ExecuteSqlRaw(@"
-                CREATE TABLE ""Announcements"" (
-                    ""Id"" text NOT NULL,
-                    ""Title"" text NOT NULL,
-                    ""DatePosted"" timestamp with time zone NOT NULL,
-                    ""Preview"" text NOT NULL,
-                    ""Label"" text NOT NULL,
-                    ""Color"" text NOT NULL,
-                    ""CourseId"" text NOT NULL,
-                    ""LecturerId"" text NOT NULL,
-                    CONSTRAINT ""PK_Announcements"" PRIMARY KEY (""Id""),
-                    CONSTRAINT ""FK_Announcements_Courses_CourseId"" FOREIGN KEY (""CourseId"") REFERENCES ""Courses"" (""Id"") ON DELETE CASCADE,
-                    CONSTRAINT ""FK_Announcements_Users_LecturerId"" FOREIGN KEY (""LecturerId"") REFERENCES ""Users"" (""Id"") ON DELETE CASCADE
-                );
-            ");
 
             // All dev accounts share password: dev@123
             var hash = "$2b$10$Cma9hPOlUNJt2VNaK0etgO1ZhFefacPgubTlhcnMvwcNPZfNAnx.2";

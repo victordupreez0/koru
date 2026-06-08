@@ -63,6 +63,32 @@ namespace TodoApi.Migrations
                     b.ToTable("Announcements");
                 });
 
+            modelBuilder.Entity("LearnOnline.Models.AnnouncementReadState", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<string>("AnnouncementId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("ReadAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("AnnouncementId", "UserId")
+                        .IsUnique();
+
+                    b.ToTable("AnnouncementReadStates");
+                });
+
             modelBuilder.Entity("LearnOnline.Models.Assignment", b =>
                 {
                     b.Property<string>("Id")
@@ -717,6 +743,25 @@ namespace TodoApi.Migrations
                     b.Navigation("Course");
 
                     b.Navigation("Lecturer");
+                });
+
+            modelBuilder.Entity("LearnOnline.Models.AnnouncementReadState", b =>
+                {
+                    b.HasOne("LearnOnline.Models.Announcement", "Announcement")
+                        .WithMany()
+                        .HasForeignKey("AnnouncementId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("LearnOnline.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Announcement");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("LearnOnline.Models.Assignment", b =>
