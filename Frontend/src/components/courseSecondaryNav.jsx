@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { NavLink } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../contexts/AuthContext";
 import { useCourses } from "../contexts/CoursesContext";
+import { updateCourseVisibility } from "../services/courseService";
 import {
     Home,
     Megaphone,
@@ -44,7 +45,7 @@ function getIcon(label) {
 
 export default function CourseSecondaryNav({ activeCourseId, hideNav }) {
     const { role } = useAuth();
-    const { visibleCourses } = useCourses();
+    const { visibleCourses, updateCourseVisibilityInContext } = useCourses();
     const isTeacher = role === "teacher";
     
     const [navItems, setNavItems] = useState(INITIAL_NAV_ITEMS);
@@ -54,6 +55,27 @@ export default function CourseSecondaryNav({ activeCourseId, hideNav }) {
 
     // Fetch active course details
     const course = visibleCourses.find(c => c.id === activeCourseId) || visibleCourses[0] || null;
+
+    useEffect(() => {
+        if (course) {
+            setIsPublished(!!course.isVisible);
+        }
+    }, [course]);
+
+    const togglePublished = async () => {
+        if (!course) return;
+        const newStatus = !isPublished;
+        try {
+            await updateCourseVisibility(course.id, newStatus);
+            setIsPublished(newStatus);
+            if (updateCourseVisibilityInContext) {
+                updateCourseVisibilityInContext(course.id, newStatus);
+            }
+        } catch (error) {
+            console.error("Failed to update course visibility:", error);
+            alert("Error updating visibility: " + error.message);
+        }
+    };
 
     // Generate base link
     const queryAppend = hideNav ? "?hideNav=true" : "";
@@ -243,7 +265,7 @@ export default function CourseSecondaryNav({ activeCourseId, hideNav }) {
                         <div className="flex items-center justify-between mt-2.5">
                             <span className="text-[10px] font-bold text-gray-500">Course Status</span>
                             <button
-                                onClick={() => setIsPublished(!isPublished)}
+                                onClick={togglePublished}
                                 className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer shadow-xs
                                     ${isPublished 
                                         ? "bg-green-50 text-green-600 border border-green-200/50 hover:bg-green-100/50" 

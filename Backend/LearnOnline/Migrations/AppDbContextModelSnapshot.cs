@@ -297,6 +297,12 @@ namespace TodoApi.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("Degree")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsVisible")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("SubjectId")
                         .IsRequired()
                         .HasColumnType("text");

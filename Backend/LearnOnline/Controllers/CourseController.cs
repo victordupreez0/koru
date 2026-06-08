@@ -73,7 +73,21 @@ namespace LearnOnline.Controllers
             course.Capacity = updated.Capacity;
             course.SubjectId = updated.SubjectId;
             course.TeacherId = updated.TeacherId;
+            course.IsVisible = updated.IsVisible;
+            course.Degree = updated.Degree;
 
+            await _context.SaveChangesAsync();
+            return NoContent();
+        }
+
+        // PUT /api/Course/{id}/visibility – update course visibility status
+        [HttpPut("{id}/visibility")]
+        public async Task<IActionResult> UpdateVisibility(string id, [FromBody] bool isVisible)
+        {
+            var course = await _context.Courses.FindAsync(id);
+            if (course == null) return NotFound();
+
+            course.IsVisible = isVisible;
             await _context.SaveChangesAsync();
             return NoContent();
         }
