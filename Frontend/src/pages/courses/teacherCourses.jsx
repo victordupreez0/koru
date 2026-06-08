@@ -153,8 +153,8 @@ function CourseAnnouncementsView({ activeCourseId }) {
     };
 
     return (
-        <motion.div className="flex-1 p-8 overflow-y-auto" initial="hidden" animate="visible" variants={staggerContainer}>
-            <motion.header variants={slideUp} className="mb-12 flex justify-between items-end">
+        <motion.div className="flex-1 overflow-y-auto" initial="hidden" animate="visible" variants={staggerContainer}>
+            <motion.header variants={slideUp} className="mb-6 flex justify-between items-end">
                 <div>
                     <h1 className="text-3xl font-semibold tracking-tight">Announcements</h1>
                     <p className="text-gray-500 mt-2">Latest updates from your lecturers</p>
@@ -179,7 +179,7 @@ function CourseAnnouncementsView({ activeCourseId }) {
                             initial={{ opacity: 0, y: -20, height: 0 }}
                             animate={{ opacity: 1, y: 0, height: "auto" }}
                             exit={{ opacity: 0, y: -20, height: 0 }}
-                            className="bg-white p-8 rounded-[38px] border-2 border-dashed border-[#3C0078]/20 shadow-sm mb-12 overflow-hidden"
+                            className="bg-white p-6 rounded-3xl border-2 border-dashed border-[#3C0078]/20 shadow-sm mb-6 overflow-hidden"
                         >
                             <div className="flex justify-between items-center mb-8">
                                 <h3 className="text-xl font-bold text-gray-900 italic">Drafting New Announcement</h3>
@@ -250,7 +250,7 @@ function CourseAnnouncementsView({ activeCourseId }) {
                             key={post.id}
                             onClick={() => setSelectedId(post.id)}
                             variants={slideUp}
-                            className="bg-white p-8 rounded-[38px] border border-gray-100 shadow-sm hover:shadow-xl transition-all cursor-pointer relative overflow-hidden group"
+                            className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl transition-all cursor-pointer relative overflow-hidden group"
                             whileHover={{ y: -5 }}
                         >
                             <div
@@ -301,15 +301,15 @@ function CourseAnnouncementsView({ activeCourseId }) {
                                 animate={{ opacity: 1, scale: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 0.9, y: 20 }}
                                 transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                                className="bg-white w-full max-w-2xl rounded-[48px] shadow-2xl relative overflow-hidden pointer-events-auto"
+                                className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl relative overflow-hidden pointer-events-auto"
                             >
                                 <div
                                     className="absolute left-0 top-0 bottom-0 w-3"
                                     style={{ backgroundColor: selectedAnnouncement.color }}
                                 />
 
-                                <div className="p-12">
-                                    <div className="flex justify-between items-start mb-10">
+                                <div className="p-8">
+                                    <div className="flex justify-between items-start mb-6">
                                         <div className="flex items-center gap-4">
                                             <span className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest text-white" style={{ backgroundColor: selectedAnnouncement.color }}>
                                                 {selectedAnnouncement.label}
@@ -333,7 +333,7 @@ function CourseAnnouncementsView({ activeCourseId }) {
                                         {selectedAnnouncement.title}
                                     </h2>
 
-                                    <div className="flex items-center gap-3 mb-10 pb-10 border-b border-gray-100">
+                                    <div className="flex items-center gap-3 mb-6 pb-6 border-b border-gray-100">
                                         <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-[#3C0078]">
                                             <User size={20} />
                                         </div>
@@ -352,7 +352,7 @@ function CourseAnnouncementsView({ activeCourseId }) {
                                         </p>
                                     </div>
 
-                                    <div className="mt-12 flex items-center justify-between">
+                                    <div className="mt-8 flex items-center justify-between">
                                         <button
                                             onClick={() => setSelectedId(null)}
                                             className="px-8 py-3 rounded-2xl bg-[#3C0078]/5 text-[#3C0078] font-bold text-xs uppercase tracking-widest hover:bg-[#3C0078] hover:text-white transition-all"
@@ -1354,10 +1354,10 @@ function CourseAssignmentsView({ subject, activeCourseId }) {
     }
 
     return (
-        <motion.div className="flex-1 p-8 overflow-y-auto" initial="hidden" animate="visible" variants={staggerContainer}>
+        <motion.div className="flex-1 overflow-y-auto" initial="hidden" animate="visible" variants={staggerContainer}>
 
             {/* Header */}
-            <motion.header variants={slideUp} className="mb-10 flex justify-between items-end">
+            <motion.header variants={slideUp} className="mb-6 flex justify-between items-end">
                 <div>
                     <h1 className="text-3xl font-semibold tracking-tight">Assignments</h1>
                     <p className="text-gray-500 mt-2">{subject?.code || "Module"} | Manage Assessments & Briefs</p>
@@ -1378,7 +1378,7 @@ function CourseAssignmentsView({ subject, activeCourseId }) {
             </motion.header>
 
             {/* Summary Stats */}
-            <motion.div variants={slideUp} className="grid grid-cols-3 gap-4 mb-10">
+            <motion.div variants={slideUp} className="grid grid-cols-3 gap-4 mb-6">
                 {[
                     { label: "Total Assignments", value: loading ? "…" : totalAssignments, accent: false },
                     { label: "Open", value: loading ? "…" : openCount, accent: true },
@@ -1392,7 +1392,7 @@ function CourseAssignmentsView({ subject, activeCourseId }) {
             </motion.div>
 
             {/* Assignment Type Overview Cards */}
-            <motion.div variants={slideUp} className="mb-10">
+            <motion.div variants={slideUp} className="mb-6">
                 <h2 className="text-sm font-black uppercase tracking-widest text-gray-400 mb-4">Assignment Types</h2>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
                     {ASSIGNMENT_TYPES.map(t => {
@@ -1683,7 +1683,7 @@ function CourseAttendanceView({ activeCourseId }) {
 
     if (isTaking) {
         return (
-            <motion.div className="flex-1 space-y-8" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+            <motion.div className="flex-1 space-y-6" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                 <header className="flex justify-between items-end bg-gray-50/50 p-6 rounded-3xl border border-gray-100 shadow-xs">
                     <div>
                         <div className="flex items-center gap-2 mb-1.5">
@@ -1719,9 +1719,9 @@ function CourseAttendanceView({ activeCourseId }) {
                     </div>
                 </header>
 
-                <div className="bg-white rounded-[40px] border border-gray-100 shadow-sm overflow-hidden p-8 space-y-6">
+                <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden p-6 space-y-6">
                     <div className="flex items-center justify-between">
-                        <h2 className="text-xl font-black text-gray-800 tracking-tight">Student Roster ({filteredRoster.length})</h2>
+                        <h2 className="text-lg font-black text-gray-800 tracking-tight">Student Roster ({filteredRoster.length})</h2>
                         <div className="relative w-80">
                             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
                             <input 
@@ -1738,9 +1738,9 @@ function CourseAttendanceView({ activeCourseId }) {
                         {filteredRoster.map((student) => {
                             const currentStatus = statuses[student.id] || "Present";
                             return (
-                                <div key={student.id} className="py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                <div key={student.id} className="py-3 flex flex-col md:flex-row md:items-center justify-between gap-4">
                                     <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 rounded-2xl bg-[#3C0078]/5 border border-[#3C0078]/10 flex items-center justify-center font-black text-sm text-[#3C0078]">
+                                        <div className="w-9 h-9 rounded-xl bg-[#3C0078]/5 border border-[#3C0078]/10 flex items-center justify-center font-black text-xs text-[#3C0078]">
                                             {student.firstName[0]}{student.lastName[0]}
                                         </div>
                                         <div>
@@ -1755,7 +1755,7 @@ function CourseAttendanceView({ activeCourseId }) {
                                                 { label: "Present", value: "Present", color: "text-green-600 bg-green-500/10 border-green-500/20", activeBg: "bg-green-500 text-white" },
                                                 { label: "Late", value: "Late", color: "text-yellow-600 bg-yellow-500/10 border-yellow-500/20", activeBg: "bg-yellow-500 text-white" },
                                                 { label: "Absent", value: "Absent", color: "text-red-600 bg-red-500/10 border-red-500/20", activeBg: "bg-red-500 text-white" },
-                                                { label: "Excused", value: "Excused", color: "text-blue-600 bg-blue-500/10 border-blue-500/20", activeBg: "bg-blue-500 text-white" }
+                                                { label: "Excused", value: "Excused", color: "text-blue-600 bg-blue-500/10 border-blue-500/20", activeBg: "bg-blue-50 text-white" }
                                             ].map(opt => {
                                                 const isActive = currentStatus === opt.value;
                                                 return (
@@ -1796,9 +1796,9 @@ function CourseAttendanceView({ activeCourseId }) {
     }
 
     return (
-        <motion.div className="flex-1 space-y-8" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+        <motion.div className="flex-1 space-y-6" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             {/* Top Bar Header */}
-            <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 bg-gray-50/50 p-8 rounded-[36px] border border-gray-100 shadow-xs">
+            <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 bg-gray-50/50 p-6 rounded-3xl border border-gray-100 shadow-xs">
                 <div>
                     <h1 className="text-3xl font-black text-gray-900 tracking-tight">Attendance & presence</h1>
                     <p className="text-xs text-gray-400 font-bold uppercase tracking-widest mt-1">UX300 | Academic Presence Analytics</p>
@@ -1828,9 +1828,9 @@ function CourseAttendanceView({ activeCourseId }) {
             </header>
 
             {/* Attendance Analytics Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
                 <div className="lg:col-span-2">
-                    <div className="bg-white rounded-[40px] border border-gray-100 shadow-sm p-8 h-full flex flex-col justify-between min-h-[300px]">
+                    <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 h-full flex flex-col justify-between min-h-[300px]">
                         <div className="flex justify-between items-center mb-6">
                             <div>
                                 <h3 className="text-lg font-black text-gray-800 tracking-tight">Cohort Attendance Overview</h3>
@@ -1849,7 +1849,7 @@ function CourseAttendanceView({ activeCourseId }) {
                 </div>
                 
                 <div className="flex flex-col gap-6">
-                    <div className="bg-[#3C0078] rounded-[40px] p-8 text-white flex-1 relative overflow-hidden group flex flex-col justify-between shadow-lg shadow-[#3C0078]/10 min-h-[140px]">
+                    <div className="bg-[#3C0078] rounded-3xl p-6 text-white flex-1 relative overflow-hidden group flex flex-col justify-between shadow-lg shadow-[#3C0078]/10 min-h-[140px]">
                         <div className="absolute -right-8 -top-8 w-32 h-32 bg-white/10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700"></div>
                         <div>
                             <span className="text-[10px] uppercase font-bold tracking-[0.2em] opacity-80 block mb-1">Weekly Attendance Rate</span>
@@ -1864,7 +1864,7 @@ function CourseAttendanceView({ activeCourseId }) {
                         </div>
                     </div>
 
-                    <div className="bg-white rounded-[40px] border border-gray-100 shadow-sm p-8 flex-1 group hover:border-[#3C0078]/10 transition-all min-h-[140px] flex flex-col justify-between">
+                    <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 flex-1 group hover:border-[#3C0078]/10 transition-all min-h-[140px] flex flex-col justify-between">
                         <div className="flex justify-between items-center">
                             <span className="text-[10px] uppercase font-bold tracking-[0.2em] text-gray-400">Recorded Sessions</span>
                             <ClipboardList size={16} className="text-[#3C0078]/60" />
@@ -1879,18 +1879,18 @@ function CourseAttendanceView({ activeCourseId }) {
             </div>
 
             {/* Sessions History Table */}
-            <div className="bg-white rounded-[40px] border border-gray-100 shadow-sm overflow-hidden">
-                <div className="px-8 py-6 border-b border-gray-50 flex justify-between items-center">
+            <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-50 flex justify-between items-center">
                     <h2 className="text-xl font-black text-gray-800 tracking-tight">Recorded Daily Sessions</h2>
                 </div>
                 <table className="w-full text-left">
                     <thead>
                         <tr className="bg-gray-50/50">
-                            <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Session Date</th>
-                            <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Lecturer In Charge</th>
-                            <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400 text-center">Roster size</th>
-                            <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400 text-center">Present Rate</th>
-                            <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400 text-right">Actions</th>
+                            <th className="px-6 py-3 text-[10px] font-black uppercase tracking-widest text-gray-400">Session Date</th>
+                            <th className="px-6 py-3 text-[10px] font-black uppercase tracking-widest text-gray-400">Lecturer In Charge</th>
+                            <th className="px-6 py-3 text-[10px] font-black uppercase tracking-widest text-gray-400 text-center">Roster size</th>
+                            <th className="px-6 py-3 text-[10px] font-black uppercase tracking-widest text-gray-400 text-center">Present Rate</th>
+                            <th className="px-6 py-3 text-[10px] font-black uppercase tracking-widest text-gray-400 text-right">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -1898,13 +1898,13 @@ function CourseAttendanceView({ activeCourseId }) {
                             const rate = sess.totalStudents === 0 ? 100 : Math.round((sess.presentCount / sess.totalStudents) * 100);
                             return (
                                 <tr key={sess.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/20 transition-all group">
-                                    <td className="px-8 py-5">
+                                    <td className="px-6 py-3.5">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-xl bg-[#3C0078]/5 flex items-center justify-center font-black text-xs text-[#3C0078]">
+                                            <div className="w-9 h-9 rounded-xl bg-[#3C0078]/5 flex items-center justify-center font-black text-xs text-[#3C0078]">
                                                 {new Date(sess.sessionDate).getDate()}
                                             </div>
                                             <div>
-                                                <div className="font-black text-gray-800 text-[13px]">
+                                                <div className="font-black text-gray-800 text-sm">
                                                     {new Date(sess.sessionDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                                                 </div>
                                                 <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">
@@ -1913,15 +1913,15 @@ function CourseAttendanceView({ activeCourseId }) {
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="px-8 py-5 text-gray-600 text-[13px] font-bold">
+                                    <td className="px-6 py-3.5 text-gray-600 text-sm font-bold">
                                         {sess.lecturerName}
                                     </td>
-                                    <td className="px-8 py-5 text-center text-gray-800 text-[13px] font-black">
+                                    <td className="px-6 py-3.5 text-center text-gray-800 text-sm font-black">
                                         {sess.totalStudents} Students
                                     </td>
-                                    <td className="px-8 py-5">
+                                    <td className="px-6 py-3.5">
                                         <div className="flex flex-col items-center gap-1">
-                                            <span className="text-[13px] font-black italic text-gray-800">{rate}%</span>
+                                            <span className="text-sm font-black italic text-gray-800">{rate}%</span>
                                             <div className="w-16 h-1 bg-gray-100 rounded-full overflow-hidden">
                                                 <div 
                                                     className={`h-full rounded-full ${
@@ -1932,7 +1932,7 @@ function CourseAttendanceView({ activeCourseId }) {
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="px-8 py-5 text-right">
+                                    <td className="px-6 py-3.5 text-right">
                                         <button 
                                             onClick={() => handleViewSessionHistory(sess.id)}
                                             className="px-4 py-2 rounded-xl border border-gray-100 text-[9px] font-black uppercase tracking-wider text-gray-400 group-hover:bg-[#3C0078] group-hover:text-white group-hover:border-[#3C0078] transition-all shadow-sm cursor-pointer"
@@ -2143,8 +2143,8 @@ function CourseGradesView({ activeCourseId }) {
     const topStudent = studentRows.length > 0 ? studentRows.reduce((a, b) => a.avgGradePct > b.avgGradePct ? a : b) : null;
 
     return (
-        <motion.div className="flex-1 p-8 overflow-y-auto" initial="hidden" animate="visible" variants={staggerContainer}>
-            <motion.header variants={slideUp} className="mb-12 flex justify-between items-end">
+        <motion.div className="flex-1 overflow-y-auto" initial="hidden" animate="visible" variants={staggerContainer}>
+            <motion.header variants={slideUp} className="mb-6 flex justify-between items-end">
                 <div>
                     <h1 className="text-3xl font-semibold tracking-tight text-gray-900">Grades & Performance</h1>
                     <p className="text-gray-500 mt-2">UX300 | Class Performance Analytics</p>
@@ -2157,9 +2157,9 @@ function CourseGradesView({ activeCourseId }) {
             </motion.header>
 
             {/* Grades Analytics Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12 items-stretch">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8 items-stretch">
                 <motion.div variants={scaleIn} className="lg:col-span-2">
-                    <div className="bg-white rounded-[40px] border border-gray-100 shadow-sm p-8 h-full flex flex-col">
+                    <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-8 h-full flex flex-col">
                         <div className="flex justify-between items-center mb-6">
                             <div>
                                 <h3 className="text-xl font-bold">Class Average Distribution</h3>
@@ -2177,7 +2177,7 @@ function CourseGradesView({ activeCourseId }) {
                 </motion.div>
                 
                 <motion.div variants={scaleIn} className="flex flex-col gap-6">
-                    <div className="bg-[#3C0078] rounded-[40px] p-8 text-white flex-1 relative overflow-hidden group">
+                    <div className="bg-[#3C0078] rounded-3xl p-8 text-white flex-1 relative overflow-hidden group">
                         <div className="absolute -right-8 -top-8 w-32 h-32 bg-white/10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700"></div>
                         <span className="text-[10px] uppercase font-bold tracking-[0.2em] opacity-80 block mb-2">Class Average</span>
                         <div className="flex items-baseline gap-2">
@@ -2190,7 +2190,7 @@ function CourseGradesView({ activeCourseId }) {
                         </div>
                     </div>
 
-                    <div className="bg-white rounded-[40px] border border-gray-100 shadow-sm p-8 flex-1 group hover:border-[#3C0078]/20 transition-all">
+                    <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-8 flex-1 group hover:border-[#3C0078]/20 transition-all">
                         <span className="text-[10px] uppercase font-bold tracking-[0.2em] text-gray-400 block mb-6">Highest Performance</span>
                         <div className="flex items-center gap-4">
                             <div className="w-14 h-14 rounded-2xl bg-green-50 flex items-center justify-center text-green-600 font-black italic text-xl shadow-inner">
@@ -2205,8 +2205,8 @@ function CourseGradesView({ activeCourseId }) {
                 </motion.div>
             </div>
 
-            <motion.div variants={slideUp} className="bg-white rounded-[48px] border border-gray-100 shadow-sm overflow-hidden mb-12">
-                <div className="px-10 py-8 border-b border-gray-50 flex justify-between items-center">
+            <motion.div variants={slideUp} className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden mb-8">
+                <div className="px-6 py-5 border-b border-gray-50 flex justify-between items-center">
                     <h2 className="text-2xl font-bold">Students List</h2>
                     <div className="flex gap-2">
                         <button className="p-2.5 rounded-xl bg-gray-50 text-gray-400 hover:bg-gray-100"><InfoCircle size={20} /></button>
@@ -2215,30 +2215,30 @@ function CourseGradesView({ activeCourseId }) {
                 <table className="w-full text-left border-collapse">
                     <thead>
                         <tr className="border-b border-gray-50 bg-gray-50/30">
-                            <th className="px-10 py-5 text-xs font-bold uppercase tracking-wider text-gray-400">Student Info</th>
-                            <th className="px-10 py-5 text-xs font-bold uppercase tracking-wider text-gray-400 text-center">Attendance</th>
-                            <th className="px-10 py-5 text-xs font-bold uppercase tracking-wider text-gray-400 text-center">Avg Grade</th>
-                            <th className="px-10 py-5 text-xs font-bold uppercase tracking-wider text-gray-400">Status</th>
-                            <th className="px-10 py-5 text-xs font-bold uppercase tracking-wider text-gray-400 text-right">Actions</th>
+                            <th className="px-6 py-3 text-xs font-bold uppercase tracking-wider text-gray-400">Student Info</th>
+                            <th className="px-6 py-3 text-xs font-bold uppercase tracking-wider text-gray-400 text-center">Attendance</th>
+                            <th className="px-6 py-3 text-xs font-bold uppercase tracking-wider text-gray-400 text-center">Avg Grade</th>
+                            <th className="px-6 py-3 text-xs font-bold uppercase tracking-wider text-gray-400">Status</th>
+                            <th className="px-6 py-3 text-xs font-bold uppercase tracking-wider text-gray-400 text-right">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {studentRows.map((student) => (
                             <motion.tr key={student.id} variants={slideUp} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-all group">
-                                <td className="px-10 py-6">
+                                <td className="px-6 py-3.5">
                                     <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 rounded-full bg-[#3C0078]/5 border-2 border-[#3C0078]/10 flex items-center justify-center font-black text-xs text-[#3C0078] shadow-sm">
+                                        <div className="w-9 h-9 rounded-full bg-[#3C0078]/5 border-2 border-[#3C0078]/10 flex items-center justify-center font-black text-xs text-[#3C0078] shadow-sm">
                                             {student.avatar}
                                         </div>
                                         <div>
-                                            <div className="font-bold text-gray-900 group-hover:text-[#3C0078] transition-colors">{student.name}</div>
-                                            <div className="text-xs text-gray-400 mt-1">{student.email}</div>
+                                            <div className="font-bold text-gray-900 group-hover:text-[#3C0078] transition-colors text-sm">{student.name}</div>
+                                            <div className="text-xs text-gray-400 mt-0.5">{student.email}</div>
                                         </div>
                                     </div>
                                 </td>
-                                <td className="px-10 py-6 text-center">
-                                    <div className="flex flex-col items-center gap-1.5">
-                                        <span className="text-base font-bold text-gray-900">{student.attendance}</span>
+                                <td className="px-6 py-3.5 text-center">
+                                    <div className="flex flex-col items-center gap-1">
+                                        <span className="text-sm font-bold text-gray-900">{student.attendance}</span>
                                         <div className="w-16 h-1 bg-gray-100 rounded-full overflow-hidden">
                                             <div 
                                                 className={`h-full rounded-full ${
@@ -2250,11 +2250,11 @@ function CourseGradesView({ activeCourseId }) {
                                         </div>
                                     </div>
                                 </td>
-                                <td className="px-10 py-6 text-center">
-                                    <span className="text-lg font-black italic text-gray-900">{student.avgGrade}</span>
+                                <td className="px-6 py-3.5 text-center">
+                                    <span className="text-base font-black italic text-gray-900">{student.avgGrade}</span>
                                 </td>
-                                <td className="px-10 py-6">
-                                    <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm ${
+                                <td className="px-6 py-3.5">
+                                    <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm ${
                                         student.status === "Excellent" ? "bg-green-100 text-green-700" :
                                         student.status === "Good" ? "bg-blue-50 text-blue-700" :
                                         student.status === "At Risk" ? "bg-orange-50 text-orange-700" : "bg-red-50 text-red-700"
@@ -2262,8 +2262,8 @@ function CourseGradesView({ activeCourseId }) {
                                         {student.status}
                                     </span>
                                 </td>
-                                <td className="px-10 py-6 text-right">
-                                    <button className="px-5 py-2 rounded-xl border border-gray-100 text-[10px] font-black uppercase tracking-[0.15em] text-gray-400 group-hover:bg-[#3C0078] group-hover:text-white group-hover:border-[#3C0078] transition-all whitespace-nowrap shadow-sm">
+                                <td className="px-6 py-3.5 text-right">
+                                    <button className="px-4 py-1.5 rounded-lg border border-gray-100 text-[9px] font-black uppercase tracking-[0.15em] text-gray-400 group-hover:bg-[#3C0078] group-hover:text-white group-hover:border-[#3C0078] transition-all whitespace-nowrap shadow-sm">
                                         View Student
                                     </button>
                                 </td>
@@ -2345,8 +2345,8 @@ function CourseHomeView({ subject, course, loading }) {
   const courseImage = subject?.imageUrl || sampleImg;
 
   return (
-    <div className="flex-1 flex flex-col p-12 overflow-y-auto scrollbar-hide">
-      <header className="mb-12">
+    <div className="flex-1 flex flex-col overflow-y-auto scrollbar-hide">
+      <header className="mb-6">
         <h1 className="text-4xl font-semibold tracking-tight">
           {loading ? "Loading course details..." : `${subject?.name || "Unknown"} | ${course?.term || ""}`}
         </h1>
@@ -2354,8 +2354,8 @@ function CourseHomeView({ subject, course, loading }) {
       </header>
 
       {/* Left column – course overview with todo, next class & announcements */}
-      <main className="space-y-24 w-full flex flex-col items-center">
-        <div className="w-full h-[500px] rounded-[60px] shadow-sm overflow-hidden">
+      <main className="space-y-12 w-full flex flex-col items-center">
+        <div className="w-full h-[300px] rounded-3xl shadow-sm overflow-hidden">
           <img 
             src={courseImage} 
             alt={subject?.name} 
@@ -2363,10 +2363,10 @@ function CourseHomeView({ subject, course, loading }) {
           />
         </div>
         
-        <div className="w-full max-w-6xl space-y-24">
+        <div className="w-full max-w-6xl space-y-12">
           <section>
-            <h2 className="text-3xl font-bold mb-12 tracking-tight">Course Overview</h2>
-            <div className="flex flex-col md:flex-row gap-24 items-stretch">
+            <h2 className="text-3xl font-bold mb-6 tracking-tight">Course Overview</h2>
+            <div className="flex flex-col md:flex-row gap-12 items-stretch">
               <div className="flex-1 flex flex-col justify-between">
                 <div>
                   <h3 className="font-bold text-xs mb-6 uppercase tracking-[0.2em] text-[#3C0078] border-b-2 border-[#3C0078] inline-block pb-1">
@@ -2383,7 +2383,7 @@ function CourseHomeView({ subject, course, loading }) {
                 </div>
               </div>
 
-              <div className="flex-1 flex flex-col justify-between border-l border-gray-100 pl-24">
+              <div className="flex-1 flex flex-col justify-between border-l border-gray-100 pl-12">
                 <div>
                   <h3 className="font-bold text-xs mb-6 uppercase tracking-[0.2em] text-[#3C0078] border-b-2 border-[#3C0078] inline-block pb-1">
                     Term 2
@@ -2401,7 +2401,7 @@ function CourseHomeView({ subject, course, loading }) {
             </div>
           </section>
 
-          <section className="w-full pt-20 pb-20 border-t border-gray-100/50">
+          <section className="w-full pt-10 pb-10 border-t border-gray-100/50">
             <div className="flex flex-col lg:flex-row items-center relative">
               
               {/* Universal Edit Button - Top Right of the Image/Text block */}
@@ -2440,7 +2440,7 @@ function CourseHomeView({ subject, course, loading }) {
 
               {/* Column 2: Lecturer Details & Buttons - Tightened gap with Image */}
               <div className="w-full lg:w-2/5 flex flex-col items-start text-left lg:border-l border-gray-100 lg:pl-12 ml-[-1%]">
-                <div className="mb-10 w-full">
+                <div className="mb-6 w-full">
                   <span className="text-[12px] font-black uppercase tracking-[0.4em] text-[#3C0078] mb-3 block">Module Head</span>
                   {isEditing ? (
                     <input
@@ -2465,7 +2465,7 @@ function CourseHomeView({ subject, course, loading }) {
                   )}
                 </div>
 
-                <div className="flex flex-col gap-4 w-full">
+                <div className="flex flex-col gap-3 w-full">
                   <div className="relative w-full">
                     <button 
                       type="button"
@@ -3350,7 +3350,7 @@ function CourseNotesView({ activeCourseId }) {
                         className={`relative flex flex-col border ${
                             expanded
                                 ? 'bg-transparent min-h-full border-transparent shadow-none rounded-none'
-                                : 'bg-white py-12 pr-12 pl-[72px] rounded-[40px] border-gray-200 shadow-sm min-h-[600px]'
+                                : 'bg-white py-8 pr-8 pl-12 rounded-3xl border-gray-200 shadow-sm min-h-[600px]'
                         }`}
                         style={{ transition: 'padding 0.3s ease, border-radius 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease' }}
                     >
@@ -3634,7 +3634,7 @@ export default function TeacherCourses() {
                 )}
 
                 {/* Scrollable View Content */}
-                <div className="flex-1 overflow-y-auto pt-6 px-8 pb-12">
+                <div className="flex-1 overflow-y-auto pt-4 px-6 pb-8">
                     {isItemDetailPage ? (
                         <CourseItemView activeCourseId={activeCourseId} activeItemId={activeItemId} isStudentView={false} />
                     ) : isGradesPage ? (

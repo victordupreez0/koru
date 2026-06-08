@@ -71,8 +71,8 @@ export default function CourseAssignmentsView({ subject, activeCourseId }) {
     }, [activeCourseId, user?.userId]);
 
     return (
-        <motion.div className="flex-1 p-8 overflow-y-auto" initial="hidden" animate="visible" variants={staggerContainer}>
-            <motion.header variants={slideUp} className="mb-12 flex justify-between items-end">
+        <motion.div className="flex-1 overflow-y-auto" initial="hidden" animate="visible" variants={staggerContainer}>
+            <motion.header variants={slideUp} className="mb-6 flex justify-between items-end">
                 <div>
                     <h1 className="text-3xl font-semibold tracking-tight">Assignments</h1>
                     <p className="text-gray-500 mt-2 text-lg">{subject?.code || "Pending"} | Assessments & Briefs</p>
@@ -88,13 +88,13 @@ export default function CourseAssignmentsView({ subject, activeCourseId }) {
             {loading ? (
                 <div className="text-gray-500 text-center py-20 font-medium">Loading remote course assignments...</div>
             ) : assignments.length === 0 ? (
-                <div className="text-gray-500 text-center py-20 font-medium bg-gray-50 rounded-[40px] border border-gray-100">
+                <div className="text-gray-500 text-center py-20 font-medium bg-gray-50 rounded-3xl border border-gray-100">
                     No active assignments for this module yet.
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 font-sans">
                     {assignments.map((item, index) => (
-                        <motion.div key={item.id} variants={slideUp} className={`bg-white p-6 rounded-[40px] border border-gray-100 shadow-sm relative overflow-hidden group hover:shadow-xl transition-all duration-300 flex flex-col justify-between ${item.isClosed || item.isSubmitted || item.isGraded ? 'opacity-60 bg-gray-50' : 'opacity-100'}`}>
+                        <motion.div key={item.id} variants={slideUp} className={`bg-white p-6 rounded-3xl border border-gray-100 shadow-sm relative overflow-hidden group hover:shadow-xl transition-all duration-300 flex flex-col justify-between ${item.isClosed || item.isSubmitted || item.isGraded ? 'opacity-60 bg-gray-50' : 'opacity-100'}`}>
                             <div>
                                 <div className="flex justify-between items-start mb-4">
                                     <h2 className="text-xl font-bold text-gray-900 group-hover:text-[#3C0078] transition-colors leading-tight pr-4">{item.title}</h2>

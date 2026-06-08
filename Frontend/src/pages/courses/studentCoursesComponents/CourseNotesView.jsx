@@ -133,7 +133,7 @@ export default function CourseNotesView({ activeCourseId }) {
                         className={`relative flex flex-col border ${
                             expanded
                                 ? 'bg-transparent min-h-full border-transparent shadow-none rounded-none'
-                                : 'bg-white py-12 pr-12 pl-[72px] rounded-[40px] border-gray-200 shadow-sm min-h-[600px]'
+                                : 'bg-white py-8 pr-8 pl-12 rounded-3xl border-gray-200 shadow-sm min-h-[600px]'
                         }`}
                         style={{ transition: 'padding 0.3s ease, border-radius 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease' }}
                     >

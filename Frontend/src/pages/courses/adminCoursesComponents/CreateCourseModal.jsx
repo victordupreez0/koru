@@ -25,12 +25,12 @@ export default function CreateCourseModal({ show, onClose, form, setForm, subjec
         initial={{ opacity: 0, scale: 0.9, y: 30 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.9, y: 30 }}
-        className="relative w-full max-w-[1400px] h-fit max-h-[90vh] bg-white rounded-[48px] shadow-[0_32px_128px_-16px_rgba(60,0,120,0.3)] overflow-hidden flex flex-col"
+        className="relative w-full max-w-[1400px] h-fit max-h-[90vh] bg-white rounded-3xl shadow-[0_32px_128px_-16px_rgba(60,0,120,0.3)] overflow-hidden flex flex-col"
       >
           <div className="flex flex-col md:flex-row h-full">
             {/* Left Column: Context & Subject Info */}
-            <div className="md:w-[500px] bg-gray-50 border-r border-gray-100 p-12 flex flex-col justify-between overflow-y-auto">
-                <div className="space-y-12">
+            <div className="md:w-[500px] bg-gray-50 border-r border-gray-100 p-8 flex flex-col justify-between overflow-y-auto">
+                <div className="space-y-8">
                     <button onClick={onClose} className="w-14 h-14 rounded-2xl bg-white border border-gray-100 flex items-center justify-center text-gray-400 hover:text-red-500 hover:border-red-100 transition-all group">
                       <X size={24} className="group-hover:rotate-90 transition-transform duration-300" />
                     </button>
@@ -93,14 +93,14 @@ export default function CreateCourseModal({ show, onClose, form, setForm, subjec
             </div>
 
             {/* Right Column: Detailed Configuration */}
-            <div className="flex-1 p-16 flex flex-col justify-between overflow-y-auto">
-                <div className="space-y-12">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+            <div className="flex-1 p-10 flex flex-col justify-between overflow-y-auto">
+                <div className="space-y-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-4">
                           <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block">Lecturer Assignment</label>
                           <div className="relative">
                             <select 
-                              className="w-full px-8 py-5 rounded-[24px] bg-gray-50 border-none text-[15px] font-bold text-gray-900 appearance-none focus:ring-2 focus:ring-[#3C0078]/5 transition-all outline-none"
+                              className="w-full px-8 py-3.5 rounded-2xl bg-gray-50 border-none text-[15px] font-bold text-gray-900 appearance-none focus:ring-2 focus:ring-[#3C0078]/5 transition-all outline-none"
                               value={form.teacherId}
                               onChange={(e) => setForm({...form, teacherId: e.target.value})}
                             >
@@ -115,7 +115,7 @@ export default function CreateCourseModal({ show, onClose, form, setForm, subjec
                           <div className="space-y-3">
                             <div className="relative">
                               <select 
-                                className="w-full px-8 py-5 rounded-[24px] bg-gray-50 border-none text-[15px] font-bold text-gray-900 appearance-none focus:ring-2 focus:ring-[#3C0078]/5 transition-all outline-none"
+                                className="w-full px-8 py-3.5 rounded-2xl bg-gray-50 border-none text-[15px] font-bold text-gray-900 appearance-none focus:ring-2 focus:ring-[#3C0078]/5 transition-all outline-none"
                                 value={form.degree}
                                 onChange={(e) => setForm({...form, degree: e.target.value})}
                               >
@@ -170,17 +170,17 @@ export default function CreateCourseModal({ show, onClose, form, setForm, subjec
                     </div>
                 </div>
 
-                <div className="flex gap-6 mt-16 font-sans">
+                <div className="flex gap-6 mt-10 font-sans">
                     <button 
                       disabled={!form.subjectId || !form.teacherId}
                       onClick={onCreate}
-                      className="flex-[2] py-7 rounded-[32px] bg-[#3C0078] text-white font-black uppercase tracking-widest text-[13px] shadow-2xl shadow-[#3C0078]/30 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:hover:scale-100"
+                      className="flex-[2] py-4 rounded-3xl bg-[#3C0078] text-white font-black uppercase tracking-widest text-[13px] shadow-2xl shadow-[#3C0078]/30 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:hover:scale-100"
                     >
                       Create Subject Registry
                     </button>
                     <button 
                       onClick={onClose}
-                      className="flex-1 py-7 rounded-[32px] border-2 border-gray-100 text-gray-400 font-black uppercase tracking-widest text-[13px] hover:bg-gray-50 transition-all"
+                      className="flex-1 py-4 rounded-3xl border-2 border-gray-100 text-gray-400 font-black uppercase tracking-widest text-[13px] hover:bg-gray-50 transition-all"
                     >
                       Discard
                     </button>

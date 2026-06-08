@@ -443,10 +443,10 @@ export function CourseAssignmentsView({ subject }) {
         })).filter(g => g.assignments.length > 0);
 
     return (
-        <motion.div className="flex-1 p-8 overflow-y-auto" initial="hidden" animate="visible" variants={staggerContainer}>
+        <motion.div className="flex-1 overflow-y-auto" initial="hidden" animate="visible" variants={staggerContainer}>
 
             {/* Header */}
-            <motion.header variants={slideUp} className="mb-10 flex justify-between items-end">
+            <motion.header variants={slideUp} className="mb-6 flex justify-between items-end">
                 <div>
                     <h1 className="text-3xl font-semibold tracking-tight">Assignments</h1>
                     <p className="text-gray-500 mt-2">{subject?.code || "Module"} | Manage Assessments & Briefs</p>
@@ -467,7 +467,7 @@ export function CourseAssignmentsView({ subject }) {
             </motion.header>
 
             {/* Summary Stats */}
-            <motion.div variants={slideUp} className="grid grid-cols-4 gap-4 mb-10">
+            <motion.div variants={slideUp} className="grid grid-cols-4 gap-4 mb-6">
                 {[
                     { label: "Total Assignments", value: totalAssignments, accent: false },
                     { label: "Published", value: publishedCount, accent: true },
@@ -482,7 +482,7 @@ export function CourseAssignmentsView({ subject }) {
             </motion.div>
 
             {/* Assignment Type Overview Cards */}
-            <motion.div variants={slideUp} className="mb-10">
+            <motion.div variants={slideUp} className="mb-6">
                 <h2 className="text-sm font-black uppercase tracking-widest text-gray-400 mb-4">Assignment Types</h2>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
                     {ASSIGNMENT_TYPES.map(t => {

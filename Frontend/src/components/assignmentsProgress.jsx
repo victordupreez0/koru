@@ -132,10 +132,9 @@ export default function AssignmentsProgress() {
   return (
     <div className="w-full h-full flex flex-col bg-white/80 border-1 border-gray-200 rounded-3xl drop-shadow-xl p-4">
       {/* ── Assignments Header ── */}
-      <div className="flex items-center justify-between mt-5 mb-1">
+      <div className="flex items-center justify-between mt-5 mb-5">
         <h2 className="text-2xl font-['Gabarito']">Assignments</h2>
       </div>
-      <p className="text-sm text-transparent mb-5 font-medium select-none" aria-hidden="true">Spacer</p>
 
       {/* ── Scrollable Content ── */}
       <div className="flex-1 overflow-y-auto pr-2 flex flex-col">
@@ -167,11 +166,11 @@ export default function AssignmentsProgress() {
 
         {/* ── Progress Rings Grid ── */}
         <div className="grid grid-cols-2 gap-4">
-          <div className="bg-gray-50/50 rounded-[28px] border border-gray-100 p-4 flex flex-col items-center">
+          <div className="p-4 flex flex-col items-center">
             <span className="text-[10px] font-black uppercase tracking-widest text-[#3C0078] opacity-60 mb-2">Assignments</span>
             <ProgressRing percentage={progress} size={110} strokeWidth={8} />
           </div>
-          <div className="bg-gray-50/50 rounded-[28px] border border-gray-100 p-4 flex flex-col items-center">
+          <div className="p-4 flex flex-col items-center">
             <span className="text-[10px] font-black uppercase tracking-widest text-[#3C0078] opacity-60 mb-2">Attendance</span>
             <ProgressRing percentage={attendanceRate} size={110} strokeWidth={8} />
           </div>
