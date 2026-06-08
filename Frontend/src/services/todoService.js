@@ -15,11 +15,11 @@ export async function getTeacherTodos(teacherId) {
 }
 
 // POST /api/Todo
-export async function createTodo({ title, dueDate, courseCode, teacherId, createdByAdminId = null }) {
+export async function createTodo({ title, dueDate, courseCode, teacherId, createdByAdminId = null, sharedWithCoLecturers = false }) {
   const res = await fetch(`${API_BASE}/Todo`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ title, dueDate, courseCode, teacherId, createdByAdminId }),
+    body: JSON.stringify({ title, dueDate, courseCode, teacherId, createdByAdminId, sharedWithCoLecturers }),
   });
   return handleResponse(res);
 }

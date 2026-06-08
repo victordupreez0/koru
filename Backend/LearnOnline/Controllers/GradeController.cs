@@ -90,6 +90,12 @@ namespace LearnOnline.Controllers
             grade.Id = Guid.NewGuid().ToString();
             grade.GradedAt = DateTime.UtcNow;
             _context.Grades.Add(grade);
+
+            // Keep the submission's status in sync so "Late" doesn't linger after grading
+            var submission = await _context.Submissions.FindAsync(grade.SubmissionId);
+            if (submission != null)
+                submission.Status = "Graded";
+
             await _context.SaveChangesAsync();
             return CreatedAtAction(nameof(GetById), new { id = grade.Id }, grade);
         }

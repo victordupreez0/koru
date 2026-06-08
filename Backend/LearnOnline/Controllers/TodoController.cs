@@ -24,6 +24,7 @@ namespace LearnOnline.Controllers
             var todos = await _context.TodoItems
                 .Where(t => t.TeacherId == teacherId)
                 .Include(t => t.CreatedByAdmin)
+                .Include(t => t.SharedByTeacher)
                 .OrderBy(t => t.IsCompleted)
                 .ThenBy(t => t.CreatedAt)
                 .Select(t => new
@@ -38,6 +39,10 @@ namespace LearnOnline.Controllers
                     t.CreatedByAdminId,
                     createdByAdminName = t.CreatedByAdmin != null
                         ? $"{t.CreatedByAdmin.FirstName} {t.CreatedByAdmin.LastName}"
+                        : null,
+                    t.SharedByTeacherId,
+                    sharedByTeacherName = t.SharedByTeacher != null
+                        ? $"{t.SharedByTeacher.FirstName} {t.SharedByTeacher.LastName}"
                         : null
                 })
                 .ToListAsync();
@@ -46,7 +51,9 @@ namespace LearnOnline.Controllers
         }
 
         // POST: api/Todo
-        // Creates a new todo – teacher-created (createdByAdminId = null) or admin-assigned
+        // Creates a new todo – teacher-created (createdByAdminId = null) or admin-assigned.
+        // When SharedWithCoLecturers = true, fans out a copy to every co-lecturer
+        // who teaches the same subject(s) as the originating teacher.
         [HttpPost]
         public async Task<ActionResult<object>> Create([FromBody] CreateTodoDto dto)
         {
@@ -74,6 +81,35 @@ namespace LearnOnline.Controllers
             };
 
             _context.TodoItems.Add(todo);
+
+            // Fan out to co-lecturers who teach the same subjects
+            if (dto.SharedWithCoLecturers)
+            {
+                var mySubjectIds = await _context.Courses
+                    .Where(c => c.TeacherId == dto.TeacherId)
+                    .Select(c => c.SubjectId)
+                    .Distinct()
+                    .ToListAsync();
+
+                var coLecturerIds = await _context.Courses
+                    .Where(c => mySubjectIds.Contains(c.SubjectId) && c.TeacherId != dto.TeacherId)
+                    .Select(c => c.TeacherId)
+                    .Distinct()
+                    .ToListAsync();
+
+                foreach (var coId in coLecturerIds)
+                {
+                    _context.TodoItems.Add(new TodoItem
+                    {
+                        Title = dto.Title,
+                        DueDate = dto.DueDate,
+                        CourseCode = dto.CourseCode,
+                        TeacherId = coId,
+                        SharedByTeacherId = dto.TeacherId
+                    });
+                }
+            }
+
             await _context.SaveChangesAsync();
 
             return CreatedAtAction(nameof(GetByTeacher), new { teacherId = todo.TeacherId }, new
@@ -85,7 +121,8 @@ namespace LearnOnline.Controllers
                 todo.IsCompleted,
                 todo.CreatedAt,
                 todo.TeacherId,
-                todo.CreatedByAdminId
+                todo.CreatedByAdminId,
+                todo.SharedByTeacherId
             });
         }
 
@@ -124,5 +161,6 @@ namespace LearnOnline.Controllers
         public string? CourseCode { get; set; }
         public string TeacherId { get; set; } = null!;
         public string? CreatedByAdminId { get; set; }
+        public bool SharedWithCoLecturers { get; set; } = false;
     }
 }
