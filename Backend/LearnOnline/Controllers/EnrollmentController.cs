@@ -56,16 +56,6 @@ namespace LearnOnline.Controllers
             return enrollments;
         }
 
-        // GET /api/Enrollment/course/{courseId} – return all active enrollments with student info
-        [HttpGet("course/{courseId}")]
-        public async Task<ActionResult<IEnumerable<Enrollment>>> GetByCourse(string courseId)
-        {
-            return await _context.Enrollments
-                .Include(e => e.Student)
-                .Where(e => e.CourseId == courseId && e.Status == "Active")
-                .ToListAsync();
-        }
-
         // POST /api/Enrollment/course/{courseId}/students – bulk enroll/set students for a course
         [HttpPost("course/{courseId}/students")]
         public async Task<IActionResult> BulkEnroll(string courseId, [FromBody] List<string> studentIds)

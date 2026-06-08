@@ -37,9 +37,6 @@ namespace LearnOnline.Models
         [ForeignKey("TeacherId")]
         public User? Teacher { get; set; }
 
-        // Serialised NovelEditor page content ({ sections }) for this course's homepage
-        public string? Content { get; set; }
-
         // Visibility status: true = published, false = draft
         public bool IsVisible { get; set; } = false;
 

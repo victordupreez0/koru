@@ -1,8 +1,16 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Search, Users, BookOpen, TrendingUp, Clock, CheckCircle, X, Bell } from "lucide-react";
-import { courseService, userService, subjectService, enrollmentService } from "../../services/adminService";
+import { 
+  Plus, Search, Users, BookOpen, Clock, 
+  TrendingUp, CheckCircle, X, Bell
+} from "lucide-react";
+import { 
+  courseService, 
+  userService, 
+  subjectService, 
+  enrollmentService 
+} from "../../services/adminService";
 
 // Modularized Components
 import {
@@ -43,9 +51,9 @@ export default function AdminCourses() {
       setCourses(fetchedCourses || []);
       setTeachers(fetchedTeachers || []);
       setSubjects(fetchedSubjects || []);
-
+      setEnrollments(fetchedEnrollments || []);
     } catch (error) {
-      console.error("Failed to load course registry data:", error);
+      console.error("Failed to load backend registry data:", error);
     } finally {
       setIsLoading(false);
     }
@@ -70,15 +78,20 @@ export default function AdminCourses() {
 
   const handleSaveEdit = async () => {
     try {
-      await courseService.updateCourse(editForm.id, {
-        subjectId: editForm.subjectId,
-        teacherId: editForm.teacherId,
+      const updatedData = {
         term: editForm.term,
         year: parseInt(editForm.year),
         capacity: parseInt(editForm.capacity),
+        subjectId: editForm.subjectId,
+        teacherId: editForm.teacherId,
         isVisible: editForm.isVisible || false,
         degree: editForm.degree || ""
-      });
+      };
+      
+      await courseService.updateCourse(editForm.id, updatedData);
+      
+      // Refresh database records
+      await fetchInitialData();
       setSelectedCourse(null);
       setIsEditing(false);
       await fetchInitialData();
