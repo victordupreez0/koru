@@ -50,6 +50,15 @@ namespace LearnOnline.Data
         public DbSet<AttendanceSession> AttendanceSessions { get; set; }
         public DbSet<AttendanceRecord> AttendanceRecords { get; set; }
 
+        // Teacher to-do items (self-created or admin-assigned)
+        public DbSet<TodoItem> TodoItems { get; set; }
+
+        // Attendance records (per-student, per-session) — Victor's flat model
+        public DbSet<Attendance> Attendances { get; set; }
+
+        // Live check-in sessions (teacher opens, students join with code)
+        public DbSet<CheckInSession> CheckInSessions { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

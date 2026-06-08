@@ -42,5 +42,8 @@ namespace LearnOnline.Models
 
         // Optional Degree program linkage
         public string? Degree { get; set; }
+
+        // Serialised NovelEditor page content ({ sections }) for this course's homepage
+        public string? Content { get; set; }
     }
 }

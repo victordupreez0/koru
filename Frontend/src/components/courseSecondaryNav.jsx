@@ -78,24 +78,6 @@ export default function CourseSecondaryNav({ activeCourseId, hideNav }) {
     // Generate base link
     const queryAppend = hideNav ? "?hideNav=true" : "";
 
-    const togglePublished = async () => {
-        if (!course) return;
-        const newStatus = !isPublished;
-        try {
-            await updateCourseVisibility(course.id, newStatus);
-            setIsPublished(newStatus);
-            if (updateCourseVisibilityInContext) {
-                updateCourseVisibilityInContext(course.id, newStatus);
-            }
-        } catch (error) {
-            console.error("Failed to update course visibility:", error);
-            alert("Error updating visibility: " + error.message);
-        }
-    };
-
-    // Generate base link
-    const queryAppend = hideNav ? "?hideNav=true" : "";
-
     const removeItem = (label) => {
         setNavItems(navItems.filter(item => item.label !== label));
     };
