@@ -18,7 +18,7 @@ namespace LearnOnline.Controllers
 
         // GET: api/Announcement/course/{courseId}
         [HttpGet("course/{courseId}")]
-        public async Task<ActionResult<IEnumerable<object>>> GetAnnouncementsByCourse(string courseId)
+        public async Task<ActionResult<IEnumerable<object>>> GetAnnouncementsByCourse(string courseId, [FromQuery] string? userId = null)
         {
             var announcements = await _context.Announcements
                 .Where(a => a.CourseId == courseId)
@@ -32,7 +32,8 @@ namespace LearnOnline.Controllers
                     a.Label,
                     a.Color,
                     a.DatePosted,
-                    lecturerName = a.Lecturer != null ? $"{a.Lecturer.FirstName} {a.Lecturer.LastName}" : "Unknown"
+                    lecturerName = a.Lecturer != null ? $"{a.Lecturer.FirstName} {a.Lecturer.LastName}" : "Unknown",
+                    isRead = userId != null ? _context.AnnouncementReadStates.Any(ars => ars.AnnouncementId == a.Id && ars.UserId == userId) : false
                 })
                 .ToListAsync();
 
@@ -58,6 +59,14 @@ namespace LearnOnline.Controllers
             };
 
             _context.Announcements.Add(announcement);
+
+            // Auto-mark as read for the lecturer who posted it
+            _context.AnnouncementReadStates.Add(new AnnouncementReadState
+            {
+                AnnouncementId = announcement.Id,
+                UserId = dto.LecturerId
+            });
+
             await _context.SaveChangesAsync();
 
             var lecturer = await _context.Users.FindAsync(announcement.LecturerId);
@@ -69,8 +78,82 @@ namespace LearnOnline.Controllers
                 announcement.Label,
                 announcement.Color,
                 announcement.DatePosted,
-                lecturerName = lecturer != null ? $"{lecturer.FirstName} {lecturer.LastName}" : "Unknown"
+                lecturerName = lecturer != null ? $"{lecturer.FirstName} {lecturer.LastName}" : "Unknown",
+                isRead = true
             });
+        }
+
+        // POST: api/Announcement/{id}/read
+        [HttpPost("{id}/read")]
+        public async Task<ActionResult> MarkAsRead(string id, [FromQuery] string userId)
+        {
+            if (string.IsNullOrEmpty(userId))
+                return BadRequest("UserId is required.");
+
+            var announcement = await _context.Announcements.FindAsync(id);
+            if (announcement == null)
+                return NotFound("Announcement not found.");
+
+            var userExists = await _context.Users.AnyAsync(u => u.Id == userId);
+            if (!userExists)
+                return NotFound("User not found.");
+
+            var alreadyRead = await _context.AnnouncementReadStates
+                .AnyAsync(ars => ars.AnnouncementId == id && ars.UserId == userId);
+
+            if (!alreadyRead)
+            {
+                var readState = new AnnouncementReadState
+                {
+                    AnnouncementId = id,
+                    UserId = userId
+                };
+                _context.AnnouncementReadStates.Add(readState);
+                await _context.SaveChangesAsync();
+            }
+
+            return Ok(new { message = "Announcement marked as read." });
+        }
+
+        // POST: api/Announcement/course/{courseId}/read-all
+        [HttpPost("course/{courseId}/read-all")]
+        public async Task<ActionResult> MarkAllAsRead(string courseId, [FromQuery] string userId)
+        {
+            if (string.IsNullOrEmpty(userId))
+                return BadRequest("UserId is required.");
+
+            var userExists = await _context.Users.AnyAsync(u => u.Id == userId);
+            if (!userExists)
+                return NotFound("User not found.");
+
+            var announcements = await _context.Announcements
+                .Where(a => a.CourseId == courseId)
+                .ToListAsync();
+
+            var readAnnouncementIds = await _context.AnnouncementReadStates
+                .Where(ars => ars.UserId == userId && ars.Announcement!.CourseId == courseId)
+                .Select(ars => ars.AnnouncementId)
+                .ToListAsync();
+
+            var unreadAnnouncements = announcements
+                .Where(a => !readAnnouncementIds.Contains(a.Id))
+                .ToList();
+
+            foreach (var ann in unreadAnnouncements)
+            {
+                _context.AnnouncementReadStates.Add(new AnnouncementReadState
+                {
+                    AnnouncementId = ann.Id,
+                    UserId = userId
+                });
+            }
+
+            if (unreadAnnouncements.Any())
+            {
+                await _context.SaveChangesAsync();
+            }
+
+            return Ok(new { message = "All announcements marked as read." });
         }
 
         // DELETE: api/Announcement/{id}

@@ -51,24 +51,112 @@ namespace LearnOnline.Controllers
             return assignments;
         }
 
-        // GET /api/Assignment/student/{studentId} – return global assignments across all enrolled active courses
+        // GET /api/Assignment/student/{studentId} – return assignments with dynamic cohort overrides applied
         [HttpGet("student/{studentId}")]
         public async Task<ActionResult<IEnumerable<Assignment>>> GetByStudentId(string studentId)
         {
-            // Extract the IDs of the active courses to prevent massive joins loading full course entity models into RAM
-            var enrolledCourseIds = await _context.Enrollments
+            // Fetch all active enrollments for the student
+            var enrollments = await _context.Enrollments
                 .Where(e => e.StudentId == studentId && e.Status == "Active")
-                .Select(e => e.CourseId)
                 .ToListAsync();
 
+            var enrolledCourseIds = enrollments.Select(e => e.CourseId).ToList();
+
+            // Map CourseId to ClassGroupId for active cohorts
+            var courseToCohort = enrollments
+                .Where(e => e.ClassGroupId != null)
+                .ToDictionary(e => e.CourseId, e => e.ClassGroupId!);
+
+            var cohortIds = courseToCohort.Values.ToList();
+
+            // Fetch any overrides that exist for this student's cohorts
+            var overrides = await _context.AssignmentClassOverrides
+                .Where(o => cohortIds.Contains(o.ClassGroupId))
+                .ToListAsync();
+
+            // Fetch assignments for the student's enrolled courses
             var assignments = await _context.Assignments
                 .Include(a => a.Course)
-                    .ThenInclude(c => c.Subject)
+                    .ThenInclude(c => c!.Subject)
                 .Where(a => enrolledCourseIds.Contains(a.CourseId))
-                .OrderBy(a => a.DueDate)
                 .ToListAsync();
 
-            return assignments;
+            // Dynamically apply overrides to each assignment
+            foreach (var assignment in assignments)
+            {
+                if (courseToCohort.TryGetValue(assignment.CourseId, out var cohortId))
+                {
+                    var ovr = overrides.FirstOrDefault(o => o.AssignmentId == assignment.Id && o.ClassGroupId == cohortId);
+                    if (ovr != null)
+                    {
+                        assignment.DueDate = ovr.DueDate;
+                        if (ovr.OpenDate.HasValue) assignment.OpenDate = ovr.OpenDate;
+                        if (ovr.CloseDate.HasValue) assignment.CloseDate = ovr.CloseDate;
+                    }
+                }
+            }
+
+            // Return sorted by the overridden due dates
+            return assignments.OrderBy(a => a.DueDate).ToList();
+        }
+
+        // GET /api/Assignment/{id}/overrides – get all cohort overrides for an assignment
+        [HttpGet("{id}/overrides")]
+        public async Task<ActionResult<IEnumerable<object>>> GetOverrides(string id)
+        {
+            var overrides = await _context.AssignmentClassOverrides
+                .Include(o => o.ClassGroup)
+                .Where(o => o.AssignmentId == id)
+                .Select(o => new
+                {
+                    o.Id,
+                    o.AssignmentId,
+                    o.ClassGroupId,
+                    GroupName = o.ClassGroup != null ? o.ClassGroup.Name : "Unknown Group",
+                    o.DueDate,
+                    o.OpenDate,
+                    o.CloseDate
+                })
+                .ToListAsync();
+
+            return Ok(overrides);
+        }
+
+        // POST /api/Assignment/override – create or update a cohort override for an assignment
+        [HttpPost("override")]
+        public async Task<ActionResult<AssignmentClassOverride>> CreateOrUpdateOverride(AssignmentClassOverride ovr)
+        {
+            ovr.DueDate = DateTime.SpecifyKind(ovr.DueDate, DateTimeKind.Utc);
+            if (ovr.OpenDate.HasValue) ovr.OpenDate = DateTime.SpecifyKind(ovr.OpenDate.Value, DateTimeKind.Utc);
+            if (ovr.CloseDate.HasValue) ovr.CloseDate = DateTime.SpecifyKind(ovr.CloseDate.Value, DateTimeKind.Utc);
+
+            var existing = await _context.AssignmentClassOverrides
+                .FirstOrDefaultAsync(o => o.AssignmentId == ovr.AssignmentId && o.ClassGroupId == ovr.ClassGroupId);
+
+            if (existing != null)
+            {
+                existing.DueDate = ovr.DueDate;
+                existing.OpenDate = ovr.OpenDate;
+                existing.CloseDate = ovr.CloseDate;
+                await _context.SaveChangesAsync();
+                return Ok(existing);
+            }
+
+            ovr.Id = Guid.NewGuid().ToString();
+            _context.AssignmentClassOverrides.Add(ovr);
+            await _context.SaveChangesAsync();
+            return Ok(ovr);
+        }
+
+        // DELETE /api/Assignment/override/{id} – delete an assignment cohort override
+        [HttpDelete("override/{id}")]
+        public async Task<IActionResult> DeleteOverride(string id)
+        {
+            var ovr = await _context.AssignmentClassOverrides.FindAsync(id);
+            if (ovr == null) return NotFound();
+            _context.AssignmentClassOverrides.Remove(ovr);
+            await _context.SaveChangesAsync();
+            return NoContent();
         }
 
         // GET /api/Assignment/teacher/{teacherId} – return all assignments for courses taught by this teacher

@@ -1101,5 +1101,6 @@ namespace LearnOnline.Data
                  .Replace(",", "")
                  .Replace(".", "")
                  .Replace("&", "and");
+
     }
 }

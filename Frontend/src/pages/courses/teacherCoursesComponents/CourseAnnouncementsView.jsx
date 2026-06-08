@@ -71,8 +71,8 @@ export function CourseAnnouncementsView({ activeCourseId }) {
     };
 
     return (
-        <motion.div className="flex-1 p-8 overflow-y-auto" initial="hidden" animate="visible" variants={staggerContainer}>
-            <motion.header variants={slideUp} className="mb-12 flex justify-between items-end">
+        <motion.div className="flex-1 overflow-y-auto" initial="hidden" animate="visible" variants={staggerContainer}>
+            <motion.header variants={slideUp} className="mb-6 flex justify-between items-end">
                 <div>
                     <h1 className="text-3xl font-semibold tracking-tight">Announcements</h1>
                     <p className="text-gray-500 mt-2">Post and manage course announcements</p>
@@ -97,7 +97,7 @@ export function CourseAnnouncementsView({ activeCourseId }) {
                             initial={{ opacity: 0, y: -20, height: 0 }}
                             animate={{ opacity: 1, y: 0, height: "auto" }}
                             exit={{ opacity: 0, y: -20, height: 0 }}
-                            className="bg-white p-8 rounded-[38px] border-2 border-dashed border-[#3C0078]/20 shadow-sm mb-12 overflow-hidden"
+                            className="bg-white p-6 rounded-3xl border-2 border-dashed border-[#3C0078]/20 shadow-sm mb-6 overflow-hidden"
                         >
                             <div className="flex justify-between items-center mb-8">
                                 <h3 className="text-xl font-bold text-gray-900 italic">Drafting New Announcement</h3>

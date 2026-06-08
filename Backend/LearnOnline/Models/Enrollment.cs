@@ -29,5 +29,11 @@ namespace LearnOnline.Models
 
         [ForeignKey("StudentId")]
         public User? Student { get; set; }
+
+        // Optional links a student's enrollment to a specific cohort group
+        public string? ClassGroupId { get; set; }
+
+        [ForeignKey("ClassGroupId")]
+        public ClassGroup? ClassGroup { get; set; }
     }
 }

@@ -7,3 +7,17 @@ reports/
 # Backend build output (already ignored by dotnet's gitignore, listed for clarity)
 Backend/**/bin/
 Backend/**/obj/
+
+# Environment files
+.env
+.env.*
+*.env
+*.env.*
+.DS_Store
+
+# .NET / C# ignores
+[Bb]in/
+[Oo]bj/
+*.user
+*.suo
+.vs/
