@@ -32,12 +32,6 @@ Tsungai Katsuro, William Basson
 - [Additional Features and Optimisations](#additional-features-and-optimisations)
 - [Conclusion](#conclusion)
 
-## List of Figures
-
-- **Figure 1** ER Diagram of Koru 15
-- **Figure 2** Summary of Backend Coverage 17
-- **Figure 3** Summary of Frontend 18
-
 ## Project Introduction
 
 **Project Name:** Koru
