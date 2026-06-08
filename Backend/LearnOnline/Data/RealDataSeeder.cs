@@ -116,7 +116,7 @@ namespace LearnOnline.Data
             }
 
             // Rebuild Announcements table (prevents schema drift across restarts)
-            context.Database.ExecuteSqlRaw(@"DROP TABLE IF EXISTS ""Announcements"";");
+            context.Database.ExecuteSqlRaw(@"DROP TABLE IF EXISTS ""Announcements"" CASCADE;");
             context.Database.ExecuteSqlRaw(@"
                 CREATE TABLE ""Announcements"" (
                     ""Id"" text NOT NULL,

@@ -1,9 +1,12 @@
 using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 
 #nullable disable
 
-namespace TodoApi.Migrations
+namespace LearnOnline.Migrations
 {
+    [DbContext(typeof(LearnOnline.Data.AppDbContext))]
+    [Migration("20260604120000_AddExternalToolFields")]
     public partial class AddExternalToolFields : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
