@@ -99,6 +99,12 @@ namespace TodoApi.Migrations
                     b.Property<string>("QuizQuestionsJson")
                         .HasColumnType("text");
 
+                    b.Property<string>("ExternalToolName")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ExternalToolUrl")
+                        .HasColumnType("text");
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("text");
@@ -112,6 +118,51 @@ namespace TodoApi.Migrations
                     b.HasIndex("CourseId");
 
                     b.ToTable("Assignments");
+                });
+
+            modelBuilder.Entity("LearnOnline.Models.Attendance", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<string>("CourseId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("RecordedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("RecordedById")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("SessionType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("StudentId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Time")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CourseId");
+
+                    b.HasIndex("RecordedById");
+
+                    b.HasIndex("StudentId");
+
+                    b.ToTable("Attendances");
                 });
 
             modelBuilder.Entity("LearnOnline.Models.Class", b =>
@@ -184,6 +235,83 @@ namespace TodoApi.Migrations
                     b.HasIndex("TeacherId");
 
                     b.ToTable("Courses");
+                });
+
+            modelBuilder.Entity("LearnOnline.Models.CourseModule", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Content")
+                        .HasColumnType("text");
+
+                    b.Property<string>("CourseId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsOpen")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsPublished")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Prefix")
+                        .HasColumnType("text");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CourseId");
+
+                    b.ToTable("CourseModules");
+                });
+
+            modelBuilder.Entity("LearnOnline.Models.CourseModuleItem", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Content")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsExternal")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsPublished")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ModuleId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ModuleId");
+
+                    b.ToTable("CourseModuleItems");
                 });
 
             modelBuilder.Entity("LearnOnline.Models.Enrollment", b =>
@@ -468,6 +596,48 @@ namespace TodoApi.Migrations
                     b.ToTable("Timetables");
                 });
 
+            modelBuilder.Entity("LearnOnline.Models.TodoItem", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<string>("CourseCode")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedByAdminId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("DueDate")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsCompleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("TeacherId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("SharedByTeacherId")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedByAdminId");
+
+                    b.HasIndex("SharedByTeacherId");
+
+                    b.HasIndex("TeacherId");
+
+                    b.ToTable("TodoItems");
+                });
+
             modelBuilder.Entity("LearnOnline.Models.User", b =>
                 {
                     b.Property<string>("Id")
@@ -539,6 +709,33 @@ namespace TodoApi.Migrations
                     b.Navigation("Course");
                 });
 
+            modelBuilder.Entity("LearnOnline.Models.Attendance", b =>
+                {
+                    b.HasOne("LearnOnline.Models.Course", "Course")
+                        .WithMany()
+                        .HasForeignKey("CourseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("LearnOnline.Models.User", "RecordedBy")
+                        .WithMany()
+                        .HasForeignKey("RecordedById")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("LearnOnline.Models.User", "Student")
+                        .WithMany()
+                        .HasForeignKey("StudentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Course");
+
+                    b.Navigation("RecordedBy");
+
+                    b.Navigation("Student");
+                });
+
             modelBuilder.Entity("LearnOnline.Models.Class", b =>
                 {
                     b.HasOne("LearnOnline.Models.Course", "Course")
@@ -575,6 +772,28 @@ namespace TodoApi.Migrations
                     b.Navigation("Subject");
 
                     b.Navigation("Teacher");
+                });
+
+            modelBuilder.Entity("LearnOnline.Models.CourseModule", b =>
+                {
+                    b.HasOne("LearnOnline.Models.Course", "Course")
+                        .WithMany()
+                        .HasForeignKey("CourseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Course");
+                });
+
+            modelBuilder.Entity("LearnOnline.Models.CourseModuleItem", b =>
+                {
+                    b.HasOne("LearnOnline.Models.CourseModule", "Module")
+                        .WithMany("Items")
+                        .HasForeignKey("ModuleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Module");
                 });
 
             modelBuilder.Entity("LearnOnline.Models.Enrollment", b =>
@@ -711,6 +930,34 @@ namespace TodoApi.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("LearnOnline.Models.TodoItem", b =>
+                {
+                    b.HasOne("LearnOnline.Models.User", "CreatedByAdmin")
+                        .WithMany()
+                        .HasForeignKey("CreatedByAdminId");
+
+                    b.HasOne("LearnOnline.Models.User", "SharedByTeacher")
+                        .WithMany()
+                        .HasForeignKey("SharedByTeacherId");
+
+                    b.HasOne("LearnOnline.Models.User", "Teacher")
+                        .WithMany()
+                        .HasForeignKey("TeacherId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CreatedByAdmin");
+
+                    b.Navigation("SharedByTeacher");
+
+                    b.Navigation("Teacher");
+                });
+
+            modelBuilder.Entity("LearnOnline.Models.CourseModule", b =>
+                {
+                    b.Navigation("Items");
                 });
 #pragma warning restore 612, 618
         }

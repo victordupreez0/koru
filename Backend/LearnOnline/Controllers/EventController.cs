@@ -37,6 +37,21 @@ namespace LearnOnline.Controllers
             return ev;
         }
 
+        // GET /api/Event/teacher/{teacherId} – return all events for courses taught by this teacher
+        [HttpGet("teacher/{teacherId}")]
+        public async Task<ActionResult<IEnumerable<Event>>> GetByTeacherId(string teacherId)
+        {
+            var taughtCourseIds = await _context.Courses
+                .Where(c => c.TeacherId == teacherId)
+                .Select(c => c.Id)
+                .ToListAsync();
+
+            return await _context.Events
+                .Include(e => e.Course)
+                .Where(e => taughtCourseIds.Contains(e.CourseId))
+                .ToListAsync();
+        }
+
         // POST /api/Event – create a new event and return it with a 201 status
         [HttpPost]
         public async Task<ActionResult<Event>> Create(Event ev)

@@ -14,3 +14,9 @@ export async function getCourseStudentCount(courseId) {
   });
   return handleResponse(res);
 }
+
+// GET /api/Enrollment/course/:courseId – all active enrollments with student info
+export async function getCourseEnrollments(courseId) {
+  const res = await fetch(`${API_BASE}/Enrollment/course/${encodeURIComponent(courseId)}`);
+  return handleResponse(res);
+}

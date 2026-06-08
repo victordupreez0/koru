@@ -2,7 +2,7 @@ import { MdEventNote } from "react-icons/md";
 
 // Next Class row – shows the upcoming class session inside the Course Glance card
 // Displays the subject code, time range, and room location
-// TODO: backend endpoint missing — no class schedule / timetable controller exists yet.
+// NOTE: Timetable/class scheduling controller exists on the backend; the frontend uses the Event API as a query fallback mechanism.
 export default function NextClassItem({ subject = "UX300", time = "09:00 - 13:00", room = "Room 101" }) {
   return (
     <div className="my-2 bg-white rounded-xl shadow-sm w-full h-12 flex flex-row items-center space-x-2 transition-all duration-200 hover:shadow-md hover:-translate-y-1">

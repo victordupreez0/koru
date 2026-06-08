@@ -1,11 +1,9 @@
 import React, { useEffect, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useCourses } from "../../contexts/CoursesContext";
-import CourseMenu from "../../components/coursesMenu";
 import CourseSecondaryNav from "../../components/courseSecondaryNav";
-import SideMenu from "../../components/sideMenu";
-import Menu from "../../components/menu";
 import AssignmentDetail from "./assignmentDetail";
+import CourseItemView from "./CourseItemView";
 
 import {
     CourseAnnouncementsView,
@@ -69,51 +67,73 @@ export default function StudentCourses() {
     const isModulesPage = path.endsWith("/modules");
     const isNotesPage = path.endsWith("/notes");
 
-
     // Home logic: If we are at /courses or /courses/:id NOT ending in a sub-path
     // Assignment detail: /courses/:courseId/assignments/:assignmentId
     const isAssignmentDetailPage = pathParts[2] === "assignments" && pathParts.length === 4;
     const activeAssignmentId = isAssignmentDetailPage ? pathParts[3] : null;
 
-    const isHomePage = !isGradesPage && !isAnnouncementsPage && !isAssignmentsPage && !isAttendancePage && !isModulesPage && !isNotesPage && !isAssignmentDetailPage;
+    // Module Item detail: /courses/:courseId/items/:itemId
+    const isItemDetailPage = pathParts[2] === "items" && pathParts.length === 4;
+    const activeItemId = isItemDetailPage ? pathParts[3] : null;
+
+    const isHomePage = !isGradesPage && !isAnnouncementsPage && !isAssignmentsPage && !isAttendancePage && !isModulesPage && !isNotesPage && !isAssignmentDetailPage && !isItemDetailPage;
+
+    // Determine active subpage label for the top breadcrumb bar
+    const activeSubpageLabel = useMemo(() => {
+        if (isGradesPage) return "Grades";
+        if (isAnnouncementsPage) return "Announcements";
+        if (isAssignmentsPage) return "Assignments";
+        if (isAttendancePage) return "Attendance";
+        if (isModulesPage) return "Modules";
+        if (isNotesPage) return "Notes";
+        if (isAssignmentDetailPage) return "Assignment Details";
+        if (isItemDetailPage) return "Module Page";
+        return "Home";
+    }, [isGradesPage, isAnnouncementsPage, isAssignmentsPage, isAttendancePage, isModulesPage, isNotesPage, isAssignmentDetailPage, isItemDetailPage]);
 
     return (
-        <div className={`flex overflow-hidden ${hideNav ? "" : "-ml-30 -mr-20 -mt-24"}`} style={{ height: '100vh' }}>
-            {/* The global top menu that was previously disappearing */}
-            {!hideNav && <Menu />}
+        <div className="flex overflow-hidden gap-4 transition-all duration-300 md:h-[calc(100vh-32px)] md:w-full max-md:h-screen max-md:w-screen max-md:-ml-4 max-md:-mr-4 max-md:-mt-4 bg-transparent">
+            {/* Left Section: Floating Course Secondary Navigation */}
+            <CourseSecondaryNav activeCourseId={activeCourseId || (visibleCourses[0]?.id)} hideNav={hideNav} />
 
-            {/* Leftmost Course Navigation Bar — CourseMenu is fixed, so this div is just a spacer */}
-            {!hideNav && (
-                <div className="w-16 shrink-0 flex flex-col h-full items-center">
-                    <CourseMenu />
-                    <SideMenu />
-                </div>
-            )}
-
-            {/* Middle Section: Second Navigation Bar for course-internal links */}
-            <div className="flex flex-col h-full py-1 justify-center">
-                <CourseSecondaryNav activeCourseId={activeCourseId || (visibleCourses[0]?.id)} hideNav={hideNav} />
-            </div>
-
-            {/* Main Content Area — pt-24 clears the fixed top nav */}
-            <div className={`flex-1 flex flex-col ${hideNav ? "pt-4" : "pt-24"} px-8 overflow-y-auto`}>
-                {isAssignmentDetailPage ? (
-                    <AssignmentDetail assignmentId={activeAssignmentId} activeCourseId={activeCourseId} />
-                ) : isGradesPage ? (
-                    <CourseGradesView subject={subject} activeCourseId={activeCourseId} />
-                ) : isAnnouncementsPage ? (
-                    <CourseAnnouncementsView activeCourseId={activeCourseId} />
-                ) : isAssignmentsPage ? (
-                    <CourseAssignmentsView subject={subject} activeCourseId={activeCourseId} />
-                ) : isAttendancePage ? (
-                    <CourseAttendanceView />
-                ) : isModulesPage ? (
-                    <CourseModulesView />
-                ) : isNotesPage ? (
-                    <CourseNotesView activeCourseId={activeCourseId} />
-                ) : (
-                    <CourseHomeView subject={subject} course={course} loading={loading} />
+            {/* Main Content Area: Floating Island Card */}
+            <div className="flex-1 flex flex-col overflow-hidden transition-all duration-300 md:bg-white/75 md:backdrop-blur-xl md:border md:border-white/20 md:rounded-[28px] md:shadow-lg max-md:bg-white">
+                {/* Course Header Top Bar */}
+                {course && (
+                    <div className="h-14 border-b border-gray-100 bg-white/60 backdrop-blur-md flex items-center justify-between px-8 z-10 shrink-0 select-none">
+                        <div className="flex items-center gap-3">
+                            <span className="px-2.5 py-0.5 rounded-lg text-[10px] font-black text-white shadow-sm" style={{ backgroundColor: course.color }}>
+                                {course.code} {course.number}
+                            </span>
+                            <h2 className="text-sm font-extrabold text-gray-900">{course.subjectName}</h2>
+                            <span className="text-gray-300 text-xs">/</span>
+                            <span className="text-xs font-bold text-gray-500 capitalize">{activeSubpageLabel}</span>
+                        </div>
+                    </div>
                 )}
+
+                {/* Scrollable View Content */}
+                <div className="flex-1 overflow-y-auto pt-6 px-8 pb-12">
+                    {isItemDetailPage ? (
+                        <CourseItemView activeCourseId={activeCourseId} activeItemId={activeItemId} isStudentView={true} />
+                    ) : isAssignmentDetailPage ? (
+                        <AssignmentDetail assignmentId={activeAssignmentId} activeCourseId={activeCourseId} />
+                    ) : isGradesPage ? (
+                        <CourseGradesView subject={subject} activeCourseId={activeCourseId} />
+                    ) : isAnnouncementsPage ? (
+                        <CourseAnnouncementsView activeCourseId={activeCourseId} />
+                    ) : isAssignmentsPage ? (
+                        <CourseAssignmentsView subject={subject} activeCourseId={activeCourseId} />
+                    ) : isAttendancePage ? (
+                        <CourseAttendanceView activeCourseId={activeCourseId} />
+                    ) : isModulesPage ? (
+                        <CourseModulesView activeCourseId={activeCourseId} />
+                    ) : isNotesPage ? (
+                        <CourseNotesView activeCourseId={activeCourseId} />
+                    ) : (
+                        <CourseHomeView subject={subject} course={course} loading={loading} />
+                    )}
+                </div>
             </div>
         </div>
     );

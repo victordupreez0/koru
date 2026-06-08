@@ -105,6 +105,8 @@ export default function NovelBlockMenu() {
         const wrapper = editor.view.dom.closest('.novel-editor-wrapper');
         if (!wrapper) return;
 
+        const hoverArea = wrapper.parentElement || wrapper;
+
         const onMouseMove = (e) => {
             if (menuOpen) return;
             const block = getClosestBlock(e.clientY);
@@ -129,9 +131,8 @@ export default function NovelBlockMenu() {
 
         const onMouseLeave = (e) => {
             if (menuOpen) return;
-            // Don't hide if moving to the handle buttons
             const related = e.relatedTarget;
-            if (wrapper.contains(related)) return;
+            if (hoverArea.contains(related)) return;
             if (containerRef.current && containerRef.current.contains(related)) return;
             // Small delay to allow moving to handles
             setTimeout(() => {
@@ -142,11 +143,11 @@ export default function NovelBlockMenu() {
             }, 100);
         };
 
-        wrapper.addEventListener("mousemove", onMouseMove);
-        wrapper.addEventListener("mouseleave", onMouseLeave);
+        hoverArea.addEventListener("mousemove", onMouseMove);
+        hoverArea.addEventListener("mouseleave", onMouseLeave);
         return () => {
-            wrapper.removeEventListener("mousemove", onMouseMove);
-            wrapper.removeEventListener("mouseleave", onMouseLeave);
+            hoverArea.removeEventListener("mousemove", onMouseMove);
+            hoverArea.removeEventListener("mouseleave", onMouseLeave);
         };
     }, [editor, menuOpen, getClosestBlock]);
 
@@ -312,10 +313,11 @@ export default function NovelBlockMenu() {
             onMouseEnter={() => { handleHovered.current = true; }}
             onMouseLeave={(e) => {
                 handleHovered.current = false;
-                // Don't hide if moving back to the editor or into the menu
+                // Don't hide if moving back to the hover area or into the menu
                 const related = e.relatedTarget;
                 const wrapper = editor?.view?.dom?.closest('.novel-editor-wrapper');
-                if (wrapper && wrapper.contains(related)) return;
+                const hoverArea = wrapper?.parentElement || wrapper;
+                if (hoverArea && hoverArea.contains(related)) return;
                 if (menuRef.current && menuRef.current.contains(related)) return;
                 if (!menuOpen) {
                     setHandlePos(null);

@@ -9,6 +9,15 @@ async function handleResponse(res) {
   return data;
 }
 
+// GET /api/Assignment/teacher/:teacherId – fetch all assignments for courses the teacher owns
+export async function getTeacherAssignments(teacherId) {
+  const res = await fetch(`${API_BASE}/Assignment/teacher/${encodeURIComponent(teacherId)}`, {
+    method: "GET",
+    headers: { "Content-Type": "application/json" }
+  });
+  return handleResponse(res);
+}
+
 // GET /api/Assignment/student/:studentId – fetch global assignments across all enrolled active courses
 export async function getStudentAssignments(studentId) {
   const res = await fetch(`${API_BASE}/Assignment/student/${encodeURIComponent(studentId)}`, {

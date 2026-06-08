@@ -1,12 +1,11 @@
-﻿import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Users, BookOpen, GraduationCap, ArrowUpRight, ArrowDownRight,
   UserCheck, TrendingUp, TrendingDown, CheckCircle, Clock, Target,
   BarChart3, ChevronDown, Award, Layers
 } from "lucide-react";
-import Menu from "../../components/menu";
-import SideMenu from "../../components/sideMenu";
+
 
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5299/api";
@@ -310,8 +309,6 @@ export default function AdminAnalytics() {
   /* ─────────────────────── RENDER ─────────────────────── */
   return (
     <div className="w-full pb-16">
-      <Menu />
-      <SideMenu />
 
       <motion.div
         className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-2"
