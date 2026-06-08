@@ -71,7 +71,7 @@ body {
 
 
 /* ── Teacher – warm orange theme ── */
-body[data-role="teacher"] {
+/* body[data-role="teacher"] {
   background: hsla(25, 100%, 90%, 1);
   background: linear-gradient(90deg, hsla(25, 100%, 90%, 1) 0%, rgb(255, 255, 255) 100%);
   background: -moz-linear-gradient(90deg, hsla(25, 100%, 90%, 1) 0%, rgb(255, 255, 255) 100%);
@@ -85,10 +85,10 @@ body[data-role="teacher"]::before {
     radial-gradient(ellipse 500px 400px at 60% 70%, rgba(255, 80, 0, 0.05) 0%, transparent 70%),
     radial-gradient(ellipse 650px 450px at 25% 75%, rgba(255, 200, 100, 0.07) 0%, transparent 70%),
     radial-gradient(ellipse 400px 500px at 85% 55%, rgba(220, 80, 20, 0.06) 0%, transparent 70%);
-}
+} */
 
 /* ── Admin – deep purple theme ── */
-body[data-role="admin"] {
+/* body[data-role="admin"] {
   background: hsla(270, 80%, 90%, 1);
   background: linear-gradient(90deg, hsla(270, 80%, 90%, 1) 0%, rgb(255, 255, 255) 100%);
   background: -moz-linear-gradient(90deg, hsla(270, 80%, 90%, 1) 0%, rgb(255, 255, 255) 100%);
@@ -102,7 +102,7 @@ body[data-role="admin"]::before {
     radial-gradient(ellipse 500px 400px at 60% 70%, rgba(60, 0, 120, 0.07) 0%, transparent 70%),
     radial-gradient(ellipse 650px 450px at 25% 75%, rgba(100, 50, 200, 0.07) 0%, transparent 70%),
     radial-gradient(ellipse 400px 500px at 85% 55%, rgba(180, 50, 220, 0.06) 0%, transparent 70%);
-}
+} */
 
 /* Glowing gradient orbs */
 body::before {
@@ -224,7 +224,7 @@ a:hover {
 /* ─── Novel / Tiptap Editor Styles ─── */
 .novel-editor-wrapper .tiptap {
   outline: none;
-  min-height: 300px;
+  min-height: unset;
   font-family: "Poppins", system-ui, sans-serif;
   font-size: 1rem;
   line-height: 1.75;

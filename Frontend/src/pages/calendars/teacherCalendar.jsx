@@ -1,8 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import Menu from "../../components/menu";
-import SideMenu from "../../components/sideMenu";
+
 
 import CalendarDayBlock from "./UI/CalendarDayBlock";
 import CalendarViewSelector from "./UI/CalendarViewSelector";
@@ -10,7 +9,7 @@ import CalendarTimelineView from "./UI/CalendarTimelineView";
 import CalendarDayView from "./UI/CalendarDayView";
 import AddTaskModal from "./UI/AddTaskModal";
 
-import { getAllEvents } from "../../services/eventService";
+import { getAllEvents, createEvent, updateEvent, deleteEvent } from "../../services/eventService";
 import { getCourseAssignments } from "../../services/assignmentService";
 import { getTeacherCourses } from "../../services/courseService";
 import { useAuth } from "../../contexts/AuthContext";
@@ -42,7 +41,9 @@ function mapBackendEventToCalendar(evt) {
     endTime: `${pad2(endDate.getHours())}:${pad2(endDate.getMinutes())}`,
     type: evt.eventType?.toLowerCase() === "meeting" ? "meeting" : "class",
     lecturer: evt.createdBy || "",
-    location
+    location,
+    courseId: evt.courseId,
+    description: evt.description || ""
   };
 }
 
@@ -158,33 +159,97 @@ export default function TeacherCalendar() {
   // Live data pulled from the backend
   const [events, setEvents] = useState([]);
   const [tasks, setTasks] = useState([]);
+  const [courses, setCourses] = useState([]);
 
   // Add Task modal
   const [taskModal, setTaskModal] = useState({ open: false, editEvent: null });
 
   /** Add a new or save an edited locally-created task */
-  function handleAddTask(event) {
-    setEvents((prev) => {
-      const idx = prev.findIndex((e) => e.id === event.id);
-      if (idx >= 0) {
-        const next = [...prev];
-        next[idx] = event;
-        return next;
+  async function handleAddTask(eventPayload) {
+    try {
+      if (eventPayload.id) {
+        // Edit mode
+        const rawId = eventPayload.id.replace(/^evt-/, "");
+        const backendPayload = {
+          id: rawId,
+          title: eventPayload.title,
+          description: eventPayload.description || "",
+          eventType: "Task",
+          startTime: eventPayload.startTime,
+          endTime: eventPayload.endTime,
+          createdBy: eventPayload.lecturer || `${user.firstName} ${user.lastName}`,
+          courseId: eventPayload.courseId
+        };
+        await updateEvent(rawId, backendPayload);
+        const updatedEvent = mapBackendEventToCalendar(backendPayload);
+        setEvents(prev => prev.map(e => e.id === eventPayload.id ? updatedEvent : e));
+      } else {
+        // Add mode
+        const backendPayload = {
+          title: eventPayload.title,
+          description: "",
+          eventType: "Task",
+          startTime: eventPayload.startTime,
+          endTime: eventPayload.endTime,
+          createdBy: `${user.firstName} ${user.lastName}`,
+          courseId: eventPayload.courseId
+        };
+        const createdEvent = await createEvent(backendPayload);
+        const calendarEvent = mapBackendEventToCalendar(createdEvent);
+        setEvents(prev => [...prev, calendarEvent]);
       }
-      return [...prev, event];
-    });
+    } catch (err) {
+      console.error("Error saving task:", err);
+      alert("Error saving task: " + err.message);
+    }
   }
 
   /** Delete a user task by id */
-  function handleDeleteTask(eventId) {
-    setEvents((prev) => prev.filter((e) => e.id !== eventId));
+  async function handleDeleteTask(eventId) {
+    if (!eventId.startsWith("evt-")) {
+      alert("Only custom events can be deleted.");
+      return;
+    }
+    const rawId = eventId.replace(/^evt-/, "");
+    try {
+      await deleteEvent(rawId);
+      setEvents((prev) => prev.filter((e) => e.id !== eventId));
+    } catch (err) {
+      console.error("Error deleting event:", err);
+      alert("Failed to delete event: " + err.message);
+    }
   }
 
   /** Move an event to a new day when dropped */
-  function handleEventDrop(targetDate, eventId) {
-    setEvents((prev) =>
-      prev.map((evt) => (evt.id === eventId ? { ...evt, date: targetDate } : evt))
-    );
+  async function handleEventDrop(targetDate, eventId) {
+    if (!eventId.startsWith("evt-")) return;
+    const evt = events.find((e) => e.id === eventId);
+    if (!evt) return;
+
+    const rawId = eventId.replace(/^evt-/, "");
+    const newStartISO = new Date(`${targetDate}T${evt.startTime}`).toISOString();
+    const newEndISO = new Date(`${targetDate}T${evt.endTime}`).toISOString();
+
+    const payload = {
+      id: rawId,
+      title: evt.title,
+      description: evt.description || "",
+      eventType: evt.type === "meeting" ? "Meeting" : evt.type === "class" ? "Class" : "Task",
+      startTime: newStartISO,
+      endTime: newEndISO,
+      createdBy: evt.lecturer,
+      courseId: evt.courseId
+    };
+
+    try {
+      await updateEvent(rawId, payload);
+      setEvents((prev) =>
+        prev.map((e) => (e.id === eventId ? { ...e, date: targetDate } : e))
+      );
+    } catch (err) {
+      console.error("Failed to drop event:", err);
+      alert("Failed to move event: " + err.message);
+    }
   }
 
   useEffect(() => {
@@ -219,7 +284,10 @@ export default function TeacherCalendar() {
 
         const assignmentEvents = allAssignments.map(mapAssignmentToCalendarEvent);
 
-        if (mounted) setEvents([...classEvents, ...assignmentEvents]);
+        if (mounted) {
+          setEvents([...classEvents, ...assignmentEvents]);
+          setCourses(teacherCourses || []);
+        }
 
         const taskRows = allAssignments.map(a => mapAssignmentToTask(a));
         if (mounted) setTasks(taskRows);
@@ -257,8 +325,6 @@ export default function TeacherCalendar() {
 
   return (
     <>
-      <Menu />
-      <SideMenu />
 
       <motion.div
         className="max-w-[1400px] mx-auto px-8 pt-5 pb-10"
@@ -394,6 +460,7 @@ export default function TeacherCalendar() {
       <AddTaskModal
         open={taskModal.open}
         editEvent={taskModal.editEvent}
+        courses={courses}
         onClose={() => setTaskModal({ open: false, editEvent: null })}
         onAdd={handleAddTask}
       />

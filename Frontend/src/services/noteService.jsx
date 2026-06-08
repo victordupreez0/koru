@@ -14,8 +14,9 @@ async function handleResponse(res) {
  * Get all notes
  * @returns {Promise<Array>} Array of notes
  */
-export const getNotes = async () => {
-    const res = await fetch(`${API_BASE}/Note`, {
+export const getNotes = async (userId) => {
+    const url = userId ? `${API_BASE}/Note?authorId=${encodeURIComponent(userId)}` : `${API_BASE}/Note`;
+    const res = await fetch(url, {
         method: "GET",
         headers: { "Content-Type": "application/json" }
     });

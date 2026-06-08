@@ -7,19 +7,18 @@ import { motion } from "framer-motion";
  * An interactive, abstract representation of attendance history (last 10 sessions)
  * using colored nodes that expand to show details.
  */
-export default function AttendanceVisualizer() {
-    const data = [
-        { status: "Present", color: "#3C0078" },
-        { status: "Present", color: "#3C0078" },
-        { status: "Absent", color: "#FF8731" },
-        { status: "Present", color: "#3C0078" },
-        { status: "Present", color: "#3C0078" },
-        { status: "Present", color: "#3C0078" },
-        { status: "Present", color: "#3C0078" },
-        { status: "Absent", color: "#FF8731" },
-        { status: "Present", color: "#3C0078" },
-        { status: "Present", color: "#3C0078" },
-    ];
+const FALLBACK = [
+    { status: "Present" }, { status: "Present" }, { status: "Absent" },
+    { status: "Present" }, { status: "Present" }, { status: "Present" },
+    { status: "Present" }, { status: "Absent" },  { status: "Present" },
+    { status: "Present" },
+];
+
+export default function AttendanceVisualizer({ sessions }) {
+    const raw = sessions && sessions.length > 0 ? sessions.slice(0, 10) : FALLBACK;
+    const data = raw.map(r => ({
+        status: r.status === "Absent" ? "Absent" : "Present",
+    }));
 
     return (
         <div className="bg-white p-8 rounded-[40px] border border-gray-100 shadow-sm flex flex-col h-full items-center justify-between group">

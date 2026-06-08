@@ -1,63 +1,36 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { AnimatePresence } from "framer-motion";
 import { Bell } from "lucide-react";
-import Menu from "../../components/menu";
-import SideMenu from "../../components/sideMenu";
+
 import { TeacherAnalyticsModal } from "../courses/adminCoursesComponents";
 import { createEvent } from "../../services/eventService";
-import { 
-  FilterDropdown, 
-  LecturerColumn, 
-  CourseColumn, 
-  StudentColumn, 
+import {
+  courseService,
+  userService,
+  subjectService,
+  enrollmentService,
+  registrationService,
+} from "../../services/adminService";
+import {
+  FilterDropdown,
+  LecturerColumn,
+  CourseColumn,
+  StudentColumn,
   AssignStudentsModal,
-  SendNotificationModal
+  SendNotificationModal,
 } from "./adminDashboardComponents";
 
-// ──────────────────────────────────────────────
-// MOCK DATA – swap with backend service later
-// ──────────────────────────────────────────────
-const MOCK_LECTURERS = [
-  { id: 1, name: "Tsungai Katsuro" },
-  { id: 2, name: "Laudette Sass" },
-  { id: 3, name: "Peter Smith" },
-];
-
-const MOCK_COURSES = [
-  { id: 1, title: "User Experience Design 200", code: "UX200", lecturerId: 1, year: 3, semester: 1 },
-  { id: 2, title: "Interactive Development 200", code: "ID200", lecturerId: 1, year: 3, semester: 1 },
-  { id: 3, title: "Photography 200", code: "PH200", lecturerId: 3, year: 3, semester: 1 },
-  { id: 4, title: "Communication Design 200", code: "CM200", lecturerId: 2, year: 3, semester: 1 },
-  { id: 5, title: "Robotics and Electronic 200", code: "RE200", lecturerId: 2, year: 3, semester: 1 },
-  { id: 6, title: "User Experience Design 200", code: "UX200", lecturerId: 2, year: 3, semester: 2 },
-  { id: 7, title: "Interactive Development 200", code: "ID200", lecturerId: 1, year: 3, semester: 2 },
-];
-
-const MOCK_STUDENTS = [
-  { id: 1, name: "Abigail Bota", major: "Double Major UX & DV", courseIds: [1, 2] },
-  { id: 2, name: "Andre Delport", major: "Double Major UX & DV", courseIds: [1, 2] },
-  { id: 3, name: "Bianca Du Toit", major: "Single Major DV", courseIds: [2, 3] },
-  { id: 4, name: "Ben Cole", major: "Double Major CM & DV", courseIds: [1, 4] },
-  { id: 5, name: "Cara Clark", major: "Double Major Pho & CM", courseIds: [3, 4] },
-  { id: 6, name: "Cloe Mathews", major: "Single Major DV", courseIds: [2, 5] },
-  { id: 7, name: "Dave Strydom", major: "Single Major UX", courseIds: [1, 6] },
-  { id: 8, name: "Daniel Martins", major: "Single Major PH", courseIds: [3, 5] },
-  { id: 9, name: "Emily Sanders", major: "Double Major UX & CM", courseIds: [4, 6] },
-  { id: 10, name: "Franco Visser", major: "Single Major RE", courseIds: [5, 7] },
-];
-
-// ──────────────────────────────────────────────
-// MAIN ADMIN DASHBOARD
-// ──────────────────────────────────────────────
 export default function AdminDashboard() {
   // ── Global filters ──
-  const [year, setYear] = useState("3");
+  const [year, setYear] = useState("");
   const [semester, setSemester] = useState("1");
 
-  // ── Data state (local mock) ──
-  const [lecturers, setLecturers] = useState(MOCK_LECTURERS);
-  const [courses, setCourses] = useState(MOCK_COURSES);
-  const [students, setStudents] = useState(MOCK_STUDENTS);
+  // ── Data state ──
+  const [lecturers, setLecturers] = useState([]);
+  const [courses, setCourses] = useState([]);
+  const [students, setStudents] = useState([]);
+  const [subjects, setSubjects] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   // ── Selection state ──
   const [selectedLecturerId, setSelectedLecturerId] = useState(null);
@@ -77,16 +50,87 @@ export default function AdminDashboard() {
   const [showTeacherAnalytics, setShowTeacherAnalytics] = useState(false);
   const [analyticsTeacher, setAnalyticsTeacher] = useState(null);
 
+  // ── Data fetch ──
+  const fetchData = async () => {
+    setIsLoading(true);
+    try {
+      const [rawTeachers, rawCourses, rawEnrollments, rawSubjects] = await Promise.all([
+        userService.getTeachers(),
+        courseService.getAllCourses(),
+        enrollmentService.getAll(),
+        subjectService.getSubjects(),
+      ]);
+
+      // Normalize teachers to add a display `name` field
+      const normalizedTeachers = rawTeachers.map(t => ({
+        ...t,
+        name: `${t.firstName} ${t.lastName}`,
+      }));
+
+      // Normalize courses to match the shape child components expect:
+      // - title  ← subject.name
+      // - code   ← subject.code
+      // - lecturerId ← teacherId (for existing filter/display logic)
+      // - semester ← 1 or 2 parsed from term string
+      const normalizedCourses = rawCourses.map(c => ({
+        ...c,
+        title: c.subject?.name || "Unknown Subject",
+        code: c.subject?.code || "",
+        lecturerId: c.teacherId,
+        semester: c.term?.includes("2") ? 2 : 1,
+      }));
+
+      // Derive students from enrollments, grouping courseIds per student
+      const studentMap = {};
+      rawEnrollments.forEach(e => {
+        if (!e.student) return;
+        const sid = e.student.id;
+        if (!studentMap[sid]) {
+          studentMap[sid] = {
+            ...e.student,
+            name: `${e.student.firstName} ${e.student.lastName}`,
+            courseIds: [],
+          };
+        }
+        studentMap[sid].courseIds.push(e.courseId);
+      });
+
+      setLecturers(normalizedTeachers);
+      setCourses(normalizedCourses);
+      setStudents(Object.values(studentMap));
+      setSubjects(rawSubjects);
+    } catch (err) {
+      console.error("Failed to load dashboard data:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  // ── Available calendar years derived from courses ──
+  const availableYears = useMemo(() => {
+    return [...new Set(courses.map(c => c.year.toString()))].sort((a, b) => a - b);
+  }, [courses]);
+
+  // Default year to first available year when data loads
+  useEffect(() => {
+    if (availableYears.length > 0 && !availableYears.includes(year)) {
+      setYear(availableYears[0]);
+    }
+  }, [availableYears]);
+
   // ── Derived data ──
   const filteredLecturers = useMemo(() => {
-    // Only show lecturers who teach at least one course in the selected year/semester
     const lecturerIdsWithCourses = new Set(
       courses
-        .filter((c) => c.year === parseInt(year) && c.semester === parseInt(semester))
-        .map((c) => c.lecturerId)
+        .filter(c => c.year === parseInt(year) && c.semester === parseInt(semester))
+        .map(c => c.lecturerId)
     );
     return lecturers.filter(
-      (l) =>
+      l =>
         lecturerIdsWithCourses.has(l.id) &&
         l.name.toLowerCase().includes(lecturerSearch.toLowerCase())
     );
@@ -95,7 +139,7 @@ export default function AdminDashboard() {
   const filteredCourses = useMemo(() => {
     if (!selectedLecturerId) return [];
     return courses.filter(
-      (c) =>
+      c =>
         c.lecturerId === selectedLecturerId &&
         c.year === parseInt(year) &&
         c.semester === parseInt(semester) &&
@@ -106,7 +150,7 @@ export default function AdminDashboard() {
   const filteredStudents = useMemo(() => {
     if (!selectedCourseId) return [];
     let result = students.filter(
-      (s) =>
+      s =>
         s.courseIds.includes(selectedCourseId) &&
         s.name.toLowerCase().includes(studentSearch.toLowerCase())
     );
@@ -119,8 +163,7 @@ export default function AdminDashboard() {
   // ── Auto-select first lecturer + first course on load / filter change ──
   useEffect(() => {
     if (filteredLecturers.length > 0) {
-      // Keep current selection if still valid, otherwise pick the first
-      if (!filteredLecturers.find((l) => l.id === selectedLecturerId)) {
+      if (!filteredLecturers.find(l => l.id === selectedLecturerId)) {
         setSelectedLecturerId(filteredLecturers[0].id);
       }
     } else {
@@ -130,7 +173,7 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     if (filteredCourses.length > 0) {
-      if (!filteredCourses.find((c) => c.id === selectedCourseId)) {
+      if (!filteredCourses.find(c => c.id === selectedCourseId)) {
         setSelectedCourseId(filteredCourses[0].id);
       }
     } else {
@@ -141,7 +184,7 @@ export default function AdminDashboard() {
   // ── Handlers ──
   const handleSelectLecturer = (id) => {
     setSelectedLecturerId(id);
-    setSelectedCourseId(null); // Reset course – will auto-select via effect
+    setSelectedCourseId(null);
     setIsAddingLecturer(false);
     setIsAddingCourse(false);
   };
@@ -151,33 +194,33 @@ export default function AdminDashboard() {
     setIsAddingCourse(false);
   };
 
-  const handleSaveLecturer = (name) => {
-    const newId = Math.max(...lecturers.map((l) => l.id), 0) + 1;
-    setLecturers((prev) => [...prev, { id: newId, name }]);
-    setIsAddingLecturer(false);
-    // Don't auto-select – they have no courses yet
+  const handleSaveLecturer = async ({ firstName, lastName, email }) => {
+    try {
+      await registrationService.registerTeacher({ firstName, lastName, email });
+      setIsAddingLecturer(false);
+      await fetchData();
+    } catch (err) {
+      alert("Failed to create lecturer: " + err.message);
+    }
   };
 
   const handleOpenAnalytics = (lecturer) => {
-    // Map the dashboard lecturer data to the format expected by the modal
-    const formattedTeacher = {
-      firstName: lecturer.name.split(" ")[0] || "Lecturer",
-      lastName: lecturer.name.split(" ").slice(1).join(" ") || "",
-      email: `${lecturer.name.toLowerCase().replace(/\s+/g, ".")}@learnonline.ac.za`,
-      ...lecturer
-    };
-    setAnalyticsTeacher(formattedTeacher);
+    setAnalyticsTeacher(lecturer);
     setShowTeacherAnalytics(true);
   };
 
-  const handleSendNotification = async (notificationData) => {
+  const handleSendNotification = async ({ title, description, startTime, endTime, selectedIds, eventType, bgColor, textColor }) => {
     try {
-      // Backend integration is paused as requested. 
-      // For now, we just simulate the success.
-      console.log("Simulating notification send:", notificationData);
-      
-      alert(`Simulation Mode: Notification sent to ${notificationData.selectedIds.length} lecturers!\n\nDetails:\nTitle: ${notificationData.title}\nDate: ${notificationData.startTime}`);
-      
+      const targetCourses = courses.filter(c => selectedIds.includes(c.lecturerId));
+      if (targetCourses.length === 0) {
+        alert("The selected lecturers have no courses in the current filter. No events created.");
+        return;
+      }
+      await Promise.all(
+        targetCourses.map(c =>
+          createEvent({ title, description, eventType, startTime, endTime, bgColor, textColor, courseId: c.id })
+        )
+      );
       setIsSendingNotification(false);
     } catch (err) {
       console.error("Failed to send notification:", err);
@@ -185,56 +228,62 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleSaveCourse = (title, code) => {
-    const newId = Math.max(...courses.map((c) => c.id), 0) + 1;
-    const newCourse = {
-      id: newId,
-      title,
-      code,
-      lecturerId: selectedLecturerId,
-      year: parseInt(year),
-      semester: parseInt(semester),
-    };
-    setCourses((prev) => [...prev, newCourse]);
-    setIsAddingCourse(false);
-    setSelectedCourseId(newId);
+  const handleSaveCourse = async (subjectId, term) => {
+    try {
+      await courseService.createCourse({
+        subjectId,
+        teacherId: selectedLecturerId,
+        term,
+        year: parseInt(year),
+        capacity: 50,
+      });
+      setIsAddingCourse(false);
+      await fetchData();
+    } catch (err) {
+      alert("Error creating course: " + err.message);
+    }
   };
 
-  const handleAssignStudent = (studentId) => {
-    setStudents((prev) =>
-      prev.map((s) =>
-        s.id === studentId
-          ? { ...s, courseIds: [...s.courseIds, selectedCourseId] }
-          : s
-      )
-    );
+  const handleAssignStudent = async (studentId) => {
+    try {
+      await enrollmentService.create({
+        studentId,
+        courseId: selectedCourseId,
+        status: "Active",
+      });
+      await fetchData();
+    } catch (err) {
+      alert("Failed to assign student: " + err.message);
+    }
   };
 
-  const selectedLecturer = lecturers.find((l) => l.id === selectedLecturerId);
-  const selectedCourse = courses.find((c) => c.id === selectedCourseId);
+  const selectedLecturer = lecturers.find(l => l.id === selectedLecturerId);
+  const selectedCourse = courses.find(c => c.id === selectedCourseId);
 
-  // Conditional Add-button visibility
   const showAddCourse = selectedLecturerId && !isAddingLecturer;
   const showAddStudent = selectedCourseId && !isAddingCourse && !isAddingLecturer;
 
+  if (isLoading) {
+    return (
+      <div className="h-[80vh] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-10 h-10 border-4 border-[#3C0078] border-t-transparent rounded-full animate-spin" />
+          <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Loading Dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="relative h-[80vh] overflow-hidden flex items-center justify-center p-6">
-      <Menu />
-      <SideMenu />
-
       <div className="flex flex-col h-full w-full max-w-[1400px]">
         {/* ── Year / Semester filter bar ── */}
-        <div className="flex items-center justify-start gap-4 pt-16 pb-4">
+        <div className="flex items-center justify-start gap-4 pt-2 pb-4">
           <FilterDropdown
             label="Year"
             value={year}
             onChange={setYear}
-            options={[
-              { value: "1", label: "1" },
-              { value: "2", label: "2" },
-              { value: "3", label: "3" },
-              { value: "4", label: "4" },
-            ]}
+            options={availableYears.map(y => ({ value: y, label: y }))}
           />
           <FilterDropdown
             label="Semester"
@@ -245,8 +294,8 @@ export default function AdminDashboard() {
               { value: "2", label: "2" },
             ]}
           />
-          
-          <button 
+
+          <button
             onClick={() => setIsSendingNotification(true)}
             className="ml-auto px-6 py-3 rounded-2xl bg-[#3C0078] text-white shadow-lg shadow-[#3C0078]/20 flex items-center gap-3 hover:scale-[1.03] transition-all group"
           >
@@ -284,6 +333,7 @@ export default function AdminDashboard() {
             selectedCourseId={selectedCourseId}
             handleSelectCourse={handleSelectCourse}
             lecturers={lecturers}
+            subjects={subjects}
           />
 
           <StudentColumn
@@ -304,7 +354,7 @@ export default function AdminDashboard() {
         {isAssigningStudents && selectedCourse && (
           <AssignStudentsModal
             allStudents={students}
-            currentStudentIds={filteredStudents.map((s) => s.id)}
+            currentStudentIds={filteredStudents.map(s => s.id)}
             courseTitle={selectedCourse.title}
             onAssign={handleAssignStudent}
             onClose={() => setIsAssigningStudents(false)}

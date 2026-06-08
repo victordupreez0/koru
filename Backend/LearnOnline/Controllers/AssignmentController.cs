@@ -71,6 +71,25 @@ namespace LearnOnline.Controllers
             return assignments;
         }
 
+        // GET /api/Assignment/teacher/{teacherId} – return all assignments for courses taught by this teacher
+        [HttpGet("teacher/{teacherId}")]
+        public async Task<ActionResult<IEnumerable<Assignment>>> GetByTeacherId(string teacherId)
+        {
+            var taughtCourseIds = await _context.Courses
+                .Where(c => c.TeacherId == teacherId)
+                .Select(c => c.Id)
+                .ToListAsync();
+
+            var assignments = await _context.Assignments
+                .Include(a => a.Course)
+                    .ThenInclude(c => c.Subject)
+                .Where(a => taughtCourseIds.Contains(a.CourseId))
+                .OrderBy(a => a.DueDate)
+                .ToListAsync();
+
+            return assignments;
+        }
+
         // POST /api/Assignment – create a new assignment for a course
         [HttpPost]
         public async Task<ActionResult<Assignment>> Create(Assignment assignment)
@@ -100,6 +119,8 @@ namespace LearnOnline.Controllers
             assignment.IsClosed = updated.IsClosed;
             assignment.AllowMultipleAttempts = updated.AllowMultipleAttempts;
             assignment.QuizQuestionsJson = updated.QuizQuestionsJson;
+            assignment.ExternalToolName = updated.ExternalToolName;
+            assignment.ExternalToolUrl = updated.ExternalToolUrl;
 
             await _context.SaveChangesAsync();
             return NoContent();

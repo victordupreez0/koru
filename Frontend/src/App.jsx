@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { HashRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "./contexts/AuthContext";
 
 // Page components – rendered based on the current route
@@ -16,6 +16,7 @@ import TeacherAssistant from "./pages/Assistant/teacherAssistant";
 import Profile from "./pages/profile/profile";
 import AnalyticsPage from "./pages/analytics";
 import AdminCourses from "./pages/courses/adminCourses";
+import AppSidebar from "./components/AppSidebar";
 
 // Root application component – sets up routing and the shared layout
 function App() {
@@ -32,7 +33,7 @@ function App() {
   }, [role]);
 
   return (
-    <BrowserRouter>
+    <HashRouter>
       <RouteSpeechAnnouncer />
       <ClickSpark
         sparkColor="#3C0078"
@@ -41,9 +42,11 @@ function App() {
         sparkCount={8}
         duration={400}
       >
+        {/* Unified left sidebar – rendered once, visible on all protected routes */}
+        <AppSidebar />
 
-        {/* Main content area – padded to avoid overlapping the fixed menus */}
-        <main className={isIframeMode ? "" : "pt-24 pl-40 pr-40"}>
+        {/* Main content area – offset for the floating 80px sidebar (16px margin + 80px width + 16px gap) */}
+        <main className={isIframeMode ? "" : "py-4 pl-[112px] pr-4 min-h-screen transition-all duration-300"}>
           <Routes>
             {/* Public routes – landing & role-specific login portals */}
             <Route path="/" element={<Onboarding />} />
@@ -56,9 +59,9 @@ function App() {
             <Route path="/calendar" element={<ProtectedRoute><CalendarPage /></ProtectedRoute>} />
             <Route path="/courses/*" element={<ProtectedRoute><Courses /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
-            <Route path="/teacherassistant" element={<ProtectedRoute><TeacherAssistant /></ProtectedRoute>} />
+            <Route path="/teacherassistant" element={<ProtectedRoute allowedRoles={["teacher", "admin"]}><TeacherAssistant /></ProtectedRoute>} />
             <Route path="/analytics" element={<ProtectedRoute><AnalyticsPage /></ProtectedRoute>} />
-            <Route path="/admin/courses" element={<ProtectedRoute><AdminCourses /></ProtectedRoute>} />
+            <Route path="/admin/courses" element={<ProtectedRoute allowedRoles={["admin"]}><AdminCourses /></ProtectedRoute>} />
 
             {/* Profile routes*/}
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
@@ -69,7 +72,7 @@ function App() {
           </Routes>
         </main>
       </ClickSpark>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
 

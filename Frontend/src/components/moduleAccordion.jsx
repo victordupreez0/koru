@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { ChevronDown, ChevronRight, Plus, Trash2, X } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 
@@ -76,6 +76,17 @@ function SubNavItem({ label, isActive, onClick, onRemove, isTeacher }) {
   );
 }
 
+const MODULE_ACCORDION_KEY = "module_accordion_items";
+
+const DEFAULT_ITEMS = [
+  { id: 1, title: "Overview", subItems: ["Semester Overview"], defaultOpen: true },
+  { id: 2, title: "Resources", subItems: ["Open Window Library", "Academic Rules", "Study Guide", "Prescribed Reading"], defaultOpen: true },
+  { id: 3, title: "Week 1", subItems: ["Practical", "Theory"], defaultOpen: true },
+  { id: 4, title: "Week 2", subItems: [], defaultOpen: false },
+  { id: 5, title: "Week 3", subItems: [], defaultOpen: false },
+  { id: 6, title: "Week 4", subItems: [], defaultOpen: false },
+];
+
 export default function ModuleAccordion() {
   const { role } = useAuth();
   const isTeacher = role === "teacher";
@@ -85,14 +96,17 @@ export default function ModuleAccordion() {
   const [addingSubItemTo, setAddingSubItemTo] = useState(null); 
   const [newSubItemLabel, setNewSubItemLabel] = useState("");
 
-  const [items, setItems] = useState([
-    { id: 1, title: "Overview", subItems: ["Semester Overview"], defaultOpen: true },
-    { id: 2, title: "Resources", subItems: ["Open Window Library", "Academic Rules", "Study Guide", "Prescribed Reading"], defaultOpen: true },
-    { id: 3, title: "Week 1", subItems: ["Practical", "Theory"], defaultOpen: true },
-    { id: 4, title: "Week 2", subItems: [], defaultOpen: false },
-    { id: 5, title: "Week 3", subItems: [], defaultOpen: false },
-    { id: 6, title: "Week 4", subItems: [], defaultOpen: false },
-  ]);
+  const [items, setItems] = useState(() => {
+    try {
+      const saved = localStorage.getItem(MODULE_ACCORDION_KEY);
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return DEFAULT_ITEMS;
+  });
+
+  useEffect(() => {
+    localStorage.setItem(MODULE_ACCORDION_KEY, JSON.stringify(items));
+  }, [items]);
 
   const removeSection = (id) => {
     setItems(items.filter(item => item.id !== id));
