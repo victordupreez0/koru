@@ -785,7 +785,7 @@ namespace LearnOnline.Data
             var subject = new Subject { Name = name, Code = code, Description = desc, CreatedBy = adminId };
             context.Subjects.Add(subject);
             context.SaveChanges();
-            var course = new Course { Term = term, Year = year, Capacity = capacity, SubjectId = subject.Id, TeacherId = teacherId };
+            var course = new Course { Term = term, Year = year, Capacity = capacity, SubjectId = subject.Id, TeacherId = teacherId, IsVisible = true };
             context.Courses.Add(course);
             context.SaveChanges();
             return (subject, course);
