@@ -2,28 +2,46 @@ import { MdPersonOutline } from "react-icons/md";
 
 // Single announcement row inside the Course Glance card
 // Displays the announcement title, a truncated preview of the message, and the time it was posted
-// Props have sensible defaults for preview / placeholder purposes
 export default function AnnouncementsItem({
   title = "Prescribed Reading",
-  message = "Hi everyone, a quick reminder that the prescribed reading for this week is due before our next session. Please work through the assigned material so we can hit the ground running in class. This week's reading: Chapter 5 — Design Thinking in Practice Article: User-Centred Research Methods Supplementary notes (uploaded to Files) Deadline: Complete before your next scheduled class. We'll be discussing the reading directly — coming unprepared will affect your participation. If you have any questions about the material, post them in the Discussion board — I check it daily. See you in class.",
-  time = "11:23AM"
+  message = "Hi everyone, a quick reminder...",
+  time = "11:23AM",
+  isRead = true,
+  color = "#3C0078",
+  onClick
 }) {
   return (
-    <div className="my-2 bg-white shadow-sm rounded-xl w-full flex flex-row items-start px-3 py-3 transition-all duration-200 hover:shadow-md hover:-translate-y-1">
-      {/* Teal avatar circle with a person icon */}
-      <div className="w-9 h-9  bg-teal-200 rounded-full flex items-center justify-center shrink-0 mt-0.5">
-        <MdPersonOutline className="w-6 h-6 text-black/40" />
+    <div 
+      onClick={onClick}
+      className="my-2 bg-white shadow-sm rounded-xl w-full flex flex-row items-center px-3 py-3 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 cursor-pointer border border-gray-100/50 relative overflow-hidden"
+    >
+      {/* Avatar circle using default brand color theme */}
+      <div 
+        className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
+        style={{ backgroundColor: "#3C007815", color: "#3C0078" }}
+      >
+        <MdPersonOutline className="w-5 h-5" />
       </div>
 
       {/* Title and message preview */}
       <div className="flex flex-col justify-center flex-1 ml-3 min-w-0">
-        <h3 className="text-sm font-semibold leading-tight text-black">{title}</h3>
-        <p className="text-xs text-gray-500 pt-3 line-clamp-4 leading-tight">{message}</p>
+        <div className="flex items-center gap-1.5">
+          <h3 className={`text-sm leading-tight truncate ${!isRead ? "font-bold text-black" : "font-semibold text-gray-700"}`}>
+            {title}
+          </h3>
+          {!isRead && (
+            <span className="flex h-2 w-2 shrink-0 relative">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 bg-[#3C0078]"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-[#3C0078]"></span>
+            </span>
+          )}
+        </div>
+        <p className="text-[11px] text-gray-400 pt-0.5 line-clamp-1 leading-normal">{message}</p>
       </div>
 
       {/* Timestamp */}
-      <div className="ml-3 flex items-start">
-        <span className="text-xs text-gray-400 font-medium whitespace-nowrap">{time}</span>
+      <div className="ml-3 flex items-start shrink-0">
+        <span className="text-[10px] text-gray-400 font-medium whitespace-nowrap">{time}</span>
       </div>
     </div>
   );
