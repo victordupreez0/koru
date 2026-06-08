@@ -37,13 +37,13 @@ export default function CourseAttendanceView({ activeCourseId }) {
     const missed = records.filter(r => r.status === "Absent").length;
 
     return (
-        <motion.div className="flex-1 p-8 overflow-y-auto" initial="hidden" animate="visible" variants={staggerContainer}>
-            <motion.header variants={slideUp} className="mb-12">
+        <motion.div className="flex-1 overflow-y-auto" initial="hidden" animate="visible" variants={staggerContainer}>
+            <motion.header variants={slideUp} className="mb-6">
                 <h1 className="text-3xl font-semibold tracking-tight">Attendance</h1>
                 <p className="text-gray-500 mt-2">Academic Presence Tracking</p>
             </motion.header>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
                 <motion.div variants={scaleIn} className="lg:col-span-2">
                     <AttendanceChart attended={attended} total={total || 1} missed={missed} />
                 </motion.div>
@@ -52,8 +52,8 @@ export default function CourseAttendanceView({ activeCourseId }) {
                 </motion.div>
             </div>
 
-            <motion.div variants={slideUp} className="bg-white rounded-[40px] border border-gray-100 shadow-sm overflow-hidden">
-                <div className="px-8 py-6 border-b border-gray-50 flex justify-between items-center">
+            <motion.div variants={slideUp} className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-50 flex justify-between items-center">
                     <h2 className="text-lg font-bold">Session History</h2>
                     <button className="text-sm font-semibold text-[#3C0078] hover:underline flex items-center gap-2">
                         <Calendar size={18} /> Download Report

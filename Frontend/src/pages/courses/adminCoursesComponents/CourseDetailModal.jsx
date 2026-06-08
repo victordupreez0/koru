@@ -4,6 +4,7 @@ import { X, ChevronDown, BarChart3 } from "lucide-react";
 import TeacherPerspectiveModal from "./TeacherPerspectiveModal";
 import StudentPerspectiveModal from "./StudentPerspectiveModal";
 import TeacherAnalyticsModal from "./TeacherAnalyticsModal";
+import CohortManagerModal from "./CohortManagerModal";
 
 const DEGREES = [
   "UX Design Degree",
@@ -27,6 +28,7 @@ export default function CourseDetailModal({
   const [showTeacherPreview, setShowTeacherPreview] = useState(false);
   const [showStudentPreview, setShowStudentPreview] = useState(false);
   const [showTeacherAnalytics, setShowTeacherAnalytics] = useState(false);
+  const [showCohortManager, setShowCohortManager] = useState(false);
 
   if (!course) return null;
 
@@ -36,12 +38,12 @@ export default function CourseDetailModal({
       <motion.div 
         initial={{ scale: 0.95, opacity: 0 }} 
         animate={{ scale: 1, opacity: 1 }} 
-        className="bg-white rounded-[40px] w-[80vw] max-w-[1400px] shadow-3xl overflow-hidden relative" 
+        className="bg-white rounded-3xl w-[80vw] max-w-[1400px] shadow-3xl overflow-hidden relative" 
         onClick={e => e.stopPropagation()}
       >
           <div className="flex flex-col md:flex-row min-h-[600px]">
             {/* Left Column: Core Info & Main Meta */}
-            <div className="p-12 md:w-2/5 bg-gray-50/50 border-r border-gray-100 flex flex-col justify-between">
+            <div className="p-8 md:w-2/5 bg-gray-50/50 border-r border-gray-100 flex flex-col justify-between">
                 <div className="mb-10">
                     <div className="flex items-center gap-3 mb-4">
                       {isEditing ? (
@@ -157,10 +159,10 @@ export default function CourseDetailModal({
             </div>
 
             {/* Right Column: Narrative & Actions */}
-            <div className="p-16 md:w-3/5 flex flex-col justify-between">
+            <div className="p-10 md:w-3/5 flex flex-col justify-between">
                 <button onClick={onClose} className="absolute top-10 right-10 p-3 bg-gray-50 rounded-2xl hover:bg-red-50 hover:text-red-500 transition-all shadow-sm"><X size={24}/></button>
                 
-                <div className="space-y-12">
+                <div className="space-y-8">
                     <div>
                       <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-4">Course Specification</label>
                       {isEditing ? (
@@ -228,7 +230,7 @@ export default function CourseDetailModal({
                     </div>
 
                     {!isEditing && (
-                      <div className="mt-12 flex items-center gap-4 p-8 rounded-[32px] bg-[#3C0078]/5 border border-[#3C0078]/10 group/view">
+                      <div className="mt-8 flex items-center gap-4 p-6 rounded-3xl bg-[#3C0078]/5 border border-[#3C0078]/10 group/view">
                         <div className="flex-1">
                           <h4 className="text-[14px] font-black text-[#3C0078] uppercase tracking-widest mb-1">Perspective View</h4>
                           <p className="text-[11px] font-medium text-gray-400 leading-tight">Preview this course as it appears to different platform roles.</p>
@@ -249,20 +251,35 @@ export default function CourseDetailModal({
                         </div>
                       </div>
                     )}
+
+                    {!isEditing && (
+                      <div className="mt-4 flex items-center justify-between gap-4 p-6 rounded-3xl bg-[#3C0078] text-white shadow-xl shadow-[#3C0078]/15 group/cohort">
+                        <div className="flex-1">
+                          <h4 className="text-[14px] font-black uppercase tracking-widest mb-1">Cohorts & Schedules</h4>
+                          <p className="text-[11px] font-medium text-purple-100/70 leading-tight">Manage student cohorts (Groups A/B) and weekly timetabled sessions.</p>
+                        </div>
+                        <button 
+                          onClick={() => setShowCohortManager(true)}
+                          className="px-6 py-3.5 rounded-2xl bg-white text-[#3C0078] text-[11px] font-black uppercase tracking-widest hover:bg-purple-50 transition-all shadow-sm flex items-center gap-1.5"
+                        >
+                          Manage Cohorts
+                        </button>
+                      </div>
+                    )}
                 </div>
 
-                <div className="flex gap-6 mt-16 font-sans">
+                <div className="flex gap-4 mt-10 font-sans">
                   {isEditing ? (
                     <>
                       <button 
                         onClick={onSave}
-                        className="flex-[2] py-7 rounded-[32px] bg-[#3C0078] text-white font-black uppercase tracking-widest text-[13px] shadow-2xl shadow-[#3C0078]/30 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                        className="flex-[2] py-4 rounded-3xl bg-[#3C0078] text-white font-black uppercase tracking-widest text-[13px] shadow-2xl shadow-[#3C0078]/30 hover:scale-[1.02] active:scale-[0.98] transition-all"
                       >
                         Confirm Registry Update
                       </button>
                       <button 
                         onClick={() => onDelete(editForm.id)}
-                        className="flex-1 py-7 rounded-[32px] bg-red-50 text-red-500 font-black uppercase tracking-widest text-[13px] hover:bg-red-500 hover:text-white transition-all border-none"
+                        className="flex-1 py-4 rounded-3xl bg-red-50 text-red-500 font-black uppercase tracking-widest text-[13px] hover:bg-red-500 hover:text-white transition-all border-none"
                       >
                         Delete Registry
                       </button>
@@ -271,11 +288,11 @@ export default function CourseDetailModal({
                     <>
                       <button 
                         onClick={() => setIsEditing(true)}
-                        className="flex-[2] py-7 rounded-[32px] bg-[#3C0078] text-white font-black uppercase tracking-widest text-[13px] shadow-2xl shadow-[#3C0078]/30 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                        className="flex-[2] py-4 rounded-3xl bg-[#3C0078] text-white font-black uppercase tracking-widest text-[13px] shadow-2xl shadow-[#3C0078]/30 hover:scale-[1.02] active:scale-[0.98] transition-all"
                       >
                         Modify system data
                       </button>
-                      <button className="flex-1 py-7 rounded-[32px] border-2 border-gray-100 text-gray-400 font-black uppercase tracking-widest text-[13px] hover:bg-gray-50 transition-all">
+                      <button className="flex-1 py-4 rounded-3xl border-2 border-gray-100 text-gray-400 font-black uppercase tracking-widest text-[13px] hover:bg-gray-50 transition-all">
                         Archive
                       </button>
                     </>
@@ -310,6 +327,15 @@ export default function CourseDetailModal({
             teacher={course.teacher} 
             isOpen={showTeacherAnalytics}
             onClose={() => setShowTeacherAnalytics(false)} 
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showCohortManager && (
+          <CohortManagerModal 
+            course={course}
+            onClose={() => setShowCohortManager(false)}
           />
         )}
       </AnimatePresence>

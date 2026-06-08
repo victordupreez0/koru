@@ -58,8 +58,8 @@ export function CourseAttendanceView({ activeCourseId }) {
     const overallRate = total > 0 ? Math.round((attended / total) * 100) : 0;
 
     return (
-        <motion.div className="flex-1 p-8 overflow-y-auto" initial="hidden" animate="visible" variants={staggerContainer}>
-            <motion.header variants={slideUp} className="mb-12 flex justify-between items-end">
+        <motion.div className="flex-1 overflow-y-auto" initial="hidden" animate="visible" variants={staggerContainer}>
+            <motion.header variants={slideUp} className="mb-6 flex justify-between items-end">
                 <div>
                     <h1 className="text-3xl font-semibold tracking-tight text-gray-900">Attendance & Presence</h1>
                     <p className="text-gray-500 mt-2">Academic Presence Analytics</p>
@@ -75,9 +75,9 @@ export function CourseAttendanceView({ activeCourseId }) {
             </motion.header>
 
             {/* Attendance Analytics Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12 items-stretch">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8 items-stretch">
                 <motion.div variants={scaleIn} className="lg:col-span-2">
-                    <div className="bg-white rounded-[40px] border border-gray-100 shadow-sm p-8 h-full flex flex-col">
+                    <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 h-full flex flex-col">
                         <div className="flex justify-between items-center mb-6">
                             <div>
                                 <h3 className="text-xl font-bold">Class Attendance Overview</h3>
@@ -91,7 +91,7 @@ export function CourseAttendanceView({ activeCourseId }) {
                 </motion.div>
 
                 <motion.div variants={scaleIn} className="flex flex-col gap-6">
-                    <div className="bg-[#3C0078] rounded-[40px] p-8 text-white flex-1 relative overflow-hidden group">
+                    <div className="bg-[#3C0078] rounded-3xl p-6 text-white flex-1 relative overflow-hidden group">
                         <div className="absolute -right-8 -top-8 w-32 h-32 bg-white/10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700"></div>
                         <span className="text-[10px] uppercase font-bold tracking-[0.2em] opacity-80 block mb-2">Overall Rate</span>
                         <div className="flex items-baseline gap-2">
@@ -104,7 +104,7 @@ export function CourseAttendanceView({ activeCourseId }) {
                         </div>
                     </div>
 
-                    <div className="bg-white rounded-[40px] border border-gray-100 shadow-sm p-8 flex-1 group hover:border-[#3C0078]/20 transition-all cursor-pointer">
+                    <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 flex-1 group hover:border-[#3C0078]/20 transition-all cursor-pointer">
                         <div className="flex justify-between items-center mb-6">
                             <span className="text-[10px] uppercase font-bold tracking-[0.2em] text-gray-400">Class Engagement</span>
                             <div className="flex -space-x-2">
@@ -140,8 +140,8 @@ export function CourseAttendanceView({ activeCourseId }) {
                 </motion.div>
             </div>
 
-            <motion.div variants={slideUp} className="bg-white rounded-[48px] border border-gray-100 shadow-sm overflow-hidden mb-12">
-                <div className="px-10 py-8 border-b border-gray-50 flex justify-between items-center">
+            <motion.div variants={slideUp} className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden mb-8">
+                <div className="px-6 py-4 border-b border-gray-50 flex justify-between items-center">
                     <h2 className="text-2xl font-bold">Students Attendance</h2>
                     <div className="flex gap-2">
                         <button className="p-2.5 rounded-xl bg-gray-50 text-gray-400 hover:bg-gray-100"><Filter size={20} /></button>

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useAuth } from "./AuthContext";
 import { getStudentCourses, getTeacherCourses } from "../services/courseService";
+import { courseService } from "../services/adminService";
 
 const CoursesContext = createContext();
 
@@ -26,7 +27,7 @@ export function CoursesProvider({ children }) {
     useEffect(() => {
         let mounted = true;
         async function fetchCourses() {
-            if (!user?.userId || (user.role !== "student" && user.role !== "teacher")) {
+            if (!user?.userId || (user.role !== "student" && user.role !== "teacher" && user.role !== "admin")) {
                 setLoading(false);
                 setAllCourses([]);
                 return;
@@ -49,7 +50,8 @@ export function CoursesProvider({ children }) {
                         term: enrollment.course.term,
                         description: enrollment.course.subject.description,
                         color: "#673694ff", // Default brand color for now
-                        href: `/courses/${enrollment.course.id}`
+                        href: `/courses/${enrollment.course.id}`,
+                        isVisible: enrollment.course.isVisible
                     }));
                 } else if (user.role === "teacher") {
                     const data = await getTeacherCourses(user.userId);
@@ -62,7 +64,22 @@ export function CoursesProvider({ children }) {
                         term: course.term,
                         description: course.subject.description,
                         color: "#673694ff",
-                        href: `/courses/${course.id}`
+                        href: `/courses/${course.id}`,
+                        isVisible: course.isVisible
+                    }));
+                } else if (user.role === "admin") {
+                    const data = await courseService.getAllCourses();
+                    mappedCourses = data.map(course => ({
+                        id: course.id,
+                        subjectName: course.subject?.name || "Unknown",
+                        label: course.subject?.code || "UN",
+                        code: course.subject?.code?.substring(0, 2) || "UN",
+                        number: course.subject?.code?.substring(2) || "000",
+                        term: course.term,
+                        description: course.subject?.description || "",
+                        color: "#673694ff",
+                        href: `/courses/${course.id}`,
+                        isVisible: course.isVisible
                     }));
                 }
 
@@ -99,12 +116,18 @@ export function CoursesProvider({ children }) {
         });
     };
 
+    // Updates a course's visibility status in context state directly
+    const updateCourseVisibilityInContext = (courseId, isVisible) => {
+        setAllCourses(prev => prev.map(c => c.id === courseId ? { ...c, isVisible } : c));
+    };
+
     const value = {
         allCourses,
         visibleCourses,
         loading,
         hiddenCourseIds,
-        toggleCourseVisibility
+        toggleCourseVisibility,
+        updateCourseVisibilityInContext
     };
 
     return (
