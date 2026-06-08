@@ -103,16 +103,12 @@ namespace LearnOnline.Data
         {
             context.Database.EnsureCreated();
 
-            // Run-once guard - only skip if THIS seeder's data is already present AND correct.
-            // Verify devteacher exists, >100 students exist, AND DV300 is actually assigned to devteacher.
+            // Run-once guard: skip if the seed data is already present.
+            // Checking devteacher + >100 students is sufficient evidence of a completed seed.
             var existingDevTeacher = context.Users.FirstOrDefault(u => u.Email == "devteacher@learnonline.co.za");
             if (existingDevTeacher != null && context.Users.Count(u => u.Role == UserRole.student) > 100)
             {
-                var dv300OK = context.Courses
-                    .Include(c => c.Subject)
-                    .Any(c => c.Subject.Code == "DV300" && c.TeacherId == existingDevTeacher.Id);
-                var hasUngradedWork = context.Assignments.Any(a => a.Title == "Interactive Website Project");
-                if (dv300OK && context.Attendances.Any() && hasUngradedWork) return;
+                return;
             }
 
             // Rebuild Announcements table (prevents schema drift across restarts)
