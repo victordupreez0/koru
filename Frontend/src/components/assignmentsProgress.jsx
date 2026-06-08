@@ -6,6 +6,7 @@ import ProgressRing from "./UI/progressRing";
 import { useAuth } from "../contexts/AuthContext";
 import { getStudentAssignments } from "../services/assignmentService";
 import { getStudentSubmissions } from "../services/submissionService";
+import { getStudentStats } from "../services/attendanceService";
 
 // ──────────────────────────────────────────────
 // Assignments data – easy to swap with backend later
