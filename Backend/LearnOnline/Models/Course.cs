@@ -36,5 +36,11 @@ namespace LearnOnline.Models
 
         [ForeignKey("TeacherId")]
         public User? Teacher { get; set; }
+
+        // Visibility status: true = published, false = draft
+        public bool IsVisible { get; set; } = false;
+
+        // Optional Degree program linkage
+        public string? Degree { get; set; }
     }
 }

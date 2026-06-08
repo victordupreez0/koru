@@ -251,7 +251,7 @@ namespace LearnOnline.Data
                 context.Subjects.Add(subject);
                 context.SaveChanges();
 
-                course = new Course { Term = term, Year = year, Capacity = 150, SubjectId = subject.Id, TeacherId = teacherId };
+                course = new Course { Term = term, Year = year, Capacity = 150, SubjectId = subject.Id, TeacherId = teacherId, IsVisible = true, Degree = (code == "DV300" ? "Software Engineering Degree" : code == "VC300" ? "Visual Arts Degree" : "UX Design Degree") };
                 context.Courses.Add(course);
                 context.SaveChanges();
             }
@@ -259,10 +259,28 @@ namespace LearnOnline.Data
             {
                 var subject = context.Subjects.First(s => s.Code == code);
                 course = context.Courses.FirstOrDefault(c => c.SubjectId == subject.Id);
-                if (course != null && course.TeacherId != teacherId) 
-                { 
-                    course.TeacherId = teacherId; 
-                    context.SaveChanges(); 
+                if (course != null)
+                {
+                    bool changed = false;
+                    if (course.TeacherId != teacherId)
+                    {
+                        course.TeacherId = teacherId;
+                        changed = true;
+                    }
+                    if (!course.IsVisible)
+                    {
+                        course.IsVisible = true;
+                        changed = true;
+                    }
+                    if (course.Degree == null)
+                    {
+                        course.Degree = (code == "DV300" ? "Software Engineering Degree" : code == "VC300" ? "Visual Arts Degree" : "UX Design Degree");
+                        changed = true;
+                    }
+                    if (changed)
+                    {
+                        context.SaveChanges();
+                    }
                 }
             }
 

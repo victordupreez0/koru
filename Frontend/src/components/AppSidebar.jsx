@@ -406,14 +406,18 @@ export default function AppSidebar() {
 
             {/* Footer / Actions */}
             <div className="p-4 border-t border-gray-100 flex flex-col gap-2 bg-gray-50/50">
-              {role === "teacher" && (
-                <button
-                  onClick={() => console.log("Add new course logic here")}
-                  className="flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl text-xs font-semibold bg-green-500 hover:bg-green-600 text-white transition-all cursor-pointer shadow-sm hover:shadow-md"
+              {(role === "admin" || role === "teacher") && (
+                <Link
+                  to="/courses/create"
+                  onClick={() => {
+                    setShowCourseNav(false);
+                    closeMobile();
+                  }}
+                  className="flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl text-xs font-semibold bg-green-500 hover:bg-green-600 text-white transition-all cursor-pointer shadow-sm hover:shadow-md text-center"
                 >
                   <AddCircle size={16} />
-                  <span>Add New Course</span>
-                </button>
+                  <span>Add Course</span>
+                </Link>
               )}
 
               <button

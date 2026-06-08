@@ -67,7 +67,9 @@ using (var scope = app.Services.CreateScope())
             ALTER TABLE ""Assignments"" ADD COLUMN IF NOT EXISTS ""CloseDate"" timestamp with time zone NULL;
             INSERT INTO ""__EFMigrationsHistory"" (""MigrationId"", ""ProductVersion"")
             VALUES ('20260525120000_AddAssignmentOpenCloseDate', '9.0.3')
-            ON CONFLICT DO NOTHING;";
+            ON CONFLICT DO NOTHING;
+            ALTER TABLE ""Courses"" DROP COLUMN IF EXISTS ""IsVisible"";
+            ALTER TABLE ""Courses"" DROP COLUMN IF EXISTS ""Degree"";";
         cmd.ExecuteNonQuery();
     }
     conn.Close();
