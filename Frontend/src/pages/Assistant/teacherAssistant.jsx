@@ -9,7 +9,8 @@ import { getAssistantResponse } from "../../services/assistantService";
 import { useAuth } from "../../contexts/AuthContext";
 
 export default function TeacherAssistant() {
-    const { user } = useAuth();
+    const { user, role } = useAuth();
+    const firstName = user?.firstName || user?.name?.split(" ")?.[0] || "";
     const [messages, setMessages] = useState([]);
     const [isTyping, setIsTyping] = useState(false);
     const [copiedIndex, setCopiedIndex] = useState(null);
@@ -232,7 +233,7 @@ export default function TeacherAssistant() {
                             
                             {messages.length === 0 ? (
                                 <div className="flex flex-col items-center justify-center space-y-4 my-auto">
-                                    <h2 className="text-4xl font-bold font-['Gabarito'] text-[#3C0078]">Hi Rikus,</h2>
+                                    <h2 className="text-4xl font-bold font-['Gabarito'] text-[#3C0078]">Hi {firstName || "there"},</h2>
                                     <h2 className="text-5xl font-bold font-['Gabarito'] text-slate-800 mb-8">Where should we start?</h2>
                                 </div>
                             ) : (

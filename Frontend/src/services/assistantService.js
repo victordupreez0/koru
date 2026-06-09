@@ -1,15 +1,19 @@
 // Service to handle interactions with the Groq AI model
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5299/api";
 
-const SYSTEM_INSTRUCTION = {
-  role: "system",
-  content: "You are a helpful, professional, and knowledgeable AI Teacher Assistant for the LearnOnline educational platform. " +
-            "You are conversing with Rikus, a teacher/administrator. You assist with creating structured timetables, " +
-            "writing detailed and encouraging student feedback, creating detailed module/lesson plans, " +
-            "explaining academic analytics, and drafting class announcements. " +
-            "Always respond in clear, professional, and engaging English. Use clean Markdown formatting with bolding, " +
-            "bullet points, and structured tables where appropriate to present information beautifully."
-};
+function buildSystemInstruction(role) {
+  const roleContext = role === "student"
+    ? "You are conversing with a student. Help them understand course material, assignments, study strategies, and academic concepts. Provide encouraging, clear explanations tailored to a learner."
+    : "You are conversing with a teacher/administrator. Assist with creating structured timetables, writing detailed and encouraging student feedback, creating detailed module/lesson plans, explaining academic analytics, and drafting class announcements.";
+
+  return {
+    role: "system",
+    content: "You are a helpful, professional, and knowledgeable AI Assistant for the LearnOnline educational platform. " +
+              roleContext + " " +
+              "Always respond in clear, professional, and engaging English. Use clean Markdown formatting with bolding, " +
+              "bullet points, and structured tables where appropriate to present information beautifully."
+  };
+}
 
 /**
  * Sends chat messages to the AI Assistant and returns the response content.
@@ -52,7 +56,7 @@ export async function getAssistantResponse(chatHistory, userId, role) {
       console.log("Using client-side VITE_GROQ_API_KEY direct fallback to Groq Cloud.");
       
       const messagesToSend = [
-        SYSTEM_INSTRUCTION,
+        buildSystemInstruction(role),
         ...chatHistory.filter(msg => msg.role !== "system" && msg.content && msg.content.trim())
       ];
 
