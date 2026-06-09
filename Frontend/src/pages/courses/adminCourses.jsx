@@ -1,18 +1,27 @@
 import React, { useState, useMemo, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Search, Users, BookOpen, TrendingUp } from "lucide-react";
-import { courseService, userService, subjectService } from "../../services/adminService";
+import { 
+  Plus, Search, Users, BookOpen, Clock, 
+  TrendingUp, CheckCircle, X, Bell
+} from "lucide-react";
+import { 
+  courseService, 
+  userService, 
+  subjectService, 
+  enrollmentService 
+} from "../../services/adminService";
 
 // Modularized Components
 import {
   StatCard,
   FilterDropdown,
   CourseListItem,
-  CreateCourseModal,
   CourseDetailModal
 } from "./adminCoursesComponents";
 
 export default function AdminCourses() {
+  const navigate = useNavigate();
   const [courses, setCourses] = useState([]);
   const [teachers, setTeachers] = useState([]);
   const [subjects, setSubjects] = useState([]);
@@ -24,17 +33,6 @@ export default function AdminCourses() {
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState(null);
-  const [showCreate, setShowCreate] = useState(false);
-  
-  const [newCourseForm, setNewCourseForm] = useState({
-    subjectId: "",
-    teacherId: "",
-    year: "1",
-    term: "Semester 1",
-    capacity: 50,
-    status: "Active",
-    degree: "UX Design Degree",
-  });
 
   useEffect(() => {
     fetchInitialData();
@@ -43,25 +41,19 @@ export default function AdminCourses() {
   const fetchInitialData = async () => {
     setIsLoading(true);
     try {
-      const [fetchedCourses, fetchedTeachers, fetchedSubjects] = await Promise.all([
+      const [fetchedCourses, fetchedTeachers, fetchedSubjects, fetchedEnrollments] = await Promise.all([
         courseService.getAllCourses(),
         userService.getTeachers(),
         subjectService.getSubjects(),
+        enrollmentService.getAllEnrollments().catch(() => [])
       ]);
 
-      setCourses(fetchedCourses);
-      setTeachers(fetchedTeachers);
-      setSubjects(fetchedSubjects);
-
-      if (fetchedSubjects.length > 0 && fetchedTeachers.length > 0) {
-        setNewCourseForm(prev => ({
-          ...prev,
-          subjectId: fetchedSubjects[0].id,
-          teacherId: fetchedTeachers[0].id
-        }));
-      }
+      setCourses(fetchedCourses || []);
+      setTeachers(fetchedTeachers || []);
+      setSubjects(fetchedSubjects || []);
+      setEnrollments(fetchedEnrollments || []);
     } catch (error) {
-      console.error("Failed to load course registry data:", error);
+      console.error("Failed to load backend registry data:", error);
     } finally {
       setIsLoading(false);
     }
@@ -84,33 +76,22 @@ export default function AdminCourses() {
     setIsEditing(false);
   };
 
-  const handleCreateCourse = async () => {
-    try {
-      const payload = {
-        subjectId: newCourseForm.subjectId,
-        teacherId: newCourseForm.teacherId,
-        term: newCourseForm.term,
-        year: parseInt(newCourseForm.year),
-        capacity: parseInt(newCourseForm.capacity),
-      };
-      await courseService.createCourse(payload);
-      setShowCreate(false);
-      setNewCourseForm(prev => ({ ...prev, capacity: 50 }));
-      await fetchInitialData();
-    } catch (error) {
-      alert("Error creating course: " + error.message);
-    }
-  };
-
   const handleSaveEdit = async () => {
     try {
-      await courseService.updateCourse(editForm.id, {
-        subjectId: editForm.subjectId,
-        teacherId: editForm.teacherId,
+      const updatedData = {
         term: editForm.term,
         year: parseInt(editForm.year),
         capacity: parseInt(editForm.capacity),
-      });
+        subjectId: editForm.subjectId,
+        teacherId: editForm.teacherId,
+        isVisible: editForm.isVisible || false,
+        degree: editForm.degree || ""
+      };
+      
+      await courseService.updateCourse(editForm.id, updatedData);
+      
+      // Refresh database records
+      await fetchInitialData();
       setSelectedCourse(null);
       setIsEditing(false);
       await fetchInitialData();
@@ -123,6 +104,7 @@ export default function AdminCourses() {
     if (!window.confirm("Are you sure you want to delete this course?")) return;
     try {
       await courseService.deleteCourse(id);
+      setCourses(prev => prev.filter(c => c.id !== id));
       setSelectedCourse(null);
       await fetchInitialData();
     } catch (error) {
@@ -155,7 +137,7 @@ export default function AdminCourses() {
 
   return (
     <div className="relative min-h-screen flex flex-col font-sans">
-      <main className="flex-1 w-full max-w-[1700px] mx-auto px-12 pb-24 space-y-10">
+      <main className="flex-1 w-full max-w-[1700px] mx-auto px-8 pb-12 space-y-6">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div>
                 <div className="flex items-center gap-2 mb-3">
@@ -164,7 +146,7 @@ export default function AdminCourses() {
                 </div>
                 <h1 className="text-5xl font-black tracking-tighter text-gray-900 leading-none">Course <span className="text-[#3C0078]">Management</span></h1>
             </div>
-            <button onClick={() => setShowCreate(true)} className="px-8 py-4 rounded-[20px] bg-[#3C0078] text-white shadow-lg shadow-[#3C0078]/20 flex items-center gap-3 hover:scale-[1.03] transition-all group">
+            <button onClick={() => navigate("/courses/create")} className="px-8 py-4 rounded-[20px] bg-[#3C0078] text-white shadow-lg shadow-[#3C0078]/20 flex items-center gap-3 hover:scale-[1.03] transition-all group cursor-pointer">
                 <Plus size={20} />
                 <span className="text-[12px] font-black uppercase tracking-wider">Add Course</span>
             </button>
@@ -230,19 +212,6 @@ export default function AdminCourses() {
           onDelete={handleDeleteCourse}
         />
       </AnimatePresence>
-
-      <AnimatePresence>
-        <CreateCourseModal 
-          show={showCreate}
-          onClose={() => setShowCreate(false)}
-          form={newCourseForm}
-          setForm={setNewCourseForm}
-          subjects={subjects}
-          teachers={teachers}
-          onCreate={handleCreateCourse}
-        />
-      </AnimatePresence>
     </div>
   );
 }
-

@@ -8,7 +8,11 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5299/api
 async function handleResponse(res) {
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    throw new Error(data.message || "Something went wrong.");
+    if (data.errors) {
+      const messages = Object.values(data.errors).flat().join(" ");
+      throw new Error(messages || data.title || "Something went wrong.");
+    }
+    throw new Error(data.message || data.title || "Something went wrong.");
   }
   return data;
 }
@@ -68,11 +72,28 @@ export const courseService = {
       const data = await res.json().catch(() => ({}));
       throw new Error(data.message || "Failed to delete course");
     }
+  },
+
+  /**
+   * Updates an existing course with new details.
+   * @param {string} id - The GUID of the course
+   * @param {Object} courseData - The updated course details
+   */
+  async updateCourse(id, courseData) {
+    const res = await fetch(`${API_BASE}/Course/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(courseData)
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.message || "Failed to update course");
+    }
   }
 };
 
 /**
- * User Service - Specifically for fetching teacher/staff accounts.
+ * User Service - For fetching teacher/staff and student accounts.
  */
 export const userService = {
   /**
@@ -84,9 +105,19 @@ export const userService = {
       headers: { "Content-Type": "application/json" }
     });
     const users = await handleResponse(res);
-    // Filter to only return teachers for the dropdowns
-    // Normalizing role check to handle potential case differences from DB (teacher/Teacher)
     return users.filter(user => user.role?.toLowerCase() === "teacher");
+  },
+
+  /**
+   * Fetches all users and filters them by "Student" role.
+   */
+  async getStudents() {
+    const res = await fetch(`${API_BASE}/User`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" }
+    });
+    const users = await handleResponse(res);
+    return users.filter(user => user.role?.toLowerCase() === "student");
   }
 };
 
@@ -100,17 +131,39 @@ export const subjectService = {
       headers: { "Content-Type": "application/json" }
     });
     return handleResponse(res);
+  },
+
+  async createSubject(subjectData) {
+    const res = await fetch(`${API_BASE}/Subject`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(subjectData)
+    });
+    return handleResponse(res);
   }
 };
 
 /**
- * Enrollment Service - For reading and creating student enrollments.
+ * Enrollment Service - For reading, creating, and bulk-managing student enrollments.
  */
 export const enrollmentService = {
-  async getAll() {
+  async getAllEnrollments() {
     const res = await fetch(`${API_BASE}/Enrollment`, {
       method: "GET",
       headers: { "Content-Type": "application/json" }
+    });
+    return handleResponse(res);
+  },
+
+  async getAll() {
+    return this.getAllEnrollments();
+  },
+
+  async bulkEnrollStudents(courseId, studentIds) {
+    const res = await fetch(`${API_BASE}/Enrollment/course/${courseId}/students`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(studentIds)
     });
     return handleResponse(res);
   },

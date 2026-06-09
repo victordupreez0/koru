@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { AnimatePresence } from "framer-motion";
-import { Bell } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import { Bell, Users, BookOpen, GraduationCap, UserCheck } from "lucide-react";
 
 import { TeacherAnalyticsModal } from "../courses/adminCoursesComponents";
 import { createEvent } from "../../services/eventService";
@@ -19,6 +19,7 @@ import {
   AssignStudentsModal,
   SendNotificationModal,
 } from "./adminDashboardComponents";
+import DashboardHeader from "../../components/DashboardHeader";
 
 export default function AdminDashboard() {
   // ── Global filters ──
@@ -263,49 +264,128 @@ export default function AdminDashboard() {
   const showAddCourse = selectedLecturerId && !isAddingLecturer;
   const showAddStudent = selectedCourseId && !isAddingCourse && !isAddingLecturer;
 
+  // ── Header KPIs derived from current filter ──
+  const currentTermCourses = useMemo(
+    () =>
+      courses.filter(
+        (c) => c.year === parseInt(year) && c.semester === parseInt(semester)
+      ),
+    [courses, year, semester]
+  );
+
+  const enrolledStudentCount = useMemo(() => {
+    const courseIds = new Set(currentTermCourses.map((c) => c.id));
+    const ids = new Set();
+    students.forEach((s) => {
+      if (s.courseIds.some((cid) => courseIds.has(cid))) ids.add(s.id);
+    });
+    return ids.size;
+  }, [students, currentTermCourses]);
+
+  const activeLecturerCount = useMemo(
+    () => new Set(currentTermCourses.map((c) => c.lecturerId)).size,
+    [currentTermCourses]
+  );
+
+  const headerStats = [
+    {
+      icon: UserCheck,
+      label: "Active Lecturers",
+      value: activeLecturerCount,
+      variant: "purple",
+    },
+    {
+      icon: BookOpen,
+      label: "Courses This Term",
+      value: currentTermCourses.length,
+      variant: "sky",
+    },
+    {
+      icon: GraduationCap,
+      label: "Enrolled Students",
+      value: enrolledStudentCount,
+      variant: "emerald",
+    },
+    {
+      icon: Users,
+      label: "Total Lecturers",
+      value: lecturers.length,
+      variant: "orange",
+    },
+  ];
+
   if (isLoading) {
     return (
-      <div className="h-[80vh] flex items-center justify-center">
+      <div className="h-[68vh] min-h-[520px] flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <div className="w-10 h-10 border-4 border-[#3C0078] border-t-transparent rounded-full animate-spin" />
-          <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Loading Dashboard...</p>
+          <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+            Loading Dashboard...
+          </p>
         </div>
       </div>
     );
   }
 
+  const headerActions = (
+    <>
+      <FilterDropdown
+        label="Year"
+        value={year}
+        onChange={setYear}
+        options={availableYears.map((y) => ({ value: y, label: y }))}
+      />
+      <FilterDropdown
+        label="Semester"
+        value={semester}
+        onChange={setSemester}
+        options={[
+          { value: "1", label: "1" },
+          { value: "2", label: "2" },
+        ]}
+      />
+
+      <motion.button
+        whileHover={{ y: -1 }}
+        whileTap={{ scale: 0.98 }}
+        onClick={() => setIsSendingNotification(true)}
+        className="px-5 py-3 rounded-2xl bg-[#3C0078] text-white flex items-center gap-2.5 hover:bg-[#2a0055] transition-colors"
+      >
+        <Bell size={16} />
+        <span className="text-[11px] font-black uppercase tracking-wider">
+          Send Notification
+        </span>
+      </motion.button>
+    </>
+  );
+
   return (
-    <div className="relative h-[80vh] overflow-hidden flex items-center justify-center p-6">
-      <div className="flex flex-col h-full w-full max-w-[1400px]">
-        {/* ── Year / Semester filter bar ── */}
-        <div className="flex items-center justify-start gap-4 pt-2 pb-4">
-          <FilterDropdown
-            label="Year"
-            value={year}
-            onChange={setYear}
-            options={availableYears.map(y => ({ value: y, label: y }))}
-          />
-          <FilterDropdown
-            label="Semester"
-            value={semester}
-            onChange={setSemester}
-            options={[
-              { value: "1", label: "1" },
-              { value: "2", label: "2" },
-            ]}
-          />
+    <div className="flex flex-col gap-6 pb-2">
+      <DashboardHeader
+        stats={headerStats}
+        actions={headerActions}
+        contextLine={`Managing ${year || "—"} · Semester ${semester}.`}
+      />
 
-          <button
-            onClick={() => setIsSendingNotification(true)}
-            className="ml-auto px-6 py-3 rounded-2xl bg-[#3C0078] text-white shadow-lg shadow-[#3C0078]/20 flex items-center gap-3 hover:scale-[1.03] transition-all group"
-          >
-            <Bell size={18} />
-            <span className="text-[11px] font-black uppercase tracking-wider">Send Notification</span>
-          </button>
-        </div>
-
-        {/* ── Three-column grid ── */}
-        <div className="grid grid-cols-3 gap-6 flex-1 min-h-0">
+      <motion.section
+        initial="hidden"
+        animate="show"
+        variants={{
+          hidden: {},
+          show: {
+            transition: { staggerChildren: 0.08, delayChildren: 0.15 },
+          },
+        }}
+        className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full max-w-[1400px] mx-auto h-[68vh] min-h-[520px]"
+        aria-label="Admin dashboard overview"
+      >
+        <motion.div
+          variants={{
+            hidden: { opacity: 0, y: 12 },
+            show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
+          }}
+          className="min-h-0"
+        >
           <LecturerColumn
             lecturerSearch={lecturerSearch}
             setLecturerSearch={setLecturerSearch}
@@ -319,7 +399,15 @@ export default function AdminDashboard() {
             onOpenAnalytics={handleOpenAnalytics}
             onOpenNotification={() => setIsSendingNotification(true)}
           />
+        </motion.div>
 
+        <motion.div
+          variants={{
+            hidden: { opacity: 0, y: 12 },
+            show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
+          }}
+          className="min-h-0"
+        >
           <CourseColumn
             showAddCourse={showAddCourse}
             setIsAddingCourse={setIsAddingCourse}
@@ -335,7 +423,15 @@ export default function AdminDashboard() {
             lecturers={lecturers}
             subjects={subjects}
           />
+        </motion.div>
 
+        <motion.div
+          variants={{
+            hidden: { opacity: 0, y: 12 },
+            show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
+          }}
+          className="min-h-0"
+        >
           <StudentColumn
             showAddStudent={showAddStudent}
             setIsAssigningStudents={setIsAssigningStudents}
@@ -346,8 +442,8 @@ export default function AdminDashboard() {
             selectedCourseId={selectedCourseId}
             filteredStudents={filteredStudents}
           />
-        </div>
-      </div>
+        </motion.div>
+      </motion.section>
 
       {/* ── Assign Students Modal ── */}
       <AnimatePresence>

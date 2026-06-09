@@ -163,7 +163,7 @@ export default function TodayTimeline() {
   const nextIdx = getNextEventIndex(events, now);
 
   return (
-    <div className="w-full h-full flex flex-col bg-white/80 border-1 border-gray-200 rounded-3xl p-4 drop-shadow-xl">
+    <div className="w-full h-full flex flex-col bg-white/70 border border-gray-100 rounded-3xl p-4">
       <div className="flex items-center justify-between mt-5 mb-1">
         <h2 className="text-2xl font-['Gabarito']">Today</h2>
       </div>

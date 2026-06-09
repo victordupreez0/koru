@@ -38,18 +38,35 @@ namespace LearnOnline.Data
 
         // Announcements
         public DbSet<Announcement> Announcements { get; set; }
+        public DbSet<AnnouncementReadState> AnnouncementReadStates { get; set; }
 
         // Course Modules (sections and nested items on the Modules page)
         public DbSet<CourseModule> CourseModules { get; set; }
         public DbSet<CourseModuleItem> CourseModuleItems { get; set; }
 
+        // Cohorts & Attendance
+        public DbSet<ClassGroup> ClassGroups { get; set; }
+        public DbSet<AssignmentClassOverride> AssignmentClassOverrides { get; set; }
+        public DbSet<AttendanceSession> AttendanceSessions { get; set; }
+        public DbSet<AttendanceRecord> AttendanceRecords { get; set; }
+
         // Teacher to-do items (self-created or admin-assigned)
         public DbSet<TodoItem> TodoItems { get; set; }
 
-        // Attendance records (per-student, per-session)
+        // Attendance records (per-student, per-session) — Victor's flat model
         public DbSet<Attendance> Attendances { get; set; }
 
         // Live check-in sessions (teacher opens, students join with code)
         public DbSet<CheckInSession> CheckInSessions { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            // Ensure a user can only have one read state record per announcement
+            modelBuilder.Entity<AnnouncementReadState>()
+                .HasIndex(ars => new { ars.AnnouncementId, ars.UserId })
+                .IsUnique();
+        }
     }
 }
