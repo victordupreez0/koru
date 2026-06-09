@@ -1,11 +1,14 @@
-![mockup screenshot](ReadMeImages/KoruPromo.png)
+<img width="7188" height="4968" alt="KoruPromo (1)" src="https://github.com/user-attachments/assets/a761ac91-3da9-476c-80b9-ffda67503267" />
+
+
 # Kuro
 
 Koru is a full-stack Learning Management System (LMS) built to centralise academic workflows into a single platform. Designed as a cross-platform desktop application, Koru provides dedicated experiences for Students, Teachers, and Administrators while ensuring compliance with South Africa's Protection of Personal Information Act (POPIA).
 
 By combining course management, scheduling, assessments, analytics, and communication tools into one ecosystem, Koru eliminates the inefficiencies caused by fragmented educational systems.
+<img width="6337" height="3282" alt="TeacherView" src="https://github.com/user-attachments/assets/c7baf3e0-ec35-43fd-84ae-981607a7a71d" />
 
-![mockup screenshot](ReadMeImages/TeacherView.png)
+
 ## Overview
 
 Educational institutions often rely on multiple disconnected platforms to manage teaching, learning, scheduling, grading, and administration. This fragmentation creates unnecessary complexity for both staff and students, resulting in duplicated work, missed deadlines, and poor visibility across academic operations.
@@ -133,7 +136,8 @@ The application was developed as a native desktop experience using Electron, all
 
 
 ## Features
-![mockup screenshot](ReadMeImages/StudentFeatures.png)
+<img width="3851" height="2121" alt="StudentFeatures" src="https://github.com/user-attachments/assets/2ec9db5d-a60f-42f0-86ca-ddc5840846f1" />
+
 ### Student Features
 
 * View enrolled courses
@@ -145,8 +149,9 @@ The application was developed as a native desktop experience using Electron, all
 * View daily and weekly schedules
 * Create personal calendar events
 * Monitor upcoming deadlines
+<img width="6337" height="3282" alt="TeacherView" src="https://github.com/user-attachments/assets/c3264ec9-ce62-4bea-acb4-e3ae01a8ffea" />
 
-![mockup screenshot](ReadMeImages/TeacherView.png)
+
 ### Teacher Features
 
 * Manage courses and modules
@@ -159,8 +164,10 @@ The application was developed as a native desktop experience using Electron, all
 * Manage teaching schedules
 * Create calendar events and reminders
 
+<img width="8448" height="4377" alt="AdminView" src="https://github.com/user-attachments/assets/cd1988be-8ad4-4f8b-8bb1-6c6ecbfc5980" />
 
-![mockup screenshot](ReadMeImages/AdminView.png)
+
+
 ### Administrator Features
 
 
@@ -172,8 +179,9 @@ The application was developed as a native desktop experience using Electron, all
 * Maintain oversight across the platform
 
 ## **Meet the Team** 
+<img width="977" height="475" alt="Screenshot 2026-06-09 160206" src="https://github.com/user-attachments/assets/f4110907-ecd7-4b92-ba05-407dfca4386f" />
+<img width="1000" height="342" alt="Screenshot 2026-06-09 210736" src="https://github.com/user-attachments/assets/1de65f97-c7eb-454a-8aea-2153c0f75d06" />
 
-![team pic from slides](ReadMeImages/Team.png)
 ## **Team Setup** 
 
 Git and Github were the team’s primary collaboration platform. All work was tracked, reviewed, and merged through the shared repository with a clear branching strategy to isolate features and prevent conflicts. The team used Whatsapp and Discord to 
@@ -215,7 +223,10 @@ communicate changes, ideas and have team discussions throughout the project. Rol
 |canvas-confetti|1.9.4|Celebration animations|
 |Novel|1.0.2|Rich text / notes editor|
 
-![Structure of Application](ReadMeImages/StructureofApplication.png)
+![Uploading Screenshot 2026-06-09 210736.png…]()
+
+
+
 
 ## **DevOps and Tooling** 
 
