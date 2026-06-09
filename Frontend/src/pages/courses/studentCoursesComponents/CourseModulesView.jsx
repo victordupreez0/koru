@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { 
-    ChevronDown, 
-    ChevronRight, 
-    Paperclip, 
-    FileText, 
-    Link as LinkIcon, 
+import {
+    ChevronDown,
+    ChevronRight,
+    Paperclip,
+    FileText,
+    Link as LinkIcon,
     ExternalLink,
-    Download,
     Loader
 } from "lucide-react";
 import { getCourseModules } from "../../../services/moduleService";
@@ -53,10 +52,6 @@ export default function CourseModulesView({ activeCourseId }) {
     setModules(modules.map(mod => ({ ...mod, isOpen: targetState })));
   };
 
-  const exportCourseContent = () => {
-    alert("Exporting course content... Your download will begin shortly.");
-  };
-
   return (
     <div className="w-full flex flex-col gap-6 py-6 select-none">
       {/* Loading indicator */}
@@ -74,13 +69,6 @@ export default function CourseModulesView({ activeCourseId }) {
           className="flex items-center justify-center px-4 py-2 text-xs font-bold border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 rounded-xl transition-all cursor-pointer shadow-xs"
         >
           {areAllCollapsed ? "Expand all" : "Collapse all"}
-        </button>
-        <button
-          onClick={exportCourseContent}
-          className="flex items-center gap-2 px-4 py-2 text-xs font-bold border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 rounded-xl transition-all cursor-pointer shadow-xs"
-        >
-          <Download size={13} />
-          <span>Export Course Content</span>
         </button>
       </div>
 
