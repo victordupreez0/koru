@@ -190,7 +190,7 @@ public class UserControllerTests
     }
 
     [Fact]
-    public async Task GoogleAuth_FirstTime_CreatesUser()
+    public async Task GoogleAuth_FirstTime_ReturnsUnauthorized()
     {
         using var db = TestDbContextFactory.Create();
         var factory = MakeHttpClientFactory(body: new GoogleTokenInfoDto
@@ -206,8 +206,8 @@ public class UserControllerTests
 
         var result = await controller.GoogleAuth(new GoogleAuthDto { Credential = "token", Role = UserRole.student });
 
-        result.Should().BeOfType<OkObjectResult>();
-        db.Users.Should().ContainSingle(u => u.Email == "g@x.com");
+        result.Should().BeOfType<UnauthorizedObjectResult>();
+        db.Users.Should().BeEmpty();
     }
 
     [Fact]
