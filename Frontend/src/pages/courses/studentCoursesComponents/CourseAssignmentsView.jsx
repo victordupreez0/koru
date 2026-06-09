@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { Folder, Upload } from "@solar-icons/react";
+import { Upload } from "@solar-icons/react";
 import { motion } from "framer-motion";
 import { getCourseAssignments } from "../../../services/assignmentService";
 import { getStudentSubmissions } from "../../../services/submissionService";
@@ -75,13 +75,6 @@ export default function CourseAssignmentsView({ subject, activeCourseId }) {
             <motion.header variants={slideUp} className="mb-6 flex justify-between items-end">
                 <div>
                     <h1 className="text-3xl font-semibold tracking-tight">Assignments</h1>
-                    <p className="text-gray-500 mt-2 text-lg">{subject?.code || "Pending"} | Assessments & Briefs</p>
-                </div>
-                <div className="flex gap-4">
-                    <button className="px-6 py-3 rounded-2xl border border-gray-200 text-sm font-semibold hover:bg-gray-50 transition-colors flex items-center gap-2 shadow-sm">
-                        <Folder size={20} /> Briefs Archive
-                    </button>
-                    {/* The global 'Submit Assignment' button was removed here as per instructions */}
                 </div>
             </motion.header>
             

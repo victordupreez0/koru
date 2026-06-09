@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Bell, CloseSquare, Letter, User } from "@solar-icons/react";
+import { Bell, CloseSquare, User } from "@solar-icons/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { staggerContainer, slideUp } from "./constants";
 import { getCourseAnnouncements, markAnnouncementAsRead, markAllAnnouncementsAsRead } from "../../../services/announcementService";
@@ -153,7 +153,7 @@ export default function CourseAnnouncementsView({ activeCourseId }) {
                         <motion.div
                             initial={{ opacity: 0, x: 50 }}
                             animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: 50 }}
+                            exit={{ opacity: 0, x: 20, transition: { duration: 0.15, ease: "easeIn" } }}
                             transition={{ type: "spring", damping: 30, stiffness: 250 }}
                             className={`${
                                 selectedId ? "flex" : "hidden lg:flex"
@@ -197,20 +197,6 @@ export default function CourseAnnouncementsView({ activeCourseId }) {
                                 </p>
                             </div>
 
-                            <div className="mt-8 pt-6 border-t border-gray-100 flex items-center justify-between shrink-0">
-                                <button
-                                    onClick={() => setSelectedId(null)}
-                                    className="px-6 py-2.5 rounded-2xl bg-[#3C0078]/5 text-[#3C0078] font-bold text-xs uppercase tracking-widest hover:bg-[#3C0078] hover:text-white transition-all"
-                                >
-                                    Close Details
-                                </button>
-                                <div className="flex gap-4">
-                                    <button className="flex items-center gap-2 text-gray-400 hover:text-[#3C0078] transition-colors">
-                                        <Letter size={18} />
-                                        <span className="text-xs font-bold uppercase tracking-widest">Share</span>
-                                    </button>
-                                </div>
-                            </div>
                         </motion.div>
                     )}
                 </AnimatePresence>
