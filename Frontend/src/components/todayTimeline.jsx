@@ -11,8 +11,9 @@ import { getStudentAssignments, getTeacherAssignments } from "../services/assign
 import { getAvailableSessionsForStudent } from "../services/checkInService";
 import { useAuth } from "../contexts/AuthContext";
 
+const MIN_LOADING_MS = 1500;
+
 function mapBackendEventToTimeline(evt) {
-  // Normalise keys – backend may return PascalCase (model) or camelCase (anonymous projection)
   const startTime   = evt.startTime   ?? evt.StartTime;
   const endTime     = evt.endTime     ?? evt.EndTime;
   const courseId    = evt.courseId    ?? evt.CourseId;
@@ -94,6 +95,22 @@ function inferSessionType(title = "") {
   return "Lecture";
 }
 
+function SkeletonEvent() {
+  return (
+    <div className="flex gap-4 mb-3">
+      <div className="flex flex-col items-center w-4 shrink-0">
+        <div className="w-3 h-3 rounded-full bg-gray-100 animate-pulse mt-1" />
+        <div className="w-0.5 h-14 bg-gray-100 animate-pulse mt-1" />
+      </div>
+      <div className="flex-1 rounded-2xl border border-gray-100 p-3 mb-1 space-y-2">
+        <div className="h-3 bg-gray-100 rounded-full animate-pulse w-2/3" />
+        <div className="h-2.5 bg-gray-100 rounded-full animate-pulse w-1/3" />
+        <div className="h-2.5 bg-gray-100 rounded-full animate-pulse w-1/2" />
+      </div>
+    </div>
+  );
+}
+
 export default function TodayTimeline() {
   const { user } = useAuth();
   const isTeacher = user?.role === "teacher";
@@ -101,11 +118,10 @@ export default function TodayTimeline() {
   const [now, setNow]                     = useState(new Date());
   const [events, setEvents]               = useState([]);
   const [loading, setLoading]             = useState(true);
-  const [availableSessions, setAvailable] = useState([]); // student: open check-in sessions
-  const [manageModal, setManageModal]     = useState(null); // { courseId, sessionType, courseName }
-  const [checkInModal, setCheckInModal]   = useState(null); // { courseName }
+  const [availableSessions, setAvailable] = useState([]);
+  const [manageModal, setManageModal]     = useState(null);
+  const [checkInModal, setCheckInModal]   = useState(null);
 
-  // Fetch events & assignments
   useEffect(() => {
     let mounted = true;
     async function fetchData() {
@@ -118,6 +134,7 @@ export default function TodayTimeline() {
             : user?.userId
             ? getStudentAssignments(user.userId)
             : Promise.resolve([]),
+          new Promise(resolve => setTimeout(resolve, MIN_LOADING_MS)),
         ]);
 
         const todayStr = new Date().toDateString();
@@ -142,7 +159,6 @@ export default function TodayTimeline() {
     return () => { mounted = false; };
   }, [user?.userId, user?.role]);
 
-  // Student: poll for open check-in sessions every 5 s
   useEffect(() => {
     if (!user?.userId || isTeacher) return;
     const poll = () =>
@@ -154,7 +170,6 @@ export default function TodayTimeline() {
     return () => clearInterval(id);
   }, [user?.userId, isTeacher]);
 
-  // Clock tick every 30 s
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 30_000);
     return () => clearInterval(id);
@@ -170,11 +185,11 @@ export default function TodayTimeline() {
       <p className="text-sm text-gray-400 mb-5 font-medium">{formatDate(now)}</p>
       <div className="h-5" />
 
-      <div className="relative flex-1 overflow-y-auto scrollbar-black pr-1 flex flex-col">
+      <div className="relative flex flex-col pr-1">
         {loading ? (
-          <div className="text-gray-500 text-center py-10 font-medium">Loading timeline...</div>
+          <>{[0, 1, 2].map(i => <SkeletonEvent key={i} />)}</>
         ) : events.length === 0 ? (
-          <div className="text-gray-500 text-center py-10 font-medium">No events scheduled for today.</div>
+          <p className="text-sm text-gray-400 text-center py-10 font-medium">No events scheduled for today.</p>
         ) : (
           events.map((evt, idx) => {
             const isNext  = idx === nextIdx;
@@ -183,10 +198,7 @@ export default function TodayTimeline() {
               ? `Due at ${fmt(evt.endHour, evt.endMin)}`
               : `${fmt(evt.startHour, evt.startMin)} – ${fmt(evt.endHour, evt.endMin)}`;
 
-            // Teacher: show Manage Attendance on non-past class events
             const showManage = isTeacher && !evt.isAssignment && !isPast && !!evt.courseId;
-
-            // Student: show Check In when a session is open for this course
             const openSession = !isTeacher && !evt.isAssignment && !isPast
               ? availableSessions.find(s => s.courseId === evt.courseId)
               : null;
@@ -194,7 +206,6 @@ export default function TodayTimeline() {
             const manageProps = showManage
               ? { onManageAttendance: () => setManageModal({ courseId: evt.courseId, sessionType: inferSessionType(evt.title), courseName: evt.title }) }
               : {};
-
             const checkInProps = openSession
               ? { onCheckIn: () => setCheckInModal({ courseName: evt.title }) }
               : {};
@@ -237,7 +248,6 @@ export default function TodayTimeline() {
         )}
       </div>
 
-      {/* Modals */}
       <AnimatePresence>
         {manageModal && (
           <AttendanceManageModal

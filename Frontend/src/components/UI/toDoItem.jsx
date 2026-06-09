@@ -4,8 +4,22 @@ import { MdEditNote } from "react-icons/md";
 import { ChevronRight } from "lucide-react";
 import { getCourseAssignments } from "../../services/assignmentService";
 
-// To-Do item list – renders inside the Course Glance card
-// Each row shows a task icon, the task title, its due date, and a checkbox placeholder
+const BRAND = "#3C0078";
+const BRAND_TINT = "#3C007812";
+const MIN_LOADING_MS = 1500;
+
+function SkeletonRow() {
+    return (
+        <div className="my-2 rounded-xl border border-gray-100 w-full h-12 flex flex-row items-center space-x-3 px-2">
+            <div className="w-9 h-9 rounded-full bg-gray-100 animate-pulse shrink-0" />
+            <div className="flex-1 space-y-1.5">
+                <div className="h-3 bg-gray-100 rounded-full animate-pulse w-3/4" />
+                <div className="h-2.5 bg-gray-100 rounded-full animate-pulse w-1/2" />
+            </div>
+        </div>
+    );
+}
+
 export default function ToDoItem({ activeCourseId }) {
     const [todos, setTodos] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -20,22 +34,23 @@ export default function ToDoItem({ activeCourseId }) {
             }
             try {
                 setLoading(true);
-                const data = await getCourseAssignments(activeCourseId);
-                
-                // Filter for upcoming assignments (Due Date hasn't passed)
+                const [data] = await Promise.all([
+                    getCourseAssignments(activeCourseId),
+                    new Promise(resolve => setTimeout(resolve, MIN_LOADING_MS)),
+                ]);
+
                 const now = new Date();
                 const upcoming = data
                     .filter(a => new Date(a.dueDate) > now)
                     .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate))
-                    .slice(0, 3) // showing max 3 upcoming ones
+                    .slice(0, 3)
                     .map(a => {
                         const due = new Date(a.dueDate);
                         const diffDays = Math.ceil((due - now) / (1000 * 60 * 60 * 24));
                         let dueLabel = "Due soon";
-                        if (diffDays === 1) dueLabel = "Due Tomorrow";
+                        if (diffDays === 1) dueLabel = "Due tomorrow";
                         else if (diffDays <= 7) dueLabel = `Due in ${diffDays} days`;
                         else dueLabel = `Due ${due.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`;
-                        
                         return { id: a.id, courseId: activeCourseId, title: a.title, due: dueLabel };
                     });
 
@@ -51,11 +66,11 @@ export default function ToDoItem({ activeCourseId }) {
     }, [activeCourseId]);
 
     if (loading) {
-        return <div className="text-sm text-gray-400 py-2">Loading tasks...</div>;
+        return <>{[1, 2].map(i => <SkeletonRow key={i} />)}</>;
     }
 
     if (todos.length === 0) {
-        return <div className="text-sm text-gray-400 py-2">No upcoming tasks!</div>;
+        return <p className="text-xs text-gray-400 py-2">No upcoming tasks</p>;
     }
 
     return (
@@ -63,23 +78,23 @@ export default function ToDoItem({ activeCourseId }) {
             {todos.map((todo, idx) => (
                 <div
                     key={idx}
-                    className="my-2 bg-white rounded-xl shadow-sm w-full h-12 flex flex-row items-center space-x-2 transition-all duration-200 hover:shadow-md hover:-translate-y-1 cursor-pointer"
+                    className="my-2 bg-white rounded-xl border border-gray-100 w-full h-12 flex flex-row items-center space-x-2 transition-colors duration-150 hover:bg-gray-50/60 hover:border-gray-200 cursor-pointer"
                     onClick={() => navigate(`/courses/${todo.courseId}/assignments/${todo.id}`)}
                 >
-                    {/* Purple icon badge */}
-                    <div className="w-9 h-9 bg-purple-400 rounded-full ml-2 flex items-center justify-center">
-                        <MdEditNote className="w-6 h-6 text-white" />
+                    <div
+                        className="w-9 h-9 rounded-full ml-2 flex items-center justify-center shrink-0"
+                        style={{ backgroundColor: BRAND_TINT }}
+                    >
+                        <MdEditNote className="w-5 h-5" style={{ color: BRAND }} />
                     </div>
 
-                    {/* Task title and due date */}
-                    <div className="ml-2 flex flex-col justify-center space-y-1 flex-1">
-                        <h3 className="text-sm font-bold">{todo.title}</h3>
-                        <h3 className="text-xs text-gray-500">{todo.due}</h3>
+                    <div className="ml-2 flex flex-col justify-center space-y-0.5 flex-1 min-w-0">
+                        <h3 className="text-sm font-semibold text-gray-800 truncate">{todo.title}</h3>
+                        <p className="text-xs text-gray-400">{todo.due}</p>
                     </div>
 
-                    {/* Arrow icon */}
-                    <div className="w-9 h-9 flex items-center justify-center mr-2">
-                        <ChevronRight className="w-5 h-5 text-gray-400" />
+                    <div className="w-9 h-9 flex items-center justify-center mr-2 shrink-0">
+                        <ChevronRight className="w-4 h-4 text-gray-300" />
                     </div>
                 </div>
             ))}

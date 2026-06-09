@@ -104,16 +104,16 @@ export default function TeacherDashboard() {
           hidden: {},
           show: { transition: { staggerChildren: 0.08, delayChildren: 0.15 } },
         }}
-        className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full max-w-[1400px] mx-auto h-[68vh] min-h-[520px]"
+        className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full max-w-[1400px] mx-auto min-h-[520px]"
         aria-label="Lecturer dashboard overview"
       >
-        <motion.div variants={column} className="min-h-0">
+        <motion.div variants={column} className="">
           <CourseGlance />
         </motion.div>
-        <motion.div variants={column} className="min-h-0">
+        <motion.div variants={column} className="">
           <TodayTimeline />
         </motion.div>
-        <motion.div variants={column} className="min-h-0">
+        <motion.div variants={column} className="">
           <TeacherTodoProgress />
         </motion.div>
       </motion.section>
