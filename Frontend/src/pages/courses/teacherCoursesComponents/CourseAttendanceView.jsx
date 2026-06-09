@@ -3,7 +3,9 @@ import { Folder, CheckCircle, Filter } from "@solar-icons/react";
 import { motion } from "framer-motion";
 import AttendanceChart from "../../../components/UI/attendanceChart";
 import { getCourseAttendance, updateAttendanceRecord } from "../../../services/attendanceService";
+import { getCourseCohorts, getCourseStudents } from "../../../services/classGroupService";
 import StudentAttendanceDetailModal from "../../../components/StudentAttendanceDetailModal";
+import CohortFilterBar from "../../../components/CohortFilterBar";
 import { staggerContainer, slideUp, scaleIn } from "./constants";
 
 export function CourseAttendanceView({ activeCourseId }) {
@@ -11,34 +13,52 @@ export function CourseAttendanceView({ activeCourseId }) {
     const [loading, setLoading] = useState(true);
     const [selectedStudent, setSelectedStudent] = useState(null);
 
+    // Cohort filter state
+    const [cohorts, setCohorts] = useState([]);
+    const [studentCohortMap, setStudentCohortMap] = useState({});
+    const [selectedCohortId, setSelectedCohortId] = useState(null);
+
     const handleUpdateStatus = async (recordId, newStatus) => {
         await updateAttendanceRecord(recordId, newStatus);
         setRecords(prev => prev.map(rec => rec.id === recordId ? { ...rec, status: newStatus } : rec));
     };
 
-
     useEffect(() => {
         if (!activeCourseId) return;
         let mounted = true;
         setLoading(true);
-        getCourseAttendance(activeCourseId)
-            .then(data => { if (mounted) setRecords(data); })
-            .catch(() => {})
-            .finally(() => { if (mounted) setLoading(false); });
+        setSelectedCohortId(null);
+        Promise.all([
+            getCourseAttendance(activeCourseId),
+            getCourseCohorts(activeCourseId).catch(() => []),
+            getCourseStudents(activeCourseId).catch(() => []),
+        ]).then(([attendanceData, cohortData, studentData]) => {
+            if (!mounted) return;
+            setRecords(attendanceData);
+            setCohorts(cohortData || []);
+            const map = {};
+            (studentData || []).forEach(s => { map[s.studentId] = s.classGroupId; });
+            setStudentCohortMap(map);
+        }).catch(() => {}).finally(() => { if (mounted) setLoading(false); });
         return () => { mounted = false; };
     }, [activeCourseId]);
 
+    // Filter records by selected cohort
+    const filteredRecords = selectedCohortId
+        ? records.filter(r => studentCohortMap[r.studentId] === selectedCohortId)
+        : records;
+
     // Class-level aggregate
-    const total   = records.length;
-    const attended = records.filter(r => r.status !== "Absent").length;
-    const missed   = records.filter(r => r.status === "Absent").length;
+    const total   = filteredRecords.length;
+    const attended = filteredRecords.filter(r => r.status !== "Absent").length;
+    const missed   = filteredRecords.filter(r => r.status === "Absent").length;
 
     // Unique session count (by date string)
-    const totalSessions = new Set(records.map(r => r.date?.split("T")[0])).size;
+    const totalSessions = new Set(filteredRecords.map(r => r.date?.split("T")[0])).size;
 
     // Per-student aggregation
     const studentMap = {};
-    records.forEach(r => {
+    filteredRecords.forEach(r => {
         if (!r.student) return;
         if (!studentMap[r.studentId]) {
             studentMap[r.studentId] = {
@@ -63,6 +83,9 @@ export function CourseAttendanceView({ activeCourseId }) {
                 <div>
                     <h1 className="text-3xl font-semibold tracking-tight text-gray-900">Attendance & Presence</h1>
                     <p className="text-gray-500 mt-2">Academic Presence Analytics</p>
+                    <div className="mt-3">
+                        <CohortFilterBar cohorts={cohorts} selected={selectedCohortId} onChange={setSelectedCohortId} />
+                    </div>
                 </div>
                 <div className="flex gap-4">
                     <button className="px-6 py-3 rounded-2xl border border-gray-200 text-sm font-semibold hover:bg-gray-50 transition-colors flex items-center gap-2 shadow-sm">

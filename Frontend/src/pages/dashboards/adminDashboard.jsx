@@ -20,6 +20,7 @@ import {
   SendNotificationModal,
 } from "./adminDashboardComponents";
 import DashboardHeader from "../../components/DashboardHeader";
+import { getCourseCohorts, getCourseStudents } from "../../services/classGroupService";
 
 export default function AdminDashboard() {
   // ── Global filters ──
@@ -36,6 +37,10 @@ export default function AdminDashboard() {
   // ── Selection state ──
   const [selectedLecturerId, setSelectedLecturerId] = useState(null);
   const [selectedCourseId, setSelectedCourseId] = useState(null);
+
+  // ── Cohort data for selected course ──
+  const [courseCohorts, setCourseCohorts] = useState([]);
+  const [cohortStudentMap, setCohortStudentMap] = useState({});
 
   // ── Search state ──
   const [lecturerSearch, setLecturerSearch] = useState("");
@@ -181,6 +186,24 @@ export default function AdminDashboard() {
       setSelectedCourseId(null);
     }
   }, [filteredCourses]);
+
+  // ── Fetch cohorts whenever selected course changes ──
+  useEffect(() => {
+    if (!selectedCourseId) {
+      setCourseCohorts([]);
+      setCohortStudentMap({});
+      return;
+    }
+    Promise.all([
+      getCourseCohorts(selectedCourseId).catch(() => []),
+      getCourseStudents(selectedCourseId).catch(() => []),
+    ]).then(([cohorts, students]) => {
+      setCourseCohorts(cohorts || []);
+      const map = {};
+      (students || []).forEach(s => { map[s.studentId] = s.classGroupId; });
+      setCohortStudentMap(map);
+    });
+  }, [selectedCourseId]);
 
   // ── Handlers ──
   const handleSelectLecturer = (id) => {
@@ -441,6 +464,8 @@ export default function AdminDashboard() {
             setStudentSort={setStudentSort}
             selectedCourseId={selectedCourseId}
             filteredStudents={filteredStudents}
+            cohorts={courseCohorts}
+            cohortStudentMap={cohortStudentMap}
           />
         </motion.div>
       </motion.section>

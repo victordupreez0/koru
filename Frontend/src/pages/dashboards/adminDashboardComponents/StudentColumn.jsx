@@ -1,7 +1,29 @@
 import React from "react";
-import { Plus, User, ExternalLink } from "lucide-react";
+import { Plus, User, ExternalLink, Users } from "lucide-react";
 import { motion } from "framer-motion";
 import { SearchInput } from "./SearchInput";
+
+function StudentCard({ student }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.25, ease: "easeOut" }}
+      className="w-full rounded-2xl px-4 py-3.5 flex items-center gap-3 bg-white/80 border border-gray-100 hover:border-gray-200 transition-colors duration-150"
+    >
+      <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
+        <User className="w-4 h-4 text-gray-500" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-bold text-gray-800 truncate">{student.name}</p>
+        <p className="text-xs text-gray-400">{student.major}</p>
+      </div>
+      <button className="w-8 h-8 rounded-lg hover:bg-gray-100 flex items-center justify-center transition-colors shrink-0">
+        <ExternalLink className="w-4 h-4 text-gray-400" />
+      </button>
+    </motion.div>
+  );
+}
 
 export function StudentColumn({
   showAddStudent,
@@ -11,8 +33,23 @@ export function StudentColumn({
   studentSort,
   setStudentSort,
   selectedCourseId,
-  filteredStudents
+  filteredStudents,
+  cohorts = [],
+  cohortStudentMap = {},
 }) {
+  const hasCohorts = cohorts.length > 0;
+
+  // Build grouped list when cohorts exist
+  const cohortGroups = React.useMemo(() => {
+    if (!hasCohorts) return null;
+    const groups = cohorts.map((c) => ({
+      cohort: c,
+      students: filteredStudents.filter((s) => cohortStudentMap[s.id] === c.id),
+    }));
+    const unassigned = filteredStudents.filter((s) => !cohortStudentMap[s.id]);
+    return { groups, unassigned };
+  }, [hasCohorts, cohorts, filteredStudents, cohortStudentMap]);
+
   return (
     <div className="flex flex-col bg-white/70 border border-gray-100 rounded-3xl p-4 min-h-0">
       <div className="flex items-center justify-between mb-3">
@@ -44,26 +81,57 @@ export function StudentColumn({
           <p className="text-sm text-gray-400 text-center py-8">Select a course to view students.</p>
         ) : filteredStudents.length === 0 ? (
           <p className="text-sm text-gray-400 text-center py-8">No students enrolled.</p>
+        ) : hasCohorts ? (
+          // ── Grouped by cohort ──
+          <>
+            {cohortGroups.groups.map(({ cohort, students }) => (
+              <div key={cohort.id}>
+                {/* Cohort header */}
+                <div className="flex items-center gap-2 px-1 py-2 mb-1">
+                  <div className="w-2 h-2 rounded-full bg-[#3C0078] shrink-0" />
+                  <span className="text-[11px] font-black uppercase tracking-widest text-[#3C0078]">
+                    {cohort.name}
+                  </span>
+                  <span className="text-[10px] text-gray-400 font-semibold ml-auto">
+                    {students.length} student{students.length !== 1 ? "s" : ""}
+                  </span>
+                </div>
+                {students.length === 0 ? (
+                  <p className="text-xs text-gray-400 px-3 pb-2 italic">No students assigned</p>
+                ) : (
+                  students.map((student) => (
+                    <div key={student.id} className="mb-1.5">
+                      <StudentCard student={student} />
+                    </div>
+                  ))
+                )}
+              </div>
+            ))}
+
+            {/* Unassigned section */}
+            {cohortGroups.unassigned.length > 0 && (
+              <div>
+                <div className="flex items-center gap-2 px-1 py-2 mb-1">
+                  <div className="w-2 h-2 rounded-full bg-gray-300 shrink-0" />
+                  <span className="text-[11px] font-black uppercase tracking-widest text-gray-400">
+                    Unassigned
+                  </span>
+                  <span className="text-[10px] text-gray-400 font-semibold ml-auto">
+                    {cohortGroups.unassigned.length}
+                  </span>
+                </div>
+                {cohortGroups.unassigned.map((student) => (
+                  <div key={student.id} className="mb-1.5">
+                    <StudentCard student={student} />
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
         ) : (
+          // ── Flat list (no cohorts) ──
           filteredStudents.map((student) => (
-            <motion.div
-              key={student.id}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.25, ease: "easeOut" }}
-              className="w-full rounded-2xl px-4 py-3.5 flex items-center gap-3 bg-white/80 border border-gray-100 hover:border-gray-200 transition-colors duration-150"
-            >
-              <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
-                <User className="w-4 h-4 text-gray-500" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-gray-800 truncate">{student.name}</p>
-                <p className="text-xs text-gray-400">{student.major}</p>
-              </div>
-              <button className="w-8 h-8 rounded-lg hover:bg-gray-100 flex items-center justify-center transition-colors shrink-0">
-                <ExternalLink className="w-4 h-4 text-gray-400" />
-              </button>
-            </motion.div>
+            <StudentCard key={student.id} student={student} />
           ))
         )}
       </div>
