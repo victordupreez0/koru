@@ -31,8 +31,6 @@ export function StudentColumn({
   setIsAddingStudent,
   studentSearch,
   setStudentSearch,
-  studentSort,
-  setStudentSort,
   selectedCourseId,
   filteredStudents,
   cohorts = [],
@@ -68,17 +66,7 @@ export function StudentColumn({
           </button>
         )}
       </div>
-      <div className="flex items-center gap-2">
-        <SearchInput value={studentSearch} onChange={setStudentSearch} />
-        <select
-          value={studentSort}
-          onChange={(e) => setStudentSort(e.target.value)}
-          className="appearance-none text-xs font-semibold text-gray-600 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 pr-7 outline-none cursor-pointer hover:border-gray-300 transition-colors"
-        >
-          <option value="alpha">Alphabetical Order</option>
-          <option value="default">Default Order</option>
-        </select>
-      </div>
+      <SearchInput value={studentSearch} onChange={setStudentSearch} />
 
       <div className="mt-4 flex flex-col gap-2 flex-1 min-h-0 overflow-y-auto pr-1">
         {!selectedCourseId ? (

@@ -8,7 +8,6 @@ import {
   userService,
   enrollmentService,
   registrationService,
-  subjectService,
 } from "../../services/adminService";
 import {
   FilterDropdown,
@@ -28,22 +27,14 @@ const column = {
   show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
 };
 
-const DEGREES = [
-  "Software Engineering Degree",
-  "UX Design Degree",
-  "Visual Arts Degree",
-  "Interaction Design Degree",
-  "Design Leadership Degree",
-];
 const CURRENT_YEAR = new Date().getFullYear();
 const DEFAULT_COURSE_FORM = {
-  subjectId: "",
+  name: "",
+  code: "",
   teacherId: "",
-  degree: DEGREES[0],
   year: String(CURRENT_YEAR),
   term: "Semester 1",
   capacity: "50",
-  status: "Active",
 };
 
 export default function AdminDashboard() {
@@ -67,7 +58,6 @@ export default function AdminDashboard() {
   // ── Search state ──
   const [courseSearch, setCourseSearch] = useState("");
   const [studentSearch, setStudentSearch] = useState("");
-  const [studentSort, setStudentSort] = useState("alpha");
 
   // ── Modal state ──
   const [isAddingLecturer, setIsAddingLecturer] = useState(false);
@@ -79,7 +69,6 @@ export default function AdminDashboard() {
   // ── Course creation state ──
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [courseForm, setCourseForm] = useState(DEFAULT_COURSE_FORM);
-  const [createSubjects, setCreateSubjects] = useState([]);
   const [createTeachers, setCreateTeachers] = useState([]);
 
   // ── Data fetch ──
@@ -99,8 +88,8 @@ export default function AdminDashboard() {
 
       const normalizedCourses = rawCourses.map(c => ({
         ...c,
-        title: c.subject?.name || "Unknown Subject",
-        code: c.subject?.code || "",
+        title: c.name || c.subject?.name || "Unknown Course",
+        code: c.code || c.subject?.code || "",
         lecturerId: c.teacherId,
         semester: c.term?.includes("2") ? 2 : 1,
       }));
@@ -131,15 +120,9 @@ export default function AdminDashboard() {
 
   useEffect(() => { fetchData(); }, []);
 
-  // ── Load subjects & teachers for course creation modal ──
+  // ── Load teachers for course creation modal ──
   useEffect(() => {
-    Promise.all([
-      subjectService.getSubjects().catch(() => []),
-      userService.getTeachers().catch(() => []),
-    ]).then(([subjects, teachers]) => {
-      setCreateSubjects(subjects || []);
-      setCreateTeachers(teachers || []);
-    });
+    userService.getTeachers().catch(() => []).then(t => setCreateTeachers(t || []));
   }, []);
 
   // ── Available calendar years derived from courses ──
@@ -175,16 +158,14 @@ export default function AdminDashboard() {
 
   const filteredStudents = useMemo(() => {
     if (!selectedCourseId) return [];
-    let result = students.filter(
-      s =>
-        s.courseIds.includes(selectedCourseId) &&
-        s.name.toLowerCase().includes(studentSearch.toLowerCase())
-    );
-    if (studentSort === "alpha") {
-      result = [...result].sort((a, b) => a.name.localeCompare(b.name));
-    }
-    return result;
-  }, [students, selectedCourseId, studentSearch, studentSort]);
+    return students
+      .filter(
+        s =>
+          s.courseIds.includes(selectedCourseId) &&
+          s.name.toLowerCase().includes(studentSearch.toLowerCase())
+      )
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [students, selectedCourseId, studentSearch]);
 
   // ── Auto-select first course on load / filter change ──
   useEffect(() => {
@@ -221,12 +202,12 @@ export default function AdminDashboard() {
   const handleCreateCourse = async () => {
     try {
       await courseService.createCourse({
-        subjectId: courseForm.subjectId,
+        name: courseForm.name,
+        code: courseForm.code || null,
         teacherId: courseForm.teacherId,
         term: courseForm.term,
         year: parseInt(courseForm.year),
         capacity: parseInt(courseForm.capacity),
-        degree: courseForm.degree,
       });
       setShowCreateModal(false);
       setCourseForm(DEFAULT_COURSE_FORM);
@@ -415,8 +396,6 @@ export default function AdminDashboard() {
               setIsAddingStudent={setIsAddingStudent}
               studentSearch={studentSearch}
               setStudentSearch={setStudentSearch}
-              studentSort={studentSort}
-              setStudentSort={setStudentSort}
               selectedCourseId={selectedCourseId}
               filteredStudents={filteredStudents}
               cohorts={courseCohorts}
@@ -445,7 +424,6 @@ export default function AdminDashboard() {
             onClose={() => { setShowCreateModal(false); setCourseForm(DEFAULT_COURSE_FORM); }}
             form={courseForm}
             setForm={setCourseForm}
-            subjects={createSubjects}
             teachers={createTeachers}
             onCreate={handleCreateCourse}
           />

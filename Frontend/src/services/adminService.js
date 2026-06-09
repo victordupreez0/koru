@@ -124,6 +124,26 @@ export const subjectService = {
       body: JSON.stringify(subjectData)
     });
     return handleResponse(res);
+  },
+
+  async updateSubject(id, subjectData) {
+    const res = await fetch(`${API_BASE}/Subject/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(subjectData)
+    });
+    return handleResponse(res);
+  },
+
+  async deleteSubject(id) {
+    const res = await fetch(`${API_BASE}/Subject/${id}`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" }
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.message || "Failed to delete subject");
+    }
   }
 };
 

@@ -80,7 +80,7 @@ export default function AdminCourses() {
         switch (activeSubpage) {
             case "overview": return "Overview";
             case "students": return "Students";
-            case "groups": return "Groups";
+            case "groups": return "Groups & Classes";
             case "assignments": return "Assignments";
             case "grades": return "Grades";
             case "grade-activity": return "Grade Activity";
@@ -149,7 +149,7 @@ export default function AdminCourses() {
                         ) : activeSubpage === "students" ? (
                             <AdminCourseStudentsView courseId={activeCourseId} />
                         ) : activeSubpage === "groups" ? (
-                            <AdminCohortsView courseId={activeCourseId} />
+                            <AdminCohortsView courseId={activeCourseId} course={activeCourse} />
                         ) : activeSubpage === "assignments" ? (
                             <CourseAssignmentsView
                                 subject={subject}

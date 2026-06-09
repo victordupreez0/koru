@@ -29,6 +29,18 @@ namespace LearnOnline.Models
         [ForeignKey("CourseId")]
         public Course? Course { get; set; }
 
+        // Class type name (e.g. "Lecture", "Workshop", "Practical")
+        public string? Name { get; set; }
+
+        // Lecturer assigned to this specific class slot (may differ from course default)
+        public string? TeacherId { get; set; }
+
+        [ForeignKey("TeacherId")]
+        public User? Teacher { get; set; }
+
+        // Session length in hours (used before actual start/end times are assigned)
+        public decimal? DurationHours { get; set; }
+
         // Physical or virtual room name
         public string? Room { get; set; }
 

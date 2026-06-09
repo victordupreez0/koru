@@ -69,10 +69,11 @@ namespace LearnOnline.Controllers
             var course = await _context.Courses.FindAsync(id);
             if (course == null) return NotFound();
 
+            course.Name = updated.Name;
+            course.Code = updated.Code;
             course.Term = updated.Term;
             course.Year = updated.Year;
             course.Capacity = updated.Capacity;
-            course.SubjectId = updated.SubjectId;
             course.TeacherId = updated.TeacherId;
             course.IsVisible = updated.IsVisible;
             course.Degree = updated.Degree;
