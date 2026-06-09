@@ -48,9 +48,6 @@ export function CourseModulesView({ activeCourseId }) {
     setModules(modules.map(mod => ({ ...mod, isOpen: targetState })));
   };
 
-  const exportCourseContent = () => {
-    alert("Exporting course content... Your download will begin shortly.");
-  };
 
   const handleAddModule = async () => {
     if (!newModuleTitle.trim() || !activeCourseId) return;
@@ -206,9 +203,6 @@ export function CourseModulesView({ activeCourseId }) {
           </button>
           <button onClick={toggleAll} className="flex items-center justify-center px-4 py-2 text-xs font-bold border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 rounded-xl transition-all cursor-pointer">
             {areAllCollapsed ? "Expand all" : "Collapse all"}
-          </button>
-          <button onClick={exportCourseContent} className="flex items-center gap-2 px-4 py-2 text-xs font-bold border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 rounded-xl transition-all cursor-pointer">
-            <Download size={13} /> <span>Export Content</span>
           </button>
         </div>
       </div>

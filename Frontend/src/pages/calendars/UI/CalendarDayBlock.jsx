@@ -18,6 +18,8 @@ import CalendarDayBlockEvent from "./CalendarDayBlockEvent";
  */
 
 
+const MAX_VISIBLE = 3;
+
 export default function CalendarDayBlock({
   day,
   date,
@@ -27,8 +29,15 @@ export default function CalendarDayBlock({
   onDrop,
   onEditEvent,
   onDeleteEvent,
+  onDayClick,
+  tooltipPosition = "up",
 }) {
   const [isDragOver, setIsDragOver] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+
+  const hasOverflow = events.length > MAX_VISIBLE;
+  const visibleEvents = expanded ? events : events.slice(0, MAX_VISIBLE);
+  const hiddenCount = events.length - MAX_VISIBLE;
 
   function handleDragOver(e) {
     e.preventDefault();
@@ -37,7 +46,6 @@ export default function CalendarDayBlock({
   }
 
   function handleDragLeave(e) {
-    // Only clear when truly leaving this element (not a child)
     if (!e.currentTarget.contains(e.relatedTarget)) {
       setIsDragOver(false);
     }
@@ -55,16 +63,16 @@ export default function CalendarDayBlock({
   return (
     <div
       className={[
-        "min-h-[140px] p-2.5 flex flex-col gap-1.5 border-r border-gray-200 last:border-r-0 transition-colors duration-150",
-        // Overflow visible so tooltips can escape the cell
+        "min-h-[140px] p-2.5 flex flex-col gap-1.5 border-r border-gray-200 last:border-r-0 transition-colors duration-150 cursor-pointer",
         "overflow-visible",
-        isToday ? "bg-purple-100" : "bg-transparent",
+        isToday ? "bg-purple-50/80" : "bg-transparent",
         isOutside ? "opacity-40" : "",
         isDragOver ? "bg-purple-50 ring-2 ring-inset ring-purple-300" : "",
       ].join(" ")}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
+      onClick={() => day !== null && onDayClick?.(date)}
     >
       {/* Day number badge */}
       {day !== null && (
@@ -78,23 +86,44 @@ export default function CalendarDayBlock({
         </span>
       )}
 
-      {/* Event pills — pass all fields so tooltip has full context */}
-      {events.map((evt) => (
-        <CalendarDayBlockEvent
-          key={evt.id}
-          id={evt.id}
-          title={evt.title}
-          startTime={evt.startTime}
-          endTime={evt.endTime}
-          type={evt.type}
-          lecturer={evt.lecturer}
-          location={evt.location}
-          draggable={!!evt.id?.startsWith("task-local-")}
-          isUserTask={!!evt.id?.startsWith("task-local-")}
-          onEdit={() => onEditEvent?.(evt)}
-          onDelete={() => onDeleteEvent?.(evt.id)}
-        />
+      {visibleEvents.map((evt) => (
+        <div key={evt.id} onClick={e => e.stopPropagation()}>
+          <CalendarDayBlockEvent
+            id={evt.id}
+            title={evt.title}
+            startTime={evt.startTime}
+            endTime={evt.endTime}
+            type={evt.type}
+            lecturer={evt.lecturer}
+            location={evt.location}
+            draggable={!!evt.id?.startsWith("task-local-")}
+            isUserTask={!!evt.id?.startsWith("task-local-")}
+            onEdit={() => onEditEvent?.(evt)}
+            onDelete={() => onDeleteEvent?.(evt.id)}
+            tooltipPosition={tooltipPosition}
+          />
+        </div>
       ))}
+
+      {hasOverflow && !expanded && (
+        <button
+          type="button"
+          onClick={e => { e.stopPropagation(); setExpanded(true); }}
+          className="self-start text-[10px] font-semibold text-purple-600 hover:text-purple-800 bg-transparent border-none cursor-pointer px-1 py-0.5 rounded transition-colors hover:bg-purple-50"
+        >
+          +{hiddenCount} more
+        </button>
+      )}
+
+      {hasOverflow && expanded && (
+        <button
+          type="button"
+          onClick={e => { e.stopPropagation(); setExpanded(false); }}
+          className="self-start text-[10px] font-semibold text-gray-400 hover:text-gray-600 bg-transparent border-none cursor-pointer px-1 py-0.5 rounded transition-colors hover:bg-gray-50"
+        >
+          Show less
+        </button>
+      )}
     </div>
   );
 }
