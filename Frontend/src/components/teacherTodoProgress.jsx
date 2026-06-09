@@ -138,7 +138,7 @@ export default function TeacherTodoProgress() {
   }, [todos]);
 
   return (
-    <div className="w-full h-full flex flex-col bg-white/80 border-1 border-gray-200 rounded-3xl drop-shadow-xl p-4">
+    <div className="w-full h-full flex flex-col bg-white/70 border border-gray-100 rounded-3xl p-4">
       {/* ── To Do Header ── */}
       <div className="flex items-center justify-between mt-5 mb-1">
         <h2 className="text-2xl font-['Gabarito']">To Do</h2>
@@ -240,7 +240,7 @@ export default function TeacherTodoProgress() {
                 exit={{ opacity: 0, x: 20 }}
                 transition={{ duration: 0.3, ease: "easeOut" }}
                 className={`w-full border rounded-2xl px-4 py-3.5 flex items-center gap-3 transition-all duration-300 cursor-pointer
-                  ${todo.isCompleted ? "bg-gray-50 border-gray-100 opacity-50" : "bg-white border-gray-200 hover:shadow-md"}`}
+                  ${todo.isCompleted ? "bg-gray-50/60 border-gray-100 opacity-40" : "bg-white/80 border-gray-100 hover:border-gray-200"}`}
               >
                 {/* Icon + source dot */}
                 <div className="relative shrink-0">
@@ -324,7 +324,7 @@ export default function TeacherTodoProgress() {
       <h2 className="text-2xl font-['Gabarito'] mt-4 mb-2 shrink-0">Progress</h2>
 
       {/* ── Progress Ring ── */}
-      <div className="w-full bg-gray-100 rounded-2xl border border-gray-200 p-4 shrink-0">
+      <div className="w-full bg-gray-50/60 rounded-2xl border border-gray-100 p-4 shrink-0">
         <ProgressRing percentage={progress} />
       </div>
     </div>

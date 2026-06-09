@@ -130,7 +130,7 @@ export default function AssignmentsProgress() {
   );
 
   return (
-    <div className="w-full h-full flex flex-col bg-white/80 border-1 border-gray-200 rounded-3xl drop-shadow-xl p-4">
+    <div className="w-full h-full flex flex-col bg-white/70 border border-gray-100 rounded-3xl p-4">
       {/* ── Assignments Header ── */}
       <div className="flex items-center justify-between mt-5 mb-5">
         <h2 className="text-2xl font-['Gabarito']">Assignments</h2>
