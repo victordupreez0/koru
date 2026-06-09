@@ -5,7 +5,9 @@ import { getCourseAssignments, createAssignment, updateAssignment, deleteAssignm
 import { getAssignmentGrades, createGrade, updateGrade, releaseAssignmentGrades } from "../../../services/gradeService";
 import { getCourseSubmissions, getAssignmentSubmissions, updateSubmission } from "../../../services/submissionService";
 import { getCourseStudentCount } from "../../../services/enrollmentService";
+import { getCourseCohorts, getCourseStudents } from "../../../services/classGroupService";
 import { useAuth } from "../../../contexts/AuthContext";
+import CohortFilterBar from "../../../components/CohortFilterBar";
 import { staggerContainer, slideUp, ASSIGNMENT_TYPES, GRADE_DISPLAY_OPTIONS, EXTERNAL_TOOLS } from "./constants";
 
 function AssignmentTypeIcon({ type, size = 18 }) {
@@ -301,10 +303,16 @@ function CreateAssignmentDrawer({ onClose, onSave, initialData }) {
     );
 }
 
-function TeacherSubmissionReview({ assignment, onBack }) {
+function TeacherSubmissionReview({ assignment, onBack, cohorts = [], studentCohortMap = {}, selectedCohortId: initialCohortId = null, onCohortChange }) {
     const { user } = useAuth();
     const [submissions, setSubmissions] = React.useState([]);
     const [grades, setGrades] = React.useState({});
+    const [selectedCohortId, setSelectedCohortId] = React.useState(initialCohortId);
+
+    const handleCohortChange = (id) => {
+        setSelectedCohortId(id);
+        onCohortChange?.(id);
+    };
     const [loading, setLoading] = React.useState(true);
     const [gradingState, setGradingState] = React.useState({});
     const [releasing, setReleasing] = React.useState(false);
@@ -390,6 +398,12 @@ function TeacherSubmissionReview({ assignment, onBack }) {
 
     const maxPts = assignment.points ?? null;
 
+    // Filter submissions by selected cohort
+    const visibleSubmissions = React.useMemo(() => {
+        if (!selectedCohortId) return submissions;
+        return submissions.filter(s => s.student && studentCohortMap[s.student.id] === selectedCohortId);
+    }, [submissions, selectedCohortId, studentCohortMap]);
+
     return (
         <motion.div className="flex-1 p-8 overflow-y-auto" initial="hidden" animate="visible" variants={staggerContainer}>
             <motion.div variants={slideUp} className="flex items-center gap-3 mb-10">
@@ -406,16 +420,19 @@ function TeacherSubmissionReview({ assignment, onBack }) {
                     <h1 className="text-3xl font-bold text-gray-900 tracking-tight">{assignment.title}</h1>
                     {!loading && (
                         <p className="text-gray-400 text-sm mt-1">
-                            {submissions.length} submission{submissions.length !== 1 ? "s" : ""}
+                            {visibleSubmissions.length} submission{visibleSubmissions.length !== 1 ? "s" : ""}
                             {maxPts != null && <><span className="ml-3 text-gray-300">|</span><span className="ml-3">Max: <strong>{maxPts} pts</strong></span></>}
                         </p>
                     )}
+                    <div className="mt-3">
+                        <CohortFilterBar cohorts={cohorts} selected={selectedCohortId} onChange={handleCohortChange} />
+                    </div>
                 </div>
-                {!loading && submissions.length > 0 && (
+                {!loading && visibleSubmissions.length > 0 && (
                     <div className="flex items-center gap-3">
                         <div className="px-5 py-3 bg-green-50 rounded-2xl text-center">
                             <p className="text-[10px] font-black uppercase tracking-widest text-green-600">Graded</p>
-                            <p className="text-xl font-black italic text-green-700">{Object.keys(grades).length}/{submissions.length}</p>
+                            <p className="text-xl font-black italic text-green-700">{Object.keys(grades).length}/{visibleSubmissions.length}</p>
                         </div>
                         {Object.keys(grades).length > 0 && (
                             Object.values(grades).every(g => g.isReleased) ? (
@@ -439,13 +456,13 @@ function TeacherSubmissionReview({ assignment, onBack }) {
 
             {loading ? (
                 <div className="flex items-center justify-center h-48 text-gray-400 font-medium">Loading submissions...</div>
-            ) : submissions.length === 0 ? (
+            ) : visibleSubmissions.length === 0 ? (
                 <motion.div variants={slideUp} className="text-center py-20 bg-gray-50 rounded-[40px] border border-gray-100 text-gray-400 font-medium">
                     No submissions yet for this assignment.
                 </motion.div>
             ) : (
                 <motion.div variants={staggerContainer} className="space-y-4">
-                    {submissions.map(sub => {
+                    {visibleSubmissions.map(sub => {
                         const studentName = sub.student ? `${sub.student.firstName} ${sub.student.lastName}` : sub.studentId;
                         const studentEmail = sub.student?.email || "";
                         const isQuizAnswer = (() => {
@@ -845,20 +862,32 @@ export function CourseAssignmentsView({ subject, activeCourseId }) {
     const [reviewingAssignment, setReviewingAssignment] = React.useState(null);
     const [previewingAssignment, setPreviewingAssignment] = React.useState(null);
 
+    // Cohort filter state
+    const [cohorts, setCohorts] = React.useState([]);
+    const [studentCohortMap, setStudentCohortMap] = React.useState({});
+    const [selectedCohortId, setSelectedCohortId] = React.useState(null);
+
     const loadData = React.useCallback(async () => {
         if (!activeCourseId) return;
         try {
             setLoading(true);
-            const [data, subs, count] = await Promise.all([
+            setSelectedCohortId(null);
+            const [data, subs, count, cohortData, studentData] = await Promise.all([
                 getCourseAssignments(activeCourseId),
                 getCourseSubmissions(activeCourseId).catch(() => []),
                 getCourseStudentCount(activeCourseId).catch(() => 0),
+                getCourseCohorts(activeCourseId).catch(() => []),
+                getCourseStudents(activeCourseId).catch(() => []),
             ]);
             const counts = {};
             (subs || []).forEach(s => { counts[s.assignmentId] = (counts[s.assignmentId] || 0) + 1; });
             setAssignments(data || []);
             setSubmissionCounts(counts);
             setEnrollmentCount(count || 0);
+            setCohorts(cohortData || []);
+            const map = {};
+            (studentData || []).forEach(st => { map[st.studentId] = st.classGroupId; });
+            setStudentCohortMap(map);
         } catch (err) {
             console.error("Failed to load assignments:", err);
         } finally {
@@ -948,7 +977,16 @@ export function CourseAssignmentsView({ subject, activeCourseId }) {
         : groups.map(g => ({ ...g, assignments: g.assignments.filter(a => a.type === activeTypeFilter) })).filter(g => g.assignments.length > 0);
 
     if (reviewingAssignment) {
-        return <TeacherSubmissionReview assignment={reviewingAssignment} onBack={() => setReviewingAssignment(null)} />;
+        return (
+            <TeacherSubmissionReview
+                assignment={reviewingAssignment}
+                onBack={() => setReviewingAssignment(null)}
+                cohorts={cohorts}
+                studentCohortMap={studentCohortMap}
+                selectedCohortId={selectedCohortId}
+                onCohortChange={setSelectedCohortId}
+            />
+        );
     }
 
     return (
@@ -956,6 +994,9 @@ export function CourseAssignmentsView({ subject, activeCourseId }) {
             <motion.header variants={slideUp} className="mb-10 flex justify-between items-end">
                 <div>
                     <h1 className="text-3xl font-semibold tracking-tight">Assignments</h1>
+                    <div className="mt-3">
+                        <CohortFilterBar cohorts={cohorts} selected={selectedCohortId} onChange={setSelectedCohortId} />
+                    </div>
                 </div>
                 <div className="flex items-center gap-3">
                     <motion.button

@@ -691,23 +691,6 @@ export default function SettingsPage() {
                           </select>
                         </div>
 
-                        <div className="flex flex-col gap-4">
-                          <ToggleRow
-                            icon={<Sparkles size={16} />}
-                            title="Reduced Motion Layout"
-                            description="Disable smooth slide-in and scale hover effects to enhance device performance."
-                            checked={settings.reducedMotion}
-                            onChange={(checked) => updateSetting("reducedMotion", checked)}
-                          />
-
-                          <ToggleRow
-                            icon={<Eye size={16} />}
-                            title="Focus Mode Reading"
-                            description="Optimize article modules to hide global headers, allowing distraction-free reading."
-                            checked={settings.focusMode}
-                            onChange={(checked) => updateSetting("focusMode", checked)}
-                          />
-                        </div>
                       </div>
 
                       <div className={pageClasses.card}>

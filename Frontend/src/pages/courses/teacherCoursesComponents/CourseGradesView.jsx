@@ -4,6 +4,8 @@ import { Folder, InfoCircle, CheckCircle } from "@solar-icons/react";
 import AttendanceChart from "../../../components/UI/attendanceChart";
 import { getCourseGrades } from "../../../services/gradeService";
 import { getCourseSubmissions } from "../../../services/submissionService";
+import { getCourseCohorts, getCourseStudents } from "../../../services/classGroupService";
+import CohortFilterBar from "../../../components/CohortFilterBar";
 import { staggerContainer, slideUp, scaleIn } from "./constants";
 
 export function CourseGradesView({ activeCourseId, subject }) {
@@ -11,19 +13,31 @@ export function CourseGradesView({ activeCourseId, subject }) {
     const [submissions, setSubmissions] = useState([]);
     const [loading, setLoading] = useState(true);
 
+    // Cohort filter state
+    const [cohorts, setCohorts] = useState([]);
+    const [studentCohortMap, setStudentCohortMap] = useState({});
+    const [selectedCohortId, setSelectedCohortId] = useState(null);
+
     useEffect(() => {
         let mounted = true;
         async function fetchData() {
             if (!activeCourseId) return;
             try {
                 setLoading(true);
-                const [g, s] = await Promise.all([
+                setSelectedCohortId(null);
+                const [g, s, cohortData, studentData] = await Promise.all([
                     getCourseGrades(activeCourseId).catch(() => []),
                     getCourseSubmissions(activeCourseId).catch(() => []),
+                    getCourseCohorts(activeCourseId).catch(() => []),
+                    getCourseStudents(activeCourseId).catch(() => []),
                 ]);
                 if (mounted) {
                     setGrades(g || []);
                     setSubmissions(s || []);
+                    setCohorts(cohortData || []);
+                    const map = {};
+                    (studentData || []).forEach(st => { map[st.studentId] = st.classGroupId; });
+                    setStudentCohortMap(map);
                 }
             } catch (err) {
                 console.error("Failed to load course grades/submissions:", err);
@@ -35,12 +49,19 @@ export function CourseGradesView({ activeCourseId, subject }) {
         return () => { mounted = false; };
     }, [activeCourseId]);
 
+    // Filter submissions by selected cohort
+    const filteredSubmissions = React.useMemo(() => {
+        if (!selectedCohortId) return submissions;
+        return submissions.filter(s => s.student && studentCohortMap[s.student.id] === selectedCohortId);
+    }, [submissions, selectedCohortId, studentCohortMap]);
+
     const studentRows = React.useMemo(() => {
         const map = {};
-        submissions.forEach(s => {
+        filteredSubmissions.forEach(s => {
             const student = s.student;
             if (!student) return;
             const sid = student.id;
+
             if (!map[sid]) {
                 const name = student.name || `${student.firstName || ""} ${student.lastName || ""}`.trim() || "Student";
                 map[sid] = {
@@ -94,6 +115,9 @@ export function CourseGradesView({ activeCourseId, subject }) {
                 <div>
                     <h1 className="text-3xl font-semibold tracking-tight text-gray-900">Grades & Performance</h1>
                     <p className="text-gray-500 mt-2">{subject?.code || "Course"} | Class Performance Analytics</p>
+                    <div className="mt-3">
+                        <CohortFilterBar cohorts={cohorts} selected={selectedCohortId} onChange={setSelectedCohortId} />
+                    </div>
                 </div>
                 <div className="flex gap-4">
                     <button className="px-6 py-3 rounded-2xl border border-gray-200 text-sm font-semibold hover:bg-gray-50 transition-colors flex items-center gap-2 shadow-sm">
