@@ -456,7 +456,8 @@ The backend test suite was written using xUnit.net combined with FluentAssertion
 Tests were written to cover controller logic across all 15 API controllers, as well as model validation and DTO behaviour. 
 
 Coverage was measured using Coverlet and visualised using ReportGenerator, producing a detailed HTML report broken down per class and method. 
-![BackendTest](ReadMeImages/BackendTest.png)
+<img width="751" height="612" alt="Screenshot 2026-06-09 105143" src="https://github.com/user-attachments/assets/5b0a08a5-93e4-4a7b-bb95-7694d2dee357" />
+
 ##  _Summary of Backend Coverage_ 
 
 The risk hotspot identified by ReportGenerator was the GoogleAuth() method in UserController, which has a Cyclomatic Complexity of 22 reflecting the number of conditional paths involved in validating a Google OAuth token, checking email verification, matching existing accounts, and handling edge cases. This is the most complex method in the codebase and would benefit from further dedicated test cases to fully cover all branches. 
