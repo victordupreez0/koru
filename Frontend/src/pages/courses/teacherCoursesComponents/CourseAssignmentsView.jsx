@@ -301,6 +301,109 @@ function CreateAssignmentDrawer({ onClose, onSave, initialData }) {
     );
 }
 
+function SubmissionFileViewer({ submission }) {
+    const [blobUrl, setBlobUrl] = React.useState(null);
+    const [fileError, setFileError] = React.useState(false);
+    const [fileLoading, setFileLoading] = React.useState(true);
+    const fileUrl = submission?.fileUrl || "";
+
+    const fileExt = React.useMemo(() => {
+        try {
+            const path = fileUrl.startsWith("http") ? new URL(fileUrl).pathname : fileUrl;
+            return path.split(".").pop()?.toLowerCase() || "";
+        } catch { return ""; }
+    }, [fileUrl]);
+
+    const isImage = ["jpg", "jpeg", "png", "gif", "webp", "svg"].includes(fileExt);
+    const isPdf = fileExt === "pdf";
+    const isVideo = ["mp4", "mov", "webm"].includes(fileExt);
+    const isAudio = ["mp3", "wav", "ogg"].includes(fileExt);
+
+    React.useEffect(() => {
+        if (!fileUrl) { setFileLoading(false); return; }
+        let revoke = null;
+
+        if (fileUrl.startsWith("http")) {
+            if (isImage) {
+                setBlobUrl(fileUrl);
+                setFileLoading(false);
+                return;
+            }
+        }
+
+        const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5299/api";
+        setFileLoading(true);
+        setFileError(false);
+        fetch(`${API_BASE}/Submission/${submission.id}/file`)
+            .then(res => {
+                if (!res.ok) throw new Error(`${res.status}`);
+                return res.blob();
+            })
+            .then(blob => {
+                const url = URL.createObjectURL(blob);
+                revoke = url;
+                setBlobUrl(url);
+            })
+            .catch(() => {
+                if (fileUrl.startsWith("http")) {
+                    setBlobUrl(fileUrl);
+                } else {
+                    setFileError(true);
+                }
+            })
+            .finally(() => setFileLoading(false));
+
+        return () => { if (revoke) URL.revokeObjectURL(revoke); };
+    }, [submission.id, fileUrl, isImage, isPdf]);
+
+    if (!fileUrl) return (
+        <div className="flex items-center justify-center h-64 bg-gray-50 rounded-3xl border border-gray-100 text-gray-400 text-sm font-medium">
+            No file submitted
+        </div>
+    );
+
+    if (fileLoading) return (
+        <div className="flex items-center justify-center h-64 bg-gray-50 rounded-3xl border border-gray-100">
+            <Loader size={20} className="animate-spin text-gray-400" />
+        </div>
+    );
+
+    if (fileError) return (
+        <div className="flex flex-col items-center justify-center h-64 bg-gray-50 rounded-3xl border border-gray-100 gap-3">
+            <FileText size={28} className="text-gray-300" />
+            <p className="text-sm text-gray-400 font-medium">Unable to load file preview</p>
+            <a href={fileUrl} target="_blank" rel="noreferrer" className="text-xs text-[#3C0078] font-bold hover:underline">Try opening directly</a>
+        </div>
+    );
+
+    if (isPdf) return (
+        <iframe src={blobUrl} className="w-full h-[600px] rounded-3xl border border-gray-100" title="Submission PDF" />
+    );
+    if (isImage) return (
+        <div className="flex items-center justify-center bg-gray-50 rounded-3xl border border-gray-100 p-4 min-h-[300px]">
+            <img src={blobUrl} alt="Submission" className="max-w-full max-h-[550px] rounded-2xl object-contain" />
+        </div>
+    );
+    if (isVideo) return (
+        <video src={blobUrl} controls className="w-full rounded-3xl border border-gray-100 max-h-[500px]" />
+    );
+    if (isAudio) return (
+        <div className="flex items-center justify-center bg-gray-50 rounded-3xl border border-gray-100 p-8">
+            <audio src={blobUrl} controls className="w-full" />
+        </div>
+    );
+
+    return (
+        <div className="flex flex-col items-center justify-center h-64 bg-gray-50 rounded-3xl border border-gray-100 gap-3">
+            <FileText size={28} className="text-gray-300" />
+            <p className="text-sm text-gray-500 font-medium">{fileExt.toUpperCase()} file</p>
+            <a href={blobUrl} target="_blank" rel="noreferrer" className="px-4 py-2 rounded-xl bg-[#3C0078]/5 text-[#3C0078] text-xs font-bold hover:bg-[#3C0078]/10 transition-colors">
+                Download File
+            </a>
+        </div>
+    );
+}
+
 function TeacherSubmissionReview({ assignment, onBack }) {
     const { user } = useAuth();
     const [submissions, setSubmissions] = React.useState([]);
@@ -308,6 +411,7 @@ function TeacherSubmissionReview({ assignment, onBack }) {
     const [loading, setLoading] = React.useState(true);
     const [gradingState, setGradingState] = React.useState({});
     const [releasing, setReleasing] = React.useState(false);
+    const [selectedSub, setSelectedSub] = React.useState(null);
 
     async function handleRelease() {
         setReleasing(true);
@@ -390,170 +494,247 @@ function TeacherSubmissionReview({ assignment, onBack }) {
 
     const maxPts = assignment.points ?? null;
 
-    return (
-        <motion.div className="flex-1 p-8 overflow-y-auto" initial="hidden" animate="visible" variants={staggerContainer}>
-            <motion.div variants={slideUp} className="flex items-center gap-3 mb-10">
-                <button onClick={onBack} className="flex items-center gap-2 text-gray-400 hover:text-[#3C0078] transition-colors font-semibold text-sm group">
-                    <ChevronRight size={18} className="rotate-180 group-hover:-translate-x-1 transition-transform" />
-                    Back to Assignments
-                </button>
-                <span className="text-gray-200">/</span>
-                <span className="text-sm text-gray-700 font-semibold truncate max-w-[320px]">{assignment.title}</span>
-            </motion.div>
+    const isQuizAnswer = (sub) => {
+        try {
+            if (!sub.fileUrl) return false;
+            const parsed = JSON.parse(sub.fileUrl);
+            return typeof parsed === "object" && !Array.isArray(parsed);
+        } catch { return false; }
+    };
 
-            <motion.div variants={slideUp} className="mb-8 flex items-end justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold text-gray-900 tracking-tight">{assignment.title}</h1>
-                    {!loading && (
-                        <p className="text-gray-400 text-sm mt-1">
-                            {submissions.length} submission{submissions.length !== 1 ? "s" : ""}
-                            {maxPts != null && <><span className="ml-3 text-gray-300">|</span><span className="ml-3">Max: <strong>{maxPts} pts</strong></span></>}
-                        </p>
-                    )}
+    return (
+        <div className="flex-1 flex flex-col overflow-hidden">
+            <div className="shrink-0 px-8 pt-8 pb-4">
+                <div className="flex items-center gap-3 mb-6">
+                    <button onClick={onBack} className="flex items-center gap-2 text-gray-400 hover:text-[#3C0078] transition-colors font-semibold text-sm group">
+                        <ChevronRight size={18} className="rotate-180 group-hover:-translate-x-1 transition-transform" />
+                        Back to Assignments
+                    </button>
+                    <span className="text-gray-200">/</span>
+                    <span className="text-sm text-gray-700 font-semibold truncate max-w-[320px]">{assignment.title}</span>
                 </div>
-                {!loading && submissions.length > 0 && (
-                    <div className="flex items-center gap-3">
-                        <div className="px-5 py-3 bg-green-50 rounded-2xl text-center">
-                            <p className="text-[10px] font-black uppercase tracking-widest text-green-600">Graded</p>
-                            <p className="text-xl font-black italic text-green-700">{Object.keys(grades).length}/{submissions.length}</p>
-                        </div>
-                        {Object.keys(grades).length > 0 && (
-                            Object.values(grades).every(g => g.isReleased) ? (
-                                <div className="px-4 py-2 bg-purple-50 rounded-2xl flex items-center gap-2">
-                                    <Check size={14} className="text-purple-600" />
-                                    <span className="text-xs font-bold uppercase tracking-widest text-purple-600">Grades Released</span>
-                                </div>
-                            ) : (
-                                <button
-                                    onClick={handleRelease}
-                                    disabled={releasing}
-                                    className="px-5 py-3 bg-[#3C0078] text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-[#2d0059] transition-colors disabled:opacity-60"
-                                >
-                                    {releasing ? "Releasing..." : "Release Grades"}
-                                </button>
-                            )
+                <div className="flex items-end justify-between">
+                    <div>
+                        <h1 className="text-2xl font-bold text-gray-900 tracking-tight">{assignment.title}</h1>
+                        {!loading && (
+                            <p className="text-gray-400 text-sm mt-1">
+                                {submissions.length} submission{submissions.length !== 1 ? "s" : ""}
+                                {maxPts != null && <><span className="ml-3 text-gray-300">|</span><span className="ml-3">Max: <strong>{maxPts} pts</strong></span></>}
+                            </p>
                         )}
                     </div>
-                )}
-            </motion.div>
+                    {!loading && submissions.length > 0 && (
+                        <div className="flex items-center gap-3">
+                            <div className="px-4 py-2 bg-green-50 rounded-2xl text-center">
+                                <p className="text-[9px] font-black uppercase tracking-widest text-green-600">Graded</p>
+                                <p className="text-lg font-black italic text-green-700">{Object.keys(grades).length}/{submissions.length}</p>
+                            </div>
+                            {Object.keys(grades).length > 0 && (
+                                Object.values(grades).every(g => g.isReleased) ? (
+                                    <div className="px-4 py-2 bg-purple-50 rounded-2xl flex items-center gap-2">
+                                        <Check size={14} className="text-purple-600" />
+                                        <span className="text-xs font-bold uppercase tracking-widest text-purple-600">Released</span>
+                                    </div>
+                                ) : (
+                                    <button
+                                        onClick={handleRelease}
+                                        disabled={releasing}
+                                        className="px-5 py-2.5 bg-[#3C0078] text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-[#2d0059] transition-colors disabled:opacity-60"
+                                    >
+                                        {releasing ? "Releasing..." : "Release Grades"}
+                                    </button>
+                                )
+                            )}
+                        </div>
+                    )}
+                </div>
+            </div>
 
             {loading ? (
-                <div className="flex items-center justify-center h-48 text-gray-400 font-medium">Loading submissions...</div>
+                <div className="flex items-center justify-center flex-1 text-gray-400 font-medium">Loading submissions...</div>
             ) : submissions.length === 0 ? (
-                <motion.div variants={slideUp} className="text-center py-20 bg-gray-50 rounded-[40px] border border-gray-100 text-gray-400 font-medium">
-                    No submissions yet for this assignment.
-                </motion.div>
+                <div className="flex-1 flex items-center justify-center px-8 pb-8">
+                    <div className="text-center py-20 w-full bg-gray-50 rounded-[40px] border border-gray-100 text-gray-400 font-medium">
+                        No submissions yet for this assignment.
+                    </div>
+                </div>
             ) : (
-                <motion.div variants={staggerContainer} className="space-y-4">
-                    {submissions.map(sub => {
-                        const studentName = sub.student ? `${sub.student.firstName} ${sub.student.lastName}` : sub.studentId;
-                        const studentEmail = sub.student?.email || "";
-                        const isQuizAnswer = (() => {
-                            try {
-                                if (!sub.fileUrl) return false;
-                                const parsed = JSON.parse(sub.fileUrl);
-                                return typeof parsed === "object" && !Array.isArray(parsed);
-                            } catch { return false; }
-                        })();
-                        const existingGrade = grades[sub.id];
-                        const gs = gradingState[sub.id] || { points: "", saving: false, error: null, editing: false };
-                        const ptsVal = parseFloat(gs.points);
-                        const pct = maxPts && !isNaN(ptsVal) ? Math.round((ptsVal / maxPts) * 100) : null;
-                        const isEditing = gs.editing || !existingGrade;
+                <div className="flex-1 flex overflow-hidden border-t border-gray-100 mt-2">
+                    {/* Left — Student list */}
+                    <div className="w-[340px] shrink-0 overflow-y-auto border-r border-gray-100 bg-gray-50/30">
+                        <div className="p-4 space-y-1">
+                            {submissions.map(sub => {
+                                const studentName = sub.student ? `${sub.student.firstName} ${sub.student.lastName}` : sub.studentId;
+                                const isSelected = selectedSub?.id === sub.id;
+                                const existingGrade = grades[sub.id];
+                                const isQuiz = isQuizAnswer(sub);
 
-                        return (
-                            <motion.div key={sub.id} variants={slideUp} className="bg-white border border-gray-100 rounded-[28px] p-6 space-y-4">
-                                <div className="flex items-center gap-4">
-                                    <div className="shrink-0 w-11 h-11 rounded-2xl bg-[#3C0078]/10 flex items-center justify-center">
-                                        <span className="text-[#3C0078] font-bold text-sm">
+                                return (
+                                    <button
+                                        key={sub.id}
+                                        onClick={() => setSelectedSub(sub)}
+                                        className={`w-full text-left flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${
+                                            isSelected
+                                                ? "bg-white border border-gray-200 shadow-sm"
+                                                : "hover:bg-white/60 border border-transparent"
+                                        }`}
+                                    >
+                                        <div className={`shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-xs font-black ${
+                                            isSelected ? "bg-[#3C0078] text-white" : "bg-[#3C0078]/5 border-2 border-[#3C0078]/10 text-[#3C0078]"
+                                        }`}>
                                             {(sub.student?.firstName?.[0] || "?").toUpperCase()}{(sub.student?.lastName?.[0] || "").toUpperCase()}
-                                        </span>
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <p className="font-bold text-gray-900">{studentName}</p>
-                                        <p className="text-xs text-gray-400 mt-0.5">{studentEmail}</p>
-                                    </div>
-                                    <div className="shrink-0 text-right">
-                                        <p className="text-xs font-semibold text-gray-500">{sub.submittedAt ? new Date(sub.submittedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "-"}</p>
-                                        <p className="text-[10px] text-gray-400">{sub.submittedAt ? new Date(sub.submittedAt).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }) : ""}</p>
-                                    </div>
-                                    {sub.fileUrl && !isQuizAnswer && (
-                                        <a href={`${(import.meta.env.VITE_API_BASE_URL || "http://localhost:5299/api").replace("/api", "")}${sub.fileUrl}`} target="_blank" rel="noreferrer" className="shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl bg-[#3C0078]/5 text-[#3C0078] text-xs font-bold hover:bg-[#3C0078]/10 transition-colors">
-                                            <FileText size={14} /> View File
-                                        </a>
-                                    )}
-                                    {isQuizAnswer && <span className="shrink-0 px-4 py-2 rounded-xl bg-orange-50 text-orange-600 text-xs font-bold">Quiz Response</span>}
-                                    <span className={`shrink-0 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${
-                                        sub.status === "Graded" ? "bg-green-100 text-green-700"
-                                        : sub.status === "Submitted" || sub.status === "Resubmitted" ? "bg-blue-50 text-blue-600"
-                                        : "bg-gray-100 text-gray-500"
-                                    }`}>{sub.status || "Submitted"}</span>
-                                </div>
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className={`text-sm font-bold truncate ${isSelected ? "text-[#3C0078]" : "text-gray-900"}`}>{studentName}</p>
+                                            <p className="text-[10px] text-gray-400 mt-0.5">
+                                                {sub.submittedAt ? new Date(sub.submittedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "—"}
+                                            </p>
+                                        </div>
+                                        <div className="shrink-0 flex flex-col items-end gap-1">
+                                            <span className={`px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest ${
+                                                sub.status === "Graded" ? "bg-green-100 text-green-700"
+                                                : sub.status === "Late" ? "bg-orange-100 text-orange-600"
+                                                : "bg-blue-50 text-blue-600"
+                                            }`}>{sub.status || "Submitted"}</span>
+                                            {existingGrade && maxPts != null && (
+                                                <span className="text-[10px] font-bold text-gray-500">{existingGrade.pointsEarned}/{maxPts}</span>
+                                            )}
+                                        </div>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
 
-                                <div className="border-t border-gray-50 pt-4">
-                                    {existingGrade && !gs.editing ? (
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-4">
-                                                <div className="flex flex-col">
-                                                    <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Grade</span>
-                                                    <span className="text-2xl font-black italic text-gray-900">
-                                                        {existingGrade.pointsEarned}{maxPts != null && <span className="text-sm font-normal text-gray-400">/{maxPts} pts</span>}
-                                                    </span>
-                                                </div>
-                                                {maxPts != null && (
-                                                    <div className="px-5 py-2 rounded-2xl bg-[#3C0078] text-white">
-                                                        <span className="text-xl font-black italic">{Math.round((existingGrade.pointsEarned / maxPts) * 100)}%</span>
+                    {/* Right — File viewer + grading */}
+                    <div className="flex-1 overflow-y-auto">
+                        <AnimatePresence mode="wait">
+                            {selectedSub ? (
+                                <motion.div
+                                    key={selectedSub.id}
+                                    initial={{ opacity: 0, x: 20 }}
+                                    animate={{ opacity: 1, x: 0, transition: { type: "spring", stiffness: 300, damping: 30 } }}
+                                    exit={{ opacity: 0, x: 20, transition: { duration: 0.15, ease: "easeIn" } }}
+                                    className="p-6 space-y-6"
+                                >
+                                    {/* Student header */}
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-11 h-11 rounded-full bg-[#3C0078] flex items-center justify-center">
+                                            <span className="text-white font-bold text-sm">
+                                                {(selectedSub.student?.firstName?.[0] || "?").toUpperCase()}{(selectedSub.student?.lastName?.[0] || "").toUpperCase()}
+                                            </span>
+                                        </div>
+                                        <div className="flex-1">
+                                            <p className="font-bold text-gray-900">{selectedSub.student ? `${selectedSub.student.firstName} ${selectedSub.student.lastName}` : selectedSub.studentId}</p>
+                                            <p className="text-xs text-gray-400">{selectedSub.student?.email || ""}</p>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="text-xs font-semibold text-gray-500">{selectedSub.submittedAt ? new Date(selectedSub.submittedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—"}</p>
+                                            <p className="text-[10px] text-gray-400">{selectedSub.submittedAt ? new Date(selectedSub.submittedAt).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }) : ""}</p>
+                                        </div>
+                                        <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${
+                                            selectedSub.status === "Graded" ? "bg-green-100 text-green-700"
+                                            : selectedSub.status === "Late" ? "bg-orange-100 text-orange-600"
+                                            : selectedSub.status === "Submitted" || selectedSub.status === "Resubmitted" ? "bg-blue-50 text-blue-600"
+                                            : "bg-gray-100 text-gray-500"
+                                        }`}>{selectedSub.status || "Submitted"}</span>
+                                    </div>
+
+                                    {/* File viewer */}
+                                    {isQuizAnswer(selectedSub) ? (
+                                        <div className="bg-orange-50 rounded-3xl border border-orange-100 p-6">
+                                            <p className="text-sm font-bold text-orange-700 mb-3">Quiz Response</p>
+                                            <pre className="text-xs text-gray-600 whitespace-pre-wrap overflow-auto max-h-96">{(() => {
+                                                try { return JSON.stringify(JSON.parse(selectedSub.fileUrl), null, 2); } catch { return selectedSub.fileUrl; }
+                                            })()}</pre>
+                                        </div>
+                                    ) : (
+                                        <SubmissionFileViewer submission={selectedSub} />
+                                    )}
+
+                                    {/* Grading section */}
+                                    {(() => {
+                                        const existingGrade = grades[selectedSub.id];
+                                        const gs = gradingState[selectedSub.id] || { points: "", saving: false, error: null, editing: false };
+                                        const ptsVal = parseFloat(gs.points);
+                                        const pct = maxPts && !isNaN(ptsVal) ? Math.round((ptsVal / maxPts) * 100) : null;
+
+                                        return (
+                                            <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6">
+                                                <h3 className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-4">Grade</h3>
+                                                {existingGrade && !gs.editing ? (
+                                                    <div className="flex items-center justify-between">
+                                                        <div className="flex items-center gap-4">
+                                                            <span className="text-3xl font-black italic text-gray-900">
+                                                                {existingGrade.pointsEarned}{maxPts != null && <span className="text-base font-normal text-gray-400">/{maxPts} pts</span>}
+                                                            </span>
+                                                            {maxPts != null && (
+                                                                <div className="px-4 py-2 rounded-2xl bg-[#3C0078] text-white">
+                                                                    <span className="text-lg font-black italic">{Math.round((existingGrade.pointsEarned / maxPts) * 100)}%</span>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                        <button onClick={() => setField(selectedSub.id, "editing", true)} className="flex items-center gap-2 px-5 py-2.5 rounded-2xl border border-gray-200 text-xs font-bold text-gray-500 hover:border-[#3C0078] hover:text-[#3C0078] transition-all">
+                                                            <Edit2 size={13} /> Update
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex items-end gap-4">
+                                                        <div className="flex-1 space-y-2">
+                                                            <label className="text-xs text-gray-500 font-medium">Points{maxPts != null && ` (out of ${maxPts})`}</label>
+                                                            <div className="flex items-center gap-3">
+                                                                <input
+                                                                    type="number" min="0" max={maxPts ?? undefined} step="0.5"
+                                                                    value={gs.points}
+                                                                    onChange={e => setField(selectedSub.id, "points", e.target.value)}
+                                                                    placeholder={maxPts != null ? `0 – ${maxPts}` : "Points"}
+                                                                    disabled={gs.saving}
+                                                                    className="w-32 px-4 py-3 rounded-2xl border border-gray-200 text-sm font-bold text-gray-900 focus:outline-none focus:border-[#3C0078] transition-colors disabled:opacity-50"
+                                                                />
+                                                                {pct !== null && (
+                                                                    <div className={`px-4 py-3 rounded-2xl font-black italic text-lg min-w-[65px] text-center ${pct >= 75 ? "bg-green-50 text-green-700" : pct >= 50 ? "bg-orange-50 text-orange-600" : "bg-red-50 text-red-600"}`}>
+                                                                        {pct}%
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                            {gs.error && <p className="text-xs text-red-500 font-medium">{gs.error}</p>}
+                                                        </div>
+                                                        <div className="flex gap-2 pb-0.5">
+                                                            {existingGrade && (
+                                                                <button onClick={() => { setField(selectedSub.id, "editing", false); setField(selectedSub.id, "points", String(existingGrade.pointsEarned)); }} disabled={gs.saving} className="px-4 py-3 rounded-2xl border border-gray-200 text-xs font-bold text-gray-400 hover:bg-gray-50 transition-all">
+                                                                    Cancel
+                                                                </button>
+                                                            )}
+                                                            <button
+                                                                onClick={() => handleGrade(selectedSub)}
+                                                                disabled={gs.saving || gs.points === ""}
+                                                                className={`flex items-center gap-2 px-6 py-3 rounded-2xl text-xs font-bold uppercase tracking-widest text-white transition-all ${gs.saving || gs.points === "" ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-[#3C0078] hover:bg-[#2A0054] shadow-lg shadow-[#3C0078]/20"}`}
+                                                            >
+                                                                {gs.saving ? <><Loader size={13} className="animate-spin" /> Saving...</> : <><Check size={14} /> {existingGrade ? "Update" : "Submit Grade"}</>}
+                                                            </button>
+                                                        </div>
                                                     </div>
                                                 )}
                                             </div>
-                                            <button onClick={() => setField(sub.id, "editing", true)} className="flex items-center gap-2 px-5 py-2.5 rounded-2xl border border-gray-200 text-xs font-bold text-gray-500 hover:border-[#3C0078] hover:text-[#3C0078] transition-all">
-                                                <Edit2 size={13} /> Update Grade
-                                            </button>
-                                        </div>
-                                    ) : (
-                                        <div className="flex items-start gap-4">
-                                            <div className="flex-1 space-y-2">
-                                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Points Awarded{maxPts != null && ` (out of ${maxPts})`}</label>
-                                                <div className="flex items-center gap-3">
-                                                    <input
-                                                        type="number" min="0" max={maxPts ?? undefined} step="0.5"
-                                                        value={gs.points}
-                                                        onChange={e => setField(sub.id, "points", e.target.value)}
-                                                        placeholder={maxPts != null ? `0 - ${maxPts}` : "Points"}
-                                                        disabled={gs.saving}
-                                                        className="w-36 px-4 py-3 rounded-2xl border border-gray-200 text-sm font-bold text-gray-900 focus:outline-none focus:border-[#3C0078] transition-colors disabled:opacity-50"
-                                                    />
-                                                    {pct !== null && (
-                                                        <div className={`px-4 py-3 rounded-2xl font-black italic text-lg min-w-[70px] text-center ${pct >= 75 ? "bg-green-50 text-green-700" : pct >= 50 ? "bg-orange-50 text-orange-600" : "bg-red-50 text-red-600"}`}>
-                                                            {pct}%
-                                                        </div>
-                                                    )}
-                                                </div>
-                                                {gs.error && <p className="text-xs text-red-500 font-medium">{gs.error}</p>}
-                                            </div>
-                                            <div className="flex items-end gap-2 pb-0.5">
-                                                {existingGrade && (
-                                                    <button onClick={() => { setField(sub.id, "editing", false); setField(sub.id, "points", String(existingGrade.pointsEarned)); }} disabled={gs.saving} className="px-5 py-3 rounded-2xl border border-gray-200 text-xs font-bold text-gray-400 hover:bg-gray-50 transition-all">
-                                                        Cancel
-                                                    </button>
-                                                )}
-                                                <button
-                                                    onClick={() => handleGrade(sub)}
-                                                    disabled={gs.saving || gs.points === ""}
-                                                    className={`flex items-center gap-2 px-6 py-3 rounded-2xl text-xs font-bold uppercase tracking-widest text-white transition-all ${gs.saving || gs.points === "" ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-[#3C0078] hover:bg-[#2A0054] shadow-lg shadow-[#3C0078]/20"}`}
-                                                >
-                                                    {gs.saving ? <><Loader size={13} className="animate-spin" /> Saving...</> : <><Check size={14} /> {existingGrade ? "Update" : "Submit Grade"}</>}
-                                                </button>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            </motion.div>
-                        );
-                    })}
-                </motion.div>
+                                        );
+                                    })()}
+                                </motion.div>
+                            ) : (
+                                <motion.div
+                                    key="empty"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    className="flex flex-col items-center justify-center h-full text-gray-400 gap-3"
+                                >
+                                    <Users size={32} className="text-gray-200" />
+                                    <p className="text-sm font-medium">Select a student to review their submission</p>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
+                </div>
             )}
-        </motion.div>
+        </div>
     );
 }
 
@@ -764,68 +945,90 @@ function AssignmentGroupRow({ group, onTogglePublish, onDelete, onEdit, onClose,
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: "auto" }}
                         exit={{ opacity: 0, height: 0 }}
-                        className="space-y-3 overflow-hidden"
+                        className="overflow-hidden"
                     >
-                        {group.assignments.map(item => {
-                            const typeInfo = ASSIGNMENT_TYPES.find(t => t.id === item.type);
-                            const Icon = typeInfo?.icon || FileText;
-                            const submissionPct = item.totalStudents > 0 ? Math.round((item.submissions / item.totalStudents) * 100) : 0;
+                        <div className="mt-3 bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+                            <table className="w-full text-left border-collapse">
+                                <thead>
+                                    <tr className="border-b border-gray-50 bg-gray-50/30">
+                                        <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-gray-400">Assignment</th>
+                                        <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-gray-400">Due</th>
+                                        <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-gray-400 text-center">Submissions</th>
+                                        <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-gray-400">Status</th>
+                                        <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-gray-400 text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {group.assignments.map(item => {
+                                        const typeInfo = ASSIGNMENT_TYPES.find(t => t.id === item.type);
+                                        const Icon = typeInfo?.icon || FileText;
+                                        const submissionPct = item.totalStudents > 0 ? Math.round((item.submissions / item.totalStudents) * 100) : 0;
 
-                            return (
-                                <motion.div key={item.id} layout className="bg-white border border-gray-100 rounded-[28px] px-7 py-5 flex items-center gap-5 hover:shadow-lg hover:border-[#3C0078]/10 transition-all group">
-                                    <span className={`shrink-0 inline-flex items-center justify-center w-10 h-10 rounded-2xl ${typeInfo?.bg || "bg-gray-100"}`}>
-                                        <Icon size={18} style={{ color: typeInfo?.color || "#64748B" }} />
-                                    </span>
-
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-3 flex-wrap">
-                                            <span className="font-bold text-gray-900 group-hover:text-[#3C0078] transition-colors truncate">{item.title}</span>
-                                            <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400 whitespace-nowrap">{typeInfo?.label}</span>
-                                        </div>
-                                        <div className="flex items-center gap-5 mt-1.5 text-xs text-gray-400 flex-wrap">
-                                            <span>{item.points} pts</span>
-                                            {item.openDate && <span className="text-green-600">Opens: {new Date(item.openDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>}
-                                            {item.dueDate && <span className="text-orange-500">Due: {new Date(item.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>}
-                                            {item.closeDate && <span className="text-red-500">Closes: {new Date(item.closeDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>}
-                                        </div>
-                                    </div>
-
-                                    <div className="shrink-0 flex flex-col items-end gap-1 min-w-[90px]">
-                                        <span className="text-xs font-bold text-gray-700">{item.submissions}/{item.totalStudents} submitted</span>
-                                        <div className="w-20 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                                            <div className="h-full bg-[#3C0078] rounded-full transition-all" style={{ width: `${submissionPct}%` }} />
-                                        </div>
-                                    </div>
-
-                                    <button onClick={() => onPreview(item)} className="shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-50 text-gray-500 font-bold text-[10px] uppercase tracking-widest hover:bg-gray-100 transition-all" title="Preview assignment">
-                                        <BookOpen size={14} /> Preview
-                                    </button>
-
-                                    <button onClick={() => onView(item)} className="shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl bg-[#3C0078]/5 text-[#3C0078] font-bold text-[10px] uppercase tracking-widest hover:bg-[#3C0078]/10 transition-all" title="Review submissions">
-                                        <Users size={14} /> Review
-                                    </button>
-
-                                    <button
-                                        onClick={() => onClose(group.id, item.id)}
-                                        className={`shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all ${
-                                            item.isClosed ? "bg-red-50 text-red-600 hover:bg-green-50 hover:text-green-700" : "bg-green-50 text-green-700 hover:bg-red-50 hover:text-red-600"
-                                        }`}
-                                        title={item.isClosed ? "Click to reopen" : "Click to close"}
-                                    >
-                                        {item.isClosed ? <EyeOff size={14} /> : <Eye size={14} />}
-                                        {item.isClosed ? "Closed" : "Open"}
-                                    </button>
-
-                                    <button onClick={() => onEdit(group.id, item.id)} className="shrink-0 p-2 rounded-xl text-gray-200 hover:text-[#3C0078] hover:bg-[#3C0078]/10 transition-all opacity-0 group-hover:opacity-100" title="Edit assignment">
-                                        <Edit2 size={16} />
-                                    </button>
-
-                                    <button onClick={() => onDelete(group.id, item.id)} className="shrink-0 p-2 rounded-xl text-gray-200 hover:text-red-500 hover:bg-red-50 transition-all opacity-0 group-hover:opacity-100">
-                                        <Trash2 size={16} />
-                                    </button>
-                                </motion.div>
-                            );
-                        })}
+                                        return (
+                                            <motion.tr key={item.id} layout className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-all group">
+                                                <td className="px-6 py-3.5">
+                                                    <div className="flex items-center gap-3">
+                                                        <span className={`shrink-0 inline-flex items-center justify-center w-9 h-9 rounded-xl ${typeInfo?.bg || "bg-gray-100"}`}>
+                                                            <Icon size={16} style={{ color: typeInfo?.color || "#64748B" }} />
+                                                        </span>
+                                                        <div>
+                                                            <div className="font-bold text-gray-900 group-hover:text-[#3C0078] transition-colors text-sm">{item.title}</div>
+                                                            <div className="text-xs text-gray-400 mt-0.5">{typeInfo?.label} · {item.points} pts</div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-3.5">
+                                                    <div className="text-xs text-gray-500 font-semibold">
+                                                        {item.dueDate ? new Date(item.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—"}
+                                                    </div>
+                                                    {item.closeDate && <div className="text-[10px] text-red-400 mt-0.5">Closes {new Date(item.closeDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</div>}
+                                                </td>
+                                                <td className="px-6 py-3.5 text-center">
+                                                    <div className="flex flex-col items-center gap-1">
+                                                        <span className="text-sm font-black italic text-gray-900">{item.submissions}/{item.totalStudents}</span>
+                                                        <div className="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                                            <div className="h-full bg-[#3C0078] rounded-full transition-all" style={{ width: `${submissionPct}%` }} />
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-3.5">
+                                                    <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm ${
+                                                        item.isClosed ? "bg-red-50 text-red-600" : "bg-green-50 text-green-700"
+                                                    }`}>
+                                                        {item.isClosed ? "Closed" : "Open"}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-3.5">
+                                                    <div className="flex items-center justify-end gap-2">
+                                                        <button onClick={() => onPreview(item)} className="px-3 py-1.5 rounded-lg border border-gray-100 text-[9px] font-black uppercase tracking-[0.15em] text-gray-400 hover:bg-gray-100 transition-all whitespace-nowrap shadow-sm">
+                                                            Preview
+                                                        </button>
+                                                        <button onClick={() => onView(item)} className="px-3 py-1.5 rounded-lg border border-gray-100 text-[9px] font-black uppercase tracking-[0.15em] text-gray-400 group-hover:bg-[#3C0078] group-hover:text-white group-hover:border-[#3C0078] transition-all whitespace-nowrap shadow-sm">
+                                                            Review
+                                                        </button>
+                                                        <button
+                                                            onClick={() => onClose(group.id, item.id)}
+                                                            className={`px-3 py-1.5 rounded-lg border text-[9px] font-black uppercase tracking-[0.15em] transition-all whitespace-nowrap shadow-sm ${
+                                                                item.isClosed ? "border-red-100 text-red-500 hover:bg-red-50" : "border-gray-100 text-gray-400 hover:bg-red-50 hover:text-red-500 hover:border-red-100"
+                                                            }`}
+                                                            title={item.isClosed ? "Click to reopen" : "Click to close"}
+                                                        >
+                                                            {item.isClosed ? "Reopen" : "Close"}
+                                                        </button>
+                                                        <button onClick={() => onEdit(group.id, item.id)} className="p-1.5 rounded-lg text-gray-300 hover:text-[#3C0078] hover:bg-[#3C0078]/10 transition-all opacity-0 group-hover:opacity-100">
+                                                            <Edit2 size={14} />
+                                                        </button>
+                                                        <button onClick={() => onDelete(group.id, item.id)} className="p-1.5 rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 transition-all opacity-0 group-hover:opacity-100">
+                                                            <Trash2 size={14} />
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </motion.tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
                     </motion.div>
                 )}
             </AnimatePresence>
@@ -856,7 +1059,8 @@ export function CourseAssignmentsView({ subject, activeCourseId }) {
             ]);
             const counts = {};
             (subs || []).forEach(s => { counts[s.assignmentId] = (counts[s.assignmentId] || 0) + 1; });
-            setAssignments(data || []);
+            const sorted = (data || []).sort((a, b) => new Date(b.createdAt ?? b.dueDate) - new Date(a.createdAt ?? a.dueDate));
+            setAssignments(sorted);
             setSubmissionCounts(counts);
             setEnrollmentCount(count || 0);
         } catch (err) {
