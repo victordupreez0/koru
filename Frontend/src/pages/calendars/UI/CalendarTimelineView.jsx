@@ -97,7 +97,29 @@ const ClockIcon = () => (
   </svg>
 );
 
-export default function CalendarTimelineView({ events = [], weeks = [], onDayClick }) {
+// ── Skeleton helpers ──────────────────────────────────────────
+// Plausible class start times used to position skeleton pills on the track
+const SKELETON_SLOTS = [9, 11, 13, 15, 17];
+
+/**
+ * Returns a small array of simulated event y-positions for a given date,
+ * so the skeleton looks like real data. Seeded by date so it's stable.
+ */
+function skeletonPositions(date, timeToY) {
+  const seed = date.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
+  const dow = new Date(date + "T12:00:00").getDay(); // 0=Sun … 6=Sat
+  const isWeekend = dow === 0 || dow === 6;
+  if (isWeekend && seed % 3 === 0) return []; // ~1/3 of weekend days empty
+  const count = isWeekend ? 1 : ((seed % 3) === 0 ? 3 : 2);
+  const picks = [];
+  for (let i = 0; i < SKELETON_SLOTS.length && picks.length < count; i++) {
+    const idx = (seed + i * 7) % SKELETON_SLOTS.length;
+    if (!picks.includes(SKELETON_SLOTS[idx])) picks.push(SKELETON_SLOTS[idx]);
+  }
+  return picks.map(h => timeToY(`${h}:00`));
+}
+
+export default function CalendarTimelineView({ events = [], weeks = [], loading = false, onDayClick }) {
   const [weekIdx, setWeekIdx] = useState(() => {
     const d = new Date();
     const today = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
@@ -255,6 +277,11 @@ export default function CalendarTimelineView({ events = [], weeks = [], onDayCli
                 }
               }
 
+              // Skeleton positions for this day column
+              const skelPositions = loading ? skeletonPositions(date, timeToY) : [];
+              // Seed for varying skeleton pill widths
+              const skelSeed = date.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
+
               return (
                 <td key={date} style={{ verticalAlign:"top", padding:0, borderLeft:"1px solid #e5e7eb", cursor:"pointer" }}
                   onClick={() => onDayClick?.(date)}>
@@ -275,8 +302,26 @@ export default function CalendarTimelineView({ events = [], weeks = [], onDayCli
                       pointerEvents:"none",
                     }} />
 
-                    {/* Events — centred on their time so the dot sits ON the hour line */}
-                    {raw.map(evt => {
+                    {/* ── Skeleton pills (loading) ── */}
+                    {loading && skelPositions.map((y, i) => (
+                      <div key={i}
+                        style={{ position:"absolute", top:y, left:0, right:4, display:"flex", alignItems:"center", transform:"translateY(-50%)", pointerEvents:"none" }}>
+                        {/* Dot placeholder */}
+                        <div style={{
+                          flexShrink:0, width:8, height:8, borderRadius:"50%",
+                          background:"#e5e7eb",
+                          marginLeft:AXIS_X - 4, marginRight:6,
+                        }} />
+                        {/* Pill placeholder */}
+                        <div
+                          className="animate-pulse rounded-full bg-gray-200"
+                          style={{ height: PILL_H, flex:1, width: `${45 + ((skelSeed * (i + 2) * 13) % 40)}%`, maxWidth:"calc(100% - 18px)" }}
+                        />
+                      </div>
+                    ))}
+
+                    {/* ── Real event pills (loaded) ── */}
+                    {!loading && raw.map(evt => {
                       const hasTooltipDetails = evt.lecturer || evt.location || evt.startTime;
                       return (
                         <div key={evt.id}

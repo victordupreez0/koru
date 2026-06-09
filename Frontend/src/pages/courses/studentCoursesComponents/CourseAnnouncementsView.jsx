@@ -82,7 +82,27 @@ export default function CourseAnnouncementsView({ activeCourseId }) {
                         selectedId ? "w-full lg:w-[45%] lg:shrink-0" : "w-full"
                     }`}
                 >
-                    {announcements.map((post) => (
+                    {loading ? (
+                        <div className="flex flex-col gap-4 w-full animate-pulse">
+                            {[1, 2, 3, 4].map(i => (
+                                <div key={i} className="p-5 rounded-2xl border border-gray-100 bg-white shadow-sm flex items-center justify-between gap-4">
+                                    <div className="flex items-start gap-4 flex-1 pl-2">
+                                        <div className="w-10 h-10 rounded-full bg-gray-100 shrink-0 mt-0.5" />
+                                        <div className="flex-1 flex flex-col gap-2.5">
+                                            <div className="h-5 rounded-full bg-gray-200" style={{ width: `${45 + (i * 17) % 35}%` }} />
+                                            <div className="h-3 rounded-full bg-gray-100 w-4/5" />
+                                            <div className="h-2.5 rounded-full bg-gray-100 w-32 mt-0.5" />
+                                        </div>
+                                    </div>
+                                    <div className="h-3 rounded-full bg-gray-100 w-20 shrink-0" />
+                                </div>
+                            ))}
+                        </div>
+                    ) : announcements.length === 0 ? (
+                        <div className="flex items-center justify-center w-full h-48 text-gray-400 text-sm font-medium bg-white rounded-3xl border border-gray-100">
+                            No announcements yet.
+                        </div>
+                    ) : announcements.map((post) => (
                         <motion.div
                             key={post.id}
                             onClick={() => handleSelectAnnouncement(post)}
@@ -129,17 +149,11 @@ export default function CourseAnnouncementsView({ activeCourseId }) {
                                 </div>
                             </div>
 
-                            {/* Right tags and details */}
-                            <div className="flex md:flex-col items-center md:items-end justify-between md:justify-center gap-2 pl-6 md:pl-0 shrink-0 self-stretch md:self-auto border-t md:border-t-0 pt-3 md:pt-0 border-gray-50">
-                                <span 
-                                    className="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider text-white select-none shrink-0" 
-                                    style={{ backgroundColor: post.color }}
-                                >
-                                    {post.label}
-                                </span>
-                                <span className="text-xs text-gray-400 font-semibold">
-                                    {post.datePosted 
-                                        ? new Date(post.datePosted).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) 
+                            {/* Date */}
+                            <div className="shrink-0 pl-6 md:pl-0 border-t md:border-t-0 pt-3 md:pt-0 border-gray-50 self-stretch md:self-auto flex md:flex-col items-center md:items-end justify-end">
+                                <span className="text-xs text-gray-400 font-semibold whitespace-nowrap">
+                                    {post.datePosted
+                                        ? new Date(post.datePosted).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
                                         : (post.date || "")}
                                 </span>
                             </div>
@@ -159,13 +173,12 @@ export default function CourseAnnouncementsView({ activeCourseId }) {
                                 selectedId ? "flex" : "hidden lg:flex"
                             } flex-1 w-full lg:w-[55%] bg-white border border-gray-100 rounded-3xl p-8 flex flex-col shadow-sm overflow-y-auto`}
                         >
-                            <div className="flex justify-between items-start mb-6">
-                                <div className="flex items-center gap-4">
-                                    <span className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest text-white animate-fade-in" style={{ backgroundColor: selectedAnnouncement.color }}>
-                                        {selectedAnnouncement.label}
-                                    </span>
-                                    <span className="text-sm font-medium text-gray-400">{selectedAnnouncement.datePosted ? new Date(selectedAnnouncement.datePosted).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : (selectedAnnouncement.date || "")}</span>
-                                </div>
+                            <div className="flex justify-between items-center mb-6">
+                                <span className="text-sm font-medium text-gray-400">
+                                    {selectedAnnouncement.datePosted
+                                        ? new Date(selectedAnnouncement.datePosted).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+                                        : (selectedAnnouncement.date || "")}
+                                </span>
                                 <button
                                     onClick={() => setSelectedId(null)}
                                     className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-50 text-gray-400 hover:bg-gray-100 hover:text-gray-900 transition-colors"

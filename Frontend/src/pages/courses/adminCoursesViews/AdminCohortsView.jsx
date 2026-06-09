@@ -196,8 +196,21 @@ export function AdminCohortsView({ courseId }) {
       {/* Groups list */}
       <motion.div variants={slideUp} className="space-y-3">
         {loading ? (
-          <div className="bg-white rounded-3xl border border-gray-100 shadow-sm px-8 py-10 text-center text-gray-400 text-sm">
-            Loading groups…
+          <div className="space-y-3 animate-pulse">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+                <div className="flex items-center justify-between px-6 py-5">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-2xl bg-gray-100 shrink-0" />
+                    <div className="flex flex-col gap-2">
+                      <div className="h-4 rounded-full bg-gray-200" style={{ width: `${80 + i * 20}px` }} />
+                      <div className="h-3 rounded-full bg-gray-100 w-28" />
+                    </div>
+                  </div>
+                  <div className="w-6 h-6 rounded-lg bg-gray-100" />
+                </div>
+              </div>
+            ))}
           </div>
         ) : cohorts.length === 0 ? (
           <div className="bg-white rounded-3xl border border-gray-100 shadow-sm px-8 py-14 text-center">

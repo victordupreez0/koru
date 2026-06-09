@@ -1,10 +1,8 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
-import { Plus } from "lucide-react";
 import { useCourses } from "../../contexts/CoursesContext";
 import CourseSecondaryNav from "../../components/courseSecondaryNav";
-import { courseService, subjectService, userService } from "../../services/adminService";
+import { courseService } from "../../services/adminService";
 import {
     AdminCourseOverviewView,
     AdminCourseStudentsView,
@@ -15,7 +13,6 @@ import {
     CourseAssignmentsView,
     CourseGradesView,
 } from "./teacherCoursesComponents";
-import { CreateCourseModal } from "./adminCoursesComponents";
 
 const SUBPAGES = ["overview", "students", "groups", "assignments", "grades", "grade-activity"];
 
@@ -27,21 +24,6 @@ export default function AdminCourses() {
     // Full course objects (with teacher, subject, capacity, etc.) for detail views
     const [fullCourses, setFullCourses] = useState([]);
     const [detailsLoading, setDetailsLoading] = useState(true);
-
-    // Create course modal
-    const [showCreateModal, setShowCreateModal] = useState(false);
-    const [createSubjects, setCreateSubjects] = useState([]);
-    const [createTeachers, setCreateTeachers] = useState([]);
-    const defaultCourseForm = {
-        subjectId: "",
-        teacherId: "",
-        degree: "Software Engineering Degree",
-        year: String(new Date().getFullYear()),
-        term: "Semester 1",
-        capacity: "50",
-        status: "Active",
-    };
-    const [courseForm, setCourseForm] = useState(defaultCourseForm);
 
     const loadFullCourses = useCallback(async () => {
         try {
@@ -57,34 +39,6 @@ export default function AdminCourses() {
     useEffect(() => {
         loadFullCourses();
     }, [loadFullCourses]);
-
-    useEffect(() => {
-        Promise.all([
-            subjectService.getSubjects().catch(() => []),
-            userService.getTeachers().catch(() => []),
-        ]).then(([subjects, teachers]) => {
-            setCreateSubjects(subjects || []);
-            setCreateTeachers(teachers || []);
-        });
-    }, []);
-
-    const handleCreateCourse = async () => {
-        try {
-            await courseService.createCourse({
-                subjectId: courseForm.subjectId,
-                teacherId: courseForm.teacherId,
-                term: courseForm.term,
-                year: parseInt(courseForm.year),
-                capacity: parseInt(courseForm.capacity),
-                degree: courseForm.degree,
-            });
-            setShowCreateModal(false);
-            setCourseForm(defaultCourseForm);
-            loadFullCourses();
-        } catch (err) {
-            alert("Failed to create course: " + err.message);
-        }
-    };
 
     // Parse path: /courses/:courseId/:subpage
     const pathParts = location.pathname.split("/").filter(Boolean);
@@ -151,8 +105,7 @@ export default function AdminCourses() {
     }, [loadFullCourses]);
 
     return (
-        <>
-            <div className="flex overflow-hidden gap-4 transition-all duration-300 md:h-[calc(100vh-32px)] md:w-full max-md:h-screen max-md:w-screen max-md:-ml-4 max-md:-mr-4 max-md:-mt-4 bg-transparent">
+        <div className="flex overflow-hidden gap-4 transition-all duration-300 md:h-[calc(100vh-32px)] md:w-full max-md:h-screen max-md:w-screen max-md:-ml-4 max-md:-mr-4 max-md:-mt-4 bg-transparent">
                 <CourseSecondaryNav
                     activeCourseId={activeCourseId || visibleCourses[0]?.id}
                     onDeleteCourse={handleCourseDeleted}
@@ -172,21 +125,21 @@ export default function AdminCourses() {
                                 <span className="text-gray-300 text-xs">/</span>
                                 <span className="text-xs font-bold text-gray-500 capitalize">{activeSubpageLabel}</span>
                             </div>
-                            <button
-                                onClick={() => setShowCreateModal(true)}
-                                className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#3C0078] text-white text-[11px] font-black uppercase tracking-widest hover:bg-[#2a0055] transition-colors shadow-sm"
-                            >
-                                <Plus size={13} />
-                                New Course
-                            </button>
                         </div>
                     )}
 
                     {/* Content area */}
                     <div className="flex-1 overflow-y-auto pt-6 px-8 pb-12">
                         {ctxLoading || detailsLoading ? (
-                            <div className="flex items-center justify-center h-40">
-                                <div className="w-8 h-8 border-3 border-[#3C0078] border-t-transparent rounded-full animate-spin" />
+                            <div className="flex flex-col gap-5 animate-pulse">
+                                <div className="h-8 rounded-2xl bg-gray-200 w-48" />
+                                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                                    {[1, 2, 3, 4].map(i => (
+                                        <div key={i} className="h-24 rounded-3xl bg-gray-100" />
+                                    ))}
+                                </div>
+                                <div className="h-44 rounded-3xl bg-gray-100" />
+                                <div className="h-36 rounded-3xl bg-gray-100" />
                             </div>
                         ) : activeSubpage === "overview" ? (
                             <AdminCourseOverviewView
@@ -217,21 +170,6 @@ export default function AdminCourses() {
                         )}
                     </div>
                 </div>
-            </div>
-
-            <AnimatePresence>
-                {showCreateModal && (
-                    <CreateCourseModal
-                        show={showCreateModal}
-                        onClose={() => { setShowCreateModal(false); setCourseForm(defaultCourseForm); }}
-                        form={courseForm}
-                        setForm={setCourseForm}
-                        subjects={createSubjects}
-                        teachers={createTeachers}
-                        onCreate={handleCreateCourse}
-                    />
-                )}
-            </AnimatePresence>
-        </>
+        </div>
     );
 }

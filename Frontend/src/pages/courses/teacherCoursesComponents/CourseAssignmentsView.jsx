@@ -355,9 +355,7 @@ function SubmissionFileViewer({ submission }) {
     );
 
     if (fileLoading) return (
-        <div className="flex items-center justify-center h-64 bg-gray-50 rounded-3xl border border-gray-100">
-            <Loader size={20} className="animate-spin text-gray-400" />
-        </div>
+        <div className="h-64 rounded-3xl bg-gray-100 animate-pulse border border-gray-100" />
     );
 
     if (fileError) return (

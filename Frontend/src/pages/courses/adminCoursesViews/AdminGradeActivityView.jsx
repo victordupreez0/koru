@@ -119,7 +119,37 @@ export function AdminGradeActivityView({ courseId }) {
 
       <motion.div variants={slideUp} className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
         {loading ? (
-          <div className="px-8 py-12 text-center text-gray-400 text-sm">Loading grade log…</div>
+          <div className="animate-pulse">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="bg-gray-50/50 border-b border-gray-100">
+                  {["w-20", "w-16", "w-24", "w-16", "w-16", "w-16"].map((w, i) => (
+                    <th key={i} className="px-6 py-4"><div className={`h-2.5 rounded-full bg-gray-200 ${w}`} /></th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {[1, 2, 3, 4, 5].map(i => (
+                  <tr key={i} className="border-b border-gray-50">
+                    <td className="px-6 py-4"><div className="h-3 rounded-full bg-gray-100 w-28" /></td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-7 h-7 rounded-full bg-gray-100 shrink-0" />
+                        <div className="h-4 rounded-full bg-gray-200" style={{ width: `${65 + (i * 19) % 40}px` }} />
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="h-4 rounded-full bg-gray-200 mb-1" style={{ width: `${75 + (i * 13) % 50}px` }} />
+                      <div className="h-3 rounded-full bg-gray-100 w-16" />
+                    </td>
+                    <td className="px-6 py-4"><div className="h-5 rounded-full bg-gray-100 w-24" /></td>
+                    <td className="px-6 py-4"><div className="h-3 rounded-full bg-gray-100 w-20" /></td>
+                    <td className="px-6 py-4"><div className="h-5 rounded-full bg-gray-100 w-10" /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         ) : sorted.length === 0 ? (
           <div className="px-8 py-16 text-center">
             <div className="w-14 h-14 rounded-3xl bg-[#3C0078]/5 flex items-center justify-center mx-auto mb-4">

@@ -149,10 +149,19 @@ export function CourseHomeView({ subject, course, loading }) {
     <div className="flex-1 flex flex-col p-12 overflow-y-auto scrollbar-hide">
       <header className="mb-8 flex justify-between items-start select-none">
         <div>
-          <h1 className="text-4xl font-semibold tracking-tight text-gray-900 leading-tight">
-            {loading ? "Loading course details..." : (subject?.name || "Unknown")}
-          </h1>
-          <p className="text-xl text-gray-500 mt-2 font-medium">{loading ? "..." : subject?.code}</p>
+          {loading ? (
+            <div className="flex flex-col gap-3 animate-pulse">
+              <div className="h-9 rounded-2xl bg-gray-200 w-64" />
+              <div className="h-5 rounded-full bg-gray-100 w-20" />
+            </div>
+          ) : (
+            <>
+              <h1 className="text-4xl font-semibold tracking-tight text-gray-900 leading-tight">
+                {subject?.name || "Unknown"}
+              </h1>
+              <p className="text-xl text-gray-500 mt-2 font-medium">{subject?.code}</p>
+            </>
+          )}
         </div>
         {!loading && !pageLoading && (
           <div className="flex items-center gap-4">
@@ -193,8 +202,33 @@ export function CourseHomeView({ subject, course, loading }) {
       </header>
 
       {pageLoading || loading ? (
-        <div className="flex items-center justify-center py-20 flex-1">
-          <Loader size={24} className="animate-spin text-gray-400" />
+        <div className="flex-1 flex flex-col gap-6 animate-pulse">
+          {/* Cover image skeleton */}
+          <div className="w-full h-[250px] rounded-xl bg-gray-100" />
+          {/* Content lines */}
+          <div className="flex flex-col gap-3 mt-2">
+            {[85, 70, 90, 55, 75].map((w, i) => (
+              <div key={i} className={`h-4 rounded-full ${i % 2 === 0 ? "bg-gray-200" : "bg-gray-100"}`} style={{ width: `${w}%` }} />
+            ))}
+          </div>
+          <div className="h-32 rounded-2xl bg-gray-100 mt-2" />
+          <div className="flex flex-col gap-3">
+            {[60, 80, 45].map((w, i) => (
+              <div key={i} className="h-4 rounded-full bg-gray-100" style={{ width: `${w}%` }} />
+            ))}
+          </div>
+          {/* Lecturer skeleton */}
+          <div className="flex gap-4 pt-8 border-t border-gray-100 mt-4">
+            {[1, 2].map(i => (
+              <div key={i} className="flex items-center gap-4 bg-gray-50 rounded-2xl p-4 flex-1">
+                <div className="w-16 h-16 rounded-full bg-gray-200 shrink-0" />
+                <div className="flex flex-col gap-2">
+                  <div className="h-4 rounded-full bg-gray-200 w-28" />
+                  <div className="h-3 rounded-full bg-gray-100 w-36" />
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       ) : (
         <div className="flex-1 flex flex-col gap-6">

@@ -2,12 +2,13 @@ import React, { useState, useMemo, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Users, BookOpen, GraduationCap, UserCheck } from "lucide-react";
 
-import { TeacherAnalyticsModal } from "../courses/adminCoursesComponents";
+import { TeacherAnalyticsModal, CreateCourseModal } from "../courses/adminCoursesComponents";
 import {
   courseService,
   userService,
   enrollmentService,
   registrationService,
+  subjectService,
 } from "../../services/adminService";
 import {
   FilterDropdown,
@@ -27,6 +28,24 @@ const column = {
   show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
 };
 
+const DEGREES = [
+  "Software Engineering Degree",
+  "UX Design Degree",
+  "Visual Arts Degree",
+  "Interaction Design Degree",
+  "Design Leadership Degree",
+];
+const CURRENT_YEAR = new Date().getFullYear();
+const DEFAULT_COURSE_FORM = {
+  subjectId: "",
+  teacherId: "",
+  degree: DEGREES[0],
+  year: String(CURRENT_YEAR),
+  term: "Semester 1",
+  capacity: "50",
+  status: "Active",
+};
+
 export default function AdminDashboard() {
   // ── Global filters ──
   const [year, setYear] = useState("");
@@ -39,7 +58,6 @@ export default function AdminDashboard() {
   const [isLoading, setIsLoading] = useState(true);
 
   // ── Selection state ──
-  const [selectedLecturerId, setSelectedLecturerId] = useState(null);
   const [selectedCourseId, setSelectedCourseId] = useState(null);
 
   // ── Cohort data for selected course ──
@@ -47,7 +65,6 @@ export default function AdminDashboard() {
   const [cohortStudentMap, setCohortStudentMap] = useState({});
 
   // ── Search state ──
-  const [lecturerSearch, setLecturerSearch] = useState("");
   const [courseSearch, setCourseSearch] = useState("");
   const [studentSearch, setStudentSearch] = useState("");
   const [studentSort, setStudentSort] = useState("alpha");
@@ -58,6 +75,12 @@ export default function AdminDashboard() {
   const [isSendingNotification, setIsSendingNotification] = useState(false);
   const [showTeacherAnalytics, setShowTeacherAnalytics] = useState(false);
   const [analyticsTeacher, setAnalyticsTeacher] = useState(null);
+
+  // ── Course creation state ──
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [courseForm, setCourseForm] = useState(DEFAULT_COURSE_FORM);
+  const [createSubjects, setCreateSubjects] = useState([]);
+  const [createTeachers, setCreateTeachers] = useState([]);
 
   // ── Data fetch ──
   const fetchData = async () => {
@@ -106,8 +129,17 @@ export default function AdminDashboard() {
     }
   };
 
+  useEffect(() => { fetchData(); }, []);
+
+  // ── Load subjects & teachers for course creation modal ──
   useEffect(() => {
-    fetchData();
+    Promise.all([
+      subjectService.getSubjects().catch(() => []),
+      userService.getTeachers().catch(() => []),
+    ]).then(([subjects, teachers]) => {
+      setCreateSubjects(subjects || []);
+      setCreateTeachers(teachers || []);
+    });
   }, []);
 
   // ── Available calendar years derived from courses ──
@@ -122,29 +154,24 @@ export default function AdminDashboard() {
   }, [availableYears]);
 
   // ── Derived data ──
-  const filteredLecturers = useMemo(() => {
-    const lecturerIdsWithCourses = new Set(
-      courses
-        .filter(c => c.year === parseInt(year) && c.semester === parseInt(semester))
-        .map(c => c.lecturerId)
-    );
-    return lecturers.filter(
-      l =>
-        lecturerIdsWithCourses.has(l.id) &&
-        l.name.toLowerCase().includes(lecturerSearch.toLowerCase())
-    );
-  }, [lecturers, courses, year, semester, lecturerSearch]);
-
   const filteredCourses = useMemo(() => {
-    if (!selectedLecturerId) return [];
     return courses.filter(
       c =>
-        c.lecturerId === selectedLecturerId &&
         c.year === parseInt(year) &&
         c.semester === parseInt(semester) &&
         c.title.toLowerCase().includes(courseSearch.toLowerCase())
     );
-  }, [courses, selectedLecturerId, year, semester, courseSearch]);
+  }, [courses, year, semester, courseSearch]);
+
+  const selectedCourse = useMemo(
+    () => courses.find(c => c.id === selectedCourseId) || null,
+    [courses, selectedCourseId]
+  );
+
+  const courseLecturer = useMemo(
+    () => selectedCourse ? lecturers.find(l => l.id === selectedCourse.lecturerId) || null : null,
+    [selectedCourse, lecturers]
+  );
 
   const filteredStudents = useMemo(() => {
     if (!selectedCourseId) return [];
@@ -159,17 +186,7 @@ export default function AdminDashboard() {
     return result;
   }, [students, selectedCourseId, studentSearch, studentSort]);
 
-  // ── Auto-select first lecturer + first course on load / filter change ──
-  useEffect(() => {
-    if (filteredLecturers.length > 0) {
-      if (!filteredLecturers.find(l => l.id === selectedLecturerId)) {
-        setSelectedLecturerId(filteredLecturers[0].id);
-      }
-    } else {
-      setSelectedLecturerId(null);
-    }
-  }, [filteredLecturers]);
-
+  // ── Auto-select first course on load / filter change ──
   useEffect(() => {
     if (filteredCourses.length > 0) {
       if (!filteredCourses.find(c => c.id === selectedCourseId)) {
@@ -199,13 +216,24 @@ export default function AdminDashboard() {
   }, [selectedCourseId]);
 
   // ── Handlers ──
-  const handleSelectLecturer = (id) => {
-    setSelectedLecturerId(id);
-    setSelectedCourseId(null);
-  };
+  const handleSelectCourse = (id) => setSelectedCourseId(id);
 
-  const handleSelectCourse = (id) => {
-    setSelectedCourseId(id);
+  const handleCreateCourse = async () => {
+    try {
+      await courseService.createCourse({
+        subjectId: courseForm.subjectId,
+        teacherId: courseForm.teacherId,
+        term: courseForm.term,
+        year: parseInt(courseForm.year),
+        capacity: parseInt(courseForm.capacity),
+        degree: courseForm.degree,
+      });
+      setShowCreateModal(false);
+      setCourseForm(DEFAULT_COURSE_FORM);
+      await fetchData();
+    } catch (err) {
+      alert("Failed to create course: " + err.message);
+    }
   };
 
   const handleSaveLecturer = async ({ firstName, lastName, email, tempPassword }) => {
@@ -246,11 +274,7 @@ export default function AdminDashboard() {
       const newUser = await registrationService.registerStudent({ firstName, lastName, email, tempPassword });
       const studentId = newUser?.id || newUser?.userId;
       if (selectedCourseId && studentId) {
-        await enrollmentService.create({
-          studentId,
-          courseId: selectedCourseId,
-          status: "Active",
-        });
+        await enrollmentService.create({ studentId, courseId: selectedCourseId, status: "Active" });
       }
       setIsAddingStudent(false);
       await fetchData();
@@ -259,28 +283,21 @@ export default function AdminDashboard() {
     }
   };
 
-  const showAddStudent = !!selectedCourseId;
-
   // ── Header KPIs ──
   const currentTermCourses = useMemo(
-    () =>
-      courses.filter(
-        (c) => c.year === parseInt(year) && c.semester === parseInt(semester)
-      ),
+    () => courses.filter(c => c.year === parseInt(year) && c.semester === parseInt(semester)),
     [courses, year, semester]
   );
 
   const enrolledStudentCount = useMemo(() => {
-    const courseIds = new Set(currentTermCourses.map((c) => c.id));
+    const courseIds = new Set(currentTermCourses.map(c => c.id));
     const ids = new Set();
-    students.forEach((s) => {
-      if (s.courseIds.some((cid) => courseIds.has(cid))) ids.add(s.id);
-    });
+    students.forEach(s => { if (s.courseIds.some(cid => courseIds.has(cid))) ids.add(s.id); });
     return ids.size;
   }, [students, currentTermCourses]);
 
   const activeLecturerCount = useMemo(
-    () => new Set(currentTermCourses.map((c) => c.lecturerId)).size,
+    () => new Set(currentTermCourses.map(c => c.lecturerId)).size,
     [currentTermCourses]
   );
 
@@ -297,16 +314,13 @@ export default function AdminDashboard() {
         label="Year"
         value={year}
         onChange={setYear}
-        options={availableYears.map((y) => ({ value: y, label: y }))}
+        options={availableYears.map(y => ({ value: y, label: y }))}
       />
       <FilterDropdown
         label="Semester"
         value={semester}
         onChange={setSemester}
-        options={[
-          { value: "1", label: "1" },
-          { value: "2", label: "2" },
-        ]}
+        options={[{ value: "1", label: "1" }, { value: "2", label: "2" }]}
       />
     </>
   );
@@ -321,12 +335,39 @@ export default function AdminDashboard() {
       />
 
       {isLoading ? (
-        <div className="min-h-[520px] flex items-center justify-center">
-          <div className="flex flex-col items-center gap-4">
-            <div className="w-10 h-10 border-4 border-[#3C0078] border-t-transparent rounded-full animate-spin" />
-            <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">
-              Loading Dashboard...
-            </p>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full max-w-[1400px] mx-auto min-h-[520px] animate-pulse">
+          {/* Column 1 — course list */}
+          <div className="flex flex-col gap-3 bg-white rounded-[28px] p-5 shadow-sm border border-gray-100">
+            <div className="h-5 rounded-full bg-gray-200 w-24 mb-1" />
+            <div className="h-8 rounded-2xl bg-gray-100 w-full mb-2" />
+            {[1, 2, 3, 4].map(i => (
+              <div key={i} className="h-16 rounded-2xl bg-gray-100" />
+            ))}
+          </div>
+          {/* Column 2 — lecturer */}
+          <div className="flex flex-col gap-3 bg-white rounded-[28px] p-5 shadow-sm border border-gray-100">
+            <div className="h-5 rounded-full bg-gray-200 w-28 mb-1" />
+            <div className="flex items-center gap-3 p-3 rounded-2xl bg-[#3C0078]/10 mt-2">
+              <div className="w-10 h-10 rounded-full bg-[#3C0078]/20 shrink-0" />
+              <div className="flex-1 flex flex-col gap-2">
+                <div className="h-2 rounded-full bg-[#3C0078]/20 w-2/5" />
+                <div className="h-3 rounded-full bg-[#3C0078]/20 w-3/5" />
+              </div>
+            </div>
+          </div>
+          {/* Column 3 — student list */}
+          <div className="flex flex-col gap-3 bg-white rounded-[28px] p-5 shadow-sm border border-gray-100">
+            <div className="h-5 rounded-full bg-gray-200 w-28 mb-1" />
+            <div className="h-8 rounded-2xl bg-gray-100 w-full mb-2" />
+            {[1, 2, 3, 4, 5].map(i => (
+              <div key={i} className="flex items-center gap-3 p-3 rounded-2xl bg-gray-50">
+                <div className="w-10 h-10 rounded-full bg-gray-200 shrink-0" />
+                <div className="flex-1 flex flex-col gap-2">
+                  <div className="h-3 rounded-full bg-gray-200" style={{ width: `${45 + i * 12}%` }} />
+                  <div className="h-3 rounded-full bg-gray-100 w-1/3" />
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       ) : (
@@ -340,35 +381,36 @@ export default function AdminDashboard() {
           className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full max-w-[1400px] mx-auto h-[68vh] min-h-[520px]"
           aria-label="Admin dashboard overview"
         >
+          {/* Column 1: Courses */}
+          <motion.div variants={column} className="min-h-0 h-full">
+            <CourseColumn
+              courseSearch={courseSearch}
+              setCourseSearch={setCourseSearch}
+              filteredCourses={filteredCourses}
+              selectedCourseId={selectedCourseId}
+              handleSelectCourse={handleSelectCourse}
+              lecturers={lecturers}
+              onAddCourse={() => setShowCreateModal(true)}
+              isAddingCourse={showCreateModal}
+            />
+          </motion.div>
+
+          {/* Column 2: Lecturer for selected course */}
           <motion.div variants={column} className="min-h-0 h-full">
             <LecturerColumn
-              lecturerSearch={lecturerSearch}
-              setLecturerSearch={setLecturerSearch}
+              lecturer={courseLecturer}
+              selectedCourseId={selectedCourseId}
               isAddingLecturer={isAddingLecturer}
               setIsAddingLecturer={setIsAddingLecturer}
-              filteredLecturers={filteredLecturers}
-              selectedLecturerId={selectedLecturerId}
-              handleSelectLecturer={handleSelectLecturer}
               onOpenAnalytics={handleOpenAnalytics}
               onOpenNotification={() => setIsSendingNotification(true)}
             />
           </motion.div>
 
-          <motion.div variants={column} className="min-h-0 h-full">
-            <CourseColumn
-              courseSearch={courseSearch}
-              setCourseSearch={setCourseSearch}
-              selectedLecturerId={selectedLecturerId}
-              filteredCourses={filteredCourses}
-              selectedCourseId={selectedCourseId}
-              handleSelectCourse={handleSelectCourse}
-              lecturers={lecturers}
-            />
-          </motion.div>
-
+          {/* Column 3: Students for selected course */}
           <motion.div variants={column} className="min-h-0 h-full">
             <StudentColumn
-              showAddStudent={showAddStudent}
+              showAddStudent={!!selectedCourseId}
               isAddingStudent={isAddingStudent}
               setIsAddingStudent={setIsAddingStudent}
               studentSearch={studentSearch}
@@ -391,6 +433,21 @@ export default function AdminDashboard() {
             teacher={analyticsTeacher}
             isOpen={showTeacherAnalytics}
             onClose={() => setShowTeacherAnalytics(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* ── Create Course Modal ── */}
+      <AnimatePresence>
+        {showCreateModal && (
+          <CreateCourseModal
+            show={showCreateModal}
+            onClose={() => { setShowCreateModal(false); setCourseForm(DEFAULT_COURSE_FORM); }}
+            form={courseForm}
+            setForm={setCourseForm}
+            subjects={createSubjects}
+            teachers={createTeachers}
+            onCreate={handleCreateCourse}
           />
         )}
       </AnimatePresence>

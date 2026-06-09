@@ -442,13 +442,28 @@ export default function AssignmentDetail({ assignmentId, activeCourseId }) {
           </button>
           <span className="text-gray-200">/</span>
           <span className="text-sm text-gray-400 font-medium truncate max-w-[260px]">
-            {loadingAssignment ? "Loading..." : assignment?.title}
+            {loadingAssignment ? <span className="inline-block h-4 rounded-full bg-gray-200 animate-pulse w-40 align-middle" /> : assignment?.title}
           </span>
         </motion.div>
 
         {loadingAssignment ? (
-          <div className="flex items-center justify-center h-64 text-gray-400 font-medium">
-            Loading assignment details...
+          <div className="space-y-6 animate-pulse">
+            {/* Title + meta chips */}
+            <div className="space-y-4">
+              <div className="h-10 rounded-2xl bg-gray-200 w-3/4" />
+              <div className="flex flex-wrap gap-3">
+                {[1, 2, 3].map(i => <div key={i} className="h-14 rounded-2xl bg-gray-100 w-36" />)}
+              </div>
+            </div>
+            {/* Description block */}
+            <div className="p-6 bg-white rounded-3xl border border-gray-100 space-y-3">
+              <div className="h-4 rounded-full bg-gray-200 w-32 mb-4" />
+              {[90, 75, 85, 60, 80].map((w, i) => (
+                <div key={i} className="h-4 rounded-full bg-gray-100" style={{ width: `${w}%` }} />
+              ))}
+            </div>
+            {/* Submission area */}
+            <div className="h-44 rounded-3xl bg-gray-100" />
           </div>
         ) : !assignment ? (
           <div className="flex items-center justify-center h-64 text-red-400 font-medium">

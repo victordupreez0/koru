@@ -120,14 +120,10 @@ export default function GoogleAuthButton({
   return (
     <div className="flex w-full flex-col items-center justify-center gap-2">
       {!isReady ? (
-        <button
-          type="button"
-          disabled
-          className="flex w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-600"
-        >
-          <FcGoogle size={20} />
-          <span>Loading Google sign-in...</span>
-        </button>
+        <div className="flex w-full h-[50px] items-center justify-center gap-3 rounded-2xl border border-slate-100 bg-white px-4 animate-pulse">
+          <div className="w-5 h-5 rounded bg-gray-200 shrink-0" />
+          <div className="h-4 rounded-full bg-gray-200 w-36" />
+        </div>
       ) : null}
       <div ref={buttonRef} className={isReady ? "" : "hidden"} />
     </div>

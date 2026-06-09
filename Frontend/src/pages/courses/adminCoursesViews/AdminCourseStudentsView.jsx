@@ -214,7 +214,36 @@ export function AdminCourseStudentsView({ courseId }) {
       {/* Student list */}
       <motion.div variants={slideUp} className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
         {loading ? (
-          <div className="px-8 py-12 text-center text-gray-400 text-sm">Loading students…</div>
+          <div className="animate-pulse">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="bg-gray-50/50 border-b border-gray-100">
+                  <th className="px-6 py-4"><div className="h-2.5 rounded-full bg-gray-200 w-16" /></th>
+                  <th className="px-6 py-4"><div className="h-2.5 rounded-full bg-gray-200 w-12" /></th>
+                  <th className="px-6 py-4"><div className="h-2.5 rounded-full bg-gray-200 w-14" /></th>
+                  <th className="px-6 py-4 text-right"><div className="h-2.5 rounded-full bg-gray-200 w-16 ml-auto" /></th>
+                </tr>
+              </thead>
+              <tbody>
+                {[1, 2, 3, 4, 5].map(i => (
+                  <tr key={i} className="border-b border-gray-50">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-full bg-gray-100 shrink-0" />
+                        <div className="flex flex-col gap-2">
+                          <div className="h-4 rounded-full bg-gray-200" style={{ width: `${70 + (i * 17) % 45}px` }} />
+                          <div className="h-3 rounded-full bg-gray-100 w-36" />
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4"><div className="h-7 rounded-xl bg-gray-100 w-24" /></td>
+                    <td className="px-6 py-4"><div className="h-5 rounded-full bg-gray-100 w-16" /></td>
+                    <td className="px-6 py-4 text-right"><div className="h-8 rounded-xl bg-gray-100 w-8 ml-auto" /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         ) : filtered.length === 0 ? (
           <div className="px-8 py-12 text-center text-gray-400 text-sm">No students enrolled in this course.</div>
         ) : (

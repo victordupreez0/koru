@@ -154,10 +154,36 @@ export default function CreateCoursePage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-[80vh] flex items-center justify-center bg-transparent">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-12 h-12 text-[#3C0078] animate-spin" />
-          <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Loading Registry Profiles...</p>
+      <div className="w-full max-w-[1700px] mx-auto px-8 pb-12 animate-pulse">
+        {/* Header skeleton */}
+        <div className="mb-8 flex items-center justify-between">
+          <div className="flex flex-col gap-3 mt-2">
+            <div className="h-3 rounded-full bg-gray-200 w-40" />
+            <div className="h-10 rounded-2xl bg-gray-200 w-96 mt-1" />
+          </div>
+          <div className="h-9 rounded-2xl bg-gray-100 w-52" />
+        </div>
+        {/* Form skeleton */}
+        <div className="flex flex-col xl:flex-row gap-8">
+          {/* Left column */}
+          <div className="flex-1 space-y-6">
+            <div className="p-8 bg-white border border-gray-100 rounded-3xl space-y-5">
+              <div className="h-5 rounded-full bg-gray-200 w-44 mb-2" />
+              {[1, 2, 3, 4].map(i => <div key={i} className="h-14 rounded-2xl bg-gray-100" />)}
+            </div>
+            <div className="p-8 bg-white border border-gray-100 rounded-3xl space-y-5">
+              <div className="h-5 rounded-full bg-gray-200 w-36 mb-2" />
+              {[1, 2].map(i => <div key={i} className="h-14 rounded-2xl bg-gray-100" />)}
+            </div>
+          </div>
+          {/* Right column */}
+          <div className="xl:w-[420px] space-y-6">
+            <div className="p-8 bg-white border border-gray-100 rounded-3xl space-y-5">
+              <div className="h-5 rounded-full bg-gray-200 w-36 mb-2" />
+              {[1, 2, 3].map(i => <div key={i} className="h-14 rounded-2xl bg-gray-100" />)}
+            </div>
+            <div className="h-14 rounded-3xl bg-[#3C0078]/10" />
+          </div>
         </div>
       </div>
     );

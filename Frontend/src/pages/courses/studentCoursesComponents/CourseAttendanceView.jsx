@@ -88,7 +88,28 @@ export default function CourseAttendanceView({ activeCourseId, subject }) {
                 </div>
 
                 {loading ? (
-                    <div className="px-8 py-12 text-center text-gray-400 text-sm">Loading attendance…</div>
+                    <div className="animate-pulse">
+                        <table className="w-full text-left">
+                            <thead>
+                                <tr className="bg-gray-50/50">
+                                    <th className="px-8 py-4"><div className="h-2.5 rounded-full bg-gray-200 w-10" /></th>
+                                    <th className="px-8 py-4"><div className="h-2.5 rounded-full bg-gray-200 w-24" /></th>
+                                    <th className="px-8 py-4"><div className="h-2.5 rounded-full bg-gray-200 w-10" /></th>
+                                    <th className="px-8 py-4 text-right"><div className="h-2.5 rounded-full bg-gray-200 w-14 ml-auto" /></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {[1, 2, 3, 4, 5].map(i => (
+                                    <tr key={i} className="border-b border-gray-50">
+                                        <td className="px-8 py-6"><div className="h-4 rounded-full bg-gray-100" style={{ width: `${60 + (i * 17) % 40}px` }} /></td>
+                                        <td className="px-8 py-6"><div className="h-4 rounded-full bg-gray-100 w-20" /></td>
+                                        <td className="px-8 py-6"><div className="h-4 rounded-full bg-gray-100 w-16" /></td>
+                                        <td className="px-8 py-6 text-right"><div className="h-5 rounded-full bg-gray-100 w-16 ml-auto" /></td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 ) : error ? (
                     <div className="px-8 py-12 text-center text-red-400 text-sm">{error}</div>
                 ) : records.length === 0 ? (

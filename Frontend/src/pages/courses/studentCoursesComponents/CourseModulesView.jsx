@@ -54,14 +54,6 @@ export default function CourseModulesView({ activeCourseId }) {
 
   return (
     <div className="w-full flex flex-col gap-6 py-6 select-none">
-      {/* Loading indicator */}
-      {modulesLoading && (
-        <div className="flex items-center gap-2 text-xs text-gray-400 font-medium px-1">
-          <Loader size={13} className="animate-spin" />
-          <span>Loading modules...</span>
-        </div>
-      )}
-
       {/* Top action bar */}
       <div className="flex items-center justify-end gap-3 shrink-0">
         <button
@@ -74,7 +66,32 @@ export default function CourseModulesView({ activeCourseId }) {
 
       {/* Modules list */}
       <div className="flex flex-col gap-5">
-        {modules.map((mod) => (
+        {modulesLoading ? (
+          [3, 2, 4].map((itemCount, i) => (
+            <div key={i} className="border border-gray-100 rounded-2xl overflow-hidden bg-white animate-pulse">
+              <div className="flex items-center gap-3 px-5 py-4 bg-gray-50/80 border-b border-gray-100">
+                <div className="w-5 h-5 rounded-md bg-gray-200 shrink-0" />
+                <div className="h-3 rounded-full bg-gray-200" style={{ width: `${90 + i * 45}px` }} />
+              </div>
+              <div className="p-5 flex flex-col gap-3">
+                {Array.from({ length: itemCount }, (_, j) => (
+                  <div key={j} className="flex items-center gap-3 py-1">
+                    <div className="w-4 h-4 rounded bg-gray-100 shrink-0" />
+                    <div className="h-3 rounded-full bg-gray-100" style={{ width: `${110 + j * 55}px` }} />
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))
+        ) : modules.length === 0 ? (
+          <div className="bg-white border border-gray-100 rounded-2xl px-8 py-16 text-center">
+            <div className="w-12 h-12 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center mx-auto mb-4">
+              <FileText size={20} className="text-gray-300" />
+            </div>
+            <p className="text-gray-500 font-semibold mb-1">No modules yet</p>
+            <p className="text-xs text-gray-400">Course content will appear here once modules are published.</p>
+          </div>
+        ) : modules.map((mod) => (
           <div key={mod.id} className="border border-gray-200 rounded-2xl overflow-hidden shadow-xs bg-white">
             {/* Header row */}
             <div 

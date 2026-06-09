@@ -251,7 +251,38 @@ export function CourseAttendanceView({ activeCourseId, subject }) {
                     </div>
 
                     {loading ? (
-                        <div className="px-8 py-12 text-center text-gray-400 text-sm">Loading attendance…</div>
+                        <div className="animate-pulse">
+                            <table className="w-full text-left">
+                                <thead>
+                                    <tr className="border-b border-gray-50 bg-gray-50/30">
+                                        <th className="px-5 py-4"><div className="h-2.5 rounded-full bg-gray-200 w-16" /></th>
+                                        <th className="px-4 py-4 text-center"><div className="h-2.5 rounded-full bg-gray-200 w-10 mx-auto" /></th>
+                                        <th className="px-4 py-4"><div className="h-2.5 rounded-full bg-gray-200 w-14" /></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {[1, 2, 3, 4, 5].map(i => (
+                                        <tr key={i} className="border-b border-gray-50">
+                                            <td className="py-3 pl-5 pr-3">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-8 h-8 rounded-full bg-gray-100 shrink-0" />
+                                                    <div className="flex flex-col gap-2">
+                                                        <div className="h-3.5 rounded-full bg-gray-200" style={{ width: `${65 + (i * 19) % 45}px` }} />
+                                                        <div className="h-2.5 rounded-full bg-gray-100 w-28" />
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-4 py-3 text-center">
+                                                <div className="h-5 rounded-full bg-gray-100 w-10 mx-auto" />
+                                            </td>
+                                            <td className="px-4 py-3">
+                                                <div className="h-5 rounded-full bg-gray-100 w-16" />
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                     ) : studentStats.length === 0 ? (
                         <div className="px-8 py-12 text-center text-gray-400 text-sm">No attendance records yet.</div>
                     ) : (

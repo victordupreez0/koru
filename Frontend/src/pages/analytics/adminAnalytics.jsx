@@ -374,7 +374,18 @@ export default function AdminAnalytics() {
               <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">{lecturers.length} lecturers</span>
             </div>
             {loading ? (
-              <div className="px-7 py-12 text-center text-gray-300 text-sm font-semibold">Loading…</div>
+              <div className="divide-y divide-gray-50 animate-pulse">
+                {[140, 180, 110, 160, 130].map((w, i) => (
+                  <div key={i} className="flex items-center gap-4 px-7 py-4">
+                    <div className="w-10 h-10 rounded-full bg-gray-100 shrink-0" />
+                    <div className="flex-1">
+                      <div className="h-3 rounded-full bg-gray-200" style={{ width: w }} />
+                    </div>
+                    <div className="h-7 rounded-full bg-gray-100 w-8" />
+                    <div className="h-5 rounded-full bg-gray-100" style={{ width: `${70 + i * 18}px` }} />
+                  </div>
+                ))}
+              </div>
             ) : coursesPerLecturer.length === 0 ? (
               <div className="px-7 py-12 text-center text-gray-300 text-sm font-semibold">No lecturers found.</div>
             ) : (
@@ -531,10 +542,18 @@ export default function AdminAnalytics() {
               <motion.div
                 key="loading"
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                className="rounded-[28px] border border-gray-100 bg-white p-16 flex flex-col items-center gap-3 text-center shadow-sm"
+                className="flex flex-col gap-6 animate-pulse"
               >
-                <div className="w-8 h-8 border-2 border-[#3C0078]/30 border-t-[#3C0078] rounded-full animate-spin" />
-                <p className="text-sm font-semibold text-gray-400">Loading lecturer analytics…</p>
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                  {[1, 2, 3, 4].map(i => (
+                    <div key={i} className="rounded-[28px] h-32 bg-gray-100" />
+                  ))}
+                </div>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <div className="rounded-[28px] h-64 bg-gray-100" />
+                  <div className="rounded-[28px] h-64 bg-gray-100" />
+                </div>
+                <div className="rounded-[28px] h-48 bg-gray-100" />
               </motion.div>
             ) : (
               <motion.div
