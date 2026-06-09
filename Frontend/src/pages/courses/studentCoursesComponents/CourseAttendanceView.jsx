@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Calendar, CheckCircle, CloseCircle } from "@solar-icons/react";
 import { motion } from "framer-motion";
+import { Download } from "lucide-react";
 import { useAuth } from "../../../contexts/AuthContext";
 import AttendanceChart from "../../../components/UI/attendanceChart";
 import AttendanceVisualizer from "../../../components/UI/attendanceVisualizer";
@@ -11,7 +12,29 @@ function formatDate(dateStr) {
     return new Date(dateStr).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
 }
 
-export default function CourseAttendanceView({ activeCourseId }) {
+function downloadCSV(records, courseName) {
+    const header = ["Date", "Session Type", "Time", "Status"];
+    const rows = records.map(r => [
+        formatDate(r.date),
+        r.sessionType || "—",
+        r.time || "—",
+        r.status,
+    ]);
+    const csvContent = [header, ...rows]
+        .map(row => row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(","))
+        .join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `attendance-${(courseName || "report").toLowerCase().replace(/\s+/g, "-")}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+}
+
+export default function CourseAttendanceView({ activeCourseId, subject }) {
     const { user } = useAuth();
     const [records, setRecords] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -55,8 +78,12 @@ export default function CourseAttendanceView({ activeCourseId }) {
             <motion.div variants={slideUp} className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
                 <div className="px-6 py-4 border-b border-gray-50 flex justify-between items-center">
                     <h2 className="text-lg font-bold">Session History</h2>
-                    <button className="text-sm font-semibold text-[#3C0078] hover:underline flex items-center gap-2">
-                        <Calendar size={18} /> Download Report
+                    <button
+                        onClick={() => downloadCSV(records, subject?.name || subject?.code || activeCourseId)}
+                        disabled={records.length === 0}
+                        className="text-sm font-semibold text-[#3C0078] hover:underline flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                        <Download size={15} /> Download Report
                     </button>
                 </div>
 
@@ -78,7 +105,7 @@ export default function CourseAttendanceView({ activeCourseId }) {
                         </thead>
                         <tbody>
                             {records.map((log, i) => (
-                                <tr key={i} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/30 transition-colors group">
+                                <tr key={i} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/30 transition-colors">
                                     <td className="px-8 py-6 text-sm font-bold text-gray-900">{formatDate(log.date)}</td>
                                     <td className="px-8 py-6 text-sm text-gray-600">{log.sessionType}</td>
                                     <td className="px-8 py-6 text-sm text-gray-400">{log.time ?? "—"}</td>
@@ -86,11 +113,11 @@ export default function CourseAttendanceView({ activeCourseId }) {
                                         <div className="flex items-center justify-end gap-2">
                                             <span className={`text-xs font-bold uppercase tracking-widest ${
                                                 log.status === "Present" ? "text-green-600" :
-                                                log.status === "Late"    ? "text-orange-400" : "text-orange-600"
+                                                log.status === "Late"    ? "text-orange-400" : "text-red-500"
                                             }`}>{log.status}</span>
                                             {log.status === "Present"
                                                 ? <CheckCircle className="text-green-600" size={18} />
-                                                : <CloseCircle className="text-orange-600" size={18} />}
+                                                : <CloseCircle className="text-red-500" size={18} />}
                                         </div>
                                     </td>
                                 </tr>
