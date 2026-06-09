@@ -355,7 +355,7 @@ export default function AssignmentDetail({ assignmentId, activeCourseId }) {
             Assignment not found.
           </div>
         ) : (
-          <div className="max-w-4xl mx-auto space-y-6">
+          <div className="space-y-6">
 
             {/* ── Title & Meta bar ── */}
             <motion.div variants={slideUp}>
