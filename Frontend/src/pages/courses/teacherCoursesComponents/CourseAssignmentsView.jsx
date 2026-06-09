@@ -66,33 +66,24 @@ function CreateAssignmentDrawer({ onClose, onSave, initialData }) {
     };
 
     return (
-        <AnimatePresence>
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100]"
-                onClick={onClose}
-            />
-            <motion.div
-                initial={{ x: "100%" }}
-                animate={{ x: 0 }}
-                exit={{ x: "100%" }}
-                transition={{ type: "spring", damping: 28, stiffness: 220 }}
-                className="fixed right-0 top-0 bottom-0 z-[101] w-full max-w-xl bg-white shadow-2xl flex flex-col overflow-hidden"
-                style={{ borderRadius: "40px 0 0 40px" }}
-            >
-                <div className="flex justify-between items-center px-10 py-8 border-b border-gray-100 shrink-0">
-                    <div>
-                        <h2 className="text-2xl font-bold text-gray-900">{isEditing ? "Edit Assignment" : "Create Assignment"}</h2>
-                        <p className="text-sm text-gray-400 mt-1">Fill in the details below</p>
-                    </div>
-                    <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-500">
-                        <X size={22} />
-                    </button>
+        <motion.div
+            initial={{ x: "100%", opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: "100%", opacity: 0 }}
+            transition={{ type: "spring", damping: 28, stiffness: 220 }}
+            className="w-full max-w-xl bg-white border border-gray-100 rounded-[32px] shadow-sm flex flex-col overflow-hidden h-full shrink-0"
+        >
+            <div className="flex justify-between items-center px-8 py-6 border-b border-gray-100 shrink-0">
+                <div>
+                    <h2 className="text-2xl font-bold text-gray-900">{isEditing ? "Edit Assignment" : "Create Assignment"}</h2>
+                    <p className="text-sm text-gray-400 mt-1">Fill in the details below</p>
                 </div>
+                <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-500">
+                    <X size={22} />
+                </button>
+            </div>
 
-                <div className="flex-1 overflow-y-auto px-10 py-8 space-y-8">
+            <div className="flex-1 overflow-y-auto px-8 py-6 space-y-6">
                     <div>
                         <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3 block">Assignment Type</label>
                         <div className="grid grid-cols-3 gap-2">
@@ -287,7 +278,7 @@ function CreateAssignmentDrawer({ onClose, onSave, initialData }) {
                     )}
                 </div>
 
-                <div className="px-10 py-6 border-t border-gray-100 flex gap-3 shrink-0">
+                <div className="px-8 py-5 border-t border-gray-100 flex gap-3 shrink-0">
                     <button onClick={onClose} className="flex-1 py-4 rounded-2xl border-2 border-gray-200 text-gray-700 font-bold text-xs uppercase tracking-widest hover:bg-gray-50 transition-all">
                         Cancel
                     </button>
@@ -298,8 +289,7 @@ function CreateAssignmentDrawer({ onClose, onSave, initialData }) {
                         <Eye size={16} /> {isEditing ? "Save Changes" : "Publish"}
                     </button>
                 </div>
-            </motion.div>
-        </AnimatePresence>
+        </motion.div>
     );
 }
 
@@ -1203,108 +1193,112 @@ export function CourseAssignmentsView({ subject, activeCourseId }) {
     }
 
     return (
-        <motion.div className="flex-1 p-8 overflow-y-auto" initial="hidden" animate="visible" variants={staggerContainer}>
-            <motion.header variants={slideUp} className="mb-10 flex justify-between items-end">
-                <div>
-                    <h1 className="text-3xl font-semibold tracking-tight">Assignments</h1>
-                    <div className="mt-3">
-                        <CohortFilterBar cohorts={cohorts} selected={selectedCohortId} onChange={setSelectedCohortId} />
+        <div className="flex-1 flex flex-row gap-6 p-8 overflow-hidden h-full">
+            <motion.div className="flex-1 flex flex-col overflow-y-auto pr-2 min-w-0" initial="hidden" animate="visible" variants={staggerContainer}>
+                <motion.header variants={slideUp} className="mb-10 flex justify-between items-end">
+                    <div>
+                        <h1 className="text-3xl font-semibold tracking-tight">Assignments</h1>
+                        <div className="mt-3">
+                            <CohortFilterBar cohorts={cohorts} selected={selectedCohortId} onChange={setSelectedCohortId} />
+                        </div>
                     </div>
-                </div>
-                <div className="flex items-center gap-3">
-                    <motion.button
-                        whileHover={{ scale: 1.03 }}
-                        whileTap={{ scale: 0.97 }}
-                        onClick={() => setShowDrawer(true)}
-                        className="bg-[#3C0078] text-white px-8 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest flex items-center gap-2 shadow-lg shadow-[#3C0078]/20"
-                    >
-                        <Plus size={18} /> Create Assignment
-                    </motion.button>
-                </div>
-            </motion.header>
-
-            <motion.div variants={slideUp} className="grid grid-cols-3 gap-4 mb-10">
-                {[
-                    { label: "Total Assignments", value: loading ? "..." : totalAssignments, accent: false },
-                    { label: "Open", value: loading ? "..." : openCount, accent: true },
-                    { label: "Closed", value: loading ? "..." : totalAssignments - openCount, accent: false },
-                ].map((stat) => (
-                    <div key={stat.label} className={`rounded-[28px] px-7 py-6 flex flex-col gap-1 ${stat.accent ? "bg-[#3C0078] text-white" : "bg-white border border-gray-100 shadow-sm"}`}>
-                        <span className={`text-[10px] font-black uppercase tracking-widest ${stat.accent ? "text-white/60" : "text-gray-400"}`}>{stat.label}</span>
-                        <span className={`text-4xl font-black italic ${stat.accent ? "text-white" : "text-gray-900"}`}>{stat.value}</span>
+                    <div className="flex items-center gap-3">
+                        <motion.button
+                            whileHover={{ scale: 1.03 }}
+                            whileTap={{ scale: 0.97 }}
+                            onClick={() => setShowDrawer(true)}
+                            className="bg-[#3C0078] text-white px-8 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest flex items-center gap-2 shadow-lg shadow-[#3C0078]/20"
+                        >
+                            <Plus size={18} /> Create Assignment
+                        </motion.button>
                     </div>
-                ))}
-            </motion.div>
+                </motion.header>
 
-            <motion.div variants={slideUp} className="mb-10">
-                <h2 className="text-sm font-black uppercase tracking-widest text-gray-400 mb-4">Assignment Types</h2>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-                    {ASSIGNMENT_TYPES.map(t => {
-                        const Icon = t.icon;
-                        const count = groups.reduce((sum, g) => sum + g.assignments.filter(a => a.type === t.id).length, 0);
-                        const isActive = activeTypeFilter === t.id;
-                        return (
-                            <motion.button
-                                key={t.id}
-                                whileHover={{ y: -3 }}
-                                whileTap={{ scale: 0.97 }}
-                                onClick={() => setActiveTypeFilter(isActive ? "all" : t.id)}
-                                className={`flex flex-col items-start gap-3 p-5 rounded-[24px] border-2 text-left transition-all ${isActive ? "border-[#3C0078] bg-[#3C0078]/5 shadow-md" : "border-gray-100 bg-white hover:border-gray-200 hover:shadow-sm"}`}
-                            >
-                                <span className={`inline-flex items-center justify-center w-10 h-10 rounded-2xl ${t.bg}`}>
-                                    <Icon size={20} style={{ color: t.color }} />
-                                </span>
-                                <div>
-                                    <p className={`text-[10px] font-black uppercase tracking-widest leading-tight ${isActive ? "text-[#3C0078]" : "text-gray-500"}`}>{t.label}</p>
-                                    <p className="text-2xl font-black italic text-gray-900 mt-1">{count}</p>
-                                </div>
-                            </motion.button>
-                        );
-                    })}
-                </div>
-            </motion.div>
-
-            {activeTypeFilter !== "all" && (
-                <motion.div variants={slideUp} className="mb-6 flex items-center gap-3">
-                    <span className="text-sm text-gray-500">Filtering by:</span>
-                    <button onClick={() => setActiveTypeFilter("all")} className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#3C0078]/10 text-[#3C0078] font-bold text-xs uppercase tracking-widest hover:bg-[#3C0078]/20 transition-all">
-                        {ASSIGNMENT_TYPES.find(t => t.id === activeTypeFilter)?.label}
-                        <X size={14} />
-                    </button>
+                <motion.div variants={slideUp} className="grid grid-cols-3 gap-4 mb-10">
+                    {[
+                        { label: "Total Assignments", value: loading ? "..." : totalAssignments, accent: false },
+                        { label: "Open", value: loading ? "..." : openCount, accent: true },
+                        { label: "Closed", value: loading ? "..." : totalAssignments - openCount, accent: false },
+                    ].map((stat) => (
+                        <div key={stat.label} className={`rounded-[28px] px-7 py-6 flex flex-col gap-1 ${stat.accent ? "bg-[#3C0078] text-white" : "bg-white border border-gray-100 shadow-sm"}`}>
+                            <span className={`text-[10px] font-black uppercase tracking-widest ${stat.accent ? "text-white/60" : "text-gray-400"}`}>{stat.label}</span>
+                            <span className={`text-4xl font-black italic ${stat.accent ? "text-white" : "text-gray-900"}`}>{stat.value}</span>
+                        </div>
+                    ))}
                 </motion.div>
-            )}
 
-            <motion.div variants={slideUp}>
-                <div className="mb-5">
-                    <h2 className="text-sm font-black uppercase tracking-widest text-gray-400">Assignment Groups</h2>
-                </div>
-                {filteredGroups.length === 0 ? (
-                    <div className="text-center py-20 bg-gray-50 rounded-[40px] border border-gray-100 text-gray-400 font-medium">
-                        No assignments match this filter.
+                <motion.div variants={slideUp} className="mb-10">
+                    <h2 className="text-sm font-black uppercase tracking-widest text-gray-400 mb-4">Assignment Types</h2>
+                    <div className="flex flex-wrap gap-3">
+                        {ASSIGNMENT_TYPES.map(t => {
+                            const Icon = t.icon;
+                            const count = groups.reduce((sum, g) => sum + g.assignments.filter(a => a.type === t.id).length, 0);
+                            const isActive = activeTypeFilter === t.id;
+                            return (
+                                <motion.button
+                                    key={t.id}
+                                    whileHover={{ y: -3 }}
+                                    whileTap={{ scale: 0.97 }}
+                                    onClick={() => setActiveTypeFilter(isActive ? "all" : t.id)}
+                                    className={`flex-1 min-w-[130px] flex flex-col items-start gap-3 p-5 rounded-[24px] border-2 text-left transition-all ${isActive ? "border-[#3C0078] bg-[#3C0078]/5 shadow-md" : "border-gray-100 bg-white hover:border-gray-200 hover:shadow-sm"}`}
+                                >
+                                    <span className={`inline-flex items-center justify-center w-10 h-10 rounded-2xl ${t.bg}`}>
+                                        <Icon size={20} style={{ color: t.color }} />
+                                    </span>
+                                    <div>
+                                        <p className={`text-[10px] font-black uppercase tracking-widest leading-tight ${isActive ? "text-[#3C0078]" : "text-gray-500"}`}>{t.label}</p>
+                                        <p className="text-2xl font-black italic text-gray-900 mt-1">{count}</p>
+                                    </div>
+                                </motion.button>
+                            );
+                        })}
                     </div>
-                ) : (
-                    filteredGroups.map(group => (
-                        <AssignmentGroupRow
-                            key={group.id}
-                            group={group}
-                            onTogglePublish={() => {}}
-                            onDelete={handleDelete}
-                            onEdit={handleEdit}
-                            onClose={handleClose}
-                            onView={(item) => setReviewingAssignment(item)}
-                            onPreview={(item) => setPreviewingAssignment(item)}
-                        />
-                    ))
+                </motion.div>
+
+                {activeTypeFilter !== "all" && (
+                    <motion.div variants={slideUp} className="mb-6 flex items-center gap-3">
+                        <span className="text-sm text-gray-500">Filtering by:</span>
+                        <button onClick={() => setActiveTypeFilter("all")} className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#3C0078]/10 text-[#3C0078] font-bold text-xs uppercase tracking-widest hover:bg-[#3C0078]/20 transition-all">
+                            {ASSIGNMENT_TYPES.find(t => t.id === activeTypeFilter)?.label}
+                            <X size={14} />
+                        </button>
+                    </motion.div>
                 )}
+
+                <motion.div variants={slideUp}>
+                    <div className="mb-5">
+                        <h2 className="text-sm font-black uppercase tracking-widest text-gray-400">Assignment Groups</h2>
+                    </div>
+                    {filteredGroups.length === 0 ? (
+                        <div className="text-center py-20 bg-gray-50 rounded-[40px] border border-gray-100 text-gray-400 font-medium">
+                            No assignments match this filter.
+                        </div>
+                    ) : (
+                        filteredGroups.map(group => (
+                            <AssignmentGroupRow
+                                key={group.id}
+                                group={group}
+                                onTogglePublish={() => {}}
+                                onDelete={handleDelete}
+                                onEdit={handleEdit}
+                                onClose={handleClose}
+                                onView={(item) => setReviewingAssignment(item)}
+                                onPreview={(item) => setPreviewingAssignment(item)}
+                            />
+                        ))
+                    )}
+                </motion.div>
             </motion.div>
 
-            {showDrawer && (
-                <CreateAssignmentDrawer
-                    onClose={() => { setShowDrawer(false); setEditingAssignment(null); }}
-                    onSave={handleSave}
-                    initialData={editingAssignment}
-                />
-            )}
+            <AnimatePresence>
+                {showDrawer && (
+                    <CreateAssignmentDrawer
+                        onClose={() => { setShowDrawer(false); setEditingAssignment(null); }}
+                        onSave={handleSave}
+                        initialData={editingAssignment}
+                    />
+                )}
+            </AnimatePresence>
 
             {previewingAssignment && (
                 <AssignmentPreviewDrawer
@@ -1312,6 +1306,6 @@ export function CourseAssignmentsView({ subject, activeCourseId }) {
                     onClose={() => setPreviewingAssignment(null)}
                 />
             )}
-        </motion.div>
+        </div>
     );
 }
