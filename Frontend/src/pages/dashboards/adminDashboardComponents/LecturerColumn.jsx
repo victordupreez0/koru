@@ -19,7 +19,7 @@ export function LecturerColumn({
   onOpenNotification
 }) {
   return (
-    <div className="flex flex-col bg-white/80 border-1 border-gray-200 rounded-3xl drop-shadow-xl p-4 min-h-0">
+    <div className="flex flex-col bg-white/70 border border-gray-100 rounded-3xl p-4 min-h-0">
       <div className="flex items-center justify-between mb-3 px-1">
         <h2 className="text-2xl font-bold font-['Gabarito']">Lecturers</h2>
         <div className="flex items-center gap-2">
