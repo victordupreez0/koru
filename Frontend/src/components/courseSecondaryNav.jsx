@@ -50,6 +50,7 @@ const ICON_MAP = {
     Attendance: CalendarCheck,
     Overview: LayoutDashboard,
     Students: Users,
+    Groups: UsersRound,
     Cohorts: UsersRound,
     "Grade Activity": ScrollText,
 };

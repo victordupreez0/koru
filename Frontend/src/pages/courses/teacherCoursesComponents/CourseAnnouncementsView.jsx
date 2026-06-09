@@ -21,8 +21,6 @@ export function CourseAnnouncementsView({ activeCourseId }) {
     const [newAnnouncement, setNewAnnouncement] = useState({
         title: "",
         preview: "",
-        label: "Notice",
-        color: "#3C0078",
     });
 
     useEffect(() => {
@@ -57,7 +55,7 @@ export function CourseAnnouncementsView({ activeCourseId }) {
             const created = await createAnnouncement(payload);
             setAnnouncements(prev => [created, ...prev]);
             setIsAdding(false);
-            setNewAnnouncement({ title: "", preview: "", label: "Notice", color: "#3C0078" });
+            setNewAnnouncement({ title: "", preview: "" });
         } catch (err) {
             console.error("Failed to post announcement:", err);
         } finally {
@@ -74,12 +72,6 @@ export function CourseAnnouncementsView({ activeCourseId }) {
         } catch (err) {
             console.error("Failed to delete announcement:", err);
         }
-    };
-
-    const LABEL_COLORS = {
-        Notice: "#3C0078",
-        Event: "#FF8731",
-        Update: "#87CEFA",
     };
 
     return (
@@ -117,29 +109,15 @@ export function CourseAnnouncementsView({ activeCourseId }) {
                         </div>
 
                         <div className="flex flex-col gap-6 mb-6">
-                            <div className="flex flex-col md:flex-row gap-4">
-                                <div className="flex-[3]">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2 block">Announcement Title</label>
-                                    <input
-                                        type="text"
-                                        placeholder="What's the update about?"
-                                        className="w-full bg-gray-50 border-none rounded-2xl px-5 py-3.5 text-gray-900 font-medium focus:ring-2 focus:ring-[#3C0078]/20 transition-all"
-                                        value={newAnnouncement.title}
-                                        onChange={e => setNewAnnouncement({ ...newAnnouncement, title: e.target.value })}
-                                    />
-                                </div>
-                                <div className="flex-1">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2 block">Label</label>
-                                    <select
-                                        className="w-full bg-gray-50 border-none rounded-2xl px-5 py-3.5 text-gray-900 font-medium focus:ring-2 focus:ring-[#3C0078]/20 transition-all appearance-none"
-                                        value={newAnnouncement.label}
-                                        onChange={e => setNewAnnouncement({ ...newAnnouncement, label: e.target.value, color: LABEL_COLORS[e.target.value] || "#3C0078" })}
-                                    >
-                                        <option>Notice</option>
-                                        <option>Event</option>
-                                        <option>Update</option>
-                                    </select>
-                                </div>
+                            <div>
+                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2 block">Announcement Title</label>
+                                <input
+                                    type="text"
+                                    placeholder="What's the update about?"
+                                    className="w-full bg-gray-50 border-none rounded-2xl px-5 py-3.5 text-gray-900 font-medium focus:ring-2 focus:ring-[#3C0078]/20 transition-all"
+                                    value={newAnnouncement.title}
+                                    onChange={e => setNewAnnouncement({ ...newAnnouncement, title: e.target.value })}
+                                />
                             </div>
                             <div>
                                 <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2 block">Announcement Message</label>
@@ -221,27 +199,19 @@ export function CourseAnnouncementsView({ activeCourseId }) {
                                 </div>
                             </div>
 
-                            <div className="flex md:flex-col items-center md:items-end justify-between md:justify-center gap-2 pl-6 md:pl-0 shrink-0 self-stretch md:self-auto border-t md:border-t-0 pt-3 md:pt-0 border-gray-50">
-                                <span
-                                    className="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider text-white select-none shrink-0"
-                                    style={{ backgroundColor: post.color }}
-                                >
-                                    {post.label}
+                            <div className="flex md:flex-col items-center md:items-end justify-end gap-2 pl-6 md:pl-0 shrink-0 self-stretch md:self-auto border-t md:border-t-0 pt-3 md:pt-0 border-gray-50">
+                                <span className="text-xs text-gray-400 font-semibold">
+                                    {post.datePosted
+                                        ? new Date(post.datePosted).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+                                        : (post.date || "")}
                                 </span>
-                                <div className="flex items-center gap-2">
-                                    <span className="text-xs text-gray-400 font-semibold">
-                                        {post.datePosted
-                                            ? new Date(post.datePosted).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
-                                            : (post.date || "")}
-                                    </span>
-                                    <button
-                                        onClick={e => handleDelete(post.id, e)}
-                                        className="opacity-0 group-hover:opacity-100 p-1 text-gray-300 hover:text-red-500 transition-all"
-                                        title="Delete announcement"
-                                    >
-                                        <Trash2 size={13} />
-                                    </button>
-                                </div>
+                                <button
+                                    onClick={e => handleDelete(post.id, e)}
+                                    className="opacity-0 group-hover:opacity-100 p-1 text-gray-300 hover:text-red-500 transition-all"
+                                    title="Delete announcement"
+                                >
+                                    <Trash2 size={13} />
+                                </button>
                             </div>
                         </motion.div>
                     ))}
@@ -258,16 +228,11 @@ export function CourseAnnouncementsView({ activeCourseId }) {
                             className="flex-1 w-full lg:w-[55%] bg-white border border-gray-100 rounded-3xl p-8 flex flex-col shadow-sm overflow-y-auto"
                         >
                             <div className="flex justify-between items-start mb-6">
-                                <div className="flex items-center gap-4">
-                                    <span className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest text-white" style={{ backgroundColor: selectedAnnouncement.color }}>
-                                        {selectedAnnouncement.label}
-                                    </span>
-                                    <span className="text-sm font-medium text-gray-400">
-                                        {selectedAnnouncement.datePosted
-                                            ? new Date(selectedAnnouncement.datePosted).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
-                                            : (selectedAnnouncement.date || "")}
-                                    </span>
-                                </div>
+                                <span className="text-sm font-medium text-gray-400">
+                                    {selectedAnnouncement.datePosted
+                                        ? new Date(selectedAnnouncement.datePosted).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+                                        : (selectedAnnouncement.date || "")}
+                                </span>
                                 <div className="flex items-center gap-2">
                                     <button
                                         onClick={() => handleDelete(selectedId)}

@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Users, BookOpen, Clock, Eye, Save, X, BarChart3 } from "lucide-react";
-import { courseService, userService } from "../../../services/adminService";
-import { getCourseStudentCount } from "../../../services/enrollmentService";
+import { Users, BookOpen, Clock, Save, X, BarChart3 } from "lucide-react";
+import { courseService, userService, enrollmentService } from "../../../services/adminService";
 import { getCourseCohorts } from "../../../services/classGroupService";
 import { staggerContainer, slideUp, scaleIn } from "../teacherCoursesComponents/constants";
 
@@ -40,7 +39,9 @@ export function AdminCourseOverviewView({ course, onSaved }) {
     });
     setDirty(false);
 
-    getCourseStudentCount(course.id).then(setStudentCount).catch(() => setStudentCount(0));
+    enrollmentService.getAllEnrollments()
+      .then(all => setStudentCount((all || []).filter(e => e.courseId === course.id || e.course?.id === course.id).length))
+      .catch(() => setStudentCount(0));
     getCourseCohorts(course.id).then(c => setCohortCount(c.length)).catch(() => setCohortCount(0));
   }, [course?.id]);
 
@@ -274,30 +275,6 @@ export function AdminCourseOverviewView({ course, onSaved }) {
               {course.subject?.description && (
                 <p className="text-xs text-gray-400 leading-relaxed mt-2 pt-3 border-t border-gray-100">{course.subject.description}</p>
               )}
-            </div>
-          </div>
-
-          {/* Perspective view */}
-          <div className="bg-[#3C0078] rounded-3xl p-6 text-white">
-            <h3 className="text-xs font-black uppercase tracking-widest text-white/60 mb-1">Perspective View</h3>
-            <p className="text-sm font-medium text-white/80 mb-4">Preview this course as students or teachers see it.</p>
-            <div className="flex gap-3">
-              <a
-                href={`/courses/${course.id}?viewAs=teacher`}
-                target="_blank"
-                rel="noreferrer"
-                className="flex-1 py-3 rounded-2xl bg-white/10 text-white text-[11px] font-black uppercase tracking-widest text-center hover:bg-white/20 transition-all flex items-center justify-center gap-2"
-              >
-                <Eye size={14} /> Teacher
-              </a>
-              <a
-                href={`/courses/${course.id}?viewAs=student`}
-                target="_blank"
-                rel="noreferrer"
-                className="flex-1 py-3 rounded-2xl bg-white/10 text-white text-[11px] font-black uppercase tracking-widest text-center hover:bg-white/20 transition-all flex items-center justify-center gap-2"
-              >
-                <Eye size={14} /> Student
-              </a>
             </div>
           </div>
         </motion.div>

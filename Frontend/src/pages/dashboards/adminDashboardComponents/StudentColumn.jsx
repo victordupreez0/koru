@@ -1,5 +1,5 @@
 import React from "react";
-import { Plus, User, ExternalLink, Users } from "lucide-react";
+import { Plus, User, ExternalLink, X } from "lucide-react";
 import { motion } from "framer-motion";
 import { SearchInput } from "./SearchInput";
 
@@ -16,7 +16,7 @@ function StudentCard({ student }) {
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-bold text-gray-800 truncate">{student.name}</p>
-        <p className="text-xs text-gray-400">{student.major}</p>
+        <p className="text-xs text-gray-400 truncate">{student.email || student.major || ""}</p>
       </div>
       <button className="w-8 h-8 rounded-lg hover:bg-gray-100 flex items-center justify-center transition-colors shrink-0">
         <ExternalLink className="w-4 h-4 text-gray-400" />
@@ -27,7 +27,8 @@ function StudentCard({ student }) {
 
 export function StudentColumn({
   showAddStudent,
-  setIsAssigningStudents,
+  isAddingStudent,
+  setIsAddingStudent,
   studentSearch,
   setStudentSearch,
   studentSort,
@@ -39,7 +40,6 @@ export function StudentColumn({
 }) {
   const hasCohorts = cohorts.length > 0;
 
-  // Build grouped list when cohorts exist
   const cohortGroups = React.useMemo(() => {
     if (!hasCohorts) return null;
     const groups = cohorts.map((c) => ({
@@ -51,16 +51,20 @@ export function StudentColumn({
   }, [hasCohorts, cohorts, filteredStudents, cohortStudentMap]);
 
   return (
-    <div className="flex flex-col bg-white/70 border border-gray-100 rounded-3xl p-4 min-h-0">
+    <div className="flex flex-col bg-white/70 border border-gray-100 rounded-3xl p-4 h-full">
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-2xl font-bold font-['Gabarito']">Students</h2>
         {showAddStudent && (
           <button
-            onClick={() => setIsAssigningStudents(true)}
-            className="w-9 h-9 rounded-full border border-gray-200 hover:bg-gray-100 flex items-center justify-center transition-colors"
+            onClick={() => setIsAddingStudent(prev => !prev)}
+            className={`w-9 h-9 rounded-full border flex items-center justify-center transition-all ${
+              isAddingStudent
+                ? "border-[#3C0078] bg-[#3C0078]/10 text-[#3C0078]"
+                : "border-gray-200 hover:bg-gray-100 text-gray-600"
+            }`}
             aria-label="Add student to course"
           >
-            <Plus className="w-4 h-4 text-gray-600" />
+            {isAddingStudent ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
           </button>
         )}
       </div>
@@ -82,11 +86,9 @@ export function StudentColumn({
         ) : filteredStudents.length === 0 ? (
           <p className="text-sm text-gray-400 text-center py-8">No students enrolled.</p>
         ) : hasCohorts ? (
-          // ── Grouped by cohort ──
           <>
             {cohortGroups.groups.map(({ cohort, students }) => (
               <div key={cohort.id}>
-                {/* Cohort header */}
                 <div className="flex items-center gap-2 px-1 py-2 mb-1">
                   <div className="w-2 h-2 rounded-full bg-[#3C0078] shrink-0" />
                   <span className="text-[11px] font-black uppercase tracking-widest text-[#3C0078]">
@@ -108,7 +110,6 @@ export function StudentColumn({
               </div>
             ))}
 
-            {/* Unassigned section */}
             {cohortGroups.unassigned.length > 0 && (
               <div>
                 <div className="flex items-center gap-2 px-1 py-2 mb-1">
@@ -129,7 +130,6 @@ export function StudentColumn({
             )}
           </>
         ) : (
-          // ── Flat list (no cohorts) ──
           filteredStudents.map((student) => (
             <StudentCard key={student.id} student={student} />
           ))

@@ -3,11 +3,14 @@ import { motion } from "framer-motion";
 
 export function ColumnCard({ children, isSelected, onClick, className = "" }) {
   return (
-    <motion.button
+    <motion.div
       onClick={onClick}
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25, ease: "easeOut" }}
+      tabIndex={0}
+      role="button"
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") onClick?.(); }}
       className={`w-full text-left rounded-2xl px-4 py-3.5 flex items-center gap-3 transition-all duration-200 cursor-pointer border
         ${isSelected
           ? "bg-[#3C0078] text-white border-[#3C0078]"
@@ -15,6 +18,6 @@ export function ColumnCard({ children, isSelected, onClick, className = "" }) {
         } ${className}`}
     >
       {children}
-    </motion.button>
+    </motion.div>
   );
 }

@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { UserMinus, UserPlus, Search } from "lucide-react";
-import { getCourseEnrollments } from "../../../services/enrollmentService";
 import { userService, enrollmentService } from "../../../services/adminService";
 import { getCourseCohorts, getCourseStudents, assignStudents } from "../../../services/classGroupService";
 import { staggerContainer, slideUp } from "../teacherCoursesComponents/constants";
@@ -30,12 +29,16 @@ export function AdminCourseStudentsView({ courseId }) {
     if (!courseId) return;
     setLoading(true);
     try {
-      const [enrs, cohs, studs, cohortStudents] = await Promise.all([
-        getCourseEnrollments(courseId).catch(() => []),
+      const [allEnrs, cohs, studs, cohortStudents] = await Promise.all([
+        enrollmentService.getAllEnrollments().catch(() => []),
         getCourseCohorts(courseId).catch(() => []),
         userService.getStudents().catch(() => []),
         getCourseStudents(courseId).catch(() => []),
       ]);
+      // Filter enrollments to just this course
+      const enrs = (allEnrs || []).filter(
+        e => e.courseId === courseId || e.course?.id === courseId
+      );
       setEnrollments(enrs || []);
       setCohorts(cohs || []);
       setAllStudents(studs || []);
