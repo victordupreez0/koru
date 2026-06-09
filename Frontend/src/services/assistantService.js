@@ -31,8 +31,8 @@ export async function getAssistantResponse(chatHistory, userId, role) {
     const res = await fetch(`${API_BASE}/Assistant/chat`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ 
-        messages: chatHistory,
+      body: JSON.stringify({
+        messages: chatHistory.filter(m => m.role === "user" || m.role === "assistant"),
         userId: userId,
         role: role
       })
@@ -68,7 +68,7 @@ export async function getAssistantResponse(chatHistory, userId, role) {
             "Authorization": `Bearer ${clientApiKey}`
           },
           body: JSON.stringify({
-            model: "llama-3.3-70b-versatile",
+            model: "llama-3.1-8b-instant",
             messages: messagesToSend,
             temperature: 0.7,
             max_completion_tokens: 4096
@@ -92,10 +92,12 @@ export async function getAssistantResponse(chatHistory, userId, role) {
       }
     }
 
-    // If we reach here, neither server key nor frontend key was configured
-    const userMessage = backendError.message.includes("not configured") 
-      ? backendError.message 
-      : "Groq API Key is not configured. Please add your key to Backend/LearnOnline/appsettings.Development.json ('Groq': { 'ApiKey': '...' }) or Frontend/.env (VITE_GROQ_API_KEY=...).";
+    // Surface the actual error — never show a misleading "key not configured" message
+    // when the real cause is a rate limit, timeout, or any other backend/Groq error.
+    const userMessage =
+      backendError.message && backendError.message !== "Backend error"
+        ? backendError.message
+        : "Unable to reach the assistant. Please try again in a moment.";
 
     throw new Error(userMessage);
   }

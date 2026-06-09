@@ -1,6 +1,9 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bot, Trash2, Copy, Check, AlertCircle } from "lucide-react";
+import {
+  Bot, Trash2, Copy, Check, AlertCircle, Plus, MessageSquare,
+  GraduationCap, BookOpen, ShieldCheck, PanelLeft,
+} from "lucide-react";
 
 import Orb from "../../components/UI/Orb";
 import AssistantInput from "../../components/assistantInput";
@@ -8,338 +11,605 @@ import HeaderTopBar from "../../components/HeaderTopBar";
 import { getAssistantResponse } from "../../services/assistantService";
 import { useAuth } from "../../contexts/AuthContext";
 
-export default function TeacherAssistant() {
-    const { user, role } = useAuth();
-    const firstName = user?.firstName || user?.name?.split(" ")?.[0] || "";
-    const [messages, setMessages] = useState([]);
-    const [isTyping, setIsTyping] = useState(false);
-    const [copiedIndex, setCopiedIndex] = useState(null);
-    const scrollRef = useRef(null);
+// ─── Persistence helpers ──────────────────────────────────────────────────────
 
-    // Auto-scroll to bottom on new messages
-    useEffect(() => {
-        if (scrollRef.current) {
-            scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-        }
-    }, [messages, isTyping]);
+const chatsKey = (uid) => `koru.chats.${uid || "guest"}`;
 
-    const handleSend = async (text) => {
-        if (!text || text.trim() === "") return;
-
-        // 1. Add user message
-        const updatedMessages = [...messages, { role: "user", content: text }];
-        setMessages(updatedMessages);
-        setIsTyping(true);
-
-        try {
-            // 2. Call the AI assistant service (passes message history and user identity context)
-            const response = await getAssistantResponse(updatedMessages, user?.userId, user?.role);
-            
-            // 3. Add AI assistant response
-            setMessages((prev) => [...prev, { role: "assistant", content: response.content }]);
-        } catch (error) {
-            console.error("Assistant Error:", error);
-            // 4. Add error message in context so user knows what failed
-            setMessages((prev) => [
-                ...prev, 
-                { 
-                    role: "error", 
-                    content: error.message || "An unexpected error occurred while communicating with the assistant." 
-                }
-            ]);
-        } finally {
-            setIsTyping(false);
-        }
-    };
-
-    const handleClearChat = () => {
-        setMessages([]);
-    };
-
-    const handleCopy = (text, idx) => {
-        navigator.clipboard.writeText(text);
-        setCopiedIndex(idx);
-        setTimeout(() => {
-            setCopiedIndex(null);
-        }, 2000);
-    };
-
-    // Custom inline Markdown & code renderer for beautiful styling
-    const renderMessageContent = (content) => {
-        if (!content) return null;
-
-        const lines = content.split("\n");
-        const elements = [];
-        let currentList = [];
-        let currentListType = null; // "ul" or "ol"
-        let inCodeBlock = false;
-        let codeBlockContent = [];
-        let codeBlockLanguage = "";
-
-        const flushList = (key) => {
-            if (currentList.length > 0) {
-                if (currentListType === "ul") {
-                    elements.push(
-                        <ul key={`ul-${key}`} className="list-disc pl-6 my-2 space-y-1.5 text-slate-800">
-                            {currentList.map((item, idx) => <li key={idx} className="leading-relaxed">{parseInlineStyle(item)}</li>)}
-                        </ul>
-                    );
-                } else if (currentListType === "ol") {
-                    elements.push(
-                        <ol key={`ol-${key}`} className="list-decimal pl-6 my-2 space-y-1.5 text-slate-800">
-                            {currentList.map((item, idx) => <li key={idx} className="leading-relaxed">{parseInlineStyle(item)}</li>)}
-                        </ol>
-                    );
-                }
-                currentList = [];
-                currentListType = null;
-            }
-        };
-
-        const parseInlineStyle = (text) => {
-            const parts = text.split(/\*\*([^*]+)\*\*/g);
-            return parts.map((part, index) => {
-                if (index % 2 === 1) {
-                    return <strong key={index} className="font-bold text-purple-950">{part}</strong>;
-                }
-                
-                const subParts = part.split(/\*([^*]+)\*/g);
-                return subParts.map((subPart, subIndex) => {
-                    if (subIndex % 2 === 1) {
-                        return <em key={subIndex} className="italic text-slate-700">{subPart}</em>;
-                    }
-
-                    const codeParts = subPart.split(/`([^`]+)`/g);
-                    return codeParts.map((codePart, codeIndex) => {
-                        if (codeIndex % 2 === 1) {
-                            return <code key={codeIndex} className="px-1.5 py-0.5 rounded bg-purple-50 text-[#3C0078] text-sm font-mono border border-purple-100">{codePart}</code>;
-                        }
-                        return codePart;
-                    });
-                });
-            });
-        };
-
-        for (let i = 0; i < lines.length; i++) {
-            const line = lines[i];
-
-            if (line.trim().startsWith("```")) {
-                if (inCodeBlock) {
-                    inCodeBlock = false;
-                    elements.push(
-                        <pre key={`code-${i}`} className="p-4 rounded-2xl bg-slate-900 text-slate-100 text-xs font-mono my-3 overflow-x-auto shadow-inner border border-slate-800 select-all">
-                            <code>{codeBlockContent.join("\n")}</code>
-                        </pre>
-                    );
-                    codeBlockContent = [];
-                    codeBlockLanguage = "";
-                } else {
-                    flushList(i);
-                    inCodeBlock = true;
-                    codeBlockLanguage = line.trim().substring(3).trim();
-                }
-                continue;
-            }
-
-            if (inCodeBlock) {
-                codeBlockContent.push(line);
-                continue;
-            }
-
-            if (line.startsWith("### ")) {
-                flushList(i);
-                elements.push(<h4 key={`h4-${i}`} className="text-lg font-bold text-purple-950 mt-4 mb-2">{parseInlineStyle(line.substring(4))}</h4>);
-                continue;
-            }
-            if (line.startsWith("## ")) {
-                flushList(i);
-                elements.push(<h3 key={`h3-${i}`} className="text-xl font-bold text-purple-950 mt-5 mb-2">{parseInlineStyle(line.substring(3))}</h3>);
-                continue;
-            }
-            if (line.startsWith("# ")) {
-                flushList(i);
-                elements.push(<h2 key={`h2-${i}`} className="text-2xl font-bold text-purple-950 mt-6 mb-3">{parseInlineStyle(line.substring(2))}</h2>);
-                continue;
-            }
-
-            if (line.trim().startsWith("- ") || line.trim().startsWith("* ")) {
-                if (currentListType && currentListType !== "ul") {
-                    flushList(i);
-                }
-                currentListType = "ul";
-                currentList.push(line.trim().substring(2));
-                continue;
-            }
-
-            const olMatch = line.trim().match(/^(\d+)\.\s(.*)/);
-            if (olMatch) {
-                if (currentListType && currentListType !== "ol") {
-                    flushList(i);
-                }
-                currentListType = "ol";
-                currentList.push(olMatch[2]);
-                continue;
-            }
-
-            if (line.trim() === "") {
-                flushList(i);
-                continue;
-            }
-
-            flushList(i);
-            elements.push(<p key={`p-${i}`} className="leading-relaxed text-slate-800 my-2">{parseInlineStyle(line)}</p>);
-        }
-
-        flushList(lines.length);
-        return <div className="space-y-1">{elements}</div>;
-    };
-
-    return (
-        <div className="flex flex-col overflow-hidden transition-all duration-300 md:h-[calc(100vh-32px)] md:w-full md:bg-white/55 md:backdrop-blur-xl md:border md:border-white/20 md:rounded-[28px] md:shadow-lg max-md:h-screen max-md:w-screen max-md:-ml-4 max-md:-mr-4 max-md:-mt-4 max-md:bg-transparent text-slate-900 relative">
-            
-            {/* Header top bar with Clear Chat option */}
-            <div className="flex items-center justify-between pr-6 border-b border-gray-100/50 bg-white/30 backdrop-blur-md">
-                <div className="flex-1">
-                    <HeaderTopBar />
-                </div>
-                {messages.length > 0 && (
-                    <motion.button
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={handleClearChat}
-                        className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/60 hover:bg-red-50 border border-white/50 text-slate-500 hover:text-red-600 text-xs font-semibold shadow-sm transition-all cursor-pointer"
-                        title="Clear Conversation"
-                    >
-                        <Trash2 className="w-3.5 h-3.5" />
-                        Clear Chat
-                    </motion.button>
-                )}
-            </div>
-
-            {/* Orb Background */}
-            <div className="absolute inset-0 w-full h-full -z-10 bg-gradient-to-br from-[#F3ebff] via-[#fff1e7] to-[#e6f4ff] md:rounded-[28px] overflow-hidden">
-                <div className="w-full h-full opacity-60">
-                    <Orb hoverIntensity={2} rotateOnHover={true} hue={0} forceHoverState={false} backgroundColor="#F3ebff" />
-                </div>
-            </div>
-
-            {/* Chat Content Viewport */}
-            <div className="flex-1 overflow-y-auto pt-6 px-8 pb-12 flex flex-col relative">
-                <div className="flex flex-col h-[calc(100vh-10rem)] text-black w-full relative">
-                    <div className="flex w-full flex-col z-10 h-full pb-4">
-                        <div className="flex flex-col items-center justify-center flex-1 h-full w-full max-w-4xl mx-auto overflow-hidden">
-                            
-                            {messages.length === 0 ? (
-                                <div className="flex flex-col items-center justify-center space-y-4 my-auto">
-                                    <h2 className="text-4xl font-bold font-['Gabarito'] text-[#3C0078]">Hi {firstName || "there"},</h2>
-                                    <h2 className="text-5xl font-bold font-['Gabarito'] text-slate-800 mb-8">Where should we start?</h2>
-                                </div>
-                            ) : (
-                                <div ref={scrollRef} className="flex-1 w-full overflow-y-auto scrollbar-black px-4 pt-10 pb-4 space-y-6">
-                                    {messages.map((msg, idx) => {
-                                        if (msg.role === "error") {
-                                            return (
-                                                <motion.div
-                                                    key={idx}
-                                                    initial={{ opacity: 0, y: 10 }}
-                                                    animate={{ opacity: 1, y: 0 }}
-                                                    className="flex gap-4 p-5 rounded-3xl w-full bg-amber-50 border border-amber-200/70 shadow-sm max-w-3xl mx-auto"
-                                                >
-                                                    <div className="w-9 h-9 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
-                                                        <AlertCircle className="w-5 h-5 text-amber-700" />
-                                                    </div>
-                                                    <div className="flex flex-col space-y-2">
-                                                        <h4 className="font-semibold text-amber-900 text-sm">System Configuration Alert</h4>
-                                                        <p className="text-xs text-amber-800 leading-relaxed font-medium">{msg.content}</p>
-                                                        <div className="pt-2 text-[11px] text-amber-700 font-semibold space-y-1">
-                                                            <p>💡 To fix this, you can:</p>
-                                                            <ul className="list-disc pl-4 space-y-0.5">
-                                                                <li>Add your API Key in <code className="bg-amber-100/50 px-1 rounded font-mono text-[10px]">Backend/LearnOnline/appsettings.Development.json</code> under <code className="bg-amber-100/50 px-1 rounded font-mono text-[10px]">"Groq": &#123; "ApiKey": "your-key" &#125;</code></li>
-                                                                <li>Or create a <code className="bg-amber-100/50 px-1 rounded font-mono text-[10px]">Frontend/.env</code> file and set <code className="bg-amber-100/50 px-1 rounded font-mono text-[10px]">VITE_GROQ_API_KEY=your-key</code></li>
-                                                            </ul>
-                                                        </div>
-                                                    </div>
-                                                </motion.div>
-                                            );
-                                        }
-
-                                        return (
-                                            <motion.div 
-                                                key={idx}
-                                                initial={{ opacity: 0, y: 10 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                className={`flex gap-4 p-5 rounded-3xl w-fit max-w-[90%] relative group ${
-                                                    msg.role === "user" 
-                                                    ? "bg-white/80 backdrop-blur-xl border border-white shadow-sm ml-auto rounded-tr-sm" 
-                                                    : "bg-[#3C0078]/5 border border-[#3C0078]/10 mr-auto rounded-tl-sm"
-                                                }`}
-                                            >
-                                                {msg.role === "assistant" && (
-                                                    <div className="w-9 h-9 rounded-full bg-[#3C0078]/10 flex items-center justify-center shrink-0">
-                                                        <Bot className="w-5 h-5 text-[#3C0078]" />
-                                                    </div>
-                                                )}
-                                                
-                                                <div className="flex flex-col pt-1 pr-6 flex-1 min-w-0">
-                                                    {msg.role === "assistant" ? (
-                                                        renderMessageContent(msg.content)
-                                                    ) : (
-                                                        <p className="text-slate-800 font-semibold leading-relaxed whitespace-pre-wrap">{msg.content}</p>
-                                                    )}
-                                                </div>
-
-                                                {/* Copy Button for Assistant responses */}
-                                                {msg.role === "assistant" && (
-                                                    <button
-                                                        onClick={() => handleCopy(msg.content, idx)}
-                                                        className="absolute top-4 right-4 p-1.5 rounded-lg bg-white/80 hover:bg-[#3C0078]/10 border border-gray-200/50 hover:border-[#3C0078]/20 text-gray-400 hover:text-[#3C0078] opacity-0 group-hover:opacity-100 transition-all duration-200"
-                                                        title="Copy text to clipboard"
-                                                    >
-                                                        {copiedIndex === idx ? (
-                                                            <Check className="w-3.5 h-3.5 text-green-600" />
-                                                        ) : (
-                                                            <Copy className="w-3.5 h-3.5" />
-                                                        )}
-                                                    </button>
-                                                )}
-                                            </motion.div>
-                                        );
-                                    })}
-
-                                    {isTyping && (
-                                        <motion.div 
-                                            initial={{ opacity: 0, y: 10 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            className="flex gap-4 p-5 rounded-3xl w-fit bg-[#3C0078]/5 border border-[#3C0078]/10 mr-auto rounded-tl-sm"
-                                        >
-                                            <div className="w-9 h-9 rounded-full bg-[#3C0078]/10 flex items-center justify-center shrink-0">
-                                                <Bot className="w-5 h-5 text-[#3C0078]" />
-                                            </div>
-                                            <div className="flex items-center gap-1.5 px-3">
-                                                <motion.div className="w-2.5 h-2.5 rounded-full bg-[#3C0078]/70" animate={{ y: [0, -6, 0] }} transition={{ repeat: Infinity, duration: 1, delay: 0 }} />
-                                                <motion.div className="w-2.5 h-2.5 rounded-full bg-[#3C0078]/70" animate={{ y: [0, -6, 0] }} transition={{ repeat: Infinity, duration: 1, delay: 0.2 }} />
-                                                <motion.div className="w-2.5 h-2.5 rounded-full bg-[#3C0078]/70" animate={{ y: [0, -6, 0] }} transition={{ repeat: Infinity, duration: 1, delay: 0.4 }} />
-                                            </div>
-                                        </motion.div>
-                                    )}
-                                </div>
-                            )}
-                            
-                        </div>
-
-                        {/* Input attached to the bottom */}
-                        <div className="w-full flex justify-center mt-auto">
-                            <AssistantInput 
-                              onSend={handleSend} 
-                              hideChips={messages.length > 0} 
-                            />
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
+function loadChats(uid) {
+  try { return JSON.parse(localStorage.getItem(chatsKey(uid)) || "[]"); }
+  catch { return []; }
 }
 
+function saveChats(uid, chats) {
+  try { localStorage.setItem(chatsKey(uid), JSON.stringify(chats)); }
+  catch {}
+}
+
+function genId() {
+  return Math.random().toString(36).slice(2, 9) + Date.now().toString(36);
+}
+
+function relativeTime(iso) {
+  const diff = Date.now() - new Date(iso).getTime();
+  const m = Math.floor(diff / 60000);
+  if (m < 1) return "just now";
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  const d = Math.floor(h / 24);
+  if (d === 1) return "Yesterday";
+  return `${d}d ago`;
+}
+
+// ─── Role configuration ───────────────────────────────────────────────────────
+
+const ROLE_CONFIG = {
+  student: {
+    label: "Student",
+    Icon: GraduationCap,
+    badge: "bg-blue-50 text-blue-700 border border-blue-100",
+    subtitle: "What are we studying today?",
+    chips: [
+      { label: "Explain a concept",   message: "Can you explain a key concept from one of my current courses?" },
+      { label: "Help with assignment", message: "I need help understanding the requirements for one of my assignments." },
+      { label: "My current grades",   message: "Can you summarise my current grades and how I am doing overall?" },
+      { label: "Build a study plan",  message: "Help me build a study plan for the rest of this semester." },
+    ],
+  },
+  teacher: {
+    label: "Teacher",
+    Icon: BookOpen,
+    badge: "bg-purple-50 text-[#3C0078] border border-purple-100",
+    subtitle: "Where should we start?",
+    chips: [
+      { label: "Analyse class performance", message: "Analyse my class performance and highlight any areas of concern." },
+      { label: "Plan next week",            message: "Help me plan next week's lessons and activities for my courses." },
+      { label: "Draft student feedback",    message: "Draft constructive and encouraging feedback for a student who needs support." },
+      { label: "Generate timetable",        message: "Generate a structured weekly timetable for my course." },
+    ],
+  },
+  admin: {
+    label: "Administrator",
+    Icon: ShieldCheck,
+    badge: "bg-amber-50 text-amber-700 border border-amber-100",
+    subtitle: "What can I help you with?",
+    chips: [
+      { label: "Platform overview",    message: "Give me an overview of the platform's current performance and activity." },
+      { label: "At-risk students",     message: "Help me identify students who may be at risk based on grades and attendance." },
+      { label: "Performance trends",   message: "Analyse academic performance trends across all courses and cohorts." },
+      { label: "Generate a report",    message: "Create a comprehensive progress report for all active courses." },
+    ],
+  },
+};
+
+// ─── Markdown renderer ────────────────────────────────────────────────────────
+
+function renderMessageContent(content) {
+  if (!content) return null;
+
+  const lines = content.split("\n");
+  const elements = [];
+  let currentList = [];
+  let currentListType = null;
+  let inCodeBlock = false;
+  let codeBlockContent = [];
+
+  const flushList = (key) => {
+    if (currentList.length === 0) return;
+    const Tag = currentListType === "ul" ? "ul" : "ol";
+    elements.push(
+      <Tag
+        key={`list-${key}`}
+        className={`${currentListType === "ul" ? "list-disc" : "list-decimal"} pl-5 my-2 space-y-1 text-slate-700`}
+      >
+        {currentList.map((item, i) => (
+          <li key={i} className="leading-relaxed text-sm">{parseInline(item)}</li>
+        ))}
+      </Tag>
+    );
+    currentList = [];
+    currentListType = null;
+  };
+
+  const parseInline = (text) => {
+    const parts = text.split(/\*\*([^*]+)\*\*/g);
+    return parts.map((part, i) => {
+      if (i % 2 === 1)
+        return <strong key={i} className="font-semibold text-gray-900">{part}</strong>;
+      const sub = part.split(/\*([^*]+)\*/g);
+      return sub.map((s, j) => {
+        if (j % 2 === 1) return <em key={j} className="italic text-slate-600">{s}</em>;
+        const code = s.split(/`([^`]+)`/g);
+        return code.map((c, k) =>
+          k % 2 === 1 ? (
+            <code key={k} className="px-1.5 py-0.5 rounded-md bg-purple-50 text-[#3C0078] text-[0.8em] font-mono border border-purple-100">
+              {c}
+            </code>
+          ) : c
+        );
+      });
+    });
+  };
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    if (line.trim().startsWith("```")) {
+      if (inCodeBlock) {
+        inCodeBlock = false;
+        elements.push(
+          <pre key={`code-${i}`} className="p-4 rounded-xl bg-gray-900 text-gray-100 text-xs font-mono my-3 overflow-x-auto border border-gray-800 select-all">
+            <code>{codeBlockContent.join("\n")}</code>
+          </pre>
+        );
+        codeBlockContent = [];
+      } else {
+        flushList(i);
+        inCodeBlock = true;
+      }
+      continue;
+    }
+    if (inCodeBlock) { codeBlockContent.push(line); continue; }
+
+    if (line.startsWith("### ")) {
+      flushList(i);
+      elements.push(<h4 key={`h4-${i}`} className="text-sm font-semibold text-gray-900 mt-4 mb-1.5">{parseInline(line.slice(4))}</h4>);
+      continue;
+    }
+    if (line.startsWith("## ")) {
+      flushList(i);
+      elements.push(<h3 key={`h3-${i}`} className="text-base font-semibold text-gray-900 mt-4 mb-2">{parseInline(line.slice(3))}</h3>);
+      continue;
+    }
+    if (line.startsWith("# ")) {
+      flushList(i);
+      elements.push(<h2 key={`h2-${i}`} className="text-lg font-bold text-gray-900 mt-5 mb-2">{parseInline(line.slice(2))}</h2>);
+      continue;
+    }
+
+    if (line.trim().startsWith("- ") || line.trim().startsWith("* ")) {
+      if (currentListType && currentListType !== "ul") flushList(i);
+      currentListType = "ul";
+      currentList.push(line.trim().slice(2));
+      continue;
+    }
+    const olMatch = line.trim().match(/^(\d+)\.\s(.*)/);
+    if (olMatch) {
+      if (currentListType && currentListType !== "ol") flushList(i);
+      currentListType = "ol";
+      currentList.push(olMatch[2]);
+      continue;
+    }
+    if (line.trim() === "") { flushList(i); continue; }
+
+    flushList(i);
+    elements.push(
+      <p key={`p-${i}`} className="leading-relaxed text-sm text-slate-700 my-1">{parseInline(line)}</p>
+    );
+  }
+  flushList(lines.length);
+  return <div className="space-y-0.5">{elements}</div>;
+}
+
+// ─── Component ────────────────────────────────────────────────────────────────
+
+export default function TeacherAssistant() {
+  const { user } = useAuth();
+  const userId   = user?.userId;
+  const role     = (user?.role || "teacher").toLowerCase();
+  const firstName = user?.firstName || user?.name?.split(" ")?.[0] || "";
+  const config   = ROLE_CONFIG[role] || ROLE_CONFIG.teacher;
+  const { Icon: RoleIcon, label: roleLabel, badge: badgeClass, subtitle, chips } = config;
+
+  // Chat history persisted in localStorage
+  const [chats, setChats]             = useState(() => loadChats(userId));
+  const [activeChatId, setActiveChatId] = useState(() => loadChats(userId)[0]?.id ?? null);
+
+  const [isTyping, setIsTyping]       = useState(false);
+  const [copiedIndex, setCopiedIndex] = useState(null);
+  const [sidebarOpen, setSidebarOpen] = useState(() => typeof window !== "undefined" && window.innerWidth >= 768);
+
+  const scrollRef = useRef(null);
+
+  // Derived: messages of the currently selected conversation
+  const activeMessages = useMemo(
+    () => chats.find((c) => c.id === activeChatId)?.messages ?? [],
+    [chats, activeChatId]
+  );
+
+  // Auto-scroll on new messages
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [activeMessages, isTyping]);
+
+  // Persist whenever chats change
+  useEffect(() => {
+    saveChats(userId, chats);
+  }, [chats, userId]);
+
+  // ── Actions ───────────────────────────────────────────────────────────────
+
+  const handleNewChat = useCallback(() => {
+    const id = genId();
+    const chat = {
+      id,
+      title: "New conversation",
+      messages: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    setChats((prev) => [chat, ...prev]);
+    setActiveChatId(id);
+  }, []);
+
+  const handleSelectChat = useCallback((id) => {
+    setActiveChatId(id);
+  }, []);
+
+  const handleDeleteChat = useCallback(
+    (e, id) => {
+      e.stopPropagation();
+      const remaining = chats.filter((c) => c.id !== id);
+      setChats(remaining);
+      if (activeChatId === id) {
+        setActiveChatId(remaining[0]?.id ?? null);
+      }
+    },
+    [chats, activeChatId]
+  );
+
+  const handleClearActive = useCallback(() => {
+    if (!activeChatId) return;
+    setChats((prev) =>
+      prev.map((c) =>
+        c.id === activeChatId
+          ? { ...c, messages: [], title: "New conversation", updatedAt: new Date().toISOString() }
+          : c
+      )
+    );
+  }, [activeChatId]);
+
+  const handleSend = useCallback(
+    async (text) => {
+      if (!text?.trim()) return;
+
+      // Resolve or create an active chat
+      let chatId = activeChatId;
+      let currentChats = chats;
+
+      if (!chatId || !currentChats.find((c) => c.id === chatId)) {
+        chatId = genId();
+        const newChat = {
+          id: chatId,
+          title: text.slice(0, 50),
+          messages: [],
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        currentChats = [newChat, ...chats];
+        setChats(currentChats);
+        setActiveChatId(chatId);
+      }
+
+      const chat     = currentChats.find((c) => c.id === chatId);
+      const prevMsgs = chat?.messages ?? [];
+      const title    = prevMsgs.length === 0 ? text.slice(0, 50) : (chat?.title ?? "Conversation");
+      const withUser = [...prevMsgs, { role: "user", content: text }];
+
+      // Helper: patch the target chat with new messages
+      const patch = (msgs) => (prev) =>
+        prev.map((c) =>
+          c.id === chatId
+            ? { ...c, title, messages: msgs, updatedAt: new Date().toISOString() }
+            : c
+        );
+
+      setChats(patch(withUser));
+      setIsTyping(true);
+
+      try {
+        const res = await getAssistantResponse(withUser, user?.userId, user?.role);
+        setChats(patch([...withUser, { role: "assistant", content: res.content }]));
+      } catch (err) {
+        setChats(
+          patch([...withUser, { role: "error", content: err.message || "An unexpected error occurred." }])
+        );
+      } finally {
+        setIsTyping(false);
+      }
+    },
+    [activeChatId, chats, user]
+  );
+
+  const handleCopy = useCallback((text, idx) => {
+    navigator.clipboard.writeText(text);
+    setCopiedIndex(idx);
+    setTimeout(() => setCopiedIndex(null), 2000);
+  }, []);
+
+  // ── Render ────────────────────────────────────────────────────────────────
+
+  return (
+    <div className="flex flex-col overflow-hidden transition-all duration-300 md:h-[calc(100vh-32px)] md:w-full md:bg-white/55 md:backdrop-blur-xl md:border md:border-white/20 md:rounded-[28px] md:shadow-lg max-md:h-screen max-md:w-screen max-md:-ml-4 max-md:-mr-4 max-md:-mt-4 max-md:bg-transparent text-slate-900">
+
+      {/* ── Top header bar ─────────────────────────────────────────────────── */}
+      <div className="flex items-center justify-between pr-4 border-b border-gray-100/60 bg-white/30 backdrop-blur-md shrink-0">
+        <div className="flex items-center gap-1 flex-1">
+          <button
+            onClick={() => setSidebarOpen((o) => !o)}
+            className="p-2 ml-2 rounded-lg hover:bg-gray-100/70 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+            aria-label="Toggle conversation history"
+          >
+            <PanelLeft className="w-4 h-4" />
+          </button>
+          <div className="flex-1">
+            <HeaderTopBar />
+          </div>
+        </div>
+
+        <AnimatePresence>
+          {activeMessages.length > 0 && (
+            <motion.button
+              initial={{ opacity: 0, scale: 0.85 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.85 }}
+              onClick={handleClearActive}
+              className="flex items-center gap-1.5 px-3 py-1.5 mr-1 rounded-full bg-white/50 hover:bg-red-50 border border-gray-200/50 text-gray-400 hover:text-red-500 text-xs font-medium transition-all cursor-pointer"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              Clear chat
+            </motion.button>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* ── Body (sidebar + main) ──────────────────────────────────────────── */}
+      <div className="flex flex-1 overflow-hidden">
+
+        {/* ── Sidebar ──────────────────────────────────────────────────────── */}
+        <AnimatePresence initial={false}>
+          {sidebarOpen && (
+            <motion.aside
+              key="sidebar"
+              initial={{ width: 0, opacity: 0 }}
+              animate={{ width: 248, opacity: 1 }}
+              exit={{ width: 0, opacity: 0 }}
+              transition={{ duration: 0.22, ease: "easeInOut" }}
+              className="shrink-0 bg-white border-r border-gray-100 flex flex-col overflow-hidden z-10"
+            >
+              {/* New conversation */}
+              <div className="p-3 pb-2">
+                <button
+                  onClick={handleNewChat}
+                  className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-[#3C0078]/5 hover:bg-[#3C0078]/10 border border-[#3C0078]/10 text-[#3C0078] text-sm font-semibold transition-colors cursor-pointer"
+                >
+                  <Plus className="w-4 h-4 shrink-0" />
+                  New conversation
+                </button>
+              </div>
+
+              {/* Chat list */}
+              <div className="flex-1 overflow-y-auto px-2 pb-2 space-y-px">
+                {chats.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-36 gap-2 text-gray-300 select-none">
+                    <MessageSquare className="w-7 h-7" />
+                    <p className="text-xs font-medium">No conversations yet</p>
+                  </div>
+                ) : (
+                  chats.map((chat) => (
+                    <motion.button
+                      key={chat.id}
+                      layout
+                      onClick={() => handleSelectChat(chat.id)}
+                      className={`group w-full text-left px-3 py-2.5 rounded-xl flex items-start gap-2.5 transition-all cursor-pointer ${
+                        chat.id === activeChatId
+                          ? "bg-[#3C0078]/8 text-gray-900"
+                          : "hover:bg-gray-50 text-gray-500"
+                      }`}
+                    >
+                      <MessageSquare
+                        className={`w-4 h-4 shrink-0 mt-0.5 transition-colors ${
+                          chat.id === activeChatId ? "text-[#3C0078]" : "text-gray-300 group-hover:text-gray-400"
+                        }`}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium truncate leading-snug text-gray-800">
+                          {chat.title}
+                        </p>
+                        <p className="text-[10px] text-gray-400 mt-0.5 leading-none">
+                          {relativeTime(chat.updatedAt)}
+                        </p>
+                      </div>
+                      <button
+                        onClick={(e) => handleDeleteChat(e, chat.id)}
+                        className="opacity-0 group-hover:opacity-100 p-1 rounded-md hover:bg-red-50 hover:text-red-500 text-gray-300 transition-all shrink-0 cursor-pointer"
+                        aria-label="Delete conversation"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    </motion.button>
+                  ))
+                )}
+              </div>
+
+              {/* Role badge footer */}
+              <div className="p-3 border-t border-gray-100 shrink-0">
+                <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${badgeClass}`}>
+                  <RoleIcon className="w-3 h-3" />
+                  {roleLabel}
+                </div>
+              </div>
+            </motion.aside>
+          )}
+        </AnimatePresence>
+
+        {/* ── Main chat area ────────────────────────────────────────────────── */}
+        <div className="flex-1 flex flex-col relative min-w-0 overflow-hidden">
+
+          {/* Gradient + Orb background */}
+          <div className="absolute inset-0 bg-gradient-to-br from-[#F3ebff] via-[#fff1e7] to-[#e6f4ff] overflow-hidden">
+            <div className="w-full h-full opacity-50">
+              <Orb hoverIntensity={2} rotateOnHover={true} hue={0} forceHoverState={false} backgroundColor="#F3ebff" />
+            </div>
+          </div>
+
+          {/* Chat content layer */}
+          <div className="relative z-10 flex-1 flex flex-col overflow-hidden">
+
+            {activeMessages.length === 0 ? (
+              /* ── Welcome / empty state ─────────────────────────────────── */
+              <div className="flex-1 flex flex-col items-center justify-center px-6 pb-4">
+                <motion.div
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.35 }}
+                  className="flex flex-col items-center text-center max-w-lg w-full"
+                >
+                  <h2 className="text-4xl font-bold font-['Gabarito'] text-[#3C0078] mb-1">
+                    Hi {firstName || "there"},
+                  </h2>
+                  <h3 className="text-3xl font-bold font-['Gabarito'] text-slate-700 mb-10">
+                    {subtitle}
+                  </h3>
+
+                  <div className="grid grid-cols-2 gap-2.5 w-full">
+                    {chips.map((chip, i) => (
+                      <motion.button
+                        key={i}
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.1 + i * 0.055, duration: 0.25 }}
+                        onClick={() => handleSend(chip.message)}
+                        className="px-4 py-3 rounded-xl bg-white/70 hover:bg-white/95 border border-white/60 shadow-sm backdrop-blur-sm text-sm font-medium text-slate-700 hover:text-slate-900 text-left transition-all cursor-pointer leading-snug"
+                      >
+                        {chip.label}
+                      </motion.button>
+                    ))}
+                  </div>
+                </motion.div>
+              </div>
+            ) : (
+              /* ── Message thread ────────────────────────────────────────── */
+              <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 pt-6 pb-2">
+                <div className="max-w-3xl mx-auto space-y-5 pb-2">
+                  {activeMessages.map((msg, idx) => {
+
+                    if (msg.role === "error") {
+                      return (
+                        <motion.div
+                          key={idx}
+                          initial={{ opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="flex gap-3 p-4 rounded-2xl bg-amber-50 border border-amber-200/60 max-w-2xl"
+                        >
+                          <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                          <div>
+                            <p className="text-sm font-semibold text-amber-900 mb-0.5">Assistant unavailable</p>
+                            <p className="text-xs text-amber-700 leading-relaxed">{msg.content}</p>
+                          </div>
+                        </motion.div>
+                      );
+                    }
+
+                    const isUser = msg.role === "user";
+
+                    return (
+                      <motion.div
+                        key={idx}
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className={`flex items-end gap-2.5 group ${isUser ? "flex-row-reverse" : "flex-row"}`}
+                      >
+                        {/* Avatar */}
+                        <div
+                          className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 mb-1 text-xs font-bold ${
+                            isUser
+                              ? "bg-gray-200 text-gray-600"
+                              : "bg-[#3C0078]/10 text-[#3C0078]"
+                          }`}
+                        >
+                          {isUser
+                            ? (firstName?.[0]?.toUpperCase() || "U")
+                            : <Bot className="w-3.5 h-3.5" />}
+                        </div>
+
+                        {/* Bubble */}
+                        <div className={`relative max-w-[78%] ${isUser ? "" : ""}`}>
+                          <div
+                            className={`px-4 py-3 rounded-2xl ${
+                              isUser
+                                ? "bg-white/85 backdrop-blur-sm border border-white/70 shadow-sm rounded-br-sm"
+                                : "bg-white/60 backdrop-blur-sm border border-white/50 shadow-sm rounded-bl-sm"
+                            }`}
+                          >
+                            {isUser ? (
+                              <p className="text-sm font-medium text-slate-800 leading-relaxed whitespace-pre-wrap">
+                                {msg.content}
+                              </p>
+                            ) : (
+                              renderMessageContent(msg.content)
+                            )}
+                          </div>
+
+                          {/* Copy button */}
+                          {!isUser && (
+                            <button
+                              onClick={() => handleCopy(msg.content, idx)}
+                              className="absolute -bottom-2.5 left-2 p-1.5 rounded-lg bg-white border border-gray-100 shadow-sm text-gray-400 hover:text-[#3C0078] opacity-0 group-hover:opacity-100 transition-all cursor-pointer"
+                              aria-label="Copy response"
+                            >
+                              {copiedIndex === idx
+                                ? <Check className="w-3 h-3 text-green-600" />
+                                : <Copy className="w-3 h-3" />}
+                            </button>
+                          )}
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+
+                  {/* Typing indicator */}
+                  {isTyping && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="flex items-end gap-2.5"
+                    >
+                      <div className="w-7 h-7 rounded-full bg-[#3C0078]/10 flex items-center justify-center shrink-0 mb-1">
+                        <Bot className="w-3.5 h-3.5 text-[#3C0078]" />
+                      </div>
+                      <div className="px-4 py-3.5 rounded-2xl rounded-bl-sm bg-white/60 backdrop-blur-sm border border-white/50 shadow-sm">
+                        <div className="flex items-center gap-1.5">
+                          {[0, 0.15, 0.3].map((delay, i) => (
+                            <motion.div
+                              key={i}
+                              className="w-2 h-2 rounded-full bg-[#3C0078]/40"
+                              animate={{ y: [0, -5, 0] }}
+                              transition={{ repeat: Infinity, duration: 0.9, delay }}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* ── Input area ──────────────────────────────────────────────── */}
+            <div className="px-4 pb-4 pt-2 shrink-0">
+              <AssistantInput
+                onSend={handleSend}
+                disabled={isTyping}
+                role={role}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
