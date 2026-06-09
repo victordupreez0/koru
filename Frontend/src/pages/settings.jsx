@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+﻿import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Volume2,
@@ -17,10 +17,12 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 
 import AuthInput from "../components/UI/authInput";
+import TwoFactorSetupModal from "../components/UI/TwoFactorSetupModal";
 import { useTextToSpeech } from "../hooks/useTextToSpeech";
 import {
   changeUserPassword,
   updateUserProfile,
+  disable2FA,
 } from "../services/authService";
 import { useAuth } from "../contexts/AuthContext";
 
@@ -37,7 +39,6 @@ const defaultSettings = {
   emailNotifications: true,
   inAppNotifications: true,
   audioCues: false,
-  mfaEnabled: false,
 };
 
 function ToggleRow({ icon, title, description, checked, onChange }) {
@@ -75,9 +76,19 @@ function ToggleRow({ icon, title, description, checked, onChange }) {
 }
 
 export default function SettingsPage() {
-  const { user: session, login: updateSession, logout } = useAuth();
+  const { user: session, login: updateSession, logout, updateUser } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("profile");
+
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(
+    () => session?.twoFactorEnabled ?? false
+  );
+  const [showSetup2FA, setShowSetup2FA] = useState(false);
+  const [showDisable2FA, setShowDisable2FA] = useState(false);
+  const [disableCode, setDisableCode] = useState("");
+  const [disabling2FA, setDisabling2FA] = useState(false);
+  const [mfaError, setMfaError] = useState("");
+  const [mfaMessage, setMfaMessage] = useState("");
 
   const [settings, setSettings] = useState(() => {
     try {
@@ -506,24 +517,99 @@ export default function SettingsPage() {
                         <p className={`${pageClasses.muted} mb-5`}>
                           Secure your university account by adding an additional layer of verification code security.
                         </p>
-                        
+
                         <ToggleRow
                           icon={<ShieldCheck size={16} />}
                           title="Authenticator MFA"
-                          description="Use an authenticator application (Google Authenticator, Duo) to generate login codes."
-                          checked={settings.mfaEnabled}
+                          description="Use Google Authenticator or any TOTP app to generate login codes."
+                          checked={twoFactorEnabled}
                           onChange={(checked) => {
-                            updateSetting("mfaEnabled", checked);
+                            setMfaError("");
+                            setMfaMessage("");
                             if (checked) {
-                              setProfileMessage("Two-factor authentication setup initialized.");
+                              setShowSetup2FA(true);
                             } else {
-                              setProfileMessage("Two-factor authentication has been disabled.");
+                              setDisableCode("");
+                              setShowDisable2FA(true);
                             }
                           }}
                         />
-                        
-                        {profileMessage && <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs font-semibold text-emerald-700 shadow-3xs">{profileMessage}</div>}
+
+                        {/* Disable 2FA confirmation form */}
+                        {showDisable2FA && (
+                          <motion.div
+                            initial={{ opacity: 0, y: -8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="mt-4 rounded-2xl border border-gray-200 bg-gray-50 p-4 flex flex-col gap-3"
+                          >
+                            <p className="text-xs font-semibold text-gray-700">
+                              Enter your current authenticator code to disable 2FA.
+                            </p>
+                            <input
+                              type="text"
+                              inputMode="numeric"
+                              pattern="[0-9]*"
+                              maxLength={6}
+                              value={disableCode}
+                              onChange={(e) => { setDisableCode(e.target.value.replace(/\D/g, "").slice(0, 6)); setMfaError(""); }}
+                              placeholder="000000"
+                              className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-center font-mono tracking-widest text-gray-900 focus:border-[#3C0078]/40 focus:ring-4 focus:ring-[#3C0078]/10 outline-none transition-all text-lg"
+                            />
+                            <div className="flex gap-2">
+                              <button
+                                type="button"
+                                disabled={disableCode.length < 6 || disabling2FA}
+                                onClick={async () => {
+                                  setDisabling2FA(true);
+                                  setMfaError("");
+                                  try {
+                                    await disable2FA(session.userId, disableCode);
+                                    setTwoFactorEnabled(false);
+                                    updateUser({ twoFactorEnabled: false });
+                                    setMfaMessage("Two-factor authentication has been disabled.");
+                                    setShowDisable2FA(false);
+                                    setDisableCode("");
+                                  } catch (err) {
+                                    setMfaError(err.message || "Invalid code.");
+                                    setDisableCode("");
+                                  } finally {
+                                    setDisabling2FA(false);
+                                  }
+                                }}
+                                className="flex-1 rounded-xl bg-red-600 hover:bg-red-700 px-3 py-2 text-xs font-black text-white transition disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                {disabling2FA ? "Disabling…" : "Confirm Disable"}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => { setShowDisable2FA(false); setDisableCode(""); setMfaError(""); }}
+                                className="rounded-xl border border-gray-200 bg-white hover:bg-gray-100 px-3 py-2 text-xs font-bold text-gray-600 transition"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </motion.div>
+                        )}
+
+                        {mfaError && <div className="mt-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs font-semibold text-red-700 shadow-3xs">{mfaError}</div>}
+                        {mfaMessage && <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs font-semibold text-emerald-700 shadow-3xs">{mfaMessage}</div>}
                       </div>
+
+                      {/* 2FA Setup Modal */}
+                      <AnimatePresence>
+                        {showSetup2FA && session?.userId && (
+                          <TwoFactorSetupModal
+                            userId={session.userId}
+                            onSuccess={() => {
+                              setShowSetup2FA(false);
+                              setTwoFactorEnabled(true);
+                              updateUser({ twoFactorEnabled: true });
+                              setMfaMessage("Two-factor authentication has been enabled.");
+                            }}
+                            onClose={() => setShowSetup2FA(false)}
+                          />
+                        )}
+                      </AnimatePresence>
                     </>
                   )}
 

@@ -120,7 +120,15 @@ using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     var context = services.GetRequiredService<AppDbContext>();
-    RealDataSeeder.Seed(context); // swap to DbSeeder.Seed(context) for mock data
+    var logger  = services.GetRequiredService<ILogger<Program>>();
+    try
+    {
+        RealDataSeeder.Seed(context); // swap to DbSeeder.Seed(context) for mock data
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "RealDataSeeder threw an exception. Database may be in a partial state.");
+    }
 }
 // ---------------------------------------
 

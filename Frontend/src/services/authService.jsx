@@ -24,6 +24,10 @@ export async function loginUser({ email, password, expectedRole }) {
 
   const data = await handleResponse(res);
 
+  // When 2FA is required the response only has requiresTwoFactor + pendingUserId,
+  // so skip the role guard and let login.jsx handle the next step.
+  if (data.requiresTwoFactor) return data;
+
   // Role guard – the backend returns the user's actual role; reject
   // if it doesn't match the portal they used to sign in
   if (expectedRole && data.role?.toLowerCase() !== expectedRole.toLowerCase()) {
@@ -65,6 +69,42 @@ export async function loginWithGoogle(credential, role = "student") {
     body: JSON.stringify({ credential, role }),
   });
 
+  return handleResponse(res);
+}
+
+// GET /api/User/2fa/setup/:userId – generate a new TOTP secret and QR code URI
+export async function setup2FA(userId) {
+  const res = await fetch(`${API_BASE}/User/2fa/setup/${encodeURIComponent(userId)}`);
+  return handleResponse(res);
+}
+
+// POST /api/User/2fa/enable – verify code and activate 2FA for the user
+export async function enable2FA(userId, code) {
+  const res = await fetch(`${API_BASE}/User/2fa/enable`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userId, code }),
+  });
+  return handleResponse(res);
+}
+
+// POST /api/User/2fa/disable – verify code and deactivate 2FA for the user
+export async function disable2FA(userId, code) {
+  const res = await fetch(`${API_BASE}/User/2fa/disable`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userId, code }),
+  });
+  return handleResponse(res);
+}
+
+// POST /api/User/2fa/validate – exchange a valid TOTP code for a full session during login
+export async function validate2FA(userId, code) {
+  const res = await fetch(`${API_BASE}/User/2fa/validate`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userId, code }),
+  });
   return handleResponse(res);
 }
 
