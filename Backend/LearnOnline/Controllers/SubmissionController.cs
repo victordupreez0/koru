@@ -12,9 +12,12 @@ namespace LearnOnline.Controllers
     public class SubmissionController : ControllerBase
     {
         private readonly AppDbContext _context;
-        public SubmissionController(AppDbContext context)
+        private readonly IHttpClientFactory _httpClientFactory;
+
+        public SubmissionController(AppDbContext context, IHttpClientFactory httpClientFactory)
         {
             _context = context;
+            _httpClientFactory = httpClientFactory;
         }
 
         // GET /api/Submission – return all submissions with their Assignment and Student
@@ -130,6 +133,53 @@ namespace LearnOnline.Controllers
             _context.Submissions.Remove(submission);
             await _context.SaveChangesAsync();
             return NoContent();
+        }
+
+        // GET /api/Submission/{id}/file – proxy the submission file to the browser
+        // Handles both Cloudinary URLs and legacy local /uploads/ paths
+        [HttpGet("{id}/file")]
+        public async Task<IActionResult> GetFile(string id)
+        {
+            var submission = await _context.Submissions.FindAsync(id);
+            if (submission == null || string.IsNullOrEmpty(submission.FileUrl))
+                return NotFound();
+
+            // Skip quiz JSON answers
+            if (submission.FileUrl.TrimStart().StartsWith("{"))
+                return BadRequest(new { message = "This submission is a quiz response." });
+
+            if (submission.FileUrl.StartsWith("http://") || submission.FileUrl.StartsWith("https://"))
+            {
+                var client = _httpClientFactory.CreateClient();
+                var response = await client.GetAsync(submission.FileUrl);
+                if (!response.IsSuccessStatusCode)
+                    return StatusCode((int)response.StatusCode);
+
+                var bytes = await response.Content.ReadAsByteArrayAsync();
+                var contentType = response.Content.Headers.ContentType?.ToString() ?? "application/octet-stream";
+                var fileName = Path.GetFileName(new Uri(submission.FileUrl).LocalPath);
+
+                // Serve inline so the browser renders PDFs/images instead of downloading
+                Response.Headers.Append("Content-Disposition", $"inline; filename=\"{fileName}\"");
+                return File(bytes, contentType);
+            }
+            else
+            {
+                var localPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot",
+                    submission.FileUrl.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
+                if (!System.IO.File.Exists(localPath))
+                    return NotFound();
+
+                var contentType = "application/octet-stream";
+                var ext = Path.GetExtension(localPath).ToLowerInvariant();
+                if (ext == ".pdf") contentType = "application/pdf";
+                else if (ext is ".jpg" or ".jpeg") contentType = "image/jpeg";
+                else if (ext == ".png") contentType = "image/png";
+
+                var fileName = Path.GetFileName(localPath);
+                Response.Headers.Append("Content-Disposition", $"inline; filename=\"{fileName}\"");
+                return PhysicalFile(localPath, contentType);
+            }
         }
 
         // POST /api/Submission/upload – save a submitted file to wwwroot/uploads and return its URL

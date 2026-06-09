@@ -44,6 +44,7 @@ internal static class TestData
             Capacity = 30,
             SubjectId = subjectId,
             TeacherId = teacherId,
+            IsVisible = true,
             CreatedAt = DateTime.UtcNow
         };
     }
