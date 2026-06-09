@@ -115,6 +115,7 @@ export default function CalendarDayBlockEvent({
   isUserTask = false,
   onEdit,
   onDelete,
+  tooltipPosition = "up",
 }) {
   const hasTooltipDetails = lecturer || location || startTime;
 
@@ -125,15 +126,19 @@ export default function CalendarDayBlockEvent({
       {hasTooltipDetails && (
         <div
           className={[
-            // Position: above the pill, centred on it
-            "absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50",
+            // Position: above or below the pill, centred on it
+            tooltipPosition === "down"
+              ? "absolute top-full left-1/2 -translate-x-1/2 mt-2 z-50"
+              : "absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50",
             // Sizing & appearance
             "w-52 bg-purple-800 rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.12)] p-3",
             // Pointer events: don't interfere with mouse
             "pointer-events-none",
             // Fade + lift animation driven by group-hover
             "opacity-0 group-hover:opacity-100",
-            "translate-y-1.5 group-hover:translate-y-0",
+            tooltipPosition === "down"
+              ? "-translate-y-1.5 group-hover:translate-y-0"
+              : "translate-y-1.5 group-hover:translate-y-0",
             "transition-all duration-200 ease-out",
           ].join(" ")}
         >
@@ -173,8 +178,11 @@ export default function CalendarDayBlockEvent({
             )}
           </div>
 
-          {/* ── Caret (pointing down) ── */}
-          <div className="absolute left-1/2 -translate-x-1/2 -bottom-[5px] w-2.5 h-2.5 bg-purple-800 rotate-45 shadow-[1px_1px_0px_rgba(0,0,0,0.04)]" />
+          {/* ── Caret (pointing down or up) ── */}
+          <div className={[
+            "absolute left-1/2 -translate-x-1/2 w-2.5 h-2.5 bg-purple-800 rotate-45 shadow-[1px_1px_0px_rgba(0,0,0,0.04)]",
+            tooltipPosition === "down" ? "-top-[5px]" : "-bottom-[5px]"
+          ].join(" ")} />
         </div>
       )}
 

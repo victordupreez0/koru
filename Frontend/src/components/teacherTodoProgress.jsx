@@ -5,7 +5,10 @@ import { Plus, Mail, FileText } from "lucide-react";
 import confetti from "canvas-confetti";
 import ProgressRing from "./UI/progressRing";
 import { useAuth } from "../contexts/AuthContext";
+import { useCourses } from "../contexts/CoursesContext";
 import { getTeacherTodos, createTodo, toggleTodo as apiToggleTodo } from "../services/todoService";
+import { getCourseSubmissions } from "../services/submissionService";
+import { getCourseGrades } from "../services/gradeService";
 
 const MIN_LOADING_MS = 1500;
 
@@ -62,7 +65,9 @@ function SkeletonTodo() {
 
 export default function TeacherTodoProgress() {
   const { user } = useAuth();
+  const { visibleCourses } = useCourses();
   const [todos, setTodos] = useState([]);
+  const [gradingProgress, setGradingProgress] = useState(0);
   const [isAdding, setIsAdding] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newDue, setNewDue] = useState("");
@@ -74,11 +79,32 @@ export default function TeacherTodoProgress() {
     let mounted = true;
     async function load() {
       try {
-        const [data] = await Promise.all([
+        const courseIds = (visibleCourses || []).map(c => c.id);
+        const [data, ...courseResults] = await Promise.all([
           getTeacherTodos(user.userId),
+          ...courseIds.map(id =>
+            Promise.all([
+              getCourseSubmissions(id).catch(() => []),
+              getCourseGrades(id).catch(() => []),
+            ])
+          ),
           new Promise(resolve => setTimeout(resolve, MIN_LOADING_MS)),
         ]);
-        if (mounted) setTodos(data);
+
+        if (mounted) {
+          setTodos(data);
+
+          let totalSubs = 0;
+          let gradedSubs = 0;
+          courseResults.forEach(result => {
+            if (!Array.isArray(result)) return;
+            const [subs, grades] = result;
+            const gradedIds = new Set((Array.isArray(grades) ? grades : []).map(g => g.submissionId));
+            totalSubs += (Array.isArray(subs) ? subs : []).length;
+            gradedSubs += (Array.isArray(subs) ? subs : []).filter(s => gradedIds.has(s.id)).length;
+          });
+          setGradingProgress(totalSubs > 0 ? Math.round((gradedSubs / totalSubs) * 100) : 0);
+        }
       } catch (err) {
         console.error(err);
       } finally {
@@ -87,7 +113,7 @@ export default function TeacherTodoProgress() {
     }
     load();
     return () => { mounted = false; };
-  }, [user?.userId]);
+  }, [user?.userId, visibleCourses]);
 
   function fireConfetti() {
     const colors = ["#3C0078", "#FF8731", "#87CEFA"];
@@ -278,14 +304,26 @@ export default function TeacherTodoProgress() {
       </div>
 
       {/* Progress section anchored to bottom of equalised card via mt-auto */}
-      <h2 className="text-2xl font-['Gabarito'] mt-auto pt-4 mb-2">Progress</h2>
-      <div className="w-full bg-gray-50/60 rounded-2xl border border-gray-100 p-4">
+      <h2 className="text-2xl font-['Gabarito'] mt-auto pt-8 mb-4">Progress & Stats</h2>
+      <div className="grid grid-cols-2 gap-4">
         {loading ? (
-          <div className="flex justify-center">
-            <div className="w-28 h-28 rounded-full bg-gray-100 animate-pulse" />
-          </div>
+          <>{[0, 1].map(i => (
+            <div key={i} className="p-4 flex flex-col items-center gap-3">
+              <div className="w-20 h-2.5 bg-gray-100 rounded-full animate-pulse" />
+              <div className="w-28 h-28 rounded-full bg-gray-100 animate-pulse" />
+            </div>
+          ))}</>
         ) : (
-          <ProgressRing percentage={progress} />
+          <>
+            <div className="p-4 flex flex-col items-center">
+              <span className="text-[10px] font-black uppercase tracking-widest text-[#3C0078] opacity-60 mb-2">To-do</span>
+              <ProgressRing percentage={progress} size={110} strokeWidth={8} />
+            </div>
+            <div className="p-4 flex flex-col items-center">
+              <span className="text-[10px] font-black uppercase tracking-widest text-[#3C0078] opacity-60 mb-2">Graded</span>
+              <ProgressRing percentage={gradingProgress} size={110} strokeWidth={8} />
+            </div>
+          </>
         )}
       </div>
     </div>
