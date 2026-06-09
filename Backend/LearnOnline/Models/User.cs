@@ -45,5 +45,8 @@ namespace LearnOnline.Models
 
         // Soft-delete flag – inactive users cannot log in
         public bool IsActive { get; set; } = true;
+
+        public bool TwoFactorEnabled { get; set; } = false;
+        public string? TwoFactorSecret { get; set; }
     }
 }

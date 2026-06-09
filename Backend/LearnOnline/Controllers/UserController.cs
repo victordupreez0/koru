@@ -1,20 +1,17 @@
 using System.Net.Http.Json;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using OtpNet;
 using LearnOnline.Data;
 using LearnOnline.Models;
 using LearnOnline.Models.DTOs;
 
 namespace LearnOnline.Controllers
 {
-    // User API – handles registration, login, and CRUD for user accounts
-    // Passwords are hashed with BCrypt before storage
-    // Responses use UserResponseDto to avoid exposing the password hash
     [ApiController]
     [Route("api/[controller]")]
     public class UserController : ControllerBase
     {
-        // Injected services – database access, outbound HTTP for Google, and app configuration
         private readonly AppDbContext _context;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly IConfiguration _configuration;
@@ -26,7 +23,6 @@ namespace LearnOnline.Controllers
             _configuration = configuration;
         }
 
-        // Helper – convert a User entity to a safe response DTO (no password hash)
         private static UserResponseDto ToResponseDto(User user) => new()
         {
             Id = user.Id,
@@ -37,7 +33,8 @@ namespace LearnOnline.Controllers
             ProfileImageUrl = user.ProfileImageUrl,
             CreatedAt = user.CreatedAt,
             UpdatedAt = user.UpdatedAt,
-            IsActive = user.IsActive
+            IsActive = user.IsActive,
+            TwoFactorEnabled = user.TwoFactorEnabled
         };
 
         // GET /api/User – return all users (minus password hashes)
@@ -57,8 +54,7 @@ namespace LearnOnline.Controllers
             return Ok(ToResponseDto(user));
         }
 
-        // POST /api/User/register – create a new account
-        // Checks for duplicate emails and hashes the password with BCrypt
+        // POST /api/User/register – create a new account (admin only via UI)
         [HttpPost("register")]
         public async Task<ActionResult<UserResponseDto>> Register(CreateUserDto dto)
         {
@@ -86,11 +82,10 @@ namespace LearnOnline.Controllers
         }
 
         // POST /api/User/login – authenticate with email + password
-        // Returns the user's profile on success, or 401 on failure
+        // Returns requiresTwoFactor = true when the account has 2FA enabled
         [HttpPost("login")]
         public async Task<ActionResult> Login(LoginDto dto)
         {
-            // Normalize the email before looking for a matching active user
             var email = dto.Email.Trim().ToLowerInvariant();
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
             if (user == null || !user.IsActive)
@@ -100,6 +95,9 @@ namespace LearnOnline.Controllers
             if (!validPassword)
                 return Unauthorized(new { message = "Invalid email or password" });
 
+            if (user.TwoFactorEnabled)
+                return Ok(new { requiresTwoFactor = true, pendingUserId = user.Id });
+
             return Ok(new
             {
                 message = "Login successful",
@@ -108,7 +106,8 @@ namespace LearnOnline.Controllers
                 firstName = user.FirstName,
                 lastName = user.LastName,
                 role = user.Role.ToString(),
-                profileImageUrl = user.ProfileImageUrl
+                profileImageUrl = user.ProfileImageUrl,
+                twoFactorEnabled = user.TwoFactorEnabled
             });
         }
 
@@ -119,14 +118,14 @@ namespace LearnOnline.Controllers
             return Ok(new { clientId = _configuration["GoogleAuth:ClientId"] ?? string.Empty });
         }
 
-        // POST /api/User/google – authenticate with Google and create the account if needed
+        // POST /api/User/google – sign in with Google
+        // Only existing accounts (created by admin) can log in; no auto-registration
         [HttpPost("google")]
         public async Task<ActionResult> GoogleAuth(GoogleAuthDto dto)
         {
             if (string.IsNullOrWhiteSpace(dto.Credential))
                 return BadRequest(new { message = "Google credential is required" });
 
-            // Ask Google to validate the received ID token and return the user's profile details
             var client = _httpClientFactory.CreateClient();
             var url = $"https://oauth2.googleapis.com/tokeninfo?id_token={Uri.EscapeDataString(dto.Credential)}";
             var tokenInfo = await client.GetFromJsonAsync<GoogleTokenInfoDto>(url);
@@ -137,7 +136,6 @@ namespace LearnOnline.Controllers
             if (!string.Equals(tokenInfo.EmailVerified, "true", StringComparison.OrdinalIgnoreCase))
                 return Unauthorized(new { message = "Google email address is not verified" });
 
-            // If a client ID is configured, ensure the incoming token was issued for this app only
             var configuredClientId = _configuration["GoogleAuth:ClientId"];
             if (!string.IsNullOrWhiteSpace(configuredClientId) &&
                 !string.Equals(tokenInfo.Audience, configuredClientId, StringComparison.Ordinal))
@@ -145,40 +143,24 @@ namespace LearnOnline.Controllers
                 return Unauthorized(new { message = "Google client ID mismatch" });
             }
 
-            // Match the Google account to an existing user or create one for first-time access
             var email = tokenInfo.Email.Trim().ToLowerInvariant();
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
 
+            // Accounts are created by admin only – Google sign-in is for existing users
             if (user == null)
-            {
-                user = new User
-                {
-                    Id = Guid.NewGuid().ToString(),
-                    Email = email,
-                    PasswordHash = BCrypt.Net.BCrypt.HashPassword(Guid.NewGuid().ToString("N")),
-                    FirstName = string.IsNullOrWhiteSpace(tokenInfo.GivenName) ? "Google" : tokenInfo.GivenName,
-                    LastName = string.IsNullOrWhiteSpace(tokenInfo.FamilyName) ? "User" : tokenInfo.FamilyName,
-                    Role = dto.Role,
-                    ProfileImageUrl = tokenInfo.Picture,
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow,
-                    IsActive = true
-                };
+                return Unauthorized(new { message = "No account found for this Google address. Contact your administrator." });
 
-                _context.Users.Add(user);
-            }
-            else
-            {
-                if (!user.IsActive)
-                    return Unauthorized(new { message = "This account is inactive" });
+            if (!user.IsActive)
+                return Unauthorized(new { message = "This account is inactive" });
 
-                if (!string.IsNullOrWhiteSpace(tokenInfo.Picture))
-                    user.ProfileImageUrl = tokenInfo.Picture;
+            if (!string.IsNullOrWhiteSpace(tokenInfo.Picture))
+                user.ProfileImageUrl = tokenInfo.Picture;
 
-                user.UpdatedAt = DateTime.UtcNow;
-            }
-
+            user.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
+
+            if (user.TwoFactorEnabled)
+                return Ok(new { requiresTwoFactor = true, pendingUserId = user.Id });
 
             return Ok(new
             {
@@ -189,11 +171,106 @@ namespace LearnOnline.Controllers
                 lastName = user.LastName,
                 role = user.Role.ToString(),
                 profileImageUrl = user.ProfileImageUrl,
+                twoFactorEnabled = user.TwoFactorEnabled,
                 provider = "Google"
             });
         }
 
-        // PUT /api/User/profile/{id} – update the signed-in user's account details from settings
+        // GET /api/User/2fa/setup/{userId}
+        // Generates a fresh TOTP secret, persists it (not yet enabled), returns QR URI + manual key
+        [HttpGet("2fa/setup/{userId}")]
+        public async Task<ActionResult> Setup2FA(string userId)
+        {
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null) return NotFound(new { message = "User not found" });
+
+            var secretBytes = KeyGeneration.GenerateRandomKey(20);
+            var base32Secret = Base32Encoding.ToString(secretBytes);
+
+            user.TwoFactorSecret = base32Secret;
+            user.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+
+            var issuer = "Koru";
+            // Encode only the account name, keeping the colon separator literal —
+            // this is what the Key URI Format spec requires for password managers to
+            // correctly parse the issuer and account fields from the QR code.
+            var qrCodeUri = $"otpauth://totp/{issuer}:{Uri.EscapeDataString(user.Email)}?secret={base32Secret}&issuer={issuer}&algorithm=SHA1&digits=6&period=30";
+
+            return Ok(new { manualEntryKey = base32Secret, qrCodeUri });
+        }
+
+        // POST /api/User/2fa/enable
+        // Verifies a TOTP code against the stored secret and marks 2FA as active
+        [HttpPost("2fa/enable")]
+        public async Task<ActionResult> Enable2FA(TwoFactorCodeDto dto)
+        {
+            var user = await _context.Users.FindAsync(dto.UserId);
+            if (user == null || string.IsNullOrEmpty(user.TwoFactorSecret))
+                return BadRequest(new { message = "2FA setup not initiated. Please start the setup process first." });
+
+            var totp = new Totp(Base32Encoding.ToBytes(user.TwoFactorSecret));
+            bool valid = totp.VerifyTotp(dto.Code, out _, new VerificationWindow(previous: 1, future: 1));
+            if (!valid)
+                return BadRequest(new { message = "Invalid verification code. Please try again." });
+
+            user.TwoFactorEnabled = true;
+            user.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Two-factor authentication enabled.", twoFactorEnabled = true });
+        }
+
+        // POST /api/User/2fa/disable
+        // Verifies the current TOTP code then clears 2FA
+        [HttpPost("2fa/disable")]
+        public async Task<ActionResult> Disable2FA(TwoFactorCodeDto dto)
+        {
+            var user = await _context.Users.FindAsync(dto.UserId);
+            if (user == null || !user.TwoFactorEnabled || string.IsNullOrEmpty(user.TwoFactorSecret))
+                return BadRequest(new { message = "2FA is not currently enabled." });
+
+            var totp = new Totp(Base32Encoding.ToBytes(user.TwoFactorSecret));
+            bool valid = totp.VerifyTotp(dto.Code, out _, new VerificationWindow(previous: 1, future: 1));
+            if (!valid)
+                return BadRequest(new { message = "Invalid verification code. Please try again." });
+
+            user.TwoFactorEnabled = false;
+            user.TwoFactorSecret = null;
+            user.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Two-factor authentication disabled.", twoFactorEnabled = false });
+        }
+
+        // POST /api/User/2fa/validate
+        // Used during login when 2FA is required; returns the full user session on success
+        [HttpPost("2fa/validate")]
+        public async Task<ActionResult> Validate2FA(TwoFactorCodeDto dto)
+        {
+            var user = await _context.Users.FindAsync(dto.UserId);
+            if (user == null || !user.TwoFactorEnabled || string.IsNullOrEmpty(user.TwoFactorSecret))
+                return BadRequest(new { message = "2FA is not enabled for this account." });
+
+            var totp = new Totp(Base32Encoding.ToBytes(user.TwoFactorSecret));
+            bool valid = totp.VerifyTotp(dto.Code, out _, new VerificationWindow(previous: 1, future: 1));
+            if (!valid)
+                return Unauthorized(new { message = "Invalid verification code." });
+
+            return Ok(new
+            {
+                message = "Two-factor authentication successful",
+                userId = user.Id,
+                email = user.Email,
+                firstName = user.FirstName,
+                lastName = user.LastName,
+                role = user.Role.ToString(),
+                profileImageUrl = user.ProfileImageUrl,
+                twoFactorEnabled = user.TwoFactorEnabled
+            });
+        }
+
+        // PUT /api/User/profile/{id} – update account details from settings
         [HttpPut("profile/{id}")]
         public async Task<ActionResult<UserResponseDto>> UpdateProfile(string id, UpdateUserProfileDto updated)
         {
