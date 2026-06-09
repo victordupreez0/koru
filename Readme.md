@@ -180,7 +180,7 @@ The application was developed as a native desktop experience using Electron, all
 
 ## **Meet the Team** 
 <img width="977" height="475" alt="Screenshot 2026-06-09 160206" src="https://github.com/user-attachments/assets/f4110907-ecd7-4b92-ba05-407dfca4386f" />
-<img width="1000" height="342" alt="Screenshot 2026-06-09 210736" src="https://github.com/user-attachments/assets/1de65f97-c7eb-454a-8aea-2153c0f75d06" />
+
 
 ## **Team Setup** 
 
@@ -223,8 +223,8 @@ communicate changes, ideas and have team discussions throughout the project. Rol
 |canvas-confetti|1.9.4|Celebration animations|
 |Novel|1.0.2|Rich text / notes editor|
 
-![Uploading Screenshot 2026-06-09 210736.png…]()
 
+<img width="1000" height="342" alt="Screenshot 2026-06-09 210736" src="https://github.com/user-attachments/assets/1de65f97-c7eb-454a-8aea-2153c0f75d06" />
 
 
 
