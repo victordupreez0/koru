@@ -406,7 +406,14 @@ function SubmissionFileViewer({ submission }) {
     );
 }
 
-function TeacherSubmissionReview({ assignment, onBack }) {
+function TeacherSubmissionReview({
+    assignment,
+    onBack,
+    cohorts = [],
+    studentCohortMap = {},
+    selectedCohortId: initialCohortId = null,
+    onCohortChange
+}) {
     const { user } = useAuth();
     const [submissions, setSubmissions] = React.useState([]);
     const [grades, setGrades] = React.useState({});
@@ -502,6 +509,12 @@ function TeacherSubmissionReview({ assignment, onBack }) {
 
     const maxPts = assignment.points ?? null;
 
+    // Filter submissions by selected cohort
+    const visibleSubmissions = React.useMemo(() => {
+        if (!selectedCohortId) return submissions;
+        return submissions.filter(s => s.student && studentCohortMap[s.student.id] === selectedCohortId);
+    }, [submissions, selectedCohortId, studentCohortMap]);
+
     const isQuizAnswer = (sub) => {
         try {
             if (!sub.fileUrl) return false;
@@ -526,16 +539,21 @@ function TeacherSubmissionReview({ assignment, onBack }) {
                         <h1 className="text-2xl font-bold text-gray-900 tracking-tight">{assignment.title}</h1>
                         {!loading && (
                             <p className="text-gray-400 text-sm mt-1">
-                                {submissions.length} submission{submissions.length !== 1 ? "s" : ""}
+                                {visibleSubmissions.length} submission{visibleSubmissions.length !== 1 ? "s" : ""}
                                 {maxPts != null && <><span className="ml-3 text-gray-300">|</span><span className="ml-3">Max: <strong>{maxPts} pts</strong></span></>}
                             </p>
                         )}
+                        <div className="mt-3">
+                            <CohortFilterBar cohorts={cohorts} selected={selectedCohortId} onChange={handleCohortChange} />
+                        </div>
                     </div>
-                    {!loading && submissions.length > 0 && (
+                    {!loading && visibleSubmissions.length > 0 && (
                         <div className="flex items-center gap-3">
                             <div className="px-4 py-2 bg-green-50 rounded-2xl text-center">
                                 <p className="text-[9px] font-black uppercase tracking-widest text-green-600">Graded</p>
-                                <p className="text-lg font-black italic text-green-700">{Object.keys(grades).length}/{submissions.length}</p>
+                                <p className="text-lg font-black italic text-green-700">
+                                    {visibleSubmissions.filter(s => grades[s.id]).length}/{visibleSubmissions.length}
+                                </p>
                             </div>
                             {Object.keys(grades).length > 0 && (
                                 Object.values(grades).every(g => g.isReleased) ? (
@@ -560,10 +578,10 @@ function TeacherSubmissionReview({ assignment, onBack }) {
 
             {loading ? (
                 <div className="flex items-center justify-center flex-1 text-gray-400 font-medium">Loading submissions...</div>
-            ) : submissions.length === 0 ? (
+            ) : visibleSubmissions.length === 0 ? (
                 <div className="flex-1 flex items-center justify-center px-8 pb-8">
                     <div className="text-center py-20 w-full bg-gray-50 rounded-[40px] border border-gray-100 text-gray-400 font-medium">
-                        No submissions yet for this assignment.
+                        No submissions found for this cohort.
                     </div>
                 </div>
             ) : (
@@ -571,7 +589,7 @@ function TeacherSubmissionReview({ assignment, onBack }) {
                     {/* Left — Student list */}
                     <div className="w-[340px] shrink-0 overflow-y-auto border-r border-gray-100 bg-gray-50/30">
                         <div className="p-4 space-y-1">
-                            {submissions.map(sub => {
+                            {visibleSubmissions.map(sub => {
                                 const studentName = sub.student ? `${sub.student.firstName} ${sub.student.lastName}` : sub.studentId;
                                 const isSelected = selectedSub?.id === sub.id;
                                 const existingGrade = grades[sub.id];
