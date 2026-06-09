@@ -30,6 +30,15 @@ export function AuthProvider({ children }) {
     setUser(null);
   }, []);
 
+  // Merge partial updates into the existing session without replacing it entirely
+  const updateUser = useCallback((updates) => {
+    setUser((prev) => {
+      const next = { ...prev, ...updates };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
   // Convenience booleans so components don't need to inspect role strings
   const value = useMemo(
     () => ({
@@ -38,8 +47,9 @@ export function AuthProvider({ children }) {
       role: user?.role ?? null,
       login,
       logout,
+      updateUser,
     }),
-    [user, login, logout]
+    [user, login, logout, updateUser]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

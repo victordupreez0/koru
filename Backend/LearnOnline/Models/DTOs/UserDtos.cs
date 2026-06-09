@@ -83,5 +83,13 @@ namespace LearnOnline.Models.DTOs
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
         public bool IsActive { get; set; }
+        public bool TwoFactorEnabled { get; set; }
+    }
+
+    // DTO for 2FA code submission (enable, disable, or validate during login)
+    public class TwoFactorCodeDto
+    {
+        public string UserId { get; set; } = null!;
+        public string Code { get; set; } = null!;
     }
 }
