@@ -1,6 +1,5 @@
 import React from "react";
 import { Plus, X, Eye, EyeOff, Edit2, Trash2, ChevronDown, ChevronRight, FileText, HelpCircle, MessageSquare, Users, ExternalLink, ClipboardList, Check, Loader, BookOpen } from "lucide-react";
-import { Folder } from "@solar-icons/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getCourseAssignments, createAssignment, updateAssignment, deleteAssignment, closeAssignment } from "../../../services/assignmentService";
 import { getAssignmentGrades, createGrade, updateGrade, releaseAssignmentGrades } from "../../../services/gradeService";
@@ -957,12 +956,8 @@ export function CourseAssignmentsView({ subject, activeCourseId }) {
             <motion.header variants={slideUp} className="mb-10 flex justify-between items-end">
                 <div>
                     <h1 className="text-3xl font-semibold tracking-tight">Assignments</h1>
-                    <p className="text-gray-500 mt-2">{subject?.code || "Module"} | Manage Assessments & Briefs</p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <button className="px-6 py-3 rounded-2xl border border-gray-200 text-sm font-semibold hover:bg-gray-50 transition-colors flex items-center gap-2 shadow-sm">
-                        <Folder size={18} /> Archive
-                    </button>
                     <motion.button
                         whileHover={{ scale: 1.03 }}
                         whileTap={{ scale: 0.97 }}
