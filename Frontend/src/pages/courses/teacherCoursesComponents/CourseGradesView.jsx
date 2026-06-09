@@ -9,6 +9,34 @@ import { getCourseCohorts, getCourseStudents } from "../../../services/classGrou
 import CohortFilterBar from "../../../components/CohortFilterBar";
 import { staggerContainer, slideUp, scaleIn } from "./constants";
 
+function downloadGradesCSV(studentRows, courseName) {
+    const header = ["Student Name", "Email", "Points Earned", "Max Points", "Average (%)", "Mark Band", "Status"];
+    const rows = studentRows.map(r => [
+        r.name,
+        r.email || "—",
+        r.totalEarned,
+        r.totalMax,
+        r.avgGradePct,
+        r.avgGradePct >= 80 ? "80%+" :
+        r.avgGradePct >= 70 ? "70–79%" :
+        r.avgGradePct >= 60 ? "60–69%" :
+        r.avgGradePct >= 50 ? "50–59%" : "<50%",
+        r.status,
+    ]);
+    const csvContent = [header, ...rows]
+        .map(row => row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(","))
+        .join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `grades-${(courseName || "report").toLowerCase().replace(/\s+/g, "-")}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+}
+
 export function CourseGradesView({ activeCourseId, subject }) {
     const [grades, setGrades] = useState([]);
     const [submissions, setSubmissions] = useState([]);
@@ -161,7 +189,10 @@ export function CourseGradesView({ activeCourseId, subject }) {
                         </div>
                     </div>
                     <div className="flex gap-4">
-                        <button className="px-6 py-3 rounded-2xl border border-gray-200 text-sm font-semibold hover:bg-gray-50 transition-colors flex items-center gap-2 shadow-sm">
+                        <button
+                            onClick={() => downloadGradesCSV(studentRows, subject?.name || subject?.code || activeCourseId)}
+                            className="px-6 py-3 rounded-2xl border border-gray-200 text-sm font-semibold hover:bg-gray-50 transition-colors flex items-center gap-2 shadow-sm cursor-pointer"
+                        >
                             <Folder size={18} /> Export CSV
                         </button>
                     </div>
