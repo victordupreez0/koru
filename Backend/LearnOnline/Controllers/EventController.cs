@@ -52,6 +52,16 @@ namespace LearnOnline.Controllers
                 .ToListAsync();
         }
 
+        // GET /api/Event/course/{courseId} – return all events for a specific course
+        [HttpGet("course/{courseId}")]
+        public async Task<ActionResult<IEnumerable<Event>>> GetByCourse(string courseId)
+        {
+            return await _context.Events
+                .Where(e => e.CourseId == courseId)
+                .OrderBy(e => e.StartTime)
+                .ToListAsync();
+        }
+
         // POST /api/Event – create a new event and return it with a 201 status
         [HttpPost]
         public async Task<ActionResult<Event>> Create(Event ev)

@@ -21,6 +21,7 @@ import {
 import { createEvent } from "../../services/eventService";
 import DashboardHeader from "../../components/DashboardHeader";
 import { getCourseCohorts, getCourseStudents } from "../../services/classGroupService";
+import { classService } from "../../services/classService";
 
 const column = {
   hidden: { opacity: 0, y: 12 },
@@ -54,6 +55,7 @@ export default function AdminDashboard() {
   // ── Cohort data for selected course ──
   const [courseCohorts, setCourseCohorts] = useState([]);
   const [cohortStudentMap, setCohortStudentMap] = useState({});
+  const [unassignedClassCount, setUnassignedClassCount] = useState(0);
 
   // ── Search state ──
   const [courseSearch, setCourseSearch] = useState("");
@@ -167,6 +169,14 @@ export default function AdminDashboard() {
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [students, selectedCourseId, studentSearch]);
 
+  // ── Warning: any group has 0 classes, OR ungrouped students with no fallback schedule ──
+  const selectedCourseHasWarning = useMemo(() => {
+    if (!selectedCourseId || filteredStudents.length === 0) return false;
+    if (courseCohorts.some(g => (g.classCount ?? 0) === 0)) return true;
+    if (unassignedClassCount === 0 && filteredStudents.some(s => !cohortStudentMap[s.id])) return true;
+    return false;
+  }, [selectedCourseId, filteredStudents, courseCohorts, cohortStudentMap, unassignedClassCount]);
+
   // ── Auto-select first course on load / filter change ──
   useEffect(() => {
     if (filteredCourses.length > 0) {
@@ -188,11 +198,13 @@ export default function AdminDashboard() {
     Promise.all([
       getCourseCohorts(selectedCourseId).catch(() => []),
       getCourseStudents(selectedCourseId).catch(() => []),
-    ]).then(([cohorts, courseStudents]) => {
+      classService.getUnassignedByCourse(selectedCourseId).catch(() => []),
+    ]).then(([cohorts, courseStudents, unassignedClasses]) => {
       setCourseCohorts(cohorts || []);
       const map = {};
       (courseStudents || []).forEach(s => { map[s.studentId] = s.classGroupId; });
       setCohortStudentMap(map);
+      setUnassignedClassCount((unassignedClasses || []).length);
     });
   }, [selectedCourseId]);
 
@@ -373,6 +385,7 @@ export default function AdminDashboard() {
               lecturers={lecturers}
               onAddCourse={() => setShowCreateModal(true)}
               isAddingCourse={showCreateModal}
+              warningCourseId={selectedCourseHasWarning ? selectedCourseId : null}
             />
           </motion.div>
 

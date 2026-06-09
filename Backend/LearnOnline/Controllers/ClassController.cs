@@ -48,7 +48,9 @@ namespace LearnOnline.Controllers
         {
             var result = await _context.Classes
                 .Include(c => c.Teacher)
-                .Where(c => c.CourseId == courseId && c.ClassGroupId == null)
+                .Where(c => c.CourseId == courseId &&
+                    (c.ClassGroupId == null || c.ClassGroupId == "" ||
+                     !_context.ClassGroups.Any(g => g.Id == c.ClassGroupId && g.CourseId == courseId)))
                 .Select(c => new {
                     c.Id,
                     c.Name,

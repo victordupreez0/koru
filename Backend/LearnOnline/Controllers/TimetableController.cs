@@ -37,15 +37,32 @@ namespace LearnOnline.Controllers
             return timetable;
         }
 
-        // POST /api/Timetable – generate a new timetable for a user
+        // POST /api/Timetable – generate a new timetable and link all unscheduled class slots to it
         [HttpPost]
-        public async Task<ActionResult<Timetable>> Create(Timetable timetable)
+        public async Task<ActionResult<object>> Create(Timetable timetable)
         {
             timetable.Id = Guid.NewGuid().ToString();
             timetable.GeneratedAt = DateTime.UtcNow;
             _context.Timetables.Add(timetable);
+
+            // Link all class slots that have a group but no timetable yet, and mark as generated
+            var unlinked = await _context.Classes
+                .Where(c => c.TimetableId == null &&
+                            c.ClassGroupId != null && c.ClassGroupId != "")
+                .ToListAsync();
+
+            foreach (var cls in unlinked)
+            {
+                cls.TimetableId = timetable.Id;
+                cls.IsGenerated = true;
+            }
+
             await _context.SaveChangesAsync();
-            return CreatedAtAction(nameof(GetById), new { id = timetable.Id }, timetable);
+            return CreatedAtAction(nameof(GetById), new { id = timetable.Id }, new
+            {
+                timetable,
+                linkedClassIds = unlinked.Select(c => c.Id).ToList()
+            });
         }
 
         // PUT /api/Timetable/{id} – update timetable details (term, year, owner)

@@ -15,6 +15,7 @@ import {
 } from "../../../services/classGroupService";
 import { enrollmentService, userService } from "../../../services/adminService";
 import { classService } from "../../../services/classService";
+import { getCourseEvents } from "../../../services/eventService";
 import { staggerContainer, slideUp } from "../teacherCoursesComponents/constants";
 import { useNavigate } from "react-router-dom";
 
@@ -495,6 +496,7 @@ export function AdminCohortsView({ courseId, course }) {
   const [teachers, setTeachers] = useState([]);
   const [classRefreshKeys, setClassRefreshKeys] = useState({});
   const [unassignedClasses, setUnassignedClasses] = useState([]);
+  const [unassignedEvents, setUnassignedEvents] = useState([]);
   const [unassignedStudents, setUnassignedStudents] = useState([]);
   const [unassignedExpanded, setUnassignedExpanded] = useState(false);
 
@@ -512,16 +514,21 @@ export function AdminCohortsView({ courseId, course }) {
     if (!courseId) return;
     setLoading(true);
     try {
-      const [cohortsData, allEnrollments, teacherList, courseStudentsData, unassignedClassesData] = await Promise.all([
+      const [cohortsData, allEnrollments, teacherList, courseStudentsData, unassignedClassesData, courseEventsData] = await Promise.all([
         getCourseCohorts(courseId).catch(() => []),
         enrollmentService.getAllEnrollments().catch(() => []),
         userService.getTeachers().catch(() => []),
         getCourseStudents(courseId).catch(() => []),
         classService.getUnassignedByCourse(courseId).catch(() => []),
+        getCourseEvents(courseId).catch(() => []),
       ]);
       setCohorts(cohortsData || []);
       setTeachers(teacherList || []);
       setUnassignedClasses(unassignedClassesData || []);
+      setUnassignedEvents((courseEventsData || []).filter(e => {
+        const t = e.eventType?.toLowerCase();
+        return t === "class" || t === "lecture" || t === "workshop" || t === "practical";
+      }));
       setUnassignedStudents((courseStudentsData || []).filter(s => !s.classGroupId));
       const ids = (allEnrollments || [])
         .filter(e => e.courseId === courseId || e.course?.id === courseId)
@@ -648,7 +655,7 @@ export function AdminCohortsView({ courseId, course }) {
           <div className="space-y-3 animate-pulse">
             {[1, 2, 3].map(i => <div key={i} className="bg-white rounded-3xl border border-gray-100 shadow-sm h-20" />)}
           </div>
-        ) : cohorts.length === 0 && unassignedClasses.length === 0 && unassignedStudents.length === 0 ? (
+        ) : cohorts.length === 0 && unassignedClasses.length === 0 && unassignedEvents.length === 0 && unassignedStudents.length === 0 ? (
           <div className="bg-white rounded-3xl border border-gray-100 shadow-sm px-8 py-14 text-center">
             <div className="w-14 h-14 rounded-3xl bg-[#3C0078]/5 flex items-center justify-center mx-auto mb-4">
               <Users size={24} className="text-[#3C0078]/40" />
@@ -659,7 +666,7 @@ export function AdminCohortsView({ courseId, course }) {
         ) : (
           <>
           {/* ── Unassigned pseudo-group ── */}
-          {(unassignedClasses.length > 0 || unassignedStudents.length > 0) && (
+          {(unassignedClasses.length > 0 || unassignedEvents.length > 0 || unassignedStudents.length > 0) && (
             <div className="bg-white/70 rounded-3xl border border-dashed border-gray-300 shadow-sm overflow-hidden">
               <div className="flex items-center px-6 py-4 gap-4">
                 <button
@@ -679,7 +686,7 @@ export function AdminCohortsView({ courseId, course }) {
                     </span>
                   </div>
                   <p className="text-xs text-gray-400 mt-0.5">
-                    {unassignedClasses.length} class slot{unassignedClasses.length !== 1 ? "s" : ""} · {unassignedStudents.length} student{unassignedStudents.length !== 1 ? "s" : ""} not in a group
+                    {unassignedClasses.length + unassignedEvents.length} schedule slot{(unassignedClasses.length + unassignedEvents.length) !== 1 ? "s" : ""} · {unassignedStudents.length} student{unassignedStudents.length !== 1 ? "s" : ""} not in a group
                   </p>
                 </div>
               </div>
@@ -721,24 +728,46 @@ export function AdminCohortsView({ courseId, course }) {
                         )}
                       </div>
 
-                      {/* Right: unassigned class slots (read-only) */}
+                      {/* Right: unassigned class slots + calendar events (read-only) */}
                       <div className="flex-1 min-w-0 px-5 py-4">
                         <div className="flex items-center gap-2 mb-3">
                           <div className="w-1.5 h-1.5 rounded-full bg-gray-300 shrink-0" />
                           <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">
-                            Classes · {unassignedClasses.length}
+                            Schedule · {unassignedClasses.length + unassignedEvents.length}
                           </span>
                         </div>
-                        {unassignedClasses.length === 0 ? (
+                        {unassignedClasses.length === 0 && unassignedEvents.length === 0 ? (
                           <div className="flex items-center gap-2 px-3 py-2.5 rounded-2xl bg-gray-50 border border-dashed border-gray-200">
                             <BookOpen size={13} className="text-gray-300 shrink-0" />
-                            <span className="text-xs text-gray-400">No course-level class slots.</span>
+                            <span className="text-xs text-gray-400">No class slots configured yet.</span>
                           </div>
                         ) : (
                           <div className="space-y-1.5 max-h-64 overflow-y-auto pr-1">
                             {unassignedClasses.map(slot => (
                               <ClassSlotCard key={slot.id} slot={slot} />
                             ))}
+                            {unassignedEvents.map(evt => {
+                              const start = evt.startTime ? new Date(evt.startTime) : null;
+                              const end = evt.endTime ? new Date(evt.endTime) : null;
+                              const dayName = start ? start.toLocaleDateString("en-US", { weekday: "long" }) : null;
+                              const fmt = (d) => d ? `${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}` : null;
+                              return (
+                                <div key={evt.id} className="flex items-start gap-2 px-3 py-2 rounded-2xl bg-blue-50/60 border border-blue-100">
+                                  <Calendar size={12} className="text-blue-400 shrink-0 mt-0.5" />
+                                  <div className="min-w-0 flex-1">
+                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                      <span className="text-[10px] font-black text-blue-700 uppercase tracking-wider truncate">{evt.title}</span>
+                                      <span className="text-[8px] font-bold text-blue-400 bg-blue-100 px-1 py-0.5 rounded shrink-0">Calendar Event</span>
+                                    </div>
+                                    {(dayName || fmt(start)) && (
+                                      <p className="text-[10px] text-blue-500 mt-0.5">
+                                        {dayName}{fmt(start) ? ` · ${fmt(start)}${fmt(end) ? `–${fmt(end)}` : ""}` : ""}
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })}
                           </div>
                         )}
                       </div>

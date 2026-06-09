@@ -38,7 +38,8 @@ namespace LearnOnline.Controllers
                     g.Id,
                     g.Name,
                     g.CourseId,
-                    StudentCount = _context.Enrollments.Count(e => e.ClassGroupId == g.Id && e.Status == "Active")
+                    StudentCount = _context.Enrollments.Count(e => e.ClassGroupId == g.Id && e.Status == "Active"),
+                    ClassCount = _context.Classes.Count(c => c.ClassGroupId == g.Id)
                 })
                 .ToListAsync();
 

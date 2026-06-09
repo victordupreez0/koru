@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   AlertTriangle, Clock, MapPin, User, CheckCircle,
-  ChevronDown, ChevronUp, Zap, Calendar,
+  ChevronDown, ChevronUp, Zap, Calendar, Sparkles,
 } from "lucide-react";
 import { classService } from "../../services/classService";
 import { useAuth } from "../../contexts/AuthContext";
@@ -69,16 +69,20 @@ export default function AdminCalendar() {
   const [panelOpen, setPanelOpen] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [lastTimetable, setLastTimetable] = useState(null);
+  const [recentlyGeneratedIds, setRecentlyGeneratedIds] = useState(new Set());
 
-  useEffect(() => {
+  const loadClasses = () => {
+    setLoading(true);
     classService.getAll()
       .then(d => setClasses(d || []))
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, []);
+  };
+
+  useEffect(() => { loadClasses(); }, []);
 
   const conflicts = useMemo(() => detectConflicts(classes), [classes]);
-  const unscheduled = useMemo(() => classes.filter(c => c.classGroupId && !c.startTime), [classes]);
+  const unscheduled = useMemo(() => classes.filter(c => c.classGroupId && !c.startTime && !c.isGenerated), [classes]);
   const conflictIds = useMemo(() => new Set(conflicts.flatMap(c => [c.slot1.id, c.slot2.id])), [conflicts]);
 
   const handleGenerate = async () => {
@@ -97,7 +101,10 @@ export default function AdminCalendar() {
       });
       if (res.ok) {
         const data = await res.json();
-        setLastTimetable(data);
+        setLastTimetable(data.timetable || data);
+        const ids = new Set(data.linkedClassIds || []);
+        setRecentlyGeneratedIds(ids);
+        loadClasses();
       } else {
         alert("Failed to generate timetable.");
       }
@@ -168,7 +175,7 @@ export default function AdminCalendar() {
 
         {/* Collapsible detail panel */}
         <AnimatePresence>
-          {panelOpen && !loading && (conflicts.length > 0 || unscheduled.length > 0) && (
+          {panelOpen && !loading && (conflicts.length > 0 || unscheduled.length > 0 || recentlyGeneratedIds.size > 0) && (
             <motion.div
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: "auto", opacity: 1 }}
@@ -212,6 +219,24 @@ export default function AdminCalendar() {
                           {cls.name && <span className="font-black text-amber-600 uppercase tracking-wider">{cls.name} · </span>}
                           <span className="text-gray-600 font-semibold">{cls.courseName || "Unknown course"}</span>
                           {cls.durationHours && <span className="text-gray-400 ml-1">({cls.durationHours}h)</span>}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Recently generated */}
+                {recentlyGeneratedIds.size > 0 && (
+                  <div>
+                    <div className="text-[9px] font-black uppercase tracking-widest text-green-600 mb-2 flex items-center gap-1.5">
+                      <Sparkles size={10} /> Just Generated · {recentlyGeneratedIds.size} slot{recentlyGeneratedIds.size !== 1 ? "s" : ""} scheduled
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {classes.filter(c => recentlyGeneratedIds.has(c.id)).map(cls => (
+                        <div key={cls.id} className="bg-green-50 border border-green-200 rounded-xl px-3 py-1.5 text-[10px]">
+                          {cls.name && <span className="font-black text-green-600 uppercase tracking-wider">{cls.name} · </span>}
+                          <span className="text-gray-600 font-semibold">{cls.courseName || "Unknown course"}</span>
+                          {cls.startTime && <span className="text-green-500 ml-1">{cls.dayOfWeek} {formatTime(cls.startTime)}</span>}
                         </div>
                       ))}
                     </div>

@@ -1,5 +1,5 @@
 import React from "react";
-import { Plus, X } from "lucide-react";
+import { Plus, X, AlertTriangle } from "lucide-react";
 import { ColumnCard } from "./ColumnCard";
 import { SearchInput } from "./SearchInput";
 
@@ -12,6 +12,7 @@ export function CourseColumn({
   lecturers,
   onAddCourse,
   isAddingCourse,
+  warningCourseId,
 }) {
   return (
     <div className="flex flex-col bg-white/70 border border-gray-100 rounded-3xl p-4 h-full">
@@ -35,23 +36,37 @@ export function CourseColumn({
         {filteredCourses.length === 0 ? (
           <p className="text-sm text-gray-400 text-center py-8">No courses found for this filter.</p>
         ) : (
-          filteredCourses.map((course) => (
-            <ColumnCard
-              key={course.id}
-              isSelected={course.id === selectedCourseId}
-              onClick={() => handleSelectCourse(course.id)}
-            >
-              <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${course.id === selectedCourseId ? "bg-white" : "bg-gray-300"}`} />
-              <div className="flex-1 min-w-0">
-                <p className={`text-sm font-bold truncate ${course.id === selectedCourseId ? "text-white" : "text-gray-800"}`}>
-                  {course.title}
-                </p>
-                <p className={`text-xs truncate ${course.id === selectedCourseId ? "text-white/70" : "text-gray-400"}`}>
-                  {lecturers.find((l) => l.id === course.lecturerId)?.name || "Unassigned"}
-                </p>
-              </div>
-            </ColumnCard>
-          ))
+          filteredCourses.map((course) => {
+            const isSelected = course.id === selectedCourseId;
+            const hasWarning = course.id === warningCourseId;
+            return (
+              <ColumnCard
+                key={course.id}
+                isSelected={isSelected}
+                onClick={() => handleSelectCourse(course.id)}
+              >
+                <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${isSelected ? "bg-white" : "bg-gray-300"}`} />
+                <div className="flex-1 min-w-0">
+                  <p className={`text-sm font-bold truncate ${isSelected ? "text-white" : "text-gray-800"}`}>
+                    {course.title}
+                  </p>
+                  <p className={`text-xs truncate ${isSelected ? "text-white/70" : "text-gray-400"}`}>
+                    {lecturers.find((l) => l.id === course.lecturerId)?.name || "Unassigned"}
+                  </p>
+                </div>
+                {hasWarning && (
+                  <div className={`flex items-center gap-1 px-2 py-1 rounded-xl shrink-0 ${
+                    isSelected
+                      ? "bg-white/20 text-white"
+                      : "bg-amber-50 border border-amber-200 text-amber-600"
+                  }`}>
+                    <AlertTriangle size={10} />
+                    <span className="text-[9px] font-black uppercase tracking-wider">No classes</span>
+                  </div>
+                )}
+              </ColumnCard>
+            );
+          })
         )}
       </div>
     </div>
