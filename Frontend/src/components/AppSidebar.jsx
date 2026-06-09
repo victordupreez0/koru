@@ -406,7 +406,7 @@ export default function AppSidebar() {
 
             {/* Footer / Actions */}
             <div className="p-4 border-t border-gray-100 flex flex-col gap-2 bg-gray-50/50">
-              {(role === "admin" || role === "teacher") && (
+              {role === "admin" && (
                 <Link
                   to="/courses/create"
                   onClick={() => {

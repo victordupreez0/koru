@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { MdEditNote } from "react-icons/md";
 import { ChevronRight } from "lucide-react";
 import { getCourseAssignments } from "../../services/assignmentService";
+import { getStudentSubmissions } from "../../services/submissionService";
+import { useAuth } from "../../contexts/AuthContext";
 
 const BRAND = "#3C0078";
 const BRAND_TINT = "#3C007812";
@@ -24,6 +26,7 @@ export default function ToDoItem({ activeCourseId }) {
     const [todos, setTodos] = useState([]);
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
+    const { user } = useAuth();
 
     useEffect(() => {
         let mounted = true;
@@ -34,14 +37,19 @@ export default function ToDoItem({ activeCourseId }) {
             }
             try {
                 setLoading(true);
-                const [data] = await Promise.all([
+                const [data, submissions] = await Promise.all([
                     getCourseAssignments(activeCourseId),
+                    user?.userId ? getStudentSubmissions(user.userId).catch(() => []) : Promise.resolve([]),
                     new Promise(resolve => setTimeout(resolve, MIN_LOADING_MS)),
                 ]);
 
+                const submittedAssignmentIds = new Set(
+                    (Array.isArray(submissions) ? submissions : []).map(s => s.assignmentId)
+                );
+
                 const now = new Date();
                 const upcoming = data
-                    .filter(a => new Date(a.dueDate) > now)
+                    .filter(a => new Date(a.dueDate) > now && !submittedAssignmentIds.has(a.id))
                     .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate))
                     .slice(0, 3)
                     .map(a => {
@@ -63,7 +71,7 @@ export default function ToDoItem({ activeCourseId }) {
         }
         fetchAssignments();
         return () => { mounted = false; };
-    }, [activeCourseId]);
+    }, [activeCourseId, user?.userId]);
 
     if (loading) {
         return <>{[1, 2].map(i => <SkeletonRow key={i} />)}</>;
