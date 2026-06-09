@@ -14,7 +14,7 @@ export function StudentColumn({
   filteredStudents
 }) {
   return (
-    <div className="flex flex-col bg-white/80 border-1 border-gray-200 rounded-3xl drop-shadow-xl p-4 min-h-0">
+    <div className="flex flex-col bg-white/70 border border-gray-100 rounded-3xl p-4 min-h-0">
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-2xl font-bold font-['Gabarito']">Students</h2>
         {showAddStudent && (
@@ -51,7 +51,7 @@ export function StudentColumn({
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.25, ease: "easeOut" }}
-              className="w-full rounded-2xl px-4 py-3.5 flex items-center gap-3 bg-white border border-gray-200 hover:shadow-md hover:border-gray-300 transition-all duration-200"
+              className="w-full rounded-2xl px-4 py-3.5 flex items-center gap-3 bg-white/80 border border-gray-100 hover:border-gray-200 transition-colors duration-150"
             >
               <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
                 <User className="w-4 h-4 text-gray-500" />
