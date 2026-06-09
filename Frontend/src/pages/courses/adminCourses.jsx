@@ -1,9 +1,10 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { Plus } from "lucide-react";
 import { useCourses } from "../../contexts/CoursesContext";
 import CourseSecondaryNav from "../../components/courseSecondaryNav";
-import { courseService } from "../../services/adminService";
+import { courseService, subjectService, userService } from "../../services/adminService";
 import {
     AdminCourseOverviewView,
     AdminCourseStudentsView,
@@ -14,6 +15,7 @@ import {
     CourseAssignmentsView,
     CourseGradesView,
 } from "./teacherCoursesComponents";
+import { CreateCourseModal } from "./adminCoursesComponents";
 
 const SUBPAGES = ["overview", "students", "groups", "assignments", "grades", "grade-activity"];
 
@@ -25,6 +27,21 @@ export default function AdminCourses() {
     // Full course objects (with teacher, subject, capacity, etc.) for detail views
     const [fullCourses, setFullCourses] = useState([]);
     const [detailsLoading, setDetailsLoading] = useState(true);
+
+    // Create course modal
+    const [showCreateModal, setShowCreateModal] = useState(false);
+    const [createSubjects, setCreateSubjects] = useState([]);
+    const [createTeachers, setCreateTeachers] = useState([]);
+    const defaultCourseForm = {
+        subjectId: "",
+        teacherId: "",
+        degree: "Software Engineering Degree",
+        year: String(new Date().getFullYear()),
+        term: "Semester 1",
+        capacity: "50",
+        status: "Active",
+    };
+    const [courseForm, setCourseForm] = useState(defaultCourseForm);
 
     const loadFullCourses = useCallback(async () => {
         try {
@@ -40,6 +57,34 @@ export default function AdminCourses() {
     useEffect(() => {
         loadFullCourses();
     }, [loadFullCourses]);
+
+    useEffect(() => {
+        Promise.all([
+            subjectService.getSubjects().catch(() => []),
+            userService.getTeachers().catch(() => []),
+        ]).then(([subjects, teachers]) => {
+            setCreateSubjects(subjects || []);
+            setCreateTeachers(teachers || []);
+        });
+    }, []);
+
+    const handleCreateCourse = async () => {
+        try {
+            await courseService.createCourse({
+                subjectId: courseForm.subjectId,
+                teacherId: courseForm.teacherId,
+                term: courseForm.term,
+                year: parseInt(courseForm.year),
+                capacity: parseInt(courseForm.capacity),
+                degree: courseForm.degree,
+            });
+            setShowCreateModal(false);
+            setCourseForm(defaultCourseForm);
+            loadFullCourses();
+        } catch (err) {
+            alert("Failed to create course: " + err.message);
+        }
+    };
 
     // Parse path: /courses/:courseId/:subpage
     const pathParts = location.pathname.split("/").filter(Boolean);
@@ -106,64 +151,87 @@ export default function AdminCourses() {
     }, [loadFullCourses]);
 
     return (
-        <div className="flex overflow-hidden gap-4 transition-all duration-300 md:h-[calc(100vh-32px)] md:w-full max-md:h-screen max-md:w-screen max-md:-ml-4 max-md:-mr-4 max-md:-mt-4 bg-transparent">
-            <CourseSecondaryNav
-                activeCourseId={activeCourseId || visibleCourses[0]?.id}
-                onDeleteCourse={handleCourseDeleted}
-            />
+        <>
+            <div className="flex overflow-hidden gap-4 transition-all duration-300 md:h-[calc(100vh-32px)] md:w-full max-md:h-screen max-md:w-screen max-md:-ml-4 max-md:-mr-4 max-md:-mt-4 bg-transparent">
+                <CourseSecondaryNav
+                    activeCourseId={activeCourseId || visibleCourses[0]?.id}
+                    onDeleteCourse={handleCourseDeleted}
+                />
 
-            <div className="flex-1 flex flex-col overflow-hidden transition-all duration-300 md:bg-white/75 md:backdrop-blur-xl md:border md:border-white/20 md:rounded-[28px] md:shadow-lg max-md:bg-white">
-                {/* Breadcrumb bar */}
-                {ctxCourse && (
-                    <div className="h-14 border-b border-gray-100 bg-white/60 backdrop-blur-md flex items-center justify-between px-8 z-10 shrink-0 select-none">
-                        <div className="flex items-center gap-3">
-                            <span
-                                className="px-2.5 py-0.5 rounded-lg text-[10px] font-black text-white shadow-sm uppercase shrink-0"
-                                style={{ backgroundColor: ctxCourse.color || "#3C0078" }}
+                <div className="flex-1 flex flex-col overflow-hidden transition-all duration-300 md:bg-white/75 md:backdrop-blur-xl md:border md:border-white/20 md:rounded-[28px] md:shadow-lg max-md:bg-white">
+                    {/* Breadcrumb bar */}
+                    {ctxCourse && (
+                        <div className="h-14 border-b border-gray-100 bg-white/60 backdrop-blur-md flex items-center justify-between px-8 z-10 shrink-0 select-none">
+                            <div className="flex items-center gap-3">
+                                <span
+                                    className="px-2.5 py-0.5 rounded-lg text-[10px] font-black text-white shadow-sm uppercase shrink-0"
+                                    style={{ backgroundColor: ctxCourse.color || "#3C0078" }}
+                                >
+                                    {ctxCourse.code}{ctxCourse.number}
+                                </span>
+                                <span className="text-gray-300 text-xs">/</span>
+                                <span className="text-xs font-bold text-gray-500 capitalize">{activeSubpageLabel}</span>
+                            </div>
+                            <button
+                                onClick={() => setShowCreateModal(true)}
+                                className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#3C0078] text-white text-[11px] font-black uppercase tracking-widest hover:bg-[#2a0055] transition-colors shadow-sm"
                             >
-                                {ctxCourse.code}{ctxCourse.number}
-                            </span>
-                            <span className="text-gray-300 text-xs">/</span>
-                            <span className="text-xs font-bold text-gray-500 capitalize">{activeSubpageLabel}</span>
+                                <Plus size={13} />
+                                New Course
+                            </button>
                         </div>
-                    </div>
-                )}
-
-                {/* Content area */}
-                <div className="flex-1 overflow-y-auto pt-6 px-8 pb-12">
-                    {ctxLoading || detailsLoading ? (
-                        <div className="flex items-center justify-center h-40">
-                            <div className="w-8 h-8 border-3 border-[#3C0078] border-t-transparent rounded-full animate-spin" />
-                        </div>
-                    ) : activeSubpage === "overview" ? (
-                        <AdminCourseOverviewView
-                            course={activeCourse}
-                            onSaved={handleOverviewSaved}
-                        />
-                    ) : activeSubpage === "students" ? (
-                        <AdminCourseStudentsView courseId={activeCourseId} />
-                    ) : activeSubpage === "groups" ? (
-                        <AdminCohortsView courseId={activeCourseId} />
-                    ) : activeSubpage === "assignments" ? (
-                        <CourseAssignmentsView
-                            subject={subject}
-                            activeCourseId={activeCourseId}
-                        />
-                    ) : activeSubpage === "grades" ? (
-                        <CourseGradesView
-                            activeCourseId={activeCourseId}
-                            subject={subject}
-                        />
-                    ) : activeSubpage === "grade-activity" ? (
-                        <AdminGradeActivityView courseId={activeCourseId} />
-                    ) : (
-                        <AdminCourseOverviewView
-                            course={activeCourse}
-                            onSaved={handleOverviewSaved}
-                        />
                     )}
+
+                    {/* Content area */}
+                    <div className="flex-1 overflow-y-auto pt-6 px-8 pb-12">
+                        {ctxLoading || detailsLoading ? (
+                            <div className="flex items-center justify-center h-40">
+                                <div className="w-8 h-8 border-3 border-[#3C0078] border-t-transparent rounded-full animate-spin" />
+                            </div>
+                        ) : activeSubpage === "overview" ? (
+                            <AdminCourseOverviewView
+                                course={activeCourse}
+                                onSaved={handleOverviewSaved}
+                            />
+                        ) : activeSubpage === "students" ? (
+                            <AdminCourseStudentsView courseId={activeCourseId} />
+                        ) : activeSubpage === "groups" ? (
+                            <AdminCohortsView courseId={activeCourseId} />
+                        ) : activeSubpage === "assignments" ? (
+                            <CourseAssignmentsView
+                                subject={subject}
+                                activeCourseId={activeCourseId}
+                            />
+                        ) : activeSubpage === "grades" ? (
+                            <CourseGradesView
+                                activeCourseId={activeCourseId}
+                                subject={subject}
+                            />
+                        ) : activeSubpage === "grade-activity" ? (
+                            <AdminGradeActivityView courseId={activeCourseId} />
+                        ) : (
+                            <AdminCourseOverviewView
+                                course={activeCourse}
+                                onSaved={handleOverviewSaved}
+                            />
+                        )}
+                    </div>
                 </div>
             </div>
-        </div>
+
+            <AnimatePresence>
+                {showCreateModal && (
+                    <CreateCourseModal
+                        show={showCreateModal}
+                        onClose={() => { setShowCreateModal(false); setCourseForm(defaultCourseForm); }}
+                        form={courseForm}
+                        setForm={setCourseForm}
+                        subjects={createSubjects}
+                        teachers={createTeachers}
+                        onCreate={handleCreateCourse}
+                    />
+                )}
+            </AnimatePresence>
+        </>
     );
 }
