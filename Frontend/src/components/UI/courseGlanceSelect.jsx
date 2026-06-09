@@ -29,7 +29,7 @@ export default function CourseGlanceSelect({ activeCourseId, setActiveCourseId, 
 
     return (
         <div className="relative w-full z-50 h-fit">
-            <motion.div layout className="relative z-0 flex flex-row flex-wrap gap-2 pb-5">
+            <motion.div layout className="relative z-0 flex flex-row flex-wrap gap-2">
                 {displayedCourses.map((course) => {
                     const isActive = activeCourseId === course.id;
                     return (
@@ -87,18 +87,17 @@ export default function CourseGlanceSelect({ activeCourseId, setActiveCourseId, 
                         </motion.button>
                     );
                 })}
-
-                {showExpander && (
-                    <motion.button
-                        layout
-                        onClick={() => setExpanded((e) => !e)}
-                        className="h-10 px-3 rounded-full bg-gray-100 text-gray-500 text-xs font-semibold hover:bg-gray-200 active:scale-95 transition-all duration-150 cursor-pointer focus:outline-none flex-shrink-0"
-                        style={{ minWidth: 0 }}
-                    >
-                        {expanded ? "Less" : `+${orderedCourses.length - COLLAPSED_LIMIT} more`}
-                    </motion.button>
-                )}
             </motion.div>
+
+            {showExpander && (
+                <motion.button
+                    layout
+                    onClick={() => setExpanded((e) => !e)}
+                    className="h-10 px-3 rounded-full bg-gray-100 text-gray-500 text-xs font-semibold hover:bg-gray-200 active:scale-95 transition-all duration-150 cursor-pointer focus:outline-none mt-2"
+                >
+                    {expanded ? "Less" : `+${orderedCourses.length - COLLAPSED_LIMIT} more`}
+                </motion.button>
+            )}
         </div>
     );
 }

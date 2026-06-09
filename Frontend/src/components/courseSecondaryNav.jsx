@@ -92,25 +92,7 @@ export default function CourseSecondaryNav({ activeCourseId, hideNav }) {
               md:h-full md:w-64 md:bg-white/70 md:backdrop-blur-xl md:border md:border-white/20 md:rounded-[28px] md:shadow-lg md:overflow-hidden
               max-md:h-full max-md:w-64 max-md:bg-white/80 max-md:backdrop-blur-md max-md:border-r max-md:border-gray-200/50"
         >
-            {/* Course Header Info */}
-            {course && (
-                <div className="px-6 pt-6 pb-5 border-b border-gray-100 flex flex-col gap-2 shrink-0">
-                    <div className="flex items-center gap-2">
-                        <div 
-                            style={{ backgroundColor: course.color }} 
-                            className="px-2 py-0.5 rounded-lg text-white font-black text-[9px] uppercase tracking-wider shadow-sm"
-                        >
-                            {course.code}
-                        </div>
-                        <span className="text-[10px] font-extrabold text-gray-400 tracking-wider">
-                            {course.code} {course.number}
-                        </span>
-                    </div>
-                    <h3 className="text-sm font-extrabold text-gray-900 leading-snug mt-1 truncate" title={course.subjectName}>
-                        {course.subjectName}
-                    </h3>
-                </div>
-            )}
+            {/* Course Header Info - Badge removed */}
 
             {/* Navigation links */}
             <div className="flex-1 overflow-y-auto pt-4 pb-6 scrollbar-hide">
