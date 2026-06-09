@@ -17,6 +17,7 @@ export default function AssistantInput({ onSend, hideChips = false }) {
   const [isToolsOpen, setIsToolsOpen] = useState(false);
   const [prompt, setPrompt] = useState("");
   const dropdownRef = useRef(null);
+  const textareaRef = useRef(null);
 
   // Close dropdown if clicked outside
   useEffect(() => {
@@ -29,12 +30,46 @@ export default function AssistantInput({ onSend, hideChips = false }) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Auto-resize textarea when prompt changes programmatically
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = textareaRef.current.scrollHeight + "px";
+    }
+  }, [prompt]);
+
   const tools = [
     { icon: Calendar, label: "Generate Timetable", desc: "Create an AI generated timetable" },
     { icon: BookOpen, label: "Plan Module", desc: "Draft a lesson plan" },
     { icon: FileEdit, label: "Draft Feedback", desc: "Write student feedback" },
     { icon: BarChart, label: "Analytics Info", desc: "Query performance data" },
   ];
+
+  const handleToolClick = (label) => {
+    let template = "";
+    switch (label) {
+      case "Generate Timetable":
+        template = "Generate a structured weekly timetable for a [Subject] course. Include lectures, lab hours, student hours, and self-study sessions.";
+        break;
+      case "Plan Module":
+        template = "Draft a detailed lesson plan and module outline for [Topic/Subject]. Include learning objectives, a weekly breakdown, and recommended reading resources.";
+        break;
+      case "Draft Feedback":
+        template = "Write constructive and encouraging feedback for a student named [Name] who [scored 88% / did exceptionally well / struggled with time management] on the [Assignment Name] assignment.";
+        break;
+      case "Analytics Info":
+        template = "Help me interpret my class analytics. What insights can I gather when the class average is [80]% but the assignment submission rate is only [65]%?";
+        break;
+      default:
+        break;
+    }
+    setPrompt(template);
+    setIsToolsOpen(false);
+    if (textareaRef.current) {
+      textareaRef.current.focus();
+    }
+  };
+
 
   return (
     <div className="w-full max-w-4xl mx-auto flex flex-col items-center">
@@ -70,6 +105,7 @@ export default function AssistantInput({ onSend, hideChips = false }) {
         <div className="flex items-start gap-3 px-3 pt-2 pb-4">
           <Shield className="w-5 h-5 text-gray-400 shrink-0 mt-0.5" />
           <textarea
+            ref={textareaRef}
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             placeholder="Ask your assistant anything..."
@@ -126,7 +162,12 @@ export default function AssistantInput({ onSend, hideChips = false }) {
                     {tools.map((tool, idx) => {
                       const Icon = tool.icon;
                       return (
-                        <button key={idx} className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 text-left transition-colors">
+                        <button 
+                          key={idx} 
+                          type="button"
+                          onClick={() => handleToolClick(tool.label)}
+                          className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 text-left transition-colors w-full"
+                        >
                           <Icon className="w-5 h-5 text-gray-500 shrink-0" />
                           <div className="flex flex-col">
                             <span className="text-sm font-semibold text-gray-800">{tool.label}</span>

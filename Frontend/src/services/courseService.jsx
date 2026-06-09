@@ -57,3 +57,13 @@ export async function updateCourseContent(courseId, content) {
   });
   return handleResponse(res);
 }
+
+// PUT /api/Course/{courseId}/visibility – update course visibility status
+export async function updateCourseVisibility(courseId, isVisible) {
+  const res = await fetch(`${API_BASE}/Course/${courseId}/visibility`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(isVisible)
+  });
+  return handleResponse(res);
+}

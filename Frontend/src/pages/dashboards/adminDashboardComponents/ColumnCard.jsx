@@ -10,8 +10,8 @@ export function ColumnCard({ children, isSelected, onClick, className = "" }) {
       transition={{ duration: 0.25, ease: "easeOut" }}
       className={`w-full text-left rounded-2xl px-4 py-3.5 flex items-center gap-3 transition-all duration-200 cursor-pointer border
         ${isSelected
-          ? "bg-[#3C0078] text-white border-[#3C0078] shadow-lg shadow-[#3C0078]/15"
-          : "bg-white border-gray-200 hover:shadow-md hover:border-gray-300"
+          ? "bg-[#3C0078] text-white border-[#3C0078]"
+          : "bg-white/80 border-gray-100 hover:border-gray-200"
         } ${className}`}
     >
       {children}

@@ -44,6 +44,12 @@ namespace LearnOnline.Models
         // Format: [{"question":"...","options":["a","b","c","d"],"correctAnswer":0}]
         public string? QuizQuestionsJson { get; set; }
 
+        // External tool name (e.g. "Google Assignments", "Turnitin") – used when Type == "external"
+        public string? ExternalToolName { get; set; }
+
+        // Launch URL for the external tool – used when Type == "external"
+        public string? ExternalToolUrl { get; set; }
+
         // Foreign key to the Course this assignment belongs to
         [Required]
         public string CourseId { get; set; } = null!;

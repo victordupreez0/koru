@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -82,7 +82,7 @@ function UploadZone({ file, onFileSelect, onFileClear, disabled }) {
       onDragLeave={() => setDragging(false)}
       onDrop={handleDrop}
       onClick={() => !disabled && !file && inputRef.current?.click()}
-      className={`relative border-2 border-dashed rounded-[28px] p-10 flex flex-col items-center justify-center gap-4 transition-all duration-200
+      className={`relative border-2 border-dashed rounded-3xl p-6 flex flex-col items-center justify-center gap-4 transition-all duration-200
         ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
         ${dragging ? "border-[#3C0078] bg-[#3C0078]/5 scale-[1.01]" : file ? "border-green-300 bg-green-50/50" : "border-gray-200 bg-gray-50/50 hover:border-[#3C0078]/40 hover:bg-[#3C0078]/3"}`}
     >
@@ -323,13 +323,13 @@ export default function AssignmentDetail({ assignmentId, activeCourseId }) {
 
   return (
     <motion.div
-      className="flex-1 overflow-y-auto p-8"
+      className="flex-1 overflow-y-auto pb-6"
       initial="hidden"
       animate="visible"
       variants={staggerContainer}
     >
         {/* ── Breadcrumb ── */}
-        <motion.div variants={slideUp} className="flex items-center gap-3 mb-10">
+        <motion.div variants={slideUp} className="flex items-center gap-3 mb-6">
           <button
             onClick={() => navigate(`/courses/${activeCourseId}/assignments`)}
             className="flex items-center gap-2 text-gray-400 hover:text-[#3C0078] transition-colors font-semibold text-sm group"
@@ -359,7 +359,7 @@ export default function AssignmentDetail({ assignmentId, activeCourseId }) {
 
             {/* ── Title & Meta bar ── */}
             <motion.div variants={slideUp}>
-              <h1 className="text-4xl font-bold text-gray-900 tracking-tight leading-tight mb-6">
+              <h1 className="text-4xl font-bold text-gray-900 tracking-tight leading-tight mb-4">
                 {assignment.title}
               </h1>
 
@@ -411,7 +411,7 @@ export default function AssignmentDetail({ assignmentId, activeCourseId }) {
             {/* ── Description Card ── */}
             <motion.div
               variants={slideUp}
-              className="bg-white rounded-[40px] border border-gray-100 shadow-sm p-10"
+              className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6"
             >
               <h2 className="text-[10px] font-black uppercase tracking-[0.25em] text-[#3C0078] mb-5">
                 Assignment Brief
@@ -430,7 +430,7 @@ export default function AssignmentDetail({ assignmentId, activeCourseId }) {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -8 }}
                   transition={{ duration: 0.4, ease: "easeOut" }}
-                  className="bg-green-50 border border-green-100 rounded-[40px] p-10"
+                  className="bg-green-50 border border-green-100 rounded-3xl p-6"
                 >
                   <h2 className="text-[10px] font-black uppercase tracking-[0.25em] text-green-600 mb-5">
                     Your Submission
@@ -467,7 +467,7 @@ export default function AssignmentDetail({ assignmentId, activeCourseId }) {
             {isClosed ? (
               <motion.div
                 variants={slideUp}
-                className="bg-red-50 border border-red-100 rounded-[40px] p-10 text-center"
+                className="bg-red-50 border border-red-100 rounded-3xl p-6 text-center"
               >
                 <p className="text-red-500 font-bold text-lg mb-1">Assignment Closed</p>
                 <p className="text-gray-400 text-sm">This assignment has been closed by your lecturer. No more submissions are accepted.</p>
@@ -475,19 +475,19 @@ export default function AssignmentDetail({ assignmentId, activeCourseId }) {
             ) : isSubmitted && !canResubmit ? (
               <motion.div
                 variants={slideUp}
-                className="bg-gray-50 border border-gray-100 rounded-[40px] p-10 text-center"
+                className="bg-gray-50 border border-gray-100 rounded-3xl p-6 text-center"
               >
                 <p className="text-gray-500 font-medium">Only one submission is allowed for this assignment.</p>
               </motion.div>
             ) : isQuiz ? (
               /* Quiz submission area */
-              <motion.div variants={slideUp} className="bg-white rounded-[40px] border border-gray-100 shadow-sm p-10">
+              <motion.div variants={slideUp} className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6">
                 {/* Results view – shown when already submitted and not retaking */}
                 {isSubmitted && !quizStarted && quizResults ? (
                   <div>
                     <h2 className="text-[10px] font-black uppercase tracking-[0.25em] text-[#FF8731] mb-6">Quiz Results</h2>
                     {/* Score summary */}
-                    <div className="flex items-center gap-6 mb-8 p-6 bg-gray-50 rounded-[28px]">
+                    <div className="flex items-center gap-6 mb-6 p-4 bg-gray-50 rounded-2xl">
                       <div className={`w-20 h-20 rounded-3xl flex flex-col items-center justify-center font-black italic shrink-0 ${
                         quizResults.pct >= 75 ? "bg-green-100 text-green-700"
                         : quizResults.pct >= 50 ? "bg-orange-100 text-orange-600"
@@ -507,7 +507,7 @@ export default function AssignmentDetail({ assignmentId, activeCourseId }) {
                     {/* Per-question breakdown */}
                     <div className="space-y-4 mb-8">
                       {quizResults.perQuestion.map(({ qi, isCorrect, chosen, correctAnswer, question, options }) => (
-                        <div key={qi} className={`rounded-[24px] p-5 border-2 ${
+                        <div key={qi} className={`rounded-2xl p-4 border-2 ${
                           isCorrect ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"
                         }`}>
                           <div className="flex items-start gap-3 mb-3">
@@ -567,7 +567,7 @@ export default function AssignmentDetail({ assignmentId, activeCourseId }) {
                     <h2 className="text-[10px] font-black uppercase tracking-[0.25em] text-[#FF8731] mb-6">Quiz</h2>
                     <div className="space-y-6">
                       {quizQuestions.map((q, qi) => (
-                        <div key={qi} className="bg-gray-50 rounded-[24px] p-6">
+                        <div key={qi} className="bg-gray-50 rounded-2xl p-4">
                           <p className="font-semibold text-gray-900 mb-4">{qi + 1}. {q.question}</p>
                           <div className="space-y-2">
                             {q.options.map((opt, oi) => (
@@ -616,7 +616,7 @@ export default function AssignmentDetail({ assignmentId, activeCourseId }) {
             ) : !isPastDue || isSubmitted ? (
               <motion.div
                 variants={slideUp}
-                className="bg-white rounded-[40px] border border-gray-100 shadow-sm p-10"
+                className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6"
               >
                 <h2 className="text-[10px] font-black uppercase tracking-[0.25em] text-[#3C0078] mb-2">
                   {isSubmitted ? "Resubmit Work" : "Submit Your Work"}
@@ -698,7 +698,7 @@ export default function AssignmentDetail({ assignmentId, activeCourseId }) {
               /* Past due and no submission */
               <motion.div
                 variants={slideUp}
-                className="bg-gray-50 border border-gray-100 rounded-[40px] p-10 text-center"
+                className="bg-gray-50 border border-gray-100 rounded-3xl p-6 text-center"
               >
                 <p className="text-gray-400 font-medium">
                   This assignment is past due and no submission was recorded.

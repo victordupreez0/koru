@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 import AnnouncementsItem from "./UI/announcementsItem";
 import NextClassItem from "./UI/nextClassItem";
 import ToDoItem from "./UI/toDoItem";
-import { getCourseAnnouncements } from "../services/announcementService";
+import { getCourseAnnouncements, markAnnouncementAsRead } from "../services/announcementService";
 import { getAllEvents } from "../services/eventService";
 
 // Course Glance detail card – renders inside the CourseGlance widget
@@ -11,6 +13,8 @@ import { getAllEvents } from "../services/eventService";
 export default function CourseGlanceDisplay({ activeCourseId }) {
     const [announcements, setAnnouncements] = useState([]);
     const [nextClass, setNextClass] = useState(null);
+    const { user } = useAuth();
+    const navigate = useNavigate();
 
     useEffect(() => {
         let mounted = true;
@@ -19,7 +23,7 @@ export default function CourseGlanceDisplay({ activeCourseId }) {
             if (!activeCourseId) return;
             try {
                 // Fetch announcements for this course (limit to 2 most recent)
-                const annData = await getCourseAnnouncements(activeCourseId);
+                const annData = await getCourseAnnouncements(activeCourseId, user?.userId);
                 if (mounted) setAnnouncements(Array.isArray(annData) ? annData.slice(0, 2) : []);
 
                 // Fetch events and pick the next upcoming class for this course
@@ -61,7 +65,7 @@ export default function CourseGlanceDisplay({ activeCourseId }) {
 
         fetchData();
         return () => { mounted = false; };
-    }, [activeCourseId]);
+    }, [activeCourseId, user?.userId]);
 
     return (
         <>
@@ -87,6 +91,18 @@ export default function CourseGlanceDisplay({ activeCourseId }) {
                             title={a.title}
                             message={a.preview}
                             time={new Date(a.datePosted).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            isRead={a.isRead}
+                            color={a.color || "#3C0078"}
+                            onClick={async () => {
+                                try {
+                                    if (user?.userId && !a.isRead) {
+                                        await markAnnouncementAsRead(a.id, user.userId);
+                                    }
+                                } catch (err) {
+                                    console.error("Failed to mark announcement as read:", err);
+                                }
+                                navigate(`/courses/${activeCourseId}/announcements`);
+                            }}
                         />
                     ))
                 )}

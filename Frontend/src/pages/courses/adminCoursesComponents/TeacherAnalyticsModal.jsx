@@ -31,11 +31,11 @@ export default function TeacherAnalyticsModal({ teacher, isOpen, onClose }) {
           initial={{ scale: 0.95, opacity: 0, y: 20 }} 
           animate={{ scale: 1, opacity: 1, y: 0 }} 
           exit={{ scale: 0.95, opacity: 0, y: 20 }}
-          className="bg-white rounded-[40px] w-full max-w-5xl shadow-3xl overflow-hidden relative max-h-[90vh] flex flex-col" 
+          className="bg-white rounded-3xl w-full max-w-5xl shadow-3xl overflow-hidden relative max-h-[90vh] flex flex-col" 
           onClick={e => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="p-10 bg-gray-50/50 border-b border-gray-100 relative shrink-0">
+          <div className="p-6 bg-gray-50/50 border-b border-gray-100 relative shrink-0">
             <button onClick={onClose} className="absolute top-8 right-8 p-3 bg-white rounded-2xl hover:bg-red-50 hover:text-red-500 transition-all shadow-sm">
                 <X size={24}/>
             </button>
@@ -59,7 +59,7 @@ export default function TeacherAnalyticsModal({ teacher, isOpen, onClose }) {
 
           <div className="flex flex-col md:flex-row overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:display-none">
             {/* Left Column: Stats Cards */}
-            <div className="flex-1 p-10 space-y-8">
+            <div className="flex-1 p-6 space-y-6">
               <div>
                 <h3 className="text-[12px] font-black text-gray-400 uppercase tracking-widest mb-6 flex items-center gap-2">
                   <BarChart3 size={16} /> Performance Overview
@@ -92,7 +92,7 @@ export default function TeacherAnalyticsModal({ teacher, isOpen, onClose }) {
                 </div>
               </div>
 
-              <div className="p-8 rounded-[32px] bg-gray-50 border border-gray-100">
+              <div className="p-6 rounded-3xl bg-gray-50 border border-gray-100">
                 <h3 className="text-[12px] font-black text-gray-400 uppercase tracking-widest mb-6">Instructional Metrics</h3>
                 <div className="space-y-6">
                   {performanceMetrics.map((metric) => (
@@ -116,7 +116,7 @@ export default function TeacherAnalyticsModal({ teacher, isOpen, onClose }) {
             </div>
 
             {/* Right Column: Detailed Stats & Actions */}
-            <div className="w-full md:w-80 bg-gray-50/50 p-10 border-l border-gray-100 space-y-8">
+            <div className="w-full md:w-80 bg-gray-50/50 p-6 border-l border-gray-100 space-y-6">
               <div>
                 <h3 className="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-4">Teaching Efficiency</h3>
                 <div className="space-y-4">
@@ -177,7 +177,7 @@ export default function TeacherAnalyticsModal({ teacher, isOpen, onClose }) {
 
 function AnalyticsCard({ label, value, icon: Icon, color }) {
   return (
-    <div className="p-6 rounded-[28px] bg-white border border-gray-100 shadow-sm hover:shadow-md transition-all group">
+    <div className="p-4 rounded-[20px] bg-white border border-gray-100 shadow-sm hover:shadow-md transition-all group">
       <div className={`w-12 h-12 rounded-2xl ${color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
         <Icon size={24} />
       </div>
