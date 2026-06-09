@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { CheckCircle } from "@solar-icons/react";
-import { Plus, ChevronDown, ChevronRight, Trash2, Loader, Download, X, Paperclip, FileText, ExternalLink, Link as LinkIcon, EyeOff } from "lucide-react";
+import { Plus, ChevronDown, ChevronRight, Loader, X, Paperclip, FileText, ExternalLink, Link as LinkIcon, EyeOff, MoreVertical, Copy, Pencil, Trash2 } from "lucide-react";
 import { getCourseModules, createModule, updateModule, deleteModule, createModuleItem, updateModuleItem, deleteModuleItem } from "../../../services/moduleService";
 
 export function CourseModulesView({ activeCourseId }) {
@@ -37,6 +37,38 @@ export function CourseModulesView({ activeCourseId }) {
   const [editingItemModuleId, setEditingItemModuleId] = useState(null);
   const [editingItemLabel, setEditingItemLabel] = useState("");
 
+  // openMenu: null | { type: 'module'|'item', id, modId?, top, right }
+  const [openMenu, setOpenMenu] = useState(null);
+  // deleteConfirm: null | { type: 'module', modId } | { type: 'item', modId, itemId }
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
+
+  function openModuleMenu(e, modId) {
+    e.stopPropagation();
+    const rect = e.currentTarget.getBoundingClientRect();
+    setOpenMenu(prev =>
+      prev?.type === "module" && prev.id === modId ? null : {
+        type: "module",
+        id: modId,
+        top: rect.bottom + 6,
+        right: window.innerWidth - rect.right,
+      }
+    );
+  }
+
+  function openItemMenu(e, modId, itemId) {
+    e.stopPropagation();
+    const rect = e.currentTarget.getBoundingClientRect();
+    setOpenMenu(prev =>
+      prev?.type === "item" && prev.id === itemId ? null : {
+        type: "item",
+        id: itemId,
+        modId,
+        top: rect.bottom + 6,
+        right: window.innerWidth - rect.right,
+      }
+    );
+  }
+
   const toggleModule = (id) => {
     setModules(modules.map(mod => mod.id === id ? { ...mod, isOpen: !mod.isOpen } : mod));
   };
@@ -47,7 +79,6 @@ export function CourseModulesView({ activeCourseId }) {
     const targetState = areAllCollapsed;
     setModules(modules.map(mod => ({ ...mod, isOpen: targetState })));
   };
-
 
   const handleAddModule = async () => {
     if (!newModuleTitle.trim() || !activeCourseId) return;
@@ -81,15 +112,41 @@ export function CourseModulesView({ activeCourseId }) {
     }
   };
 
-  const handleDeleteModule = async (modId, e) => {
-    e.stopPropagation();
-    if (!confirm("Are you sure you want to delete this module section?")) return;
+  const handleDeleteModule = async (modId) => {
     setModules(prev => prev.filter(m => m.id !== modId));
+    setDeleteConfirm(null);
     try {
       await deleteModule(modId);
     } catch (err) {
       console.error("Failed to delete module:", err);
       getCourseModules(activeCourseId).then(setModules).catch(console.error);
+    }
+  };
+
+  const handleDuplicateModule = async (modId) => {
+    const mod = modules.find(m => m.id === modId);
+    if (!mod || !activeCourseId) return;
+    try {
+      const created = await createModule({
+        courseId: activeCourseId,
+        title: `${mod.title} (Copy)`,
+        isPublished: false,
+        isOpen: true,
+      });
+      const newMod = { ...created, items: [] };
+      for (const item of (mod.items ?? [])) {
+        const createdItem = await createModuleItem({
+          moduleId: created.id,
+          label: item.label,
+          type: item.type,
+          isPublished: false,
+          isExternal: item.isExternal ?? false,
+        });
+        newMod.items.push(createdItem);
+      }
+      setModules(prev => [...prev, newMod]);
+    } catch (err) {
+      console.error("Failed to duplicate module:", err);
     }
   };
 
@@ -153,16 +210,37 @@ export function CourseModulesView({ activeCourseId }) {
   };
 
   const handleDeleteItem = async (modId, itemId) => {
-    if (!confirm("Are you sure you want to remove this item?")) return;
     setModules(prev => prev.map(m => {
       if (m.id === modId) return { ...m, items: m.items.filter(i => i.id !== itemId) };
       return m;
     }));
+    setDeleteConfirm(null);
     try {
       await deleteModuleItem(itemId);
     } catch (err) {
       console.error("Failed to delete item:", err);
       getCourseModules(activeCourseId).then(setModules).catch(console.error);
+    }
+  };
+
+  const handleDuplicateItem = async (modId, itemId) => {
+    const mod = modules.find(m => m.id === modId);
+    const item = mod?.items?.find(i => i.id === itemId);
+    if (!item) return;
+    try {
+      const created = await createModuleItem({
+        moduleId: modId,
+        label: `${item.label} (Copy)`,
+        type: item.type,
+        isPublished: false,
+        isExternal: item.isExternal ?? false,
+      });
+      setModules(prev => prev.map(m => {
+        if (m.id === modId) return { ...m, items: [...m.items, created] };
+        return m;
+      }));
+    } catch (err) {
+      console.error("Failed to duplicate item:", err);
     }
   };
 
@@ -199,7 +277,7 @@ export function CourseModulesView({ activeCourseId }) {
         <h2 className="text-lg font-black tracking-tight text-gray-900">Course Modules Manager</h2>
         <div className="flex items-center gap-3">
           <button onClick={() => setIsAddingModule(true)} className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold bg-[#3C0078] hover:bg-[#2A0054] text-white rounded-xl transition-all cursor-pointer shadow-sm hover:shadow">
-            <Plus size={14} /> <span>Add Module</span>
+            <Plus size={14} /> <span>Add Section</span>
           </button>
           <button onClick={toggleAll} className="flex items-center justify-center px-4 py-2 text-xs font-bold border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 rounded-xl transition-all cursor-pointer">
             {areAllCollapsed ? "Expand all" : "Collapse all"}
@@ -225,7 +303,7 @@ export function CourseModulesView({ activeCourseId }) {
             />
             <button onClick={handleAddModule} disabled={isCreatingModule} className="flex items-center gap-1.5 px-5 py-2 bg-[#3C0078] hover:bg-[#2A0054] disabled:opacity-60 disabled:cursor-not-allowed text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm">
               {isCreatingModule && <Loader size={12} className="animate-spin" />}
-              {isCreatingModule ? "Creating..." : "Add Module"}
+              {isCreatingModule ? "Creating..." : "Add Section"}
             </button>
             <button onClick={() => { setIsAddingModule(false); setCreateModuleError(""); }} disabled={isCreatingModule} className="px-4 py-2 bg-white border border-gray-200 text-gray-500 rounded-xl hover:bg-gray-50 text-xs font-bold cursor-pointer disabled:opacity-60">
               Cancel
@@ -264,12 +342,6 @@ export function CourseModulesView({ activeCourseId }) {
                   <div className="flex items-center gap-2 min-w-0">
                     {mod.prefix && <span className="text-sm font-extrabold text-gray-700 shrink-0">{mod.prefix}</span>}
                     <h3 className="text-xs font-black tracking-wider text-gray-700 uppercase truncate">{mod.title}</h3>
-                    <span
-                      onClick={(e) => { e.stopPropagation(); setEditingModuleId(mod.id); setEditingModuleTitle(mod.title); }}
-                      className="text-[9px] text-[#3C0078] hover:underline font-bold opacity-0 group-hover:opacity-100 transition-opacity ml-1.5 shrink-0"
-                    >
-                      Rename
-                    </span>
                   </div>
                 )}
               </div>
@@ -281,8 +353,12 @@ export function CourseModulesView({ activeCourseId }) {
                 <button onClick={() => setAddingItemTo(mod.id)} className="flex items-center gap-1 py-1.5 px-3 rounded-lg text-[10px] font-black uppercase tracking-wider bg-purple-50 text-[#3C0078] border border-purple-100 hover:bg-[#3C0078]/5 transition-all cursor-pointer">
                   <Plus size={11} /> <span>Add Item</span>
                 </button>
-                <button onClick={(e) => handleDeleteModule(mod.id, e)} className="p-1.5 text-gray-400 hover:text-red-500 rounded-lg hover:bg-gray-100 transition-all cursor-pointer opacity-0 group-hover:opacity-100" title="Delete Module">
-                  <Trash2 size={13} />
+                <button
+                  onClick={(e) => openModuleMenu(e, mod.id)}
+                  className="p-1.5 text-gray-400 hover:text-gray-700 rounded-lg hover:bg-gray-100 transition-all cursor-pointer"
+                  title="More options"
+                >
+                  <MoreVertical size={15} />
                 </button>
               </div>
             </div>
@@ -290,7 +366,7 @@ export function CourseModulesView({ activeCourseId }) {
             {addingItemTo === mod.id && (
               <div className="p-4 bg-purple-50/30 border-b border-gray-100 flex flex-col gap-3">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-[10px] font-black text-[#3C0078] uppercase tracking-wider">Add Module Item</h4>
+                  <h4 className="text-[10px] font-black text-[#3C0078] uppercase tracking-wider">Add Section Item</h4>
                   <button onClick={() => setAddingItemTo(null)} className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md cursor-pointer"><X size={12} /></button>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -367,22 +443,20 @@ export function CourseModulesView({ activeCourseId }) {
                                 {item.label}
                               </span>
                             )}
-                            <span
-                              onClick={() => { setEditingItemId(item.id); setEditingItemModuleId(mod.id); setEditingItemLabel(item.label); }}
-                              className="text-[9px] text-[#3C0078] hover:underline font-bold opacity-0 group-hover/item:opacity-100 transition-opacity ml-1.5 cursor-pointer shrink-0"
-                            >
-                              Edit
-                            </span>
                           </div>
                         )}
                       </div>
 
-                      <div className="flex items-center gap-3 shrink-0">
+                      <div className="flex items-center gap-2.5 shrink-0">
                         <div onClick={() => handleToggleItemPublish(mod.id, item.id)} title={item.isPublished ? "Published (click to unpublish)" : "Draft (click to publish)"} className="flex items-center justify-center shrink-0 cursor-pointer">
                           {item.isPublished ? <CheckCircle size={15} className="text-green-500 hover:scale-110 transition-transform shadow-2xs" /> : <EyeOff size={15} className="text-gray-400 hover:scale-110 transition-transform" />}
                         </div>
-                        <button onClick={() => handleDeleteItem(mod.id, item.id)} className="p-1 text-gray-400 hover:text-red-500 rounded hover:bg-gray-100 transition-all opacity-0 group-hover/item:opacity-100 cursor-pointer shrink-0" title="Remove Item">
-                          <X size={12} />
+                        <button
+                          onClick={(e) => openItemMenu(e, mod.id, item.id)}
+                          className="p-1 text-gray-400 hover:text-gray-700 rounded hover:bg-gray-100 transition-all opacity-0 group-hover/item:opacity-100 cursor-pointer shrink-0"
+                          title="More options"
+                        >
+                          <MoreVertical size={13} />
                         </button>
                       </div>
                     </div>
@@ -393,6 +467,108 @@ export function CourseModulesView({ activeCourseId }) {
           </div>
         ))}
       </div>
+
+      {/* Single fixed-position dropdown — never clips */}
+      {openMenu && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setOpenMenu(null)} />
+          <div
+            className="fixed z-50 bg-white border border-gray-200 rounded-xl shadow-lg py-1 min-w-[150px]"
+            style={{ top: openMenu.top, right: openMenu.right }}
+          >
+            {openMenu.type === "module" ? (
+              <>
+                <button
+                  onClick={() => {
+                    const mod = modules.find(m => m.id === openMenu.id);
+                    setEditingModuleId(openMenu.id);
+                    setEditingModuleTitle(mod?.title || "");
+                    setOpenMenu(null);
+                  }}
+                  className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+                >
+                  <Pencil size={13} className="text-gray-400" /> Rename
+                </button>
+                <button
+                  onClick={() => { handleDuplicateModule(openMenu.id); setOpenMenu(null); }}
+                  className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+                >
+                  <Copy size={13} className="text-gray-400" /> Duplicate
+                </button>
+                <div className="my-1 border-t border-gray-100" />
+                <button
+                  onClick={() => { setDeleteConfirm({ type: "module", modId: openMenu.id }); setOpenMenu(null); }}
+                  className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
+                >
+                  <Trash2 size={13} /> Delete
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => {
+                    const mod = modules.find(m => m.id === openMenu.modId);
+                    const item = mod?.items?.find(i => i.id === openMenu.id);
+                    setEditingItemId(openMenu.id);
+                    setEditingItemModuleId(openMenu.modId);
+                    setEditingItemLabel(item?.label || "");
+                    setOpenMenu(null);
+                  }}
+                  className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+                >
+                  <Pencil size={13} className="text-gray-400" /> Rename
+                </button>
+                <button
+                  onClick={() => { handleDuplicateItem(openMenu.modId, openMenu.id); setOpenMenu(null); }}
+                  className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+                >
+                  <Copy size={13} className="text-gray-400" /> Duplicate
+                </button>
+                <div className="my-1 border-t border-gray-100" />
+                <button
+                  onClick={() => { setDeleteConfirm({ type: "item", modId: openMenu.modId, itemId: openMenu.id }); setOpenMenu(null); }}
+                  className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
+                >
+                  <Trash2 size={13} /> Delete
+                </button>
+              </>
+            )}
+          </div>
+        </>
+      )}
+
+      {/* Delete confirmation modal */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/25 backdrop-blur-[2px]">
+          <div className="bg-white rounded-2xl p-6 shadow-xl max-w-sm w-full mx-4 border border-gray-100">
+            <h3 className="text-base font-black text-gray-900 mb-1">
+              {deleteConfirm.type === "module" ? "Delete section?" : "Delete item?"}
+            </h3>
+            <p className="text-sm text-gray-500 mb-5">
+              {deleteConfirm.type === "module"
+                ? "This will permanently remove the section and all its items. This cannot be undone."
+                : "This will permanently remove this item. This cannot be undone."}
+            </p>
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={() => setDeleteConfirm(null)}
+                className="px-4 py-2 text-xs font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  if (deleteConfirm.type === "module") handleDeleteModule(deleteConfirm.modId);
+                  else handleDeleteItem(deleteConfirm.modId, deleteConfirm.itemId);
+                }}
+                className="px-4 py-2 text-xs font-bold text-white bg-red-500 hover:bg-red-600 rounded-xl transition-colors cursor-pointer"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
