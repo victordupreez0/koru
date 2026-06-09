@@ -15,8 +15,8 @@ import {
   getSubmissionForAssignment,
   createSubmission,
   updateSubmission,
-  uploadSubmissionFile,
 } from "../../services/submissionService.jsx";
+import { uploadFileToCloudinary } from "../../services/cloudinaryService.js";
 import { getStudentGrades, createGrade, updateGrade } from "../../services/gradeService.js";
 import { useAuth } from "../../contexts/AuthContext";
 
@@ -62,10 +62,98 @@ function getDaysLeft(dateStr) {
 }
 
 // ─────────────────────────────────────────────
+// File preview modal
+// ─────────────────────────────────────────────
+function FilePreviewModal({ file, onClose }) {
+  const [objectUrl, setObjectUrl] = React.useState(null);
+
+  React.useEffect(() => {
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    setObjectUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [file]);
+
+  if (!file || !objectUrl) return null;
+
+  const isImage = file.type.startsWith("image/");
+  const isPdf = file.type === "application/pdf";
+  const isVideo = file.type.startsWith("video/");
+  const isAudio = file.type.startsWith("audio/");
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4"
+      >
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95, y: 16 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          transition={{ type: "spring", damping: 30, stiffness: 300 }}
+          onClick={(e) => e.stopPropagation()}
+          className="bg-white rounded-3xl shadow-2xl w-full max-w-3xl max-h-[85vh] flex flex-col overflow-hidden"
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0">
+            <div className="flex items-center gap-3 min-w-0">
+              <FileText size={18} className="text-[#3C0078] shrink-0" />
+              <p className="font-bold text-gray-900 truncate text-sm">{file.name}</p>
+              <span className="text-xs text-gray-400 shrink-0">{(file.size / 1024).toFixed(1)} KB</span>
+            </div>
+            <button
+              onClick={onClose}
+              className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors shrink-0 ml-4"
+            >
+              <X size={15} />
+            </button>
+          </div>
+
+          {/* Preview content */}
+          <div className="flex-1 overflow-auto flex items-center justify-center bg-gray-50 p-4">
+            {isImage && (
+              <img src={objectUrl} alt={file.name} className="max-w-full max-h-full object-contain rounded-xl" />
+            )}
+            {isPdf && (
+              <iframe src={objectUrl} title={file.name} className="w-full h-full min-h-[60vh] rounded-xl border-0" />
+            )}
+            {isVideo && (
+              <video src={objectUrl} controls className="max-w-full max-h-full rounded-xl" />
+            )}
+            {isAudio && (
+              <div className="flex flex-col items-center gap-4">
+                <div className="w-20 h-20 rounded-2xl bg-[#3C0078]/10 flex items-center justify-center">
+                  <FileText size={36} className="text-[#3C0078]" />
+                </div>
+                <audio src={objectUrl} controls className="w-full max-w-sm" />
+              </div>
+            )}
+            {!isImage && !isPdf && !isVideo && !isAudio && (
+              <div className="flex flex-col items-center gap-3 text-center py-12">
+                <div className="w-20 h-20 rounded-2xl bg-gray-100 flex items-center justify-center">
+                  <FileText size={36} className="text-gray-400" />
+                </div>
+                <p className="font-semibold text-gray-700">{file.name}</p>
+                <p className="text-sm text-gray-400">Preview not available for this file type</p>
+              </div>
+            )}
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
+// ─────────────────────────────────────────────
 // Upload drop zone component
 // ─────────────────────────────────────────────
 function UploadZone({ file, onFileSelect, onFileClear, disabled }) {
   const [dragging, setDragging] = useState(false);
+  const [previewing, setPreviewing] = useState(false);
   const inputRef = useRef(null);
 
   const handleDrop = (e) => {
@@ -77,74 +165,87 @@ function UploadZone({ file, onFileSelect, onFileClear, disabled }) {
   };
 
   return (
-    <div
-      onDragOver={(e) => { e.preventDefault(); if (!disabled) setDragging(true); }}
-      onDragLeave={() => setDragging(false)}
-      onDrop={handleDrop}
-      onClick={() => !disabled && !file && inputRef.current?.click()}
-      className={`relative border-2 border-dashed rounded-3xl p-6 flex flex-col items-center justify-center gap-4 transition-all duration-200
-        ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
-        ${dragging ? "border-[#3C0078] bg-[#3C0078]/5 scale-[1.01]" : file ? "border-green-300 bg-green-50/50" : "border-gray-200 bg-gray-50/50 hover:border-[#3C0078]/40 hover:bg-[#3C0078]/3"}`}
-    >
-      <input
-        ref={inputRef}
-        type="file"
-        className="hidden"
-        disabled={disabled}
-        onChange={(e) => { if (e.target.files[0]) onFileSelect(e.target.files[0]); }}
-        accept=".pdf,.doc,.docx,.zip,.png,.jpg,.jpeg,.fig,.sketch"
-      />
+    <>
+      <div
+        onDragOver={(e) => { e.preventDefault(); if (!disabled) setDragging(true); }}
+        onDragLeave={() => setDragging(false)}
+        onDrop={handleDrop}
+        onClick={() => !disabled && !file && inputRef.current?.click()}
+        className={`relative border-2 border-dashed rounded-3xl p-6 flex flex-col items-center justify-center gap-4 transition-all duration-200
+          ${disabled ? "opacity-50 cursor-not-allowed" : file ? "cursor-default" : "cursor-pointer"}
+          ${dragging ? "border-[#3C0078] bg-[#3C0078]/5 scale-[1.01]" : file ? "border-green-300 bg-green-50/50" : "border-gray-200 bg-gray-50/50 hover:border-[#3C0078]/40 hover:bg-[#3C0078]/3"}`}
+      >
+        <input
+          ref={inputRef}
+          type="file"
+          className="hidden"
+          disabled={disabled}
+          onChange={(e) => { if (e.target.files[0]) onFileSelect(e.target.files[0]); }}
+          accept=".pdf,.doc,.docx,.docm,.ppt,.pptx,.xls,.xlsx,.zip,.rar,.png,.jpg,.jpeg,.gif,.webp,.svg,.mp4,.mov,.mp3,.wav,.fig,.sketch"
+        />
 
-      <AnimatePresence mode="wait">
-        {file ? (
-          <motion.div
-            key="file"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            className="flex items-center gap-4 w-full"
-          >
-            {/* File icon */}
-            <div className="w-14 h-14 rounded-2xl bg-green-100 flex items-center justify-center shrink-0">
-              <FileText size={26} className="text-green-600" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-bold text-gray-900 truncate">{file.name}</p>
-              <p className="text-sm text-gray-400 mt-0.5">{(file.size / 1024).toFixed(1)} KB</p>
-            </div>
-            {!disabled && (
-              <button
-                onClick={(e) => { e.stopPropagation(); onFileClear(); }}
-                className="w-9 h-9 rounded-full bg-gray-100 hover:bg-red-100 hover:text-red-600 flex items-center justify-center transition-colors"
-              >
-                <X size={16} />
-              </button>
-            )}
-          </motion.div>
-        ) : (
-          <motion.div
-            key="empty"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="flex flex-col items-center gap-3 text-center"
-          >
-            <div className="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center">
-              <Upload size={28} className="text-gray-400" />
-            </div>
-            <div>
-              <p className="font-semibold text-gray-700">
-                Drag & drop your file here, or{" "}
-                <span className="text-[#3C0078] font-bold">browse</span>
-              </p>
-              <p className="text-xs text-gray-400 mt-1">
-                Supported: PDF, DOC, DOCX, ZIP, PNG, JPG, FIG, Sketch
-              </p>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+        <AnimatePresence mode="wait">
+          {file ? (
+            <motion.div
+              key="file"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="flex items-center gap-4 w-full"
+            >
+              <div className="w-14 h-14 rounded-2xl bg-green-100 flex items-center justify-center shrink-0">
+                <FileText size={26} className="text-green-600" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-bold text-gray-900 truncate">{file.name}</p>
+                <p className="text-sm text-gray-400 mt-0.5">{(file.size / 1024).toFixed(1)} KB</p>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  onClick={(e) => { e.stopPropagation(); setPreviewing(true); }}
+                  className="px-3 py-1.5 rounded-xl bg-[#3C0078]/8 text-[#3C0078] text-xs font-bold hover:bg-[#3C0078]/15 transition-colors"
+                >
+                  Preview
+                </button>
+                {!disabled && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onFileClear(); }}
+                    className="w-9 h-9 rounded-full bg-gray-100 hover:bg-red-100 hover:text-red-600 flex items-center justify-center transition-colors"
+                  >
+                    <X size={16} />
+                  </button>
+                )}
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="empty"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="flex flex-col items-center gap-3 text-center"
+            >
+              <div className="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center">
+                <Upload size={28} className="text-gray-400" />
+              </div>
+              <div>
+                <p className="font-semibold text-gray-700">
+                  Drag & drop your file here, or{" "}
+                  <span className="text-[#3C0078] font-bold">browse</span>
+                </p>
+                <p className="text-xs text-gray-400 mt-1">
+                  PDF, Word, PowerPoint, Excel, ZIP, images, video & more
+                </p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {previewing && (
+        <FilePreviewModal file={file} onClose={() => setPreviewing(false)} />
+      )}
+    </>
   );
 }
 
@@ -238,8 +339,7 @@ export default function AssignmentDetail({ assignmentId, activeCourseId }) {
       if (isQuiz) {
         fileUrl = JSON.stringify(quizAnswers);
       } else {
-        const uploaded = await uploadSubmissionFile(file);
-        fileUrl = uploaded.url;
+        fileUrl = await uploadFileToCloudinary(file);
       }
 
       let submissionId;
@@ -613,7 +713,7 @@ export default function AssignmentDetail({ assignmentId, activeCourseId }) {
                   </div>
                 )}
               </motion.div>
-            ) : !isPastDue || isSubmitted ? (
+            ) : (
               <motion.div
                 variants={slideUp}
                 className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6"
@@ -621,12 +721,15 @@ export default function AssignmentDetail({ assignmentId, activeCourseId }) {
                 <h2 className="text-[10px] font-black uppercase tracking-[0.25em] text-[#3C0078] mb-2">
                   {isSubmitted ? "Resubmit Work" : "Submit Your Work"}
                 </h2>
+                {isPastDue && !isSubmitted && (
+                  <p className="text-sm text-orange-500 font-semibold mb-4">This assignment is past due — late submissions are still accepted.</p>
+                )}
                 {isSubmitted && (
                   <p className="text-sm text-gray-400 mb-6">
-                    You've already submitted. You can resubmit until the due date.
+                    You've already submitted. You can resubmit at any time.
                   </p>
                 )}
-                {!isSubmitted && <div className="mb-6" />}
+                {!isSubmitted && !isPastDue && <div className="mb-6" />}
 
                 {/* File upload zone */}
                 <UploadZone
@@ -693,16 +796,6 @@ export default function AssignmentDetail({ assignmentId, activeCourseId }) {
                     )}
                   </button>
                 </div>
-              </motion.div>
-            ) : (
-              /* Past due and no submission */
-              <motion.div
-                variants={slideUp}
-                className="bg-gray-50 border border-gray-100 rounded-3xl p-6 text-center"
-              >
-                <p className="text-gray-400 font-medium">
-                  This assignment is past due and no submission was recorded.
-                </p>
               </motion.div>
             )}
           </div>
