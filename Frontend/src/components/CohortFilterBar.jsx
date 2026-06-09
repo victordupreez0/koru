@@ -10,7 +10,7 @@ export default function CohortFilterBar({ cohorts = [], selected, onChange }) {
   return (
     <div className="flex items-center gap-2 flex-wrap">
       <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 flex items-center gap-1 shrink-0">
-        <Users size={12} /> Cohort
+        <Users size={12} /> Group
       </span>
       <button
         onClick={() => onChange(null)}

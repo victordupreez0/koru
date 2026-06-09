@@ -581,7 +581,7 @@ function TeacherSubmissionReview({
             ) : visibleSubmissions.length === 0 ? (
                 <div className="flex-1 flex items-center justify-center px-8 pb-8">
                     <div className="text-center py-20 w-full bg-gray-50 rounded-[40px] border border-gray-100 text-gray-400 font-medium">
-                        No submissions found for this cohort.
+                        No submissions found for this group.
                     </div>
                 </div>
             ) : (
