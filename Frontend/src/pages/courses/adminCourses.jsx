@@ -1,217 +1,169 @@
-import React, { useState, useMemo, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
-import { 
-  Plus, Search, Users, BookOpen, Clock, 
-  TrendingUp, CheckCircle, X, Bell
-} from "lucide-react";
-import { 
-  courseService, 
-  userService, 
-  subjectService, 
-  enrollmentService 
-} from "../../services/adminService";
-
-// Modularized Components
+import React, { useEffect, useState, useCallback, useMemo } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { useCourses } from "../../contexts/CoursesContext";
+import CourseSecondaryNav from "../../components/courseSecondaryNav";
+import { courseService } from "../../services/adminService";
 import {
-  StatCard,
-  FilterDropdown,
-  CourseListItem,
-  CourseDetailModal
-} from "./adminCoursesComponents";
+    AdminCourseOverviewView,
+    AdminCourseStudentsView,
+    AdminCohortsView,
+    AdminGradeActivityView,
+} from "./adminCoursesViews";
+import {
+    CourseAssignmentsView,
+    CourseGradesView,
+} from "./teacherCoursesComponents";
+
+const SUBPAGES = ["overview", "students", "groups", "assignments", "grades", "grade-activity"];
 
 export default function AdminCourses() {
-  const navigate = useNavigate();
-  const [courses, setCourses] = useState([]);
-  const [teachers, setTeachers] = useState([]);
-  const [subjects, setSubjects] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  
-  const [search, setSearch] = useState("");
-  const [filterYear, setFilterYear] = useState("All Years");
-  const [filterSemester, setFilterSemester] = useState("All Semesters");
-  const [selectedCourse, setSelectedCourse] = useState(null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editForm, setEditForm] = useState(null);
+    const location = useLocation();
+    const navigate = useNavigate();
+    const { visibleCourses, loading: ctxLoading, allCourses } = useCourses();
 
-  useEffect(() => {
-    fetchInitialData();
-  }, []);
+    // Full course objects (with teacher, subject, capacity, etc.) for detail views
+    const [fullCourses, setFullCourses] = useState([]);
+    const [detailsLoading, setDetailsLoading] = useState(true);
 
-  const fetchInitialData = async () => {
-    setIsLoading(true);
-    try {
-      const [fetchedCourses, fetchedTeachers, fetchedSubjects, fetchedEnrollments] = await Promise.all([
-        courseService.getAllCourses(),
-        userService.getTeachers(),
-        subjectService.getSubjects(),
-        enrollmentService.getAllEnrollments().catch(() => [])
-      ]);
+    const loadFullCourses = useCallback(async () => {
+        try {
+            const data = await courseService.getAllCourses();
+            setFullCourses(data || []);
+        } catch {
+            setFullCourses([]);
+        } finally {
+            setDetailsLoading(false);
+        }
+    }, []);
 
-      setCourses(fetchedCourses || []);
-      setTeachers(fetchedTeachers || []);
-      setSubjects(fetchedSubjects || []);
-      setEnrollments(fetchedEnrollments || []);
-    } catch (error) {
-      console.error("Failed to load backend registry data:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    useEffect(() => {
+        loadFullCourses();
+    }, [loadFullCourses]);
 
-  const stats = useMemo(() => {
-    const totalCapacity = courses.reduce((sum, c) => sum + (c.capacity || 0), 0);
-    const avgCapacity = courses.length > 0 ? Math.round(totalCapacity / courses.length) : 0;
+    // Parse path: /courses/:courseId/:subpage
+    const pathParts = location.pathname.split("/").filter(Boolean);
+    const activeCourseId = pathParts.length > 1 ? pathParts[1] : null;
+    const activeSubpage = pathParts[2] || null;
 
-    return {
-      registryCount: courses.length,
-      facultyCount: teachers.length,
-      avgCapacity,
-    };
-  }, [courses, teachers]);
+    // Auto-redirect: to first course/overview once loaded
+    useEffect(() => {
+        if (ctxLoading || visibleCourses.length === 0) return;
+        const courseExistsInList = visibleCourses.find(c => c.id === activeCourseId);
+        if (!activeCourseId || !courseExistsInList) {
+            navigate(`/courses/${visibleCourses[0].id}/overview`, { replace: true });
+        } else if (!activeSubpage || !SUBPAGES.includes(activeSubpage)) {
+            navigate(`/courses/${activeCourseId}/overview`, { replace: true });
+        }
+    }, [ctxLoading, visibleCourses, activeCourseId, activeSubpage, navigate]);
 
-  const handleViewCourse = (course) => {
-    setSelectedCourse(course);
-    setEditForm({ ...course });
-    setIsEditing(false);
-  };
+    // Full course object for the active course (for detail views)
+    const activeCourse = fullCourses.find(c => c.id === activeCourseId) || null;
 
-  const handleSaveEdit = async () => {
-    try {
-      const updatedData = {
-        term: editForm.term,
-        year: parseInt(editForm.year),
-        capacity: parseInt(editForm.capacity),
-        subjectId: editForm.subjectId,
-        teacherId: editForm.teacherId,
-        isVisible: editForm.isVisible || false,
-        degree: editForm.degree || ""
-      };
-      
-      await courseService.updateCourse(editForm.id, updatedData);
-      
-      // Refresh database records
-      await fetchInitialData();
-      setSelectedCourse(null);
-      setIsEditing(false);
-      await fetchInitialData();
-    } catch (error) {
-      alert("Error updating course: " + error.message);
-    }
-  };
+    // Context-mapped course for breadcrumb display
+    const ctxCourse = visibleCourses.find(c => c.id === activeCourseId) || visibleCourses[0] || null;
 
-  const handleDeleteCourse = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this course?")) return;
-    try {
-      await courseService.deleteCourse(id);
-      setCourses(prev => prev.filter(c => c.id !== id));
-      setSelectedCourse(null);
-      await fetchInitialData();
-    } catch (error) {
-      alert("Failed to delete: " + error.message);
-    }
-  };
+    const subject = activeCourse
+        ? {
+            name: activeCourse.subject?.name,
+            code: activeCourse.subject?.code,
+            description: activeCourse.subject?.description,
+          }
+        : ctxCourse
+        ? {
+            name: ctxCourse.subjectName,
+            code: ctxCourse.label,
+            description: ctxCourse.description,
+          }
+        : null;
 
-  const filteredCourses = useMemo(() => {
-    return courses.filter(course => {
-      if (!course.subject) return false;
-      const matchesSearch = 
-        course.subject.name.toLowerCase().includes(search.toLowerCase()) || 
-        course.subject.code.toLowerCase().includes(search.toLowerCase());
-      const matchesYear = filterYear === "All Years" || course.year.toString().includes(filterYear.charAt(0));
-      const matchesSemester = filterSemester === "All Semesters" || course.term === filterSemester;
-      return matchesSearch && matchesYear && matchesSemester;
-    });
-  }, [courses, search, filterYear, filterSemester]);
+    const activeSubpageLabel = useMemo(() => {
+        switch (activeSubpage) {
+            case "overview": return "Overview";
+            case "students": return "Students";
+            case "groups": return "Groups";
+            case "assignments": return "Assignments";
+            case "grades": return "Grades";
+            case "grade-activity": return "Grade Activity";
+            default: return "Overview";
+        }
+    }, [activeSubpage]);
 
-  if (isLoading) {
+    const handleCourseDeleted = useCallback(() => {
+        // After deletion, load courses and go to next available course
+        loadFullCourses().then(() => {
+            const remaining = visibleCourses.filter(c => c.id !== activeCourseId);
+            if (remaining.length > 0) {
+                navigate(`/courses/${remaining[0].id}/overview`, { replace: true });
+            } else {
+                navigate("/dashboard", { replace: true });
+            }
+        });
+    }, [activeCourseId, visibleCourses, navigate, loadFullCourses]);
+
+    const handleOverviewSaved = useCallback(() => {
+        loadFullCourses();
+    }, [loadFullCourses]);
+
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-[#3C0078] border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Synchronizing Registry...</p>
-        </div>
-      </div>
-    );
-  }
+        <div className="flex overflow-hidden gap-4 transition-all duration-300 md:h-[calc(100vh-32px)] md:w-full max-md:h-screen max-md:w-screen max-md:-ml-4 max-md:-mr-4 max-md:-mt-4 bg-transparent">
+            <CourseSecondaryNav
+                activeCourseId={activeCourseId || visibleCourses[0]?.id}
+                onDeleteCourse={handleCourseDeleted}
+            />
 
-  return (
-    <div className="relative min-h-screen flex flex-col font-sans">
-      <main className="flex-1 w-full max-w-[1700px] mx-auto px-8 pb-12 space-y-6">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-            <div>
-                <div className="flex items-center gap-2 mb-3">
-                   <div className="w-1 h-5 bg-[#3C0078] rounded-full"></div>
-                   <span className="text-[11px] font-black uppercase tracking-[0.3em] text-[#3C0078] opacity-60">System Registry</span>
+            <div className="flex-1 flex flex-col overflow-hidden transition-all duration-300 md:bg-white/75 md:backdrop-blur-xl md:border md:border-white/20 md:rounded-[28px] md:shadow-lg max-md:bg-white">
+                {/* Breadcrumb bar */}
+                {ctxCourse && (
+                    <div className="h-14 border-b border-gray-100 bg-white/60 backdrop-blur-md flex items-center justify-between px-8 z-10 shrink-0 select-none">
+                        <div className="flex items-center gap-3">
+                            <span
+                                className="px-2.5 py-0.5 rounded-lg text-[10px] font-black text-white shadow-sm uppercase shrink-0"
+                                style={{ backgroundColor: ctxCourse.color || "#3C0078" }}
+                            >
+                                {ctxCourse.code}{ctxCourse.number}
+                            </span>
+                            <span className="text-gray-300 text-xs">/</span>
+                            <span className="text-xs font-bold text-gray-500 capitalize">{activeSubpageLabel}</span>
+                        </div>
+                    </div>
+                )}
+
+                {/* Content area */}
+                <div className="flex-1 overflow-y-auto pt-6 px-8 pb-12">
+                    {ctxLoading || detailsLoading ? (
+                        <div className="flex items-center justify-center h-40">
+                            <div className="w-8 h-8 border-3 border-[#3C0078] border-t-transparent rounded-full animate-spin" />
+                        </div>
+                    ) : activeSubpage === "overview" ? (
+                        <AdminCourseOverviewView
+                            course={activeCourse}
+                            onSaved={handleOverviewSaved}
+                        />
+                    ) : activeSubpage === "students" ? (
+                        <AdminCourseStudentsView courseId={activeCourseId} />
+                    ) : activeSubpage === "groups" ? (
+                        <AdminCohortsView courseId={activeCourseId} />
+                    ) : activeSubpage === "assignments" ? (
+                        <CourseAssignmentsView
+                            subject={subject}
+                            activeCourseId={activeCourseId}
+                        />
+                    ) : activeSubpage === "grades" ? (
+                        <CourseGradesView
+                            activeCourseId={activeCourseId}
+                            subject={subject}
+                        />
+                    ) : activeSubpage === "grade-activity" ? (
+                        <AdminGradeActivityView courseId={activeCourseId} />
+                    ) : (
+                        <AdminCourseOverviewView
+                            course={activeCourse}
+                            onSaved={handleOverviewSaved}
+                        />
+                    )}
                 </div>
-                <h1 className="text-5xl font-black tracking-tighter text-gray-900 leading-none">Course <span className="text-[#3C0078]">Management</span></h1>
-            </div>
-            <button onClick={() => navigate("/courses/create")} className="px-8 py-4 rounded-[20px] bg-[#3C0078] text-white shadow-lg shadow-[#3C0078]/20 flex items-center gap-3 hover:scale-[1.03] transition-all group cursor-pointer">
-                <Plus size={20} />
-                <span className="text-[12px] font-black uppercase tracking-wider">Add Course</span>
-            </button>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <StatCard label="Total Registry" value={stats.registryCount} icon={BookOpen} accent trend="+0" />
-            <StatCard label="Faculty Strength" value={stats.facultyCount} icon={Users} trend="Active" />
-            <StatCard label="Avg Capacity" value={stats.avgCapacity} icon={TrendingUp} trend="Per Course" />
-        </div>
-
-        <div className="flex flex-wrap items-center gap-4">
-            <FilterDropdown 
-              label="Academic Year"
-              value={filterYear}
-              options={["1st Year", "2nd Year", "3rd Year", "All Years"]}
-              onChange={setFilterYear}
-            />
-            <FilterDropdown 
-              label="Active Semester"
-              value={filterSemester}
-              options={["Semester 1", "Semester 2", "All Semesters"]}
-              onChange={setFilterSemester}
-            />
-            <div className="relative flex-1 max-w-sm ml-auto">
-                <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                <input 
-                    type="text" 
-                    placeholder="Search registry..." 
-                    value={search} 
-                    onChange={e => setSearch(e.target.value)} 
-                    className="w-full pl-12 pr-6 py-4 bg-white border border-gray-100 shadow-sm rounded-[20px] text-[13px] font-bold outline-none focus:border-[#3C0078]/20 transition-all" 
-                />
             </div>
         </div>
-
-        <div className="space-y-3">
-            {filteredCourses.map(course => (
-                <CourseListItem 
-                  key={course.id} 
-                  course={course} 
-                  onClick={() => handleViewCourse(course)} 
-                />
-            ))}
-            {filteredCourses.length === 0 && (
-              <div className="py-20 text-center">
-                <p className="text-gray-400 font-bold uppercase tracking-widest">No matching courses found</p>
-              </div>
-            )}
-        </div>
-      </main>
-
-      <AnimatePresence>
-        <CourseDetailModal 
-          course={selectedCourse}
-          onClose={() => setSelectedCourse(null)}
-          isEditing={isEditing}
-          setIsEditing={setIsEditing}
-          editForm={editForm}
-          setEditForm={setEditForm}
-          teachers={teachers}
-          onSave={handleSaveEdit}
-          onDelete={handleDeleteCourse}
-        />
-      </AnimatePresence>
-    </div>
-  );
+    );
 }
