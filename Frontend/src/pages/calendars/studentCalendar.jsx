@@ -159,7 +159,7 @@ export default function StudentCalendar() {
   const [tasks, setTasks] = useState([]);
 
   // Add Task modal
-  const [taskModal, setTaskModal] = useState({ open: false, editEvent: null });
+  const [taskModal, setTaskModal] = useState({ open: false, editEvent: null, defaultDate: "" });
 
   /** Add a new or save an edited locally-created task */
   function handleAddTask(event) {
@@ -246,7 +246,7 @@ export default function StudentCalendar() {
     <>
 
       <motion.div
-        className="max-w-[1400px] mx-auto px-8 pt-5 pb-10"
+        className="w-full pt-5 pb-10"
         variants={pageVariants}
         initial="hidden"
         animate="visible"
@@ -284,7 +284,7 @@ export default function StudentCalendar() {
           <button
             id="cal-add-task-btn"
             aria-label="Add Task"
-            onClick={() => setTaskModal({ open: true, editEvent: null })}
+            onClick={() => setTaskModal({ open: true, editEvent: null, defaultDate: "" })}
             className="flex items-center gap-2 bg-white rounded-full px-5 py-2.5 text-sm font-semibold text-gray-700 shadow-sm border-none cursor-pointer transition-all duration-150 hover:shadow-lg hover:-translate-y-px font-[inherit]"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -303,7 +303,7 @@ export default function StudentCalendar() {
           {activeView === "month" && (
             <motion.div
               key={`month-${currentMonth.year}-${currentMonth.month}`}
-              className="w-full bg-white/70 rounded-3xl shadow-xl border border-1 border-gray-200"
+              className="w-full border border-gray-200 rounded-2xl overflow-hidden"
               variants={viewVariants}
               initial="hidden"
               animate="visible"
@@ -331,8 +331,10 @@ export default function StudentCalendar() {
                         isOutside={!!isOutside}
                         events={eventMap[date] ?? []}
                         onDrop={handleEventDrop}
-                        onEditEvent={(evt) => setTaskModal({ open: true, editEvent: evt })}
+                        onEditEvent={(evt) => setTaskModal({ open: true, editEvent: evt, defaultDate: evt.date })}
                         onDeleteEvent={handleDeleteTask}
+                        onDayClick={(d) => setTaskModal({ open: true, editEvent: null, defaultDate: d })}
+                        tooltipPosition={wIdx === 0 ? "down" : "up"}
                       />
                     ))}
                   </div>
@@ -350,7 +352,11 @@ export default function StudentCalendar() {
               animate="visible"
               exit="exit"
             >
-              <CalendarTimelineView events={events} weeks={gridWeeks} />
+              <CalendarTimelineView
+                events={events}
+                weeks={gridWeeks}
+                onDayClick={(d) => setTaskModal({ open: true, editEvent: null, defaultDate: d })}
+              />
             </motion.div>
           )}
 
@@ -379,7 +385,8 @@ export default function StudentCalendar() {
       <AddTaskModal
         open={taskModal.open}
         editEvent={taskModal.editEvent}
-        onClose={() => setTaskModal({ open: false, editEvent: null })}
+        defaultDate={taskModal.defaultDate}
+        onClose={() => setTaskModal({ open: false, editEvent: null, defaultDate: "" })}
         onAdd={handleAddTask}
       />
     </>
