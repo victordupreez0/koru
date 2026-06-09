@@ -92,7 +92,22 @@ namespace LearnOnline.Controllers
 
             // Find scheduled class weekly slots for this cohort
             var schedules = await _context.Classes
+                .Include(c => c.Teacher)
                 .Where(c => c.ClassGroupId == id)
+                .Select(c => new {
+                    c.Id,
+                    c.Name,
+                    c.CourseId,
+                    c.ClassGroupId,
+                    c.Room,
+                    c.DayOfWeek,
+                    c.StartTime,
+                    c.EndTime,
+                    c.DurationHours,
+                    c.IsGenerated,
+                    c.TeacherId,
+                    TeacherName = c.Teacher != null ? c.Teacher.FirstName + " " + c.Teacher.LastName : null,
+                })
                 .ToListAsync();
 
             return Ok(new
@@ -100,7 +115,7 @@ namespace LearnOnline.Controllers
                 cohort.Id,
                 cohort.Name,
                 cohort.CourseId,
-                CourseName = cohort.Course?.Subject?.Name,
+                CourseName = cohort.Course != null ? (cohort.Course.Name ?? cohort.Course.Subject?.Name) : null,
                 Students = students,
                 Schedules = schedules
             });

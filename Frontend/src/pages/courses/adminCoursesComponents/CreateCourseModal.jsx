@@ -2,195 +2,160 @@ import React from "react";
 import { motion } from "framer-motion";
 import { X, ChevronDown } from "lucide-react";
 
-const DEGREES = [
-  "Software Engineering Degree",
-  "UX Design Degree",
-  "Visual Arts Degree",
-  "Interaction Design Degree",
-  "Design Leadership Degree",
-];
-
 const CURRENT_YEAR = new Date().getFullYear();
 const YEARS = [CURRENT_YEAR - 1, CURRENT_YEAR, CURRENT_YEAR + 1].map(String);
 
-export default function CreateCourseModal({ show, onClose, form, setForm, subjects, teachers, onCreate }) {
+function SelectField({ label, value, onChange, children, disabled }) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{label}</label>
+      <div className="relative">
+        <select
+          value={value}
+          onChange={onChange}
+          disabled={disabled}
+          className="w-full appearance-none text-sm border border-gray-200 rounded-xl px-4 py-3 pr-9 outline-none focus:border-[#3C0078] focus:ring-2 focus:ring-[#3C0078]/10 transition-all bg-white disabled:opacity-50 disabled:cursor-not-allowed font-medium text-gray-800"
+        >
+          {children}
+        </select>
+        <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400" />
+      </div>
+    </div>
+  );
+}
+
+function TextField({ label, value, onChange, placeholder, mono }) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{label}</label>
+      <input
+        type="text"
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        className={`text-sm border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-[#3C0078] focus:ring-2 focus:ring-[#3C0078]/10 transition-all font-medium text-gray-800 ${mono ? "uppercase tracking-wider" : ""}`}
+      />
+    </div>
+  );
+}
+
+export default function CreateCourseModal({ show, onClose, form, setForm, teachers, onCreate }) {
   if (!show) return null;
 
-  const selectedSubject = subjects.find(s => s.id === form.subjectId);
+  const canCreate = form.name?.trim() && form.teacherId;
 
   return (
-    <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6 md:p-12 overflow-hidden">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
       <motion.div
-        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-        onClick={onClose}
-        className="absolute inset-0 bg-[#0A0510]/80 backdrop-blur-xl"
-      />
-
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9, y: 30 }}
+        initial={{ opacity: 0, scale: 0.95, y: 12 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.9, y: 30 }}
-        className="relative w-full max-w-[1100px] h-fit max-h-[90vh] bg-white rounded-3xl shadow-[0_32px_128px_-16px_rgba(60,0,120,0.3)] overflow-hidden flex flex-col"
+        exit={{ opacity: 0, scale: 0.95, y: 12 }}
+        transition={{ duration: 0.2 }}
+        className="bg-white rounded-3xl shadow-2xl w-full max-w-lg p-8 flex flex-col gap-5"
       >
-        <div className="flex flex-col md:flex-row h-full">
-          {/* Left Column */}
-          <div className="md:w-[420px] bg-gray-50 border-r border-gray-100 p-8 flex flex-col justify-between overflow-y-auto">
-            <div className="space-y-6">
-              <button
-                onClick={onClose}
-                className="w-12 h-12 rounded-2xl bg-white border border-gray-100 flex items-center justify-center text-gray-400 hover:text-red-500 hover:border-red-100 transition-all group"
-              >
-                <X size={20} className="group-hover:rotate-90 transition-transform duration-300" />
-              </button>
-
-              <div className="space-y-1">
-                <span className="px-3 py-1 bg-[#3C0078]/5 text-[10px] font-black tracking-widest text-[#3C0078] uppercase rounded-lg inline-block">New Course</span>
-                <h2 className="text-2xl font-black font-['Gabarito'] text-gray-900 pt-2">Create Course</h2>
-                <p className="text-sm text-gray-400">Choose an existing subject and configure the course details.</p>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block">Subject</label>
-                <div className="relative">
-                  <select
-                    value={form.subjectId}
-                    onChange={(e) => setForm({ ...form, subjectId: e.target.value })}
-                    className="w-full bg-white border border-gray-200 px-5 py-3.5 rounded-2xl text-sm font-bold text-gray-800 focus:ring-2 focus:ring-[#3C0078]/10 focus:border-[#3C0078] transition-all outline-none appearance-none"
-                  >
-                    <option value="">Select a subject…</option>
-                    {subjects.map(s => (
-                      <option key={s.id} value={s.id}>
-                        {s.code ? `${s.code} — ${s.name}` : s.name}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown size={16} className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400" />
-                </div>
-              </div>
-
-              {selectedSubject?.description && (
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block">Description</label>
-                  <div className="p-4 rounded-2xl bg-white border border-gray-100 text-sm text-gray-500 leading-relaxed">
-                    {selectedSubject.description}
-                  </div>
-                </div>
-              )}
-
-              <div className="pt-4 border-t border-gray-200/60 space-y-2">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block">Course Status</label>
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => setForm({ ...form, status: "Active" })}
-                    className={`px-5 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${form.status === "Active" ? "bg-green-500 text-white" : "bg-gray-100 text-gray-400"}`}
-                  >Active</button>
-                  <button
-                    onClick={() => setForm({ ...form, status: "Inactive" })}
-                    className={`px-5 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${form.status === "Inactive" ? "bg-gray-200 text-gray-500" : "bg-gray-100 text-gray-400"}`}
-                  >Inactive</button>
-                </div>
-              </div>
-            </div>
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-xl font-black font-['Gabarito']">New Course</h3>
+            <p className="text-xs text-gray-400 mt-0.5">Create a course and assign a lecturer</p>
           </div>
+          <button
+            onClick={onClose}
+            className="w-9 h-9 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 transition-colors"
+          >
+            <X size={16} />
+          </button>
+        </div>
 
-          {/* Right Column */}
-          <div className="flex-1 p-8 flex flex-col justify-between overflow-y-auto">
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block">Lecturer Assignment</label>
-                  <div className="relative">
-                    <select
-                      value={form.teacherId}
-                      onChange={(e) => setForm({ ...form, teacherId: e.target.value })}
-                      className="w-full px-5 py-3.5 rounded-2xl bg-gray-50 text-sm font-bold text-gray-900 appearance-none focus:ring-2 focus:ring-[#3C0078]/5 transition-all outline-none"
-                    >
-                      <option value="">Select a lecturer…</option>
-                      {teachers.map(t => (
-                        <option key={t.id} value={t.id}>
-                          {t.firstName} {t.lastName}
-                        </option>
-                      ))}
-                    </select>
-                    <ChevronDown size={16} className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-                  </div>
-                </div>
+        {/* Course name + code */}
+        <div className="grid grid-cols-[1fr_auto] gap-3">
+          <TextField
+            label="Course Name"
+            value={form.name || ""}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            placeholder="e.g. Interactive Development"
+          />
+          <TextField
+            label="Code"
+            value={form.code || ""}
+            onChange={(e) => setForm({ ...form, code: e.target.value })}
+            placeholder="DV300"
+            mono
+          />
+        </div>
 
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block">Degree Program</label>
-                  <div className="relative">
-                    <select
-                      value={form.degree}
-                      onChange={(e) => setForm({ ...form, degree: e.target.value })}
-                      className="w-full px-5 py-3.5 rounded-2xl bg-gray-50 text-sm font-bold text-gray-900 appearance-none focus:ring-2 focus:ring-[#3C0078]/5 transition-all outline-none"
-                    >
-                      {DEGREES.map(d => <option key={d} value={d}>{d}</option>)}
-                    </select>
-                    <ChevronDown size={16} className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-                  </div>
-                </div>
-              </div>
+        {/* Lecturer */}
+        <SelectField
+          label="Lecturer"
+          value={form.teacherId}
+          onChange={(e) => setForm({ ...form, teacherId: e.target.value })}
+        >
+          <option value="">Select a lecturer…</option>
+          {teachers.map((t) => (
+            <option key={t.id} value={t.id}>
+              {t.firstName} {t.lastName}
+            </option>
+          ))}
+        </SelectField>
 
-              <div className="grid grid-cols-3 gap-4">
-                <div className="flex flex-col gap-2">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block">Year</label>
-                  <div className="relative">
-                    <select
-                      value={form.year}
-                      onChange={(e) => setForm({ ...form, year: e.target.value })}
-                      className="w-full px-5 py-3.5 rounded-2xl bg-gray-50 text-sm font-bold outline-none focus:ring-2 focus:ring-[#3C0078]/5 transition-all appearance-none"
-                    >
-                      {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
-                    </select>
-                    <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400" />
-                  </div>
-                </div>
+        {/* Year + Semester */}
+        <div className="grid grid-cols-2 gap-3">
+          <SelectField
+            label="Year"
+            value={form.year}
+            onChange={(e) => setForm({ ...form, year: e.target.value })}
+          >
+            {YEARS.map((y) => (
+              <option key={y} value={y}>{y}</option>
+            ))}
+          </SelectField>
 
-                <div className="flex flex-col gap-2">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block">Semester</label>
-                  <div className="relative">
-                    <select
-                      value={form.term}
-                      onChange={(e) => setForm({ ...form, term: e.target.value })}
-                      className="w-full px-5 py-3.5 rounded-2xl bg-gray-50 text-sm font-bold outline-none focus:ring-2 focus:ring-[#3C0078]/5 transition-all appearance-none"
-                    >
-                      <option value="Semester 1">Semester 1</option>
-                      <option value="Semester 2">Semester 2</option>
-                    </select>
-                    <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400" />
-                  </div>
-                </div>
+          <SelectField
+            label="Semester"
+            value={form.term}
+            onChange={(e) => setForm({ ...form, term: e.target.value })}
+          >
+            <option value="Semester 1">Semester 1</option>
+            <option value="Semester 2">Semester 2</option>
+          </SelectField>
+        </div>
 
-                <div className="flex flex-col gap-2">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block">Capacity</label>
-                  <input
-                    type="number"
-                    value={form.capacity}
-                    onChange={(e) => setForm({ ...form, capacity: e.target.value })}
-                    className="w-full px-5 py-3.5 rounded-2xl bg-gray-50 text-sm font-bold outline-none focus:ring-2 focus:ring-[#3C0078]/5 transition-all"
-                  />
-                </div>
-              </div>
-            </div>
+        {/* Capacity */}
+        <div className="flex flex-col gap-1.5">
+          <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Capacity</label>
+          <input
+            type="number"
+            min={1}
+            max={500}
+            value={form.capacity}
+            onChange={(e) => setForm({ ...form, capacity: e.target.value })}
+            className="text-sm border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-[#3C0078] focus:ring-2 focus:ring-[#3C0078]/10 transition-all font-medium text-gray-800"
+          />
+        </div>
 
-            <div className="flex gap-4 mt-8">
-              <button
-                disabled={!form.subjectId || !form.teacherId}
-                onClick={onCreate}
-                className="flex-[2] py-4 rounded-3xl bg-[#3C0078] text-white font-black uppercase tracking-widest text-[13px] shadow-xl shadow-[#3C0078]/20 hover:bg-[#2a0055] active:scale-[0.98] transition-all disabled:opacity-50"
-              >
-                Create Course
-              </button>
-              <button
-                onClick={onClose}
-                className="flex-1 py-4 rounded-3xl border-2 border-gray-100 text-gray-400 font-black uppercase tracking-widest text-[13px] hover:bg-gray-50 transition-all"
-              >
-                Discard
-              </button>
-            </div>
-          </div>
+        {/* Buttons */}
+        <div className="flex gap-3 pt-1">
+          <button
+            onClick={onClose}
+            className="flex-1 px-4 py-3 text-sm font-bold text-gray-500 bg-gray-100 rounded-2xl hover:bg-gray-200 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onCreate}
+            disabled={!canCreate}
+            className="flex-[2] px-4 py-3 text-sm font-bold text-white bg-[#3C0078] rounded-2xl hover:bg-[#2a0055] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            Create Course
+          </button>
         </div>
       </motion.div>
-    </div>
+    </motion.div>
   );
 }

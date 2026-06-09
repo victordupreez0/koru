@@ -10,6 +10,12 @@ namespace LearnOnline.Models
         [Key]
         public string Id { get; set; } = Guid.NewGuid().ToString();
 
+        // Human-readable course name (e.g. "Interactive Development 300")
+        public string? Name { get; set; }
+
+        // Short course code displayed in the UI (e.g. "DV300")
+        public string? Code { get; set; }
+
         // Academic term (e.g. "Term 1", "Semester 2")
         [Required]
         public string Term { get; set; } = null!;
@@ -23,9 +29,8 @@ namespace LearnOnline.Models
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        // Foreign key to the Subject this course is for
-        [Required]
-        public string SubjectId { get; set; } = null!;
+        // Legacy subject reference – kept for existing data, no longer required
+        public string? SubjectId { get; set; }
 
         [ForeignKey("SubjectId")]
         public Subject? Subject { get; set; }

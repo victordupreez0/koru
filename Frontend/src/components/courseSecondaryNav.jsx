@@ -34,7 +34,7 @@ const TEACHER_NAV_ITEMS = [
 const ADMIN_NAV_ITEMS = [
     { label: "Overview", pathSuffix: "overview" },
     { label: "Students", pathSuffix: "students" },
-    { label: "Groups", pathSuffix: "groups" },
+    { label: "Groups & Classes", pathSuffix: "groups" },
     { label: "Assignments", pathSuffix: "assignments" },
     { label: "Grades", pathSuffix: "grades" },
     { label: "Grade Activity", pathSuffix: "grade-activity" },
@@ -51,6 +51,7 @@ const ICON_MAP = {
     Overview: LayoutDashboard,
     Students: Users,
     Groups: UsersRound,
+    "Groups & Classes": UsersRound,
     Cohorts: UsersRound,
     "Grade Activity": ScrollText,
 };

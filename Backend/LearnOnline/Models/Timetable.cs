@@ -22,9 +22,8 @@ namespace LearnOnline.Models
         // ID of the user/admin who generated this timetable
         public string? GeneratedBy { get; set; }
 
-        // Foreign key to the User this timetable belongs to
-        [Required]
-        public string UserId { get; set; } = null!;
+        // Foreign key to the User who generated this timetable
+        public string? UserId { get; set; }
 
         [ForeignKey("UserId")]
         public User? User { get; set; }
