@@ -1,12 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
 
-/**
- * AttendanceVisualizer Component
- * 
- * An interactive, abstract representation of attendance history (last 10 sessions)
- * using colored nodes that expand to show details.
- */
 const FALLBACK = [
     { status: "Present" }, { status: "Present" }, { status: "Absent" },
     { status: "Present" }, { status: "Present" }, { status: "Present" },
@@ -15,8 +9,11 @@ const FALLBACK = [
 ];
 
 export default function AttendanceVisualizer({ sessions }) {
-    const raw = sessions && sessions.length > 0 ? sessions.slice(0, 10) : FALLBACK;
-    const data = raw.map(r => ({
+    const raw = sessions && sessions.length > 0 ? sessions : FALLBACK;
+
+    // Sort oldest → newest, take last 10
+    const sorted = [...raw].sort((a, b) => new Date(a.date) - new Date(b.date));
+    const last10 = sorted.slice(-10).map(r => ({
         status: r.status === "Absent" ? "Absent" : "Present",
     }));
 
@@ -24,19 +21,23 @@ export default function AttendanceVisualizer({ sessions }) {
         <div className="bg-white p-8 rounded-[40px] border border-gray-100 shadow-sm flex flex-col h-full items-center justify-between group">
             <div className="w-full mb-6">
                 <h3 className="text-sm font-black uppercase tracking-widest text-gray-400">Streak Analysis</h3>
-                <p className="text-xs text-gray-500 mt-1 italic">Last 10 sessions performance</p>
+                <p className="text-xs text-gray-500 mt-1 italic">Last {last10.length} sessions</p>
             </div>
 
             <div className="flex gap-2.5 items-end justify-center h-32 w-full">
-                {data.map((item, index) => (
+                {last10.map((item, index) => (
                     <motion.div
                         key={index}
                         initial={{ height: 0 }}
-                        animate={{ height: item.status === "Present" ? "100%" : "40%" }}
+                        animate={{ height: "100%" }}
                         transition={{ delay: index * 0.1, type: "spring", stiffness: 100 }}
-                        whileHover={{ scale: 1.1, backgroundColor: item.status === "Present" ? "#3C0078" : "#FF8731" }}
+                        whileHover={{ scale: 1.1 }}
                         className="w-4 rounded-full transition-colors cursor-pointer"
-                        style={{ backgroundColor: item.status === "Present" ? "#3C007833" : "#FF873133" }}
+                        style={{
+                            backgroundColor: item.status === "Present" ? "#3C0078" : "#FF8731",
+                            opacity: 0.35,
+                        }}
+                        whileHover={{ opacity: 1, scale: 1.1 }}
                     />
                 ))}
             </div>
