@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Folder, InfoCircle } from "@solar-icons/react";
+import { Folder, InfoCircle, Filter } from "@solar-icons/react";
 import { X, FileText, TrendingUp, Award, AlertCircle } from "lucide-react";
 import AttendanceChart from "../../../components/UI/attendanceChart";
 import { getCourseGrades } from "../../../services/gradeService";
@@ -49,6 +49,11 @@ export function CourseGradesView({ activeCourseId, subject }) {
 
     // Student report panel
     const [selectedStudent, setSelectedStudent] = useState(null);
+
+    // Filter/search state
+    const [showFilter, setShowFilter] = useState(false);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [statusFilter, setStatusFilter] = useState("All");
 
     useEffect(() => {
         let mounted = true;
@@ -121,6 +126,14 @@ export function CourseGradesView({ activeCourseId, subject }) {
         });
     }, [filteredSubmissions, grades]);
 
+    const filteredStudentRows = useMemo(() => {
+        return studentRows.filter(student => {
+            const matchesSearch = student.name.toLowerCase().includes(searchQuery.toLowerCase());
+            const matchesStatus = statusFilter === "All" || student.status === statusFilter;
+            return matchesSearch && matchesStatus;
+        });
+    }, [studentRows, searchQuery, statusFilter]);
+
     // Per-student assignment breakdown for the report panel
     const studentDetail = useMemo(() => {
         if (!selectedStudent) return [];
@@ -190,7 +203,7 @@ export function CourseGradesView({ activeCourseId, subject }) {
                     </div>
                     <div className="flex gap-4">
                         <button
-                            onClick={() => downloadGradesCSV(studentRows, subject?.name || subject?.code || activeCourseId)}
+                            onClick={() => downloadGradesCSV(filteredStudentRows, subject?.name || subject?.code || activeCourseId)}
                             className="px-6 py-3 rounded-2xl border border-gray-200 text-sm font-semibold hover:bg-gray-50 transition-colors flex items-center gap-2 shadow-sm cursor-pointer"
                         >
                             <Folder size={18} /> Export CSV
@@ -320,8 +333,63 @@ export function CourseGradesView({ activeCourseId, subject }) {
                     }`}>
                         <div className="px-6 py-5 border-b border-gray-50 flex justify-between items-center">
                             <h2 className="text-2xl font-bold">Students List</h2>
-                            <button className="p-2.5 rounded-xl bg-gray-50 text-gray-400 hover:bg-gray-100"><InfoCircle size={20} /></button>
+                            <button
+                                onClick={() => setShowFilter(!showFilter)}
+                                className={`p-2.5 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer ${showFilter ? "text-[#3C0078] bg-[#3C0078]/10" : "text-gray-400"}`}
+                            >
+                                <Filter size={20} />
+                            </button>
                         </div>
+
+                        <AnimatePresence>
+                            {showFilter && (
+                                <motion.div
+                                    initial={{ height: 0, opacity: 0 }}
+                                    animate={{ height: "auto", opacity: 1 }}
+                                    exit={{ height: 0, opacity: 0 }}
+                                    transition={{ duration: 0.2 }}
+                                    className="px-6 py-4 border-b border-gray-50 bg-gray-50/20 flex flex-col sm:flex-row gap-3 items-center overflow-hidden"
+                                >
+                                    <div className="relative flex-1 w-full">
+                                        <input
+                                            type="text"
+                                            placeholder="Search by student name..."
+                                            value={searchQuery}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                            className="w-full pl-10 pr-4 py-2 text-xs rounded-xl border border-gray-200 focus:outline-none focus:border-[#3C0078] focus:ring-1 focus:ring-[#3C0078] transition-all bg-white text-gray-800"
+                                        />
+                                        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400">
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                            </svg>
+                                        </span>
+                                        {searchQuery && (
+                                            <button
+                                                onClick={() => setSearchQuery("")}
+                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
+                                            >
+                                                <X size={14} />
+                                            </button>
+                                        )}
+                                    </div>
+                                    <div className="flex gap-2 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0 scrollbar-hide">
+                                        {["All", "Excellent", "Good", "At Risk", "Critical"].map((status) => (
+                                            <button
+                                                key={status}
+                                                onClick={() => setStatusFilter(status)}
+                                                className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+                                                    statusFilter === status
+                                                        ? "bg-[#3C0078] text-white shadow-sm shadow-[#3C0078]/20"
+                                                        : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                                                }`}
+                                            >
+                                                {status}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                         <table className="w-full text-left border-collapse">
                             <thead>
                                 <tr className="border-b border-gray-50 bg-gray-50/30">
@@ -331,54 +399,68 @@ export function CourseGradesView({ activeCourseId, subject }) {
                                 </tr>
                             </thead>
                             <tbody>
-                                {studentRows.map((student) => {
-                                    const isActive = selectedStudent?.id === student.id;
-                                    return (
-                                        <tr
-                                            key={student.id}
-                                            onClick={() => setSelectedStudent(isActive ? null : student)}
-                                            className={`border-b border-gray-50 last:border-0 transition-all cursor-pointer group ${
-                                                isActive
-                                                    ? "bg-[#3C0078]/5"
-                                                    : "hover:bg-gray-50/60"
-                                            }`}
-                                        >
-                                            <td className={`py-3 pl-5 pr-3 ${isActive ? "border-l-2 border-[#3C0078]" : ""}`}>
-                                                <div className="flex items-center gap-3">
-                                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-xs shrink-0 ${
-                                                        isActive
-                                                            ? "bg-[#3C0078]/15 border-2 border-[#3C0078]/30 text-[#3C0078]"
-                                                            : "bg-[#3C0078]/5 border-2 border-[#3C0078]/10 text-[#3C0078]"
-                                                    }`}>
-                                                        {student.avatar}
+                                {studentRows.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={selectedStudent ? 2 : 3} className="px-8 py-12 text-center text-gray-400 text-sm">
+                                            No student grade records yet.
+                                        </td>
+                                    </tr>
+                                ) : filteredStudentRows.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={selectedStudent ? 2 : 3} className="px-8 py-12 text-center text-gray-400 text-sm">
+                                            No students match your filter criteria.
+                                        </td>
+                                    </tr>
+                                ) : (
+                                    filteredStudentRows.map((student) => {
+                                        const isActive = selectedStudent?.id === student.id;
+                                        return (
+                                            <tr
+                                                key={student.id}
+                                                onClick={() => setSelectedStudent(isActive ? null : student)}
+                                                className={`border-b border-gray-50 last:border-0 transition-all cursor-pointer group ${
+                                                    isActive
+                                                        ? "bg-[#3C0078]/5"
+                                                        : "hover:bg-gray-50/60"
+                                                }`}
+                                            >
+                                                <td className={`py-3 pl-5 pr-3 ${isActive ? "border-l-2 border-[#3C0078]" : ""}`}>
+                                                    <div className="flex items-center gap-3">
+                                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-xs shrink-0 ${
+                                                            isActive
+                                                                ? "bg-[#3C0078]/15 border-2 border-[#3C0078]/30 text-[#3C0078]"
+                                                                : "bg-[#3C0078]/5 border-2 border-[#3C0078]/10 text-[#3C0078]"
+                                                        }`}>
+                                                            {student.avatar}
+                                                        </div>
+                                                        <div className="min-w-0">
+                                                            <div className={`font-bold text-sm truncate transition-colors ${
+                                                                isActive ? "text-[#3C0078]" : "text-gray-900 group-hover:text-[#3C0078]"
+                                                            }`}>{student.name}</div>
+                                                            {!selectedStudent && (
+                                                                <div className="text-xs text-gray-400 mt-0.5 truncate">{student.email}</div>
+                                                            )}
+                                                        </div>
                                                     </div>
-                                                    <div className="min-w-0">
-                                                        <div className={`font-bold text-sm truncate transition-colors ${
-                                                            isActive ? "text-[#3C0078]" : "text-gray-900 group-hover:text-[#3C0078]"
-                                                        }`}>{student.name}</div>
-                                                        {!selectedStudent && (
-                                                            <div className="text-xs text-gray-400 mt-0.5 truncate">{student.email}</div>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td className="px-4 py-3 text-center">
-                                                <span className="text-base font-black italic text-gray-900">{student.avgGrade}</span>
-                                            </td>
-                                            {!selectedStudent && (
-                                                <td className="px-4 py-3">
-                                                    <span className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${
-                                                        student.status === "Excellent" ? "bg-green-100 text-green-700" :
-                                                        student.status === "Good" ? "bg-blue-50 text-blue-700" :
-                                                        student.status === "At Risk" ? "bg-orange-50 text-orange-700" : "bg-red-50 text-red-700"
-                                                    }`}>
-                                                        {student.status}
-                                                    </span>
                                                 </td>
-                                            )}
-                                        </tr>
-                                    );
-                                })}
+                                                <td className="px-4 py-3 text-center">
+                                                    <span className="text-base font-black italic text-gray-900">{student.avgGrade}</span>
+                                                </td>
+                                                {!selectedStudent && (
+                                                    <td className="px-4 py-3">
+                                                        <span className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${
+                                                            student.status === "Excellent" ? "bg-green-100 text-green-700" :
+                                                            student.status === "Good" ? "bg-blue-50 text-blue-700" :
+                                                            student.status === "At Risk" ? "bg-orange-50 text-orange-700" : "bg-red-50 text-red-700"
+                                                        }`}>
+                                                            {student.status}
+                                                        </span>
+                                                    </td>
+                                                )}
+                                            </tr>
+                                        );
+                                    })
+                                )}
                             </tbody>
                         </table>
                     </div>

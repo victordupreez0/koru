@@ -45,6 +45,11 @@ export function CourseAttendanceView({ activeCourseId, subject }) {
     const [studentCohortMap, setStudentCohortMap] = useState({});
     const [selectedCohortId, setSelectedCohortId] = useState(null);
 
+    // Filter/search state
+    const [showFilter, setShowFilter] = useState(false);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [statusFilter, setStatusFilter] = useState("All");
+
     const handleUpdateStatus = async (recordId, newStatus) => {
         await updateAttendanceRecord(recordId, newStatus);
         setRecords(prev => prev.map(rec => rec.id === recordId ? { ...rec, status: newStatus } : rec));
@@ -105,6 +110,16 @@ export function CourseAttendanceView({ activeCourseId, subject }) {
         return Object.values(map);
     }, [filteredRecords]);
 
+    const filteredStudentStats = useMemo(() => {
+        return studentStats.filter(student => {
+            const matchesSearch = student.name.toLowerCase().includes(searchQuery.toLowerCase());
+            const rate = student.total > 0 ? Math.round((student.present / student.total) * 100) : 0;
+            const status = rate > 85 ? "Excellent" : rate > 75 ? "Good" : rate > 65 ? "At Risk" : "Critical";
+            const matchesStatus = statusFilter === "All" || status === statusFilter;
+            return matchesSearch && matchesStatus;
+        });
+    }, [studentStats, searchQuery, statusFilter]);
+
     const overallRate = total > 0 ? Math.round((attended / total) * 100) : 0;
     const onTrack     = studentStats.filter(s => s.total > 0 && Math.round((s.present / s.total) * 100) >= 80).length;
     const atRisk      = studentStats.length - onTrack;
@@ -132,7 +147,7 @@ export function CourseAttendanceView({ activeCourseId, subject }) {
                 </div>
                 <div className="flex gap-4">
                     <button
-                        onClick={() => downloadAttendanceCSV(studentStats, subject?.name || subject?.code || activeCourseId)}
+                        onClick={() => downloadAttendanceCSV(filteredStudentStats, subject?.name || subject?.code || activeCourseId)}
                         className="px-6 py-3 rounded-2xl border border-gray-200 text-sm font-semibold hover:bg-gray-50 transition-colors flex items-center gap-2 shadow-sm cursor-pointer"
                     >
                         <Folder size={18} /> Export Log
@@ -245,10 +260,63 @@ export function CourseAttendanceView({ activeCourseId, subject }) {
                 }`}>
                     <div className="px-6 py-5 border-b border-gray-50 flex justify-between items-center">
                         <h2 className="text-2xl font-bold">Students Attendance</h2>
-                        <button className="p-2.5 rounded-xl bg-gray-50 text-gray-400 hover:bg-gray-100 cursor-pointer">
+                        <button
+                            onClick={() => setShowFilter(!showFilter)}
+                            className={`p-2.5 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer ${showFilter ? "text-[#3C0078] bg-[#3C0078]/10" : "text-gray-400"}`}
+                        >
                             <Filter size={20} />
                         </button>
                     </div>
+
+                    <AnimatePresence>
+                        {showFilter && (
+                            <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: "auto", opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                transition={{ duration: 0.2 }}
+                                className="px-6 py-4 border-b border-gray-50 bg-gray-50/20 flex flex-col sm:flex-row gap-3 items-center overflow-hidden"
+                            >
+                                <div className="relative flex-1 w-full">
+                                    <input
+                                        type="text"
+                                        placeholder="Search by student name..."
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        className="w-full pl-10 pr-4 py-2 text-xs rounded-xl border border-gray-200 focus:outline-none focus:border-[#3C0078] focus:ring-1 focus:ring-[#3C0078] transition-all bg-white text-gray-800"
+                                    />
+                                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400">
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                        </svg>
+                                    </span>
+                                    {searchQuery && (
+                                        <button
+                                            onClick={() => setSearchQuery("")}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
+                                        >
+                                            <X size={14} />
+                                        </button>
+                                    )}
+                                </div>
+                                <div className="flex gap-2 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0 scrollbar-hide">
+                                    {["All", "Excellent", "Good", "At Risk", "Critical"].map((status) => (
+                                        <button
+                                            key={status}
+                                            onClick={() => setStatusFilter(status)}
+                                            className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+                                                statusFilter === status
+                                                    ? "bg-[#3C0078] text-white shadow-sm shadow-[#3C0078]/20"
+                                                    : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                                            }`}
+                                        >
+                                            {status}
+                                        </button>
+                                    ))}
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
 
                     {loading ? (
                         <div className="animate-pulse">
@@ -285,6 +353,8 @@ export function CourseAttendanceView({ activeCourseId, subject }) {
                         </div>
                     ) : studentStats.length === 0 ? (
                         <div className="px-8 py-12 text-center text-gray-400 text-sm">No attendance records yet.</div>
+                    ) : filteredStudentStats.length === 0 ? (
+                        <div className="px-8 py-12 text-center text-gray-400 text-sm">No students match your filter criteria.</div>
                     ) : (
                         <table className="w-full text-left border-collapse">
                             <thead>
@@ -295,7 +365,7 @@ export function CourseAttendanceView({ activeCourseId, subject }) {
                                 </tr>
                             </thead>
                             <tbody>
-                                {studentStats.map(student => {
+                                {filteredStudentStats.map(student => {
                                     const rate = student.total > 0 ? Math.round((student.present / student.total) * 100) : 0;
                                     const isActive = selectedStudent?.id === student.id;
                                     return (

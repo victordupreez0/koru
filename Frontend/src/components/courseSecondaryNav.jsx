@@ -113,9 +113,7 @@ export default function CourseSecondaryNav({ activeCourseId, hideNav, onDeleteCo
         }
     };
 
-    const removeItem = (label) => {
-        setNavItems(navItems.filter(item => item.label !== label));
-    };
+
 
     if (hideNav) return null;
 
@@ -184,31 +182,9 @@ export default function CourseSecondaryNav({ activeCourseId, hideNav, onDeleteCo
 
                                                 <span className="flex-1 truncate !text-inherit">{item.label}</span>
 
-                                                {isTeacher && item.label !== "Home" && (
-                                                    <button
-                                                        onClick={(e) => {
-                                                            e.preventDefault();
-                                                            e.stopPropagation();
-                                                            removeItem(item.label);
-                                                        }}
-                                                        className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-500 transition-all shrink-0 cursor-pointer"
-                                                        title="Remove Link"
-                                                    >
-                                                        <Trash2 size={12} />
-                                                    </button>
-                                                )}
 
-                                                {isActive && (
-                                                    <motion.div
-                                                        layoutId="activeSecondaryDot"
-                                                        className="w-1.5 h-1.5 rounded-full bg-[#3C0078] shrink-0"
-                                                        transition={{
-                                                            type: "spring",
-                                                            stiffness: 300,
-                                                            damping: 30
-                                                        }}
-                                                    />
-                                                )}
+
+
                                             </>
                                         )}
                                     </NavLink>
