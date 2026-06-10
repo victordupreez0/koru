@@ -189,9 +189,10 @@ namespace LearnOnline.Controllers
             if (file == null || file.Length == 0)
                 return BadRequest(new { message = "No file provided." });
 
-            // Sanitise filename to prevent path traversal
+            // Sanitise filename to prevent path traversal and remove characters like commas or spaces that break builds or URL paths
             var originalName = Path.GetFileName(file.FileName);
-            var safeFileName = $"{Guid.NewGuid()}_{originalName}";
+            var sanitizedName = System.Text.RegularExpressions.Regex.Replace(originalName, @"[^a-zA-Z0-9_\-\.]", "_");
+            var safeFileName = $"{Guid.NewGuid()}_{sanitizedName}";
 
             var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
             Directory.CreateDirectory(uploadsFolder);
