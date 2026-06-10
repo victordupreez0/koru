@@ -1,0 +1,4 @@
+**/bin/
+**/obj/
+LearnOnline.Tests/
+**/*.user

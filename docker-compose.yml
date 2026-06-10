@@ -1,0 +1,7 @@
+services:
+  backend:
+    build: ./Backend
+    container_name: learnonline-api
+    ports:
+      - "5299:5299"
+    restart: unless-stopped
