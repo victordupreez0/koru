@@ -5,21 +5,13 @@ import { Plus, Mail, FileText } from "lucide-react";
 import confetti from "canvas-confetti";
 import ProgressRing from "./UI/progressRing";
 import { useAuth } from "../contexts/AuthContext";
+import { useCourses } from "../contexts/CoursesContext";
 import { getTeacherTodos, createTodo, toggleTodo as apiToggleTodo } from "../services/todoService";
+import { getCourseSubmissions } from "../services/submissionService";
+import { getCourseGrades } from "../services/gradeService";
 
-// ──────────────────────────────────────────────
-// Teacher To-Do list + Progress ring
-// Teacher-created todos → purple (#3C0078)
-// Admin-assigned todos  → orange (#FF8731)
-// ──────────────────────────────────────────────
+const MIN_LOADING_MS = 1500;
 
-const iconMap = {
-  edit: MdEditNote,
-  mail: Mail,
-  file: FileText,
-};
-
-// Color tokens per source
 const theme = {
   teacher: {
     icon: "bg-[#3C0078]/8",
@@ -47,7 +39,6 @@ const theme = {
   },
 };
 
-// Format a datetime-local value ("2026-03-05T10:00") into "Mar 5 at 10:00"
 function formatDueDate(raw) {
   if (!raw) return null;
   const d = new Date(raw);
@@ -59,35 +50,74 @@ function formatDueDate(raw) {
   return `${month} ${day} at ${hours}:${mins}`;
 }
 
+function SkeletonTodo() {
+  return (
+    <div className="rounded-2xl border border-gray-100 px-4 py-3.5 flex items-center gap-3">
+      <div className="w-10 h-10 rounded-xl bg-gray-100 animate-pulse shrink-0" />
+      <div className="flex-1 space-y-2">
+        <div className="h-3.5 bg-gray-100 rounded-full animate-pulse w-3/4" />
+        <div className="h-2.5 bg-gray-100 rounded-full animate-pulse w-1/2" />
+      </div>
+      <div className="w-7 h-7 rounded-lg bg-gray-100 animate-pulse shrink-0" />
+    </div>
+  );
+}
+
 export default function TeacherTodoProgress() {
   const { user } = useAuth();
+  const { visibleCourses } = useCourses();
   const [todos, setTodos] = useState([]);
+  const [gradingProgress, setGradingProgress] = useState(0);
   const [isAdding, setIsAdding] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newDue, setNewDue] = useState("");
   const [shareMode, setShareMode] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Fetch todos on mount
   useEffect(() => {
     if (!user?.userId) return;
-    getTeacherTodos(user.userId)
-      .then(setTodos)
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, [user?.userId]);
+    let mounted = true;
+    async function load() {
+      try {
+        const courseIds = (visibleCourses || []).map(c => c.id);
+        const [data, ...courseResults] = await Promise.all([
+          getTeacherTodos(user.userId),
+          ...courseIds.map(id =>
+            Promise.all([
+              getCourseSubmissions(id).catch(() => []),
+              getCourseGrades(id).catch(() => []),
+            ])
+          ),
+          new Promise(resolve => setTimeout(resolve, MIN_LOADING_MS)),
+        ]);
 
-  // Fire confetti when a task is completed
+        if (mounted) {
+          setTodos(data);
+
+          let totalSubs = 0;
+          let gradedSubs = 0;
+          courseResults.forEach(result => {
+            if (!Array.isArray(result)) return;
+            const [subs, grades] = result;
+            const gradedIds = new Set((Array.isArray(grades) ? grades : []).map(g => g.submissionId));
+            totalSubs += (Array.isArray(subs) ? subs : []).length;
+            gradedSubs += (Array.isArray(subs) ? subs : []).filter(s => gradedIds.has(s.id)).length;
+          });
+          setGradingProgress(totalSubs > 0 ? Math.round((gradedSubs / totalSubs) * 100) : 0);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    }
+    load();
+    return () => { mounted = false; };
+  }, [user?.userId, visibleCourses]);
+
   function fireConfetti() {
     const colors = ["#3C0078", "#FF8731", "#87CEFA"];
-    confetti({
-      particleCount: 60,
-      spread: 55,
-      origin: { x: 0.75, y: 0.3 },
-      colors,
-      gravity: 0.8,
-      scalar: 1,
-    });
+    confetti({ particleCount: 60, spread: 55, origin: { x: 0.75, y: 0.3 }, colors, gravity: 0.8, scalar: 1 });
     document.body.classList.add("orbs-vibrant");
     setTimeout(() => document.body.classList.remove("orbs-vibrant"), 3000);
   }
@@ -96,18 +126,12 @@ export default function TeacherTodoProgress() {
     const target = todos.find((t) => t.id === id);
     if (!target) return;
     if (!target.isCompleted) fireConfetti();
-    // Optimistic update
-    setTodos((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, isCompleted: !t.isCompleted } : t))
-    );
+    setTodos((prev) => prev.map((t) => (t.id === id ? { ...t, isCompleted: !t.isCompleted } : t)));
     try {
       await apiToggleTodo(id);
     } catch (err) {
-      // Revert on failure
       console.error(err);
-      setTodos((prev) =>
-        prev.map((t) => (t.id === id ? { ...t, isCompleted: !t.isCompleted } : t))
-      );
+      setTodos((prev) => prev.map((t) => (t.id === id ? { ...t, isCompleted: !t.isCompleted } : t)));
     }
   }
 
@@ -130,7 +154,6 @@ export default function TeacherTodoProgress() {
     setIsAdding(false);
   }
 
-  // Calculate progress
   const progress = useMemo(() => {
     if (todos.length === 0) return 0;
     const done = todos.filter((t) => t.isCompleted).length;
@@ -139,7 +162,6 @@ export default function TeacherTodoProgress() {
 
   return (
     <div className="w-full h-full flex flex-col bg-white/70 border border-gray-100 rounded-3xl p-4">
-      {/* ── To Do Header ── */}
       <div className="flex items-center justify-between mt-5 mb-1">
         <h2 className="text-2xl font-['Gabarito']">To Do</h2>
         <button
@@ -151,7 +173,6 @@ export default function TeacherTodoProgress() {
         </button>
       </div>
 
-      {/* ── Add task form ── */}
       <AnimatePresence>
         {isAdding && (
           <motion.div
@@ -175,27 +196,18 @@ export default function TeacherTodoProgress() {
                 onChange={(e) => setNewDue(e.target.value)}
                 className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-[#3C0078] transition-colors"
               />
-              {/* Segmented share selector */}
               <div className="flex rounded-lg border border-gray-200 overflow-hidden text-xs font-semibold">
                 <button
                   type="button"
                   onClick={() => setShareMode(false)}
-                  className={`flex-1 py-2 transition-colors ${
-                    !shareMode
-                      ? "bg-[#3C0078] text-white"
-                      : "bg-white text-gray-500 hover:bg-gray-50"
-                  }`}
+                  className={`flex-1 py-2 transition-colors ${!shareMode ? "bg-[#3C0078] text-white" : "bg-white text-gray-500 hover:bg-gray-50"}`}
                 >
                   Just me
                 </button>
                 <button
                   type="button"
                   onClick={() => setShareMode(true)}
-                  className={`flex-1 py-2 border-l border-gray-200 transition-colors ${
-                    shareMode
-                      ? "bg-[#3C0078] text-white"
-                      : "bg-white text-gray-500 hover:bg-gray-50"
-                  }`}
+                  className={`flex-1 py-2 border-l border-gray-200 transition-colors ${shareMode ? "bg-[#3C0078] text-white" : "bg-white text-gray-500 hover:bg-gray-50"}`}
                 >
                   Share with co-lecturers
                 </button>
@@ -221,111 +233,98 @@ export default function TeacherTodoProgress() {
         )}
       </AnimatePresence>
 
-      {/* ── To-Do Cards ── */}
-      <div className="flex flex-col gap-3 flex-1 min-h-0 overflow-y-auto scrollbar-black pr-2">
-        {loading && (
-          <p className="text-sm text-gray-400 text-center mt-4">Loading...</p>
-        )}
-        <AnimatePresence>
-          {todos.map((todo) => {
-            const isAdminTodo = !!todo.createdByAdminId;
-            const isSharedTodo = !!todo.sharedByTeacherId;
-            const colors = isAdminTodo ? theme.admin : isSharedTodo ? theme.shared : theme.teacher;
-            const IconComp = MdEditNote;
-            return (
-              <motion.div
-                key={todo.id}
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                transition={{ duration: 0.3, ease: "easeOut" }}
-                className={`w-full border rounded-2xl px-4 py-3.5 flex items-center gap-3 transition-all duration-300 cursor-pointer
-                  ${todo.isCompleted ? "bg-gray-50/60 border-gray-100 opacity-40" : "bg-white/80 border-gray-100 hover:border-gray-200"}`}
-              >
-                {/* Icon + source dot */}
-                <div className="relative shrink-0">
-                  <div
-                    className={`w-10 h-10 rounded-xl flex items-center justify-center
-                      ${todo.isCompleted ? "bg-gray-100" : colors.icon}`}
-                  >
-                    <IconComp
-                      className={`w-5 h-5 ${todo.isCompleted ? "text-gray-400" : colors.iconText}`}
-                    />
-                  </div>
-                  {/* Colored dot indicates source: purple = self, orange = admin, green = shared */}
-                  <span
-                    className={`absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 border-white
-                      ${todo.isCompleted ? "bg-gray-300" : colors.dot}`}
-                  />
-                </div>
-
-                {/* Text */}
-                <div className="flex-1 min-w-0">
-                  <h4
-                    className={`text-base font-semibold leading-tight font-['Gabarito'] ${
-                      todo.isCompleted ? "text-gray-400 line-through" : "text-black"
-                    }`}
-                  >
-                    {todo.title}
-                  </h4>
-                  <p className="text-xs text-gray-400 mt-0.5 flex flex-wrap items-center gap-2">
-                    {todo.dueDate && <span>{todo.dueDate}</span>}
-                    {todo.courseCode && (
-                      <span className="font-bold text-black">{todo.courseCode}</span>
-                    )}
-                    {isAdminTodo && todo.createdByAdminName && (
-                      <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${colors.badge}`}>
-                        {todo.createdByAdminName}
-                      </span>
-                    )}
-                    {isSharedTodo && todo.sharedByTeacherName && (
-                      <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${colors.badge}`}>
-                        {todo.sharedByTeacherName}
-                      </span>
-                    )}
-                  </p>
-                </div>
-
-                {/* Checkbox */}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleToggle(todo.id);
-                  }}
-                  className={`w-7 h-7 rounded-lg border-2 flex items-center justify-center shrink-0 transition-all duration-200
-                    ${todo.isCompleted
-                      ? colors.checkbox
-                      : `border-gray-300 ${colors.checkboxHover}`
-                    }`}
-                  aria-label={`Toggle ${todo.title}`}
+      <div className="flex flex-col gap-3 pr-2">
+        {loading ? (
+          <>{[0, 1, 2].map(i => <SkeletonTodo key={i} />)}</>
+        ) : (
+          <AnimatePresence>
+            {todos.map((todo) => {
+              const isAdminTodo  = !!todo.createdByAdminId;
+              const isSharedTodo = !!todo.sharedByTeacherId;
+              const colors = isAdminTodo ? theme.admin : isSharedTodo ? theme.shared : theme.teacher;
+              return (
+                <motion.div
+                  key={todo.id}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  transition={{ duration: 0.3, ease: "easeOut" }}
+                  className={`w-full border rounded-2xl px-4 py-3.5 flex items-center gap-3 transition-all duration-300 cursor-pointer
+                    ${todo.isCompleted ? "bg-gray-50/60 border-gray-100 opacity-40" : "bg-white/80 border-gray-100 hover:border-gray-200"}`}
                 >
-                  {todo.isCompleted && (
-                    <motion.svg
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                      className="w-4 h-4 text-white"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth={3}
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                    </motion.svg>
-                  )}
-                </button>
-              </motion.div>
-            );
-          })}
-        </AnimatePresence>
+                  <div className="relative shrink-0">
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${todo.isCompleted ? "bg-gray-100" : colors.icon}`}>
+                      <MdEditNote className={`w-5 h-5 ${todo.isCompleted ? "text-gray-400" : colors.iconText}`} />
+                    </div>
+                    <span className={`absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 border-white ${todo.isCompleted ? "bg-gray-300" : colors.dot}`} />
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <h4 className={`text-base font-semibold leading-tight font-['Gabarito'] ${todo.isCompleted ? "text-gray-400 line-through" : "text-black"}`}>
+                      {todo.title}
+                    </h4>
+                    <p className="text-xs text-gray-400 mt-0.5 flex flex-wrap items-center gap-2">
+                      {todo.dueDate && <span>{todo.dueDate}</span>}
+                      {todo.courseCode && <span className="font-bold text-black">{todo.courseCode}</span>}
+                      {isAdminTodo && todo.createdByAdminName && (
+                        <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${colors.badge}`}>{todo.createdByAdminName}</span>
+                      )}
+                      {isSharedTodo && todo.sharedByTeacherName && (
+                        <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${colors.badge}`}>{todo.sharedByTeacherName}</span>
+                      )}
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleToggle(todo.id); }}
+                    className={`w-7 h-7 rounded-lg border-2 flex items-center justify-center shrink-0 transition-all duration-200
+                      ${todo.isCompleted ? colors.checkbox : `border-gray-300 ${colors.checkboxHover}`}`}
+                    aria-label={`Toggle ${todo.title}`}
+                  >
+                    {todo.isCompleted && (
+                      <motion.svg
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                        className="w-4 h-4 text-white"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={3}
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </motion.svg>
+                    )}
+                  </button>
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
+        )}
       </div>
 
-      {/* ── Progress Header ── */}
-      <h2 className="text-2xl font-['Gabarito'] mt-4 mb-2 shrink-0">Progress</h2>
-
-      {/* ── Progress Ring ── */}
-      <div className="w-full bg-gray-50/60 rounded-2xl border border-gray-100 p-4 shrink-0">
-        <ProgressRing percentage={progress} />
+      {/* Progress section anchored to bottom of equalised card via mt-auto */}
+      <h2 className="text-2xl font-['Gabarito'] mt-auto pt-8 mb-4">Progress & Stats</h2>
+      <div className="grid grid-cols-2 gap-4">
+        {loading ? (
+          <>{[0, 1].map(i => (
+            <div key={i} className="p-4 flex flex-col items-center gap-3">
+              <div className="w-20 h-2.5 bg-gray-100 rounded-full animate-pulse" />
+              <div className="w-28 h-28 rounded-full bg-gray-100 animate-pulse" />
+            </div>
+          ))}</>
+        ) : (
+          <>
+            <div className="p-4 flex flex-col items-center">
+              <span className="text-[10px] font-black uppercase tracking-widest text-[#3C0078] opacity-60 mb-2">To-do</span>
+              <ProgressRing percentage={progress} size={110} strokeWidth={8} />
+            </div>
+            <div className="p-4 flex flex-col items-center">
+              <span className="text-[10px] font-black uppercase tracking-widest text-[#3C0078] opacity-60 mb-2">Graded</span>
+              <ProgressRing percentage={gradingProgress} size={110} strokeWidth={8} />
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

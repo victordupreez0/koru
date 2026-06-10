@@ -115,6 +115,7 @@ export default function CalendarDayBlockEvent({
   isUserTask = false,
   onEdit,
   onDelete,
+  tooltipPosition = "up",
 }) {
   const hasTooltipDetails = lecturer || location || startTime;
 
@@ -125,15 +126,19 @@ export default function CalendarDayBlockEvent({
       {hasTooltipDetails && (
         <div
           className={[
-            // Position: above the pill, centred on it
-            "absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50",
+            // Position: above or below the pill, centred on it
+            tooltipPosition === "down"
+              ? "absolute top-full left-1/2 -translate-x-1/2 mt-2 z-50"
+              : "absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50",
             // Sizing & appearance
             "w-52 bg-purple-800 rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.12)] p-3",
             // Pointer events: don't interfere with mouse
             "pointer-events-none",
             // Fade + lift animation driven by group-hover
             "opacity-0 group-hover:opacity-100",
-            "translate-y-1.5 group-hover:translate-y-0",
+            tooltipPosition === "down"
+              ? "-translate-y-1.5 group-hover:translate-y-0"
+              : "translate-y-1.5 group-hover:translate-y-0",
             "transition-all duration-200 ease-out",
           ].join(" ")}
         >
@@ -173,8 +178,11 @@ export default function CalendarDayBlockEvent({
             )}
           </div>
 
-          {/* ── Caret (pointing down) ── */}
-          <div className="absolute left-1/2 -translate-x-1/2 -bottom-[5px] w-2.5 h-2.5 bg-purple-800 rotate-45 shadow-[1px_1px_0px_rgba(0,0,0,0.04)]" />
+          {/* ── Caret (pointing down or up) ── */}
+          <div className={[
+            "absolute left-1/2 -translate-x-1/2 w-2.5 h-2.5 bg-purple-800 rotate-45 shadow-[1px_1px_0px_rgba(0,0,0,0.04)]",
+            tooltipPosition === "down" ? "-top-[5px]" : "-bottom-[5px]"
+          ].join(" ")} />
         </div>
       )}
 
@@ -184,6 +192,8 @@ export default function CalendarDayBlockEvent({
           "flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-medium transition-all duration-150 shadow-xs hover:-translate-y-px hover:shadow-md",
           isUserTask
             ? "bg-amber-50 text-gray-800 hover:bg-amber-100"
+            : type === "scheduled"
+            ? "bg-green-50 text-green-900 hover:bg-green-100"
             : "bg-white text-black hover:bg-purple-100",
           isDraggable ? "cursor-grab active:cursor-grabbing active:opacity-60 active:scale-95" : "cursor-pointer",
         ].join(" ")}
@@ -194,7 +204,7 @@ export default function CalendarDayBlockEvent({
         } : undefined}
       >
         {/* Type icon */}
-        <span className={["shrink-0 mt-px", isUserTask ? "text-amber-600" : "text-purple-700"].join(" ")}>
+        <span className={["shrink-0 mt-px", isUserTask ? "text-amber-600" : type === "scheduled" ? "text-green-600" : "text-purple-700"].join(" ")}>
           {ICONS[type] ?? ICONS.class}
         </span>
 
@@ -240,9 +250,31 @@ export default function CalendarDayBlockEvent({
               </button>
             </div>
           </>
+        ) : onDelete ? (
+          <>
+            {(startTime || endTime) && (
+              <span className={`group-hover:hidden shrink-0 text-[10px] text-right leading-tight whitespace-nowrap ${type === "scheduled" ? "text-green-500" : "text-gray-400"}`}>
+                {startTime && <span className="block">{startTime}</span>}
+                {endTime && <span className="block">{endTime}</span>}
+              </span>
+            )}
+            <button
+              type="button"
+              title="Delete"
+              onClick={(e) => { e.stopPropagation(); onDelete?.(); }}
+              className="hidden group-hover:flex w-[18px] h-[18px] items-center justify-center rounded shrink-0 text-rose-400 hover:text-rose-600 hover:bg-rose-100 transition-colors"
+            >
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="3 6 5 6 21 6" />
+                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                <path d="M10 11v6" /><path d="M14 11v6" />
+                <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+              </svg>
+            </button>
+          </>
         ) : (
           (startTime || endTime) && (
-            <span className="shrink-0 text-[10px] text-gray-400 text-right leading-tight whitespace-nowrap">
+            <span className={`shrink-0 text-[10px] text-right leading-tight whitespace-nowrap ${type === "scheduled" ? "text-green-500" : "text-gray-400"}`}>
               {startTime && <span className="block">{startTime}</span>}
               {endTime && <span className="block">{endTime}</span>}
             </span>

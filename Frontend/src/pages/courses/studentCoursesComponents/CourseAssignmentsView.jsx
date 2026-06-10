@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { Folder, Upload } from "@solar-icons/react";
+import { Upload } from "@solar-icons/react";
 import { motion } from "framer-motion";
 import { getCourseAssignments } from "../../../services/assignmentService";
 import { getStudentSubmissions } from "../../../services/submissionService";
@@ -75,18 +75,37 @@ export default function CourseAssignmentsView({ subject, activeCourseId }) {
             <motion.header variants={slideUp} className="mb-6 flex justify-between items-end">
                 <div>
                     <h1 className="text-3xl font-semibold tracking-tight">Assignments</h1>
-                    <p className="text-gray-500 mt-2 text-lg">{subject?.code || "Pending"} | Assessments & Briefs</p>
-                </div>
-                <div className="flex gap-4">
-                    <button className="px-6 py-3 rounded-2xl border border-gray-200 text-sm font-semibold hover:bg-gray-50 transition-colors flex items-center gap-2 shadow-sm">
-                        <Folder size={20} /> Briefs Archive
-                    </button>
-                    {/* The global 'Submit Assignment' button was removed here as per instructions */}
                 </div>
             </motion.header>
             
             {loading ? (
-                <div className="text-gray-500 text-center py-20 font-medium">Loading remote course assignments...</div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
+                    {[1, 2, 3, 4, 5, 6].map(i => (
+                        <div key={i} className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-between">
+                            <div>
+                                <div className="flex justify-between items-start mb-4 gap-4">
+                                    <div className="h-6 rounded-full bg-gray-200 flex-1" style={{ maxWidth: `${55 + (i * 13) % 30}%` }} />
+                                    <div className="h-4 rounded-full bg-gray-100 w-16 mt-1 shrink-0" />
+                                </div>
+                                <div className="flex flex-col gap-2 mb-6">
+                                    <div className="h-3 rounded-full bg-gray-100 w-full" />
+                                    <div className="h-3 rounded-full bg-gray-100 w-4/5" />
+                                </div>
+                            </div>
+                            <div className="space-y-4 pt-6 border-t border-gray-50">
+                                <div className="flex justify-between items-center">
+                                    <div className="h-3 rounded-full bg-gray-100 w-14" />
+                                    <div className="h-3 rounded-full bg-gray-100 w-12" />
+                                </div>
+                                <div className="flex justify-between items-center">
+                                    <div className="h-3 rounded-full bg-gray-100 w-16" />
+                                    <div className="h-3 rounded-full bg-gray-100 w-24" />
+                                </div>
+                                <div className="h-12 rounded-2xl bg-gray-100 w-full" />
+                            </div>
+                        </div>
+                    ))}
+                </div>
             ) : assignments.length === 0 ? (
                 <div className="text-gray-500 text-center py-20 font-medium bg-gray-50 rounded-3xl border border-gray-100">
                     No active assignments for this module yet.

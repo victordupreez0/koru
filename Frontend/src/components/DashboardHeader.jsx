@@ -11,46 +11,30 @@ function getGreeting(hour) {
   return "Working late";
 }
 
-const ROLE_LABEL = {
-  student: "Student",
-  teacher: "Lecturer",
-  admin:   "Admin",
-};
-
 export default function DashboardHeader({
   stats = [],
   loading = false,
   actions,
   contextLine,
 }) {
-  const { user, role } = useAuth();
+  const { user } = useAuth();
 
   const now      = new Date();
   const greeting = useMemo(() => getGreeting(now.getHours()), [now]);
-  const dateLine = useMemo(
-    () => now.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" }),
-    [now]
-  );
 
   const firstName = user?.firstName || user?.name?.split(" ")?.[0] || "";
-  const roleLabel = ROLE_LABEL[role] ?? "Student";
 
   return (
     <motion.header
       initial={{ opacity: 0, y: -6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: "easeOut" }}
-      className="w-full max-w-[1400px] mx-auto"
+      className="w-full max-w-[1400px] mx-auto pt-4"
     >
       <div className="flex flex-col gap-4">
         {/* Greeting row */}
         <div className="flex items-end justify-between gap-4 flex-wrap">
           <div className="min-w-0">
-            {/* Meta line — role + date, plain text no badges */}
-            <p className="text-xs font-medium text-slate-400 mb-1.5 tracking-wide">
-              {roleLabel} · {dateLine}
-            </p>
-
             <h1 className="text-3xl font-bold font-['Gabarito'] text-slate-900 leading-tight">
               {greeting}{firstName ? `, ${firstName}` : ""}
               <span className="text-[#3C0078]">.</span>

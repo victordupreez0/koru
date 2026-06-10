@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../contexts/AuthContext";
 import { useCourses } from "../contexts/CoursesContext";
 import { updateCourseVisibility } from "../services/courseService";
+import { courseService } from "../services/adminService";
 import {
     Home,
     Megaphone,
@@ -13,12 +14,14 @@ import {
     Award,
     CalendarCheck,
     FileText,
-    Plus,
-    X,
     Trash2,
+    LayoutDashboard,
+    Users,
+    UsersRound,
+    ScrollText,
 } from "lucide-react";
 
-const INITIAL_NAV_ITEMS = [
+const TEACHER_NAV_ITEMS = [
     { label: "Home", pathSuffix: "", end: true },
     { label: "Announcements", pathSuffix: "announcements" },
     { label: "Assignments", pathSuffix: "assignments" },
@@ -26,6 +29,15 @@ const INITIAL_NAV_ITEMS = [
     { label: "Notes", pathSuffix: "notes" },
     { label: "Grades", pathSuffix: "grades" },
     { label: "Attendance", pathSuffix: "attendance" },
+];
+
+const ADMIN_NAV_ITEMS = [
+    { label: "Overview", pathSuffix: "overview" },
+    { label: "Students", pathSuffix: "students" },
+    { label: "Groups & Classes", pathSuffix: "groups" },
+    { label: "Assignments", pathSuffix: "assignments" },
+    { label: "Grades", pathSuffix: "grades" },
+    { label: "Grade Activity", pathSuffix: "grade-activity" },
 ];
 
 const ICON_MAP = {
@@ -36,6 +48,12 @@ const ICON_MAP = {
     Notes: Notebook,
     Grades: Award,
     Attendance: CalendarCheck,
+    Overview: LayoutDashboard,
+    Students: Users,
+    Groups: UsersRound,
+    "Groups & Classes": UsersRound,
+    Cohorts: UsersRound,
+    "Grade Activity": ScrollText,
 };
 
 function getIcon(label) {
@@ -43,16 +61,23 @@ function getIcon(label) {
     return <IconComponent size={15} />;
 }
 
-export default function CourseSecondaryNav({ activeCourseId, hideNav }) {
+export default function CourseSecondaryNav({ activeCourseId, hideNav, onDeleteCourse }) {
     const { role } = useAuth();
     const { visibleCourses, updateCourseVisibilityInContext } = useCourses();
     const isTeacher = role === "teacher";
-    
-    const [navItems, setNavItems] = useState(INITIAL_NAV_ITEMS);
+    const isAdmin = role === "admin";
+
+    const baseNavItems = isAdmin ? ADMIN_NAV_ITEMS : TEACHER_NAV_ITEMS;
+    const [navItems, setNavItems] = useState(baseNavItems);
     const [isPublished, setIsPublished] = useState(true);
+    const [deletingCourse, setDeletingCourse] = useState(false);
 
     // Fetch active course details
     const course = visibleCourses.find(c => c.id === activeCourseId) || visibleCourses[0] || null;
+
+    useEffect(() => {
+        setNavItems(isAdmin ? ADMIN_NAV_ITEMS : TEACHER_NAV_ITEMS);
+    }, [isAdmin]);
 
     useEffect(() => {
         if (course) {
@@ -75,12 +100,21 @@ export default function CourseSecondaryNav({ activeCourseId, hideNav }) {
         }
     };
 
-    // Generate base link
-    const queryAppend = hideNav ? "?hideNav=true" : "";
-
-    const removeItem = (label) => {
-        setNavItems(navItems.filter(item => item.label !== label));
+    const handleDeleteCourse = async () => {
+        if (!course) return;
+        if (!window.confirm(`Delete "${course.subjectName}"? This action cannot be undone.`)) return;
+        setDeletingCourse(true);
+        try {
+            await courseService.deleteCourse(course.id);
+            onDeleteCourse?.(course.id);
+        } catch (err) {
+            alert("Failed to delete course: " + err.message);
+        } finally {
+            setDeletingCourse(false);
+        }
     };
+
+
 
     if (hideNav) return null;
 
@@ -94,21 +128,9 @@ export default function CourseSecondaryNav({ activeCourseId, hideNav }) {
         >
             {/* Course Header Info */}
             {course && (
-                <div className="px-6 pt-6 pb-5 border-b border-gray-100 flex flex-col gap-2 shrink-0">
-                    <div className="flex items-center gap-2">
-                        <div 
-                            style={{ backgroundColor: course.color }} 
-                            className="px-2 py-0.5 rounded-lg text-white font-black text-[9px] uppercase tracking-wider shadow-sm"
-                        >
-                            {course.code}
-                        </div>
-                        <span className="text-[10px] font-extrabold text-gray-400 tracking-wider">
-                            {course.code} {course.number}
-                        </span>
-                    </div>
-                    <h3 className="text-sm font-extrabold text-gray-900 leading-snug mt-1 truncate" title={course.subjectName}>
-                        {course.subjectName}
-                    </h3>
+                <div className="px-6 pt-6 pb-5 border-b border-gray-100 shrink-0">
+                    <h3 className="text-sm font-black text-gray-900 leading-tight">{course.subjectName}</h3>
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mt-1">{course.code} {course.number}</p>
                 </div>
             )}
 
@@ -117,11 +139,10 @@ export default function CourseSecondaryNav({ activeCourseId, hideNav }) {
                 <ul className="flex flex-col gap-0.5">
                     <AnimatePresence>
                         {navItems.map((item, index) => {
-                            const showQuery = queryAppend && !item.pathSuffix.includes('?');
-                            const toPath = item.pathSuffix 
-                                ? `/courses/${activeCourseId}/${item.pathSuffix}${showQuery ? queryAppend : ""}`
-                                : `/courses/${activeCourseId}${queryAppend}`;
-                            
+                            const toPath = item.pathSuffix
+                                ? `/courses/${activeCourseId}/${item.pathSuffix}`
+                                : `/courses/${activeCourseId}`;
+
                             return (
                                 <motion.li
                                     key={item.label}
@@ -144,7 +165,6 @@ export default function CourseSecondaryNav({ activeCourseId, hideNav }) {
                                     >
                                         {({ isActive }) => (
                                             <>
-                                                {/* Left Accent indicator dot */}
                                                 {isActive && (
                                                     <motion.div
                                                         layoutId="activeSecondaryLeftAccent"
@@ -160,34 +180,12 @@ export default function CourseSecondaryNav({ activeCourseId, hideNav }) {
                                                 <span className={`transition-colors shrink-0 ${isActive ? "text-[#3C0078]" : "text-gray-400 group-hover:text-gray-600"}`}>
                                                     {getIcon(item.label)}
                                                 </span>
-                                                
+
                                                 <span className="flex-1 truncate !text-inherit">{item.label}</span>
-                                                
-                                                {isTeacher && item.label !== "Home" && (
-                                                    <button
-                                                        onClick={(e) => {
-                                                            e.preventDefault();
-                                                            e.stopPropagation();
-                                                            removeItem(item.label);
-                                                        }}
-                                                        className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-500 transition-all shrink-0 cursor-pointer"
-                                                        title="Remove Link"
-                                                    >
-                                                        <Trash2 size={12} />
-                                                    </button>
-                                                )}
-                                                
-                                                {isActive && (
-                                                    <motion.div
-                                                        layoutId="activeSecondaryDot"
-                                                        className="w-1.5 h-1.5 rounded-full bg-[#3C0078] shrink-0"
-                                                        transition={{
-                                                            type: "spring",
-                                                            stiffness: 300,
-                                                            damping: 30
-                                                        }}
-                                                    />
-                                                )}
+
+
+
+
                                             </>
                                         )}
                                     </NavLink>
@@ -196,8 +194,6 @@ export default function CourseSecondaryNav({ activeCourseId, hideNav }) {
                         })}
                     </AnimatePresence>
                 </ul>
-
-
             </div>
 
             {/* Teacher controls footer */}
@@ -223,6 +219,41 @@ export default function CourseSecondaryNav({ activeCourseId, hideNav }) {
                             </button>
                         </div>
                     </div>
+                </div>
+            )}
+
+            {/* Admin controls footer */}
+            {isAdmin && (
+                <div className="p-4 border-t border-gray-100 bg-gray-50/50 shrink-0 space-y-2.5">
+                    <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest px-2 block">
+                        Admin Controls
+                    </span>
+
+                    {/* Publish toggle */}
+                    <div className="flex items-center justify-between px-2">
+                        <span className="text-[10px] font-bold text-gray-500">Course Status</span>
+                        <button
+                            onClick={togglePublished}
+                            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer shadow-xs
+                                ${isPublished
+                                    ? "bg-green-50 text-green-600 border border-green-200/50 hover:bg-green-100/50"
+                                    : "bg-amber-50 text-amber-600 border border-amber-200/50 hover:bg-amber-100/50"
+                                }`}
+                        >
+                            <span className={`w-1.5 h-1.5 rounded-full ${isPublished ? "bg-green-500 animate-pulse" : "bg-amber-500"}`} />
+                            <span>{isPublished ? "Published" : "Draft"}</span>
+                        </button>
+                    </div>
+
+                    {/* Delete course */}
+                    <button
+                        onClick={handleDeleteCourse}
+                        disabled={deletingCourse}
+                        className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest text-red-500 bg-red-50 border border-red-100 hover:bg-red-100 transition-all disabled:opacity-50 cursor-pointer"
+                    >
+                        <Trash2 size={12} />
+                        {deletingCourse ? "Deleting…" : "Delete Course"}
+                    </button>
                 </div>
             )}
         </motion.div>

@@ -17,6 +17,15 @@ export async function getAllEvents() {
   return handleResponse(res);
 }
 
+// GET /api/Event/course/:courseId – fetch all events for a specific course
+export async function getCourseEvents(courseId) {
+  const res = await fetch(`${API_BASE}/Event/course/${encodeURIComponent(courseId)}`, {
+    method: "GET",
+    headers: { "Content-Type": "application/json" },
+  });
+  return handleResponse(res);
+}
+
 // GET /api/Event/teacher/:teacherId – fetch all events for courses taught by this teacher
 export async function getTeacherEvents(teacherId) {
   const res = await fetch(`${API_BASE}/Event/teacher/${encodeURIComponent(teacherId)}`, {

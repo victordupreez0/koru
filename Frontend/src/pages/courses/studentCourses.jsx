@@ -102,10 +102,9 @@ export default function StudentCourses() {
                 {course && (
                     <div className="h-14 border-b border-gray-100 bg-white/60 backdrop-blur-md flex items-center justify-between px-8 z-10 shrink-0 select-none">
                         <div className="flex items-center gap-3">
-                            <span className="px-2.5 py-0.5 rounded-lg text-[10px] font-black text-white shadow-sm" style={{ backgroundColor: course.color }}>
-                                {course.code} {course.number}
+                            <span className="px-2.5 py-0.5 rounded-lg text-[10px] font-black text-white shadow-sm uppercase shrink-0" style={{ backgroundColor: course.color }}>
+                                {course.code}{course.number}
                             </span>
-                            <h2 className="text-sm font-extrabold text-gray-900">{course.subjectName}</h2>
                             <span className="text-gray-300 text-xs">/</span>
                             <span className="text-xs font-bold text-gray-500 capitalize">{activeSubpageLabel}</span>
                         </div>
@@ -125,7 +124,7 @@ export default function StudentCourses() {
                     ) : isAssignmentsPage ? (
                         <CourseAssignmentsView subject={subject} activeCourseId={activeCourseId} />
                     ) : isAttendancePage ? (
-                        <CourseAttendanceView activeCourseId={activeCourseId} />
+                        <CourseAttendanceView activeCourseId={activeCourseId} subject={subject} />
                     ) : isModulesPage ? (
                         <CourseModulesView activeCourseId={activeCourseId} />
                     ) : isNotesPage ? (

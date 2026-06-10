@@ -177,8 +177,20 @@ export default function CourseItemView({ activeCourseId, activeItemId, isStudent
     return (
         <div className="w-full flex flex-col min-h-full">
             {pageLoading && (
-                <div className="flex items-center justify-center py-20">
-                    <Loader size={24} className="animate-spin text-gray-400" />
+                <div className="flex flex-col gap-5 animate-pulse p-6 md:p-10">
+                    <div className="h-9 rounded-2xl bg-gray-200 w-1/2" />
+                    <div className="flex flex-col gap-3 mt-4">
+                        {[90, 75, 85, 60, 80].map((w, i) => (
+                            <div key={i} className={`h-4 rounded-full ${i % 2 === 0 ? "bg-gray-200" : "bg-gray-100"}`} style={{ width: `${w}%` }} />
+                        ))}
+                    </div>
+                    <div className="h-48 rounded-3xl bg-gray-100 mt-2" />
+                    <div className="flex flex-col gap-3">
+                        {[70, 85, 55, 75].map((w, i) => (
+                            <div key={i} className="h-4 rounded-full bg-gray-100" style={{ width: `${w}%` }} />
+                        ))}
+                    </div>
+                    <div className="h-28 rounded-3xl bg-gray-100" />
                 </div>
             )}
             {!pageLoading && (<>

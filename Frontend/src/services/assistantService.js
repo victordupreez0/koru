@@ -1,15 +1,19 @@
 // Service to handle interactions with the Groq AI model
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5299/api";
 
-const SYSTEM_INSTRUCTION = {
-  role: "system",
-  content: "You are a helpful, professional, and knowledgeable AI Teacher Assistant for the LearnOnline educational platform. " +
-            "You are conversing with Rikus, a teacher/administrator. You assist with creating structured timetables, " +
-            "writing detailed and encouraging student feedback, creating detailed module/lesson plans, " +
-            "explaining academic analytics, and drafting class announcements. " +
-            "Always respond in clear, professional, and engaging English. Use clean Markdown formatting with bolding, " +
-            "bullet points, and structured tables where appropriate to present information beautifully."
-};
+function buildSystemInstruction(role) {
+  const roleContext = role === "student"
+    ? "You are conversing with a student. Help them understand course material, assignments, study strategies, and academic concepts. Provide encouraging, clear explanations tailored to a learner."
+    : "You are conversing with a teacher/administrator. Assist with creating structured timetables, writing detailed and encouraging student feedback, creating detailed module/lesson plans, explaining academic analytics, and drafting class announcements.";
+
+  return {
+    role: "system",
+    content: "You are a helpful, professional, and knowledgeable AI Assistant for the LearnOnline educational platform. " +
+              roleContext + " " +
+              "Always respond in clear, professional, and engaging English. Use clean Markdown formatting with bolding, " +
+              "bullet points, and structured tables where appropriate to present information beautifully."
+  };
+}
 
 /**
  * Sends chat messages to the AI Assistant and returns the response content.
@@ -27,8 +31,8 @@ export async function getAssistantResponse(chatHistory, userId, role) {
     const res = await fetch(`${API_BASE}/Assistant/chat`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ 
-        messages: chatHistory,
+      body: JSON.stringify({
+        messages: chatHistory.filter(m => m.role === "user" || m.role === "assistant"),
         userId: userId,
         role: role
       })
@@ -52,7 +56,7 @@ export async function getAssistantResponse(chatHistory, userId, role) {
       console.log("Using client-side VITE_GROQ_API_KEY direct fallback to Groq Cloud.");
       
       const messagesToSend = [
-        SYSTEM_INSTRUCTION,
+        buildSystemInstruction(role),
         ...chatHistory.filter(msg => msg.role !== "system" && msg.content && msg.content.trim())
       ];
 
@@ -64,7 +68,7 @@ export async function getAssistantResponse(chatHistory, userId, role) {
             "Authorization": `Bearer ${clientApiKey}`
           },
           body: JSON.stringify({
-            model: "llama-3.3-70b-versatile",
+            model: "llama-3.1-8b-instant",
             messages: messagesToSend,
             temperature: 0.7,
             max_completion_tokens: 4096
@@ -88,10 +92,12 @@ export async function getAssistantResponse(chatHistory, userId, role) {
       }
     }
 
-    // If we reach here, neither server key nor frontend key was configured
-    const userMessage = backendError.message.includes("not configured") 
-      ? backendError.message 
-      : "Groq API Key is not configured. Please add your key to Backend/LearnOnline/appsettings.Development.json ('Groq': { 'ApiKey': '...' }) or Frontend/.env (VITE_GROQ_API_KEY=...).";
+    // Surface the actual error — never show a misleading "key not configured" message
+    // when the real cause is a rate limit, timeout, or any other backend/Groq error.
+    const userMessage =
+      backendError.message && backendError.message !== "Backend error"
+        ? backendError.message
+        : "Unable to reach the assistant. Please try again in a moment.";
 
     throw new Error(userMessage);
   }

@@ -21,7 +21,7 @@ export default function CourseGlance() {
             </div>
             {/* Spacer between header and footer */}
             <div className="h-5" />
-            <div className="flex-1 overflow-y-auto">
+            <div>
                 <CourseGlanceSelect activeCourseId={activeCourseId} setActiveCourseId={setActiveCourseId} visibleCourses={visibleCourses} />
                 {isTeacher ? (
                     <TeacherCourseGlanceDisplay activeCourseId={activeCourseId} />

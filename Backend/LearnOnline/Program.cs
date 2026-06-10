@@ -108,7 +108,35 @@ using (var scope = app.Services.CreateScope())
             -- then flip all existing courses to published so the Courses page isn't empty.
             ALTER TABLE ""Courses"" ADD COLUMN IF NOT EXISTS ""IsVisible"" boolean NOT NULL DEFAULT FALSE;
             ALTER TABLE ""Courses"" ADD COLUMN IF NOT EXISTS ""Degree"" text NULL;
-            UPDATE ""Courses"" SET ""IsVisible"" = TRUE WHERE ""IsVisible"" = FALSE;";
+            UPDATE ""Courses"" SET ""IsVisible"" = TRUE WHERE ""IsVisible"" = FALSE;
+
+            -- Add Name/Code directly on Course (replaces Subject join for display).
+            -- Backfill from Subjects for any existing rows that don't have them yet.
+            ALTER TABLE ""Courses"" ADD COLUMN IF NOT EXISTS ""Name"" text NULL;
+            ALTER TABLE ""Courses"" ADD COLUMN IF NOT EXISTS ""Code"" text NULL;
+            ALTER TABLE ""Courses"" DROP CONSTRAINT IF EXISTS ""FK_Courses_Subjects_SubjectId"";
+            DROP INDEX IF EXISTS ""IX_Courses_SubjectId"";
+            ALTER TABLE ""Courses"" ALTER COLUMN ""SubjectId"" DROP NOT NULL;
+            UPDATE ""Courses"" c
+            SET ""Name"" = s.""Name"", ""Code"" = s.""Code""
+            FROM ""Subjects"" s
+            WHERE c.""SubjectId"" = s.""Id"" AND c.""Name"" IS NULL;
+            INSERT INTO ""__EFMigrationsHistory"" (""MigrationId"", ""ProductVersion"")
+            VALUES ('20260609180000_AddCourseNameCode', '9.0.3')
+            ON CONFLICT DO NOTHING;
+            -- Add Name, TeacherId, DurationHours to Classes for timetabling configuration
+            ALTER TABLE ""Classes"" ADD COLUMN IF NOT EXISTS ""Name"" text NULL;
+            ALTER TABLE ""Classes"" ADD COLUMN IF NOT EXISTS ""TeacherId"" text NULL;
+            ALTER TABLE ""Classes"" ADD COLUMN IF NOT EXISTS ""DurationHours"" numeric NULL;
+            CREATE INDEX IF NOT EXISTS ""IX_Classes_TeacherId"" ON ""Classes"" (""TeacherId"");
+            INSERT INTO ""__EFMigrationsHistory"" (""MigrationId"", ""ProductVersion"")
+            VALUES ('20260609190000_AddClassNameTeacherDuration', '9.0.3')
+            ON CONFLICT DO NOTHING;
+            -- Allow timetables to be created without a specific user FK
+            ALTER TABLE ""Timetables"" ALTER COLUMN ""UserId"" DROP NOT NULL;
+            INSERT INTO ""__EFMigrationsHistory"" (""MigrationId"", ""ProductVersion"")
+            VALUES ('20260609200000_MakeTimetableUserIdNullable', '9.0.3')
+            ON CONFLICT DO NOTHING;";
         cmd.ExecuteNonQuery();
     }
     conn.Close();
@@ -120,7 +148,15 @@ using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     var context = services.GetRequiredService<AppDbContext>();
-    RealDataSeeder.Seed(context); // swap to DbSeeder.Seed(context) for mock data
+    var logger  = services.GetRequiredService<ILogger<Program>>();
+    try
+    {
+        RealDataSeeder.Seed(context); // swap to DbSeeder.Seed(context) for mock data
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "RealDataSeeder threw an exception. Database may be in a partial state.");
+    }
 }
 // ---------------------------------------
 

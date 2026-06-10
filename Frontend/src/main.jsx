@@ -4,6 +4,7 @@ import './index.css'
 import App from './App.jsx'
 import { AuthProvider } from './contexts/AuthContext'
 import { CoursesProvider } from './contexts/CoursesContext'
+import { CalendarProvider } from './contexts/CalendarContext'
 
 // Mount the React app into the #root div defined in index.html
 // StrictMode enables extra development warnings for common mistakes
@@ -12,7 +13,9 @@ createRoot(document.getElementById('root')).render(
   <StrictMode>
     <AuthProvider>
       <CoursesProvider>
-        <App />
+        <CalendarProvider>
+          <App />
+        </CalendarProvider>
       </CoursesProvider>
     </AuthProvider>
   </StrictMode>,

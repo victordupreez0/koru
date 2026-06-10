@@ -96,7 +96,19 @@ export default function CourseGradesView({ subject, activeCourseId }) {
                     </thead>
                     <tbody>
                         {loading ? (
-                            <tr><td colSpan="4" className="text-center py-6 text-gray-500">Loading remote grades...</td></tr>
+                            <>
+                                {[1, 2, 3, 4, 5].map(i => (
+                                    <tr key={i} className="border-b border-gray-50 animate-pulse">
+                                        <td className="px-6 py-3.5">
+                                            <div className="h-4 rounded-full bg-gray-200 mb-1.5" style={{ width: `${55 + (i * 19) % 40}%` }} />
+                                            <div className="h-3 rounded-full bg-gray-100 w-20" />
+                                        </td>
+                                        <td className="px-6 py-3.5"><div className="h-4 rounded-full bg-gray-100 w-14" /></td>
+                                        <td className="px-6 py-3.5"><div className="h-5 rounded-full bg-gray-100 w-20" /></td>
+                                        <td className="px-6 py-3.5 text-right"><div className="h-4 rounded-full bg-gray-100 w-10 ml-auto" /></td>
+                                    </tr>
+                                ))}
+                            </>
                         ) : gradesData.length === 0 ? (
                             <tr><td colSpan="4" className="text-center py-6 text-gray-500">No grades found.</td></tr>
                         ) : (

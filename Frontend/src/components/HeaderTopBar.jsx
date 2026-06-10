@@ -17,6 +17,7 @@ export default function HeaderTopBar({ children }) {
     let badgeColor = "#3C0078";
     let titleText = "";
     let sectionText = "Overview";
+    let showBadge = false;
 
     if (path.startsWith("/dashboard")) {
       badgeText = "Dashboard";
@@ -46,10 +47,11 @@ export default function HeaderTopBar({ children }) {
       const activeCourseId = pathParts[1];
       const course = visibleCourses.find(c => c.id === activeCourseId) || visibleCourses[0] || null;
       if (course) {
+        showBadge = true;
         badgeText = `${course.code} ${course.number}`;
-        badgeColor = course.color || "#3C0078";
-        titleText = course.subjectName;
-        
+        badgeColor = course.color;
+        titleText = "";
+
         // Match specific course subpages
         const lastPart = pathParts[pathParts.length - 1];
         if (lastPart === "grades") sectionText = "Grades";
@@ -62,28 +64,30 @@ export default function HeaderTopBar({ children }) {
         else if (pathParts[2] === "items" && pathParts.length === 4) sectionText = "Module Page";
         else sectionText = "Home";
       } else {
-        badgeText = "Courses";
-        titleText = "My Studies";
-        sectionText = "Listings";
+        showBadge = false;
+        titleText = "";
+        sectionText = "Courses";
       }
     }
     
-    return { badgeText, badgeColor, titleText, sectionText };
+    return { badgeText, badgeColor, titleText, sectionText, showBadge };
   }, [path, pathParts, role, visibleCourses]);
 
   return (
     <div className="h-14 border-b border-gray-100 bg-white/60 backdrop-blur-md flex items-center justify-between px-8 z-10 shrink-0 select-none">
       <div className="flex items-center gap-3">
-        <span
-          className="px-2.5 py-0.5 rounded-lg text-[10px] font-black text-white shadow-sm uppercase shrink-0"
-          style={{ backgroundColor: navInfo.badgeColor }}
-        >
-          {navInfo.badgeText}
-        </span>
+        {navInfo.showBadge && (
+          <span
+            className="px-2.5 py-0.5 rounded-lg text-[10px] font-black text-white shadow-sm uppercase shrink-0"
+            style={{ backgroundColor: navInfo.badgeColor }}
+          >
+            {navInfo.badgeText}
+          </span>
+        )}
         {navInfo.titleText && (
           <h2 className="text-sm font-extrabold text-gray-900 truncate max-w-[200px] sm:max-w-xs">{navInfo.titleText}</h2>
         )}
-        <span className="text-gray-300 text-xs select-none">/</span>
+        {navInfo.showBadge && <span className="text-gray-300 text-xs select-none">/</span>}
         <span className="text-xs font-bold text-gray-500 capitalize truncate">{navInfo.sectionText}</span>
       </div>
       {children && <div className="flex items-center gap-2 shrink-0">{children}</div>}

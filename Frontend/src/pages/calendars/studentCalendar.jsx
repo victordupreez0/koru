@@ -1,7 +1,6 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-
 
 import CalendarDayBlock from "./UI/CalendarDayBlock";
 import CalendarViewSelector from "./UI/CalendarViewSelector";
@@ -9,68 +8,7 @@ import CalendarTimelineView from "./UI/CalendarTimelineView";
 import CalendarDayView from "./UI/CalendarDayView";
 import AddTaskModal from "./UI/AddTaskModal";
 
-import { getAllEvents } from "../../services/eventService";
-import { getStudentAssignments } from "../../services/assignmentService";
-import { getStudentSubmissions } from "../../services/submissionService";
-import { useAuth } from "../../contexts/AuthContext";
-
-// ─────────────────────────────────────────────────────────────
-//  Mappers — convert backend payloads into the shape the calendar
-//  UI components already expect (CalendarDayBlock, CalendarTimelineView, CalendarDayView)
-// ─────────────────────────────────────────────────────────────
-function pad2(n) { return String(n).padStart(2, "0"); }
-
-function localDateKey(d) {
-  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
-}
-
-function mapBackendEventToCalendar(evt) {
-  const startDate = new Date(evt.startTime);
-  const endDate = new Date(evt.endTime);
-
-  let location = "TBA";
-  if (evt.description && evt.description.includes("|")) {
-    location = evt.description.split("|")[1] || "TBA";
-  }
-
-  return {
-    id: `evt-${evt.id}`,
-    date: localDateKey(startDate),
-    title: evt.title,
-    startTime: `${pad2(startDate.getHours())}:${pad2(startDate.getMinutes())}`,
-    endTime: `${pad2(endDate.getHours())}:${pad2(endDate.getMinutes())}`,
-    type: evt.eventType?.toLowerCase() === "meeting" ? "meeting" : "class",
-    lecturer: evt.createdBy || "",
-    location
-  };
-}
-
-function mapAssignmentToCalendarEvent(assignment) {
-  const due = new Date(assignment.dueDate);
-  return {
-    id: `assign-${assignment.id}`,
-    date: localDateKey(due),
-    title: assignment.title,
-    startTime: `${pad2(due.getHours())}:${pad2(due.getMinutes())}`,
-    endTime: `${pad2(due.getHours())}:${pad2(due.getMinutes())}`,
-    type: "task",
-    lecturer: "Assignment Due",
-    location: assignment.course?.subject?.code || ""
-  };
-}
-
-function mapAssignmentToTask(assignment, submission) {
-  const due = new Date(assignment.dueDate);
-  return {
-    id: assignment.id,
-    title: assignment.title,
-    due: due.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-    dueTime: `${pad2(due.getHours())}:${pad2(due.getMinutes())}`,
-    course: assignment.course?.subject?.code || "",
-    isSubmitted: !!submission,
-    isGraded: submission?.status === "Graded"
-  };
-}
+import { useCalendar } from "../../contexts/CalendarContext";
 
 // ─────────────────────────────────────────────────────────────
 //  HELPERS — dynamic grid & event generation
@@ -123,13 +61,21 @@ function buildGridWeeks(year, month) {
   return weeks;
 }
 
-// Build a date → events[] lookup map
+// Build a date → events[] lookup map, sorted earliest first within each day
 function buildEventMap(events) {
-  return events.reduce((map, evt) => {
-    if (!map[evt.date]) map[evt.date] = [];
-    map[evt.date].push(evt);
-    return map;
+  const map = events.reduce((m, evt) => {
+    if (!m[evt.date]) m[evt.date] = [];
+    m[evt.date].push(evt);
+    return m;
   }, {});
+  Object.values(map).forEach(arr =>
+    arr.sort((a, b) => {
+      if (!a.startTime) return 1;
+      if (!b.startTime) return -1;
+      return a.startTime.localeCompare(b.startTime);
+    })
+  );
+  return map;
 }
 
 // Framer Motion variants
@@ -145,8 +91,10 @@ const viewVariants = {
 };
 
 // ─────────────────────────────────────────────────────────────
-export default function StudentCalendar() {
-  const { user } = useAuth();
+export default function StudentCalendar({ onDeleteClassEvent } = {}) {
+  // Pre-loaded data — already fetching before the user opened this page
+  const { events, setEvents, tasks, loading } = useCalendar();
+
   const [activeView, setActiveView] = useState("month");
   // Track current month as { year, month } (month is 0-indexed)
   const [currentMonth, setCurrentMonth] = useState(() => {
@@ -154,12 +102,8 @@ export default function StudentCalendar() {
     return { year: now.getFullYear(), month: now.getMonth() };
   });
 
-  // Live data pulled from the backend
-  const [events, setEvents] = useState([]);
-  const [tasks, setTasks] = useState([]);
-
   // Add Task modal
-  const [taskModal, setTaskModal] = useState({ open: false, editEvent: null });
+  const [taskModal, setTaskModal] = useState({ open: false, editEvent: null, defaultDate: "" });
 
   /** Add a new or save an edited locally-created task */
   function handleAddTask(event) {
@@ -185,38 +129,6 @@ export default function StudentCalendar() {
       prev.map((evt) => (evt.id === eventId ? { ...evt, date: targetDate } : evt))
     );
   }
-
-  useEffect(() => {
-    let mounted = true;
-    async function fetchData() {
-      try {
-        const [backendEvents, assignmentsData, submissionsData] = await Promise.all([
-          getAllEvents(),
-          user?.userId ? getStudentAssignments(user.userId) : Promise.resolve([]),
-          user?.userId ? getStudentSubmissions(user.userId) : Promise.resolve([])
-        ]);
-
-        // Map class/lecture events
-        const classEvents = (Array.isArray(backendEvents) ? backendEvents : []).map(mapBackendEventToCalendar);
-
-        // Map assignment due dates as task-type calendar events so they appear in the grid/timeline
-        const assignmentEvents = (Array.isArray(assignmentsData) ? assignmentsData : []).map(mapAssignmentToCalendarEvent);
-
-        if (mounted) setEvents([...classEvents, ...assignmentEvents]);
-
-        // Day view to-do panel: each assignment, annotated with submission state
-        const taskRows = (Array.isArray(assignmentsData) ? assignmentsData : []).map(a => {
-          const sub = (Array.isArray(submissionsData) ? submissionsData : []).find(s => s.assignmentId === a.id);
-          return mapAssignmentToTask(a, sub);
-        });
-        if (mounted) setTasks(taskRows);
-      } catch (err) {
-        console.error("Failed to load calendar data:", err);
-      }
-    }
-    fetchData();
-    return () => { mounted = false; };
-  }, [user?.userId]);
 
   const goToPrevMonth = () => {
     setCurrentMonth((prev) => {
@@ -246,7 +158,7 @@ export default function StudentCalendar() {
     <>
 
       <motion.div
-        className="max-w-[1400px] mx-auto px-8 pt-5 pb-10"
+        className="w-full pt-5 pb-10"
         variants={pageVariants}
         initial="hidden"
         animate="visible"
@@ -284,7 +196,7 @@ export default function StudentCalendar() {
           <button
             id="cal-add-task-btn"
             aria-label="Add Task"
-            onClick={() => setTaskModal({ open: true, editEvent: null })}
+            onClick={() => setTaskModal({ open: true, editEvent: null, defaultDate: "" })}
             className="flex items-center gap-2 bg-white rounded-full px-5 py-2.5 text-sm font-semibold text-gray-700 shadow-sm border-none cursor-pointer transition-all duration-150 hover:shadow-lg hover:-translate-y-px font-[inherit]"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -303,7 +215,7 @@ export default function StudentCalendar() {
           {activeView === "month" && (
             <motion.div
               key={`month-${currentMonth.year}-${currentMonth.month}`}
-              className="w-full bg-white/70 rounded-3xl shadow-xl border border-1 border-gray-200"
+              className="w-full border border-gray-200 rounded-2xl overflow-hidden"
               variants={viewVariants}
               initial="hidden"
               animate="visible"
@@ -330,9 +242,13 @@ export default function StudentCalendar() {
                         isToday={date === todayStr}
                         isOutside={!!isOutside}
                         events={eventMap[date] ?? []}
+                        loading={loading}
                         onDrop={handleEventDrop}
-                        onEditEvent={(evt) => setTaskModal({ open: true, editEvent: evt })}
+                        onEditEvent={(evt) => setTaskModal({ open: true, editEvent: evt, defaultDate: evt.date })}
                         onDeleteEvent={handleDeleteTask}
+                        onDeleteClassEvent={onDeleteClassEvent}
+                        onDayClick={(d) => setTaskModal({ open: true, editEvent: null, defaultDate: d })}
+                        tooltipPosition={wIdx === 0 ? "down" : "up"}
                       />
                     ))}
                   </div>
@@ -350,7 +266,12 @@ export default function StudentCalendar() {
               animate="visible"
               exit="exit"
             >
-              <CalendarTimelineView events={events} weeks={gridWeeks} />
+              <CalendarTimelineView
+                events={events}
+                weeks={gridWeeks}
+                loading={loading}
+                onDayClick={(d) => setTaskModal({ open: true, editEvent: null, defaultDate: d })}
+              />
             </motion.div>
           )}
 
@@ -379,10 +300,10 @@ export default function StudentCalendar() {
       <AddTaskModal
         open={taskModal.open}
         editEvent={taskModal.editEvent}
-        onClose={() => setTaskModal({ open: false, editEvent: null })}
+        defaultDate={taskModal.defaultDate}
+        onClose={() => setTaskModal({ open: false, editEvent: null, defaultDate: "" })}
         onAdd={handleAddTask}
       />
     </>
   );
 }
-

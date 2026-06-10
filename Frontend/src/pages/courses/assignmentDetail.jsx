@@ -15,8 +15,8 @@ import {
   getSubmissionForAssignment,
   createSubmission,
   updateSubmission,
-  uploadSubmissionFile,
 } from "../../services/submissionService.jsx";
+import { uploadFileToCloudinary } from "../../services/cloudinaryService.js";
 import { getStudentGrades, createGrade, updateGrade } from "../../services/gradeService.js";
 import { useAuth } from "../../contexts/AuthContext";
 
@@ -62,10 +62,98 @@ function getDaysLeft(dateStr) {
 }
 
 // ─────────────────────────────────────────────
+// File preview modal
+// ─────────────────────────────────────────────
+function FilePreviewModal({ file, onClose }) {
+  const [objectUrl, setObjectUrl] = React.useState(null);
+
+  React.useEffect(() => {
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    setObjectUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [file]);
+
+  if (!file || !objectUrl) return null;
+
+  const isImage = file.type.startsWith("image/");
+  const isPdf = file.type === "application/pdf";
+  const isVideo = file.type.startsWith("video/");
+  const isAudio = file.type.startsWith("audio/");
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4"
+      >
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95, y: 16 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          transition={{ type: "spring", damping: 30, stiffness: 300 }}
+          onClick={(e) => e.stopPropagation()}
+          className="bg-white rounded-3xl shadow-2xl w-full max-w-3xl max-h-[85vh] flex flex-col overflow-hidden"
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0">
+            <div className="flex items-center gap-3 min-w-0">
+              <FileText size={18} className="text-[#64748b] shrink-0" />
+              <p className="font-bold text-gray-900 truncate text-sm">{file.name}</p>
+              <span className="text-xs text-gray-400 shrink-0">{(file.size / 1024).toFixed(1)} KB</span>
+            </div>
+            <button
+              onClick={onClose}
+              className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors shrink-0 ml-4"
+            >
+              <X size={15} />
+            </button>
+          </div>
+
+          {/* Preview content */}
+          <div className="flex-1 overflow-auto flex items-center justify-center bg-gray-50 p-4">
+            {isImage && (
+              <img src={objectUrl} alt={file.name} className="max-w-full max-h-full object-contain rounded-xl" />
+            )}
+            {isPdf && (
+              <iframe src={objectUrl} title={file.name} className="w-full h-full min-h-[60vh] rounded-xl border-0" />
+            )}
+            {isVideo && (
+              <video src={objectUrl} controls className="max-w-full max-h-full rounded-xl" />
+            )}
+            {isAudio && (
+              <div className="flex flex-col items-center gap-4">
+                <div className="w-20 h-20 rounded-2xl bg-[#64748b]/10 flex items-center justify-center">
+                  <FileText size={36} className="text-[#64748b]" />
+                </div>
+                <audio src={objectUrl} controls className="w-full max-w-sm" />
+              </div>
+            )}
+            {!isImage && !isPdf && !isVideo && !isAudio && (
+              <div className="flex flex-col items-center gap-3 text-center py-12">
+                <div className="w-20 h-20 rounded-2xl bg-gray-100 flex items-center justify-center">
+                  <FileText size={36} className="text-gray-400" />
+                </div>
+                <p className="font-semibold text-gray-700">{file.name}</p>
+                <p className="text-sm text-gray-400">Preview not available for this file type</p>
+              </div>
+            )}
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
+// ─────────────────────────────────────────────
 // Upload drop zone component
 // ─────────────────────────────────────────────
 function UploadZone({ file, onFileSelect, onFileClear, disabled }) {
   const [dragging, setDragging] = useState(false);
+  const [previewing, setPreviewing] = useState(false);
   const inputRef = useRef(null);
 
   const handleDrop = (e) => {
@@ -77,74 +165,87 @@ function UploadZone({ file, onFileSelect, onFileClear, disabled }) {
   };
 
   return (
-    <div
-      onDragOver={(e) => { e.preventDefault(); if (!disabled) setDragging(true); }}
-      onDragLeave={() => setDragging(false)}
-      onDrop={handleDrop}
-      onClick={() => !disabled && !file && inputRef.current?.click()}
-      className={`relative border-2 border-dashed rounded-3xl p-6 flex flex-col items-center justify-center gap-4 transition-all duration-200
-        ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
-        ${dragging ? "border-[#3C0078] bg-[#3C0078]/5 scale-[1.01]" : file ? "border-green-300 bg-green-50/50" : "border-gray-200 bg-gray-50/50 hover:border-[#3C0078]/40 hover:bg-[#3C0078]/3"}`}
-    >
-      <input
-        ref={inputRef}
-        type="file"
-        className="hidden"
-        disabled={disabled}
-        onChange={(e) => { if (e.target.files[0]) onFileSelect(e.target.files[0]); }}
-        accept=".pdf,.doc,.docx,.zip,.png,.jpg,.jpeg,.fig,.sketch"
-      />
+    <>
+      <div
+        onDragOver={(e) => { e.preventDefault(); if (!disabled) setDragging(true); }}
+        onDragLeave={() => setDragging(false)}
+        onDrop={handleDrop}
+        onClick={() => !disabled && !file && inputRef.current?.click()}
+        className={`relative border-2 border-dashed rounded-3xl p-6 flex flex-col items-center justify-center gap-4 transition-all duration-200
+          ${disabled ? "opacity-50 cursor-not-allowed" : file ? "cursor-default" : "cursor-pointer"}
+          ${dragging ? "border-[#64748b] bg-[#64748b]/5 scale-[1.01]" : file ? "border-green-300 bg-green-50/50" : "border-gray-200 bg-gray-50/50 hover:border-[#64748b]/40 hover:bg-[#64748b]/3"}`}
+      >
+        <input
+          ref={inputRef}
+          type="file"
+          className="hidden"
+          disabled={disabled}
+          onChange={(e) => { if (e.target.files[0]) onFileSelect(e.target.files[0]); }}
+          accept=".pdf,.doc,.docx,.docm,.ppt,.pptx,.xls,.xlsx,.zip,.rar,.png,.jpg,.jpeg,.gif,.webp,.svg,.mp4,.mov,.mp3,.wav,.fig,.sketch"
+        />
 
-      <AnimatePresence mode="wait">
-        {file ? (
-          <motion.div
-            key="file"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            className="flex items-center gap-4 w-full"
-          >
-            {/* File icon */}
-            <div className="w-14 h-14 rounded-2xl bg-green-100 flex items-center justify-center shrink-0">
-              <FileText size={26} className="text-green-600" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-bold text-gray-900 truncate">{file.name}</p>
-              <p className="text-sm text-gray-400 mt-0.5">{(file.size / 1024).toFixed(1)} KB</p>
-            </div>
-            {!disabled && (
-              <button
-                onClick={(e) => { e.stopPropagation(); onFileClear(); }}
-                className="w-9 h-9 rounded-full bg-gray-100 hover:bg-red-100 hover:text-red-600 flex items-center justify-center transition-colors"
-              >
-                <X size={16} />
-              </button>
-            )}
-          </motion.div>
-        ) : (
-          <motion.div
-            key="empty"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="flex flex-col items-center gap-3 text-center"
-          >
-            <div className="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center">
-              <Upload size={28} className="text-gray-400" />
-            </div>
-            <div>
-              <p className="font-semibold text-gray-700">
-                Drag & drop your file here, or{" "}
-                <span className="text-[#3C0078] font-bold">browse</span>
-              </p>
-              <p className="text-xs text-gray-400 mt-1">
-                Supported: PDF, DOC, DOCX, ZIP, PNG, JPG, FIG, Sketch
-              </p>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+        <AnimatePresence mode="wait">
+          {file ? (
+            <motion.div
+              key="file"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="flex items-center gap-4 w-full"
+            >
+              <div className="w-14 h-14 rounded-2xl bg-green-100 flex items-center justify-center shrink-0">
+                <FileText size={26} className="text-green-600" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-bold text-gray-900 truncate">{file.name}</p>
+                <p className="text-sm text-gray-400 mt-0.5">{(file.size / 1024).toFixed(1)} KB</p>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  onClick={(e) => { e.stopPropagation(); setPreviewing(true); }}
+                  className="px-3 py-1.5 rounded-xl bg-[#64748b]/8 text-[#64748b] text-xs font-bold hover:bg-[#64748b]/15 transition-colors"
+                >
+                  Preview
+                </button>
+                {!disabled && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onFileClear(); }}
+                    className="w-9 h-9 rounded-full bg-gray-100 hover:bg-red-100 hover:text-red-600 flex items-center justify-center transition-colors"
+                  >
+                    <X size={16} />
+                  </button>
+                )}
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="empty"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="flex flex-col items-center gap-3 text-center"
+            >
+              <div className="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center">
+                <Upload size={28} className="text-gray-400" />
+              </div>
+              <div>
+                <p className="font-semibold text-gray-700">
+                  Drag & drop your file here, or{" "}
+                  <span className="text-[#64748b] font-bold">browse</span>
+                </p>
+                <p className="text-xs text-gray-400 mt-1">
+                  PDF, Word, PowerPoint, Excel, ZIP, images, video & more
+                </p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {previewing && (
+        <FilePreviewModal file={file} onClose={() => setPreviewing(false)} />
+      )}
+    </>
   );
 }
 
@@ -238,8 +339,7 @@ export default function AssignmentDetail({ assignmentId, activeCourseId }) {
       if (isQuiz) {
         fileUrl = JSON.stringify(quizAnswers);
       } else {
-        const uploaded = await uploadSubmissionFile(file);
-        fileUrl = uploaded.url;
+        fileUrl = await uploadFileToCloudinary(file);
       }
 
       let submissionId;
@@ -332,7 +432,7 @@ export default function AssignmentDetail({ assignmentId, activeCourseId }) {
         <motion.div variants={slideUp} className="flex items-center gap-3 mb-6">
           <button
             onClick={() => navigate(`/courses/${activeCourseId}/assignments`)}
-            className="flex items-center gap-2 text-gray-400 hover:text-[#3C0078] transition-colors font-semibold text-sm group"
+            className="flex items-center gap-2 text-gray-400 hover:text-[#64748b] transition-colors font-semibold text-sm group"
           >
             <ArrowLeft
               size={18}
@@ -342,20 +442,35 @@ export default function AssignmentDetail({ assignmentId, activeCourseId }) {
           </button>
           <span className="text-gray-200">/</span>
           <span className="text-sm text-gray-400 font-medium truncate max-w-[260px]">
-            {loadingAssignment ? "Loading..." : assignment?.title}
+            {loadingAssignment ? <span className="inline-block h-4 rounded-full bg-gray-200 animate-pulse w-40 align-middle" /> : assignment?.title}
           </span>
         </motion.div>
 
         {loadingAssignment ? (
-          <div className="flex items-center justify-center h-64 text-gray-400 font-medium">
-            Loading assignment details...
+          <div className="space-y-6 animate-pulse">
+            {/* Title + meta chips */}
+            <div className="space-y-4">
+              <div className="h-10 rounded-2xl bg-gray-200 w-3/4" />
+              <div className="flex flex-wrap gap-3">
+                {[1, 2, 3].map(i => <div key={i} className="h-14 rounded-2xl bg-gray-100 w-36" />)}
+              </div>
+            </div>
+            {/* Description block */}
+            <div className="p-6 bg-white rounded-3xl border border-gray-100 space-y-3">
+              <div className="h-4 rounded-full bg-gray-200 w-32 mb-4" />
+              {[90, 75, 85, 60, 80].map((w, i) => (
+                <div key={i} className="h-4 rounded-full bg-gray-100" style={{ width: `${w}%` }} />
+              ))}
+            </div>
+            {/* Submission area */}
+            <div className="h-44 rounded-3xl bg-gray-100" />
           </div>
         ) : !assignment ? (
           <div className="flex items-center justify-center h-64 text-red-400 font-medium">
             Assignment not found.
           </div>
         ) : (
-          <div className="max-w-4xl mx-auto space-y-6">
+          <div className="space-y-6">
 
             {/* ── Title & Meta bar ── */}
             <motion.div variants={slideUp}>
@@ -367,7 +482,7 @@ export default function AssignmentDetail({ assignmentId, activeCourseId }) {
               <div className="flex flex-wrap gap-3">
                 {/* Due date */}
                 <div className="flex items-center gap-2.5 px-5 py-3 rounded-2xl bg-white border border-gray-100 shadow-sm">
-                  <Calendar size={18} className="text-[#3C0078]" />
+                  <Calendar size={18} className="text-[#64748b]" />
                   <div className="flex flex-col">
                     <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Due</span>
                     <span className="text-sm font-bold text-gray-900 leading-tight">
@@ -378,14 +493,14 @@ export default function AssignmentDetail({ assignmentId, activeCourseId }) {
 
                 {/* Days left badge */}
                 {daysLeft && (
-                  <div className={`flex items-center px-5 py-3 rounded-2xl border border-transparent ${daysLeft.bg}`}>
-                    <span className={`text-sm font-bold ${daysLeft.color}`}>{daysLeft.label}</span>
+                  <div className="flex items-center px-5 py-3 rounded-2xl bg-white border border-gray-100 shadow-sm">
+                    <span className="text-sm font-bold text-gray-600">{daysLeft.label}</span>
                   </div>
                 )}
 
                 {/* Points */}
                 <div className="flex items-center gap-2.5 px-5 py-3 rounded-2xl bg-white border border-gray-100 shadow-sm">
-                  <InfoCircle size={18} className="text-[#FF8731]" />
+                  <InfoCircle size={18} className="text-[#78716c]" />
                   <div className="flex flex-col">
                     <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Points</span>
                     <span className="text-sm font-bold text-gray-900 leading-tight">
@@ -396,11 +511,11 @@ export default function AssignmentDetail({ assignmentId, activeCourseId }) {
 
                 {/* Submission status */}
                 {!loadingSubmission && (
-                  <div className={`flex items-center gap-2 px-5 py-3 rounded-2xl border ${isSubmitted ? "bg-green-50 border-green-100" : "bg-gray-50 border-gray-100"}`}>
+                  <div className="flex items-center gap-2 px-5 py-3 rounded-2xl border bg-white border-gray-100 shadow-sm">
                     {isSubmitted
-                      ? <CheckCircle size={18} className="text-green-600" />
+                      ? <CheckCircle size={18} className="text-gray-600" />
                       : <CloseCircle size={18} className="text-gray-400" />}
-                    <span className={`text-sm font-bold ${isSubmitted ? "text-green-600" : "text-gray-400"}`}>
+                    <span className="text-sm font-bold text-gray-600">
                       {isSubmitted ? existingSubmission.status || "Submitted" : "Not submitted"}
                     </span>
                   </div>
@@ -413,7 +528,7 @@ export default function AssignmentDetail({ assignmentId, activeCourseId }) {
               variants={slideUp}
               className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6"
             >
-              <h2 className="text-[10px] font-black uppercase tracking-[0.25em] text-[#3C0078] mb-5">
+              <h2 className="text-[10px] font-black uppercase tracking-[0.25em] text-[#64748b] mb-5">
                 Assignment Brief
               </h2>
               <p className="text-gray-600 leading-relaxed text-base whitespace-pre-wrap">
@@ -430,14 +545,14 @@ export default function AssignmentDetail({ assignmentId, activeCourseId }) {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -8 }}
                   transition={{ duration: 0.4, ease: "easeOut" }}
-                  className="bg-green-50 border border-green-100 rounded-3xl p-6"
+                  className="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm"
                 >
-                  <h2 className="text-[10px] font-black uppercase tracking-[0.25em] text-green-600 mb-5">
+                  <h2 className="text-[10px] font-black uppercase tracking-[0.25em] text-gray-600 mb-5">
                     Your Submission
                   </h2>
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-green-100 flex items-center justify-center">
-                      <FileText size={22} className="text-green-600" />
+                    <div className="w-12 h-12 rounded-2xl bg-gray-100 flex items-center justify-center">
+                      <FileText size={22} className="text-gray-600" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-bold text-gray-900 truncate">
@@ -455,9 +570,16 @@ export default function AssignmentDetail({ assignmentId, activeCourseId }) {
                         </p>
                       )}
                     </div>
-                    <span className="px-4 py-1.5 rounded-full bg-green-100 text-green-700 text-xs font-bold uppercase tracking-widest">
-                      {existingSubmission?.status || "Submitted"}
-                    </span>
+                    <div className="flex items-center gap-2 shrink-0">
+                      {existingGrade && (
+                        <span className="px-4 py-1.5 rounded-full bg-blue-100 text-blue-700 text-xs font-bold uppercase tracking-widest">
+                          Grade: {existingGrade.pointsEarned ?? "—"} / {assignment?.maxPoints ?? "—"}
+                        </span>
+                      )}
+                      <span className="px-4 py-1.5 rounded-full bg-green-100 text-green-700 text-xs font-bold uppercase tracking-widest">
+                        {existingSubmission?.status || "Submitted"}
+                      </span>
+                    </div>
                   </div>
                 </motion.div>
               )}
@@ -467,17 +589,17 @@ export default function AssignmentDetail({ assignmentId, activeCourseId }) {
             {isClosed ? (
               <motion.div
                 variants={slideUp}
-                className="bg-red-50 border border-red-100 rounded-3xl p-6 text-center"
+                className="bg-white border border-gray-100 rounded-3xl p-6 text-center shadow-sm"
               >
-                <p className="text-red-500 font-bold text-lg mb-1">Assignment Closed</p>
-                <p className="text-gray-400 text-sm">This assignment has been closed by your lecturer. No more submissions are accepted.</p>
+                <p className="text-gray-900 font-bold text-lg mb-1">Assignment Closed</p>
+                <p className="text-gray-500 text-sm">This assignment has been closed by your lecturer. No more submissions are accepted.</p>
               </motion.div>
             ) : isSubmitted && !canResubmit ? (
               <motion.div
                 variants={slideUp}
-                className="bg-gray-50 border border-gray-100 rounded-3xl p-6 text-center"
+                className="bg-white border border-gray-100 rounded-3xl p-6 text-center shadow-sm"
               >
-                <p className="text-gray-500 font-medium">Only one submission is allowed for this assignment.</p>
+                <p className="text-gray-600 font-medium">Only one submission is allowed for this assignment.</p>
               </motion.div>
             ) : isQuiz ? (
               /* Quiz submission area */
@@ -485,7 +607,7 @@ export default function AssignmentDetail({ assignmentId, activeCourseId }) {
                 {/* Results view – shown when already submitted and not retaking */}
                 {isSubmitted && !quizStarted && quizResults ? (
                   <div>
-                    <h2 className="text-[10px] font-black uppercase tracking-[0.25em] text-[#FF8731] mb-6">Quiz Results</h2>
+                    <h2 className="text-[10px] font-black uppercase tracking-[0.25em] text-[#78716c] mb-6">Quiz Results</h2>
                     {/* Score summary */}
                     <div className="flex items-center gap-6 mb-6 p-4 bg-gray-50 rounded-2xl">
                       <div className={`w-20 h-20 rounded-3xl flex flex-col items-center justify-center font-black italic shrink-0 ${
@@ -541,7 +663,7 @@ export default function AssignmentDetail({ assignmentId, activeCourseId }) {
                     <div className="flex justify-end">
                       <button
                         onClick={() => { setQuizStarted(true); setQuizAnswers({}); }}
-                        className="px-8 py-3.5 rounded-2xl bg-[#FF8731] text-white font-bold text-sm uppercase tracking-widest hover:bg-[#e0722a] transition-all"
+                        className="px-8 py-3.5 rounded-2xl bg-[#78716c] text-white font-bold text-sm uppercase tracking-widest hover:bg-[#e0722a] transition-all"
                       >
                         Retake Quiz
                       </button>
@@ -550,12 +672,12 @@ export default function AssignmentDetail({ assignmentId, activeCourseId }) {
                 ) : !quizStarted && !isSubmitted ? (
                   /* Pre-start screen */
                   <div>
-                    <h2 className="text-[10px] font-black uppercase tracking-[0.25em] text-[#FF8731] mb-6">Quiz</h2>
+                    <h2 className="text-[10px] font-black uppercase tracking-[0.25em] text-[#78716c] mb-6">Quiz</h2>
                     <div className="flex flex-col items-center gap-6 py-6">
                       <p className="text-gray-500 text-sm">{quizQuestions.length} question{quizQuestions.length !== 1 ? "s" : ""} — select the correct answer for each</p>
                       <button
                         onClick={() => setQuizStarted(true)}
-                        className="px-10 py-4 rounded-2xl bg-[#FF8731] text-white font-bold text-sm uppercase tracking-widest hover:bg-[#e0722a] transition-all shadow-lg shadow-[#FF8731]/20"
+                        className="px-10 py-4 rounded-2xl bg-[#78716c] text-white font-bold text-sm uppercase tracking-widest hover:bg-[#e0722a] transition-all shadow-lg shadow-[#78716c]/20"
                       >
                         Start Quiz
                       </button>
@@ -564,7 +686,7 @@ export default function AssignmentDetail({ assignmentId, activeCourseId }) {
                 ) : (
                   /* Active quiz */
                   <div>
-                    <h2 className="text-[10px] font-black uppercase tracking-[0.25em] text-[#FF8731] mb-6">Quiz</h2>
+                    <h2 className="text-[10px] font-black uppercase tracking-[0.25em] text-[#78716c] mb-6">Quiz</h2>
                     <div className="space-y-6">
                       {quizQuestions.map((q, qi) => (
                         <div key={qi} className="bg-gray-50 rounded-2xl p-4">
@@ -573,7 +695,7 @@ export default function AssignmentDetail({ assignmentId, activeCourseId }) {
                             {q.options.map((opt, oi) => (
                               <label key={oi} className={`flex items-center gap-3 px-4 py-3 rounded-2xl cursor-pointer transition-all ${
                                 quizAnswers[qi] === oi
-                                  ? "bg-[#3C0078]/10 border-2 border-[#3C0078]"
+                                  ? "bg-[#64748b]/10 border-2 border-[#64748b]"
                                   : "bg-white border-2 border-gray-100 hover:border-gray-200"
                               }`}>
                                 <input
@@ -581,7 +703,7 @@ export default function AssignmentDetail({ assignmentId, activeCourseId }) {
                                   name={`q-${qi}`}
                                   checked={quizAnswers[qi] === oi}
                                   onChange={() => setQuizAnswers(prev => ({ ...prev, [qi]: oi }))}
-                                  className="accent-[#3C0078]"
+                                  className="accent-[#64748b]"
                                   disabled={submitting}
                                 />
                                 <span className="text-sm font-medium text-gray-700">{opt}</span>
@@ -603,7 +725,7 @@ export default function AssignmentDetail({ assignmentId, activeCourseId }) {
                           className={`flex items-center gap-2.5 px-8 py-3.5 rounded-2xl text-sm font-bold uppercase tracking-widest text-white transition-all shadow-sm ${
                             submitting || Object.keys(quizAnswers).length < quizQuestions.length
                               ? "bg-gray-200 text-gray-400 cursor-not-allowed shadow-none"
-                              : "bg-[#3C0078] hover:bg-[#2A0054] shadow-[#3C0078]/20"
+                              : "bg-[#64748b] hover:bg-[#475569] shadow-[#64748b]/20"
                           }`}
                         >
                           {submitting ? <><Loader size={16} className="animate-spin" /> Submitting...</> : <><Upload size={16} /> Submit Quiz</>}
@@ -613,20 +735,23 @@ export default function AssignmentDetail({ assignmentId, activeCourseId }) {
                   </div>
                 )}
               </motion.div>
-            ) : !isPastDue || isSubmitted ? (
+            ) : (
               <motion.div
                 variants={slideUp}
                 className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6"
               >
-                <h2 className="text-[10px] font-black uppercase tracking-[0.25em] text-[#3C0078] mb-2">
+                <h2 className="text-[10px] font-black uppercase tracking-[0.25em] text-[#64748b] mb-2">
                   {isSubmitted ? "Resubmit Work" : "Submit Your Work"}
                 </h2>
+                {isPastDue && !isSubmitted && (
+                  <p className="text-sm text-gray-600 font-semibold mb-4">This assignment is past due — late submissions are still accepted.</p>
+                )}
                 {isSubmitted && (
                   <p className="text-sm text-gray-400 mb-6">
-                    You've already submitted. You can resubmit until the due date.
+                    You've already submitted. You can resubmit at any time.
                   </p>
                 )}
-                {!isSubmitted && <div className="mb-6" />}
+                {!isSubmitted && !isPastDue && <div className="mb-6" />}
 
                 {/* File upload zone */}
                 <UploadZone
@@ -647,7 +772,7 @@ export default function AssignmentDetail({ assignmentId, activeCourseId }) {
                     disabled={submitting}
                     rows={3}
                     placeholder="Add any notes for your lecturer..."
-                    className="w-full px-5 py-4 rounded-2xl border border-gray-200 text-sm text-gray-700 resize-none focus:outline-none focus:border-[#3C0078] transition-colors placeholder:text-gray-300 disabled:opacity-50"
+                    className="w-full px-5 py-4 rounded-2xl border border-gray-200 text-sm text-gray-700 resize-none focus:outline-none focus:border-[#64748b] transition-colors placeholder:text-gray-300 disabled:opacity-50"
                   />
                 </div>
 
@@ -678,7 +803,7 @@ export default function AssignmentDetail({ assignmentId, activeCourseId }) {
                     className={`flex items-center gap-2.5 px-8 py-3.5 rounded-2xl text-sm font-bold uppercase tracking-widest text-white transition-all shadow-sm
                       ${!file || submitting
                         ? "bg-gray-200 text-gray-400 cursor-not-allowed shadow-none"
-                        : "bg-[#3C0078] hover:bg-[#2A0054] shadow-[#3C0078]/20"}`}
+                        : "bg-[#64748b] hover:bg-[#475569] shadow-[#64748b]/20"}`}
                   >
                     {submitting ? (
                       <>
@@ -693,16 +818,6 @@ export default function AssignmentDetail({ assignmentId, activeCourseId }) {
                     )}
                   </button>
                 </div>
-              </motion.div>
-            ) : (
-              /* Past due and no submission */
-              <motion.div
-                variants={slideUp}
-                className="bg-gray-50 border border-gray-100 rounded-3xl p-6 text-center"
-              >
-                <p className="text-gray-400 font-medium">
-                  This assignment is past due and no submission was recorded.
-                </p>
               </motion.div>
             )}
           </div>

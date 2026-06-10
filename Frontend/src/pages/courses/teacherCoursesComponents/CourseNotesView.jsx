@@ -148,7 +148,17 @@ export function CourseNotesView({ activeCourseId }) {
                     </button>
                 </div>
                 {loading ? (
-                    <div className="text-sm text-gray-500">Loading notes...</div>
+                    <div className="space-y-2 overflow-y-auto min-w-[256px] animate-pulse">
+                        {[1, 2, 3].map(i => (
+                            <div key={i} className="p-4 rounded-2xl bg-gray-50 flex items-start justify-between gap-2">
+                                <div className="flex-1 flex flex-col gap-2">
+                                    <div className="h-4 rounded-full bg-gray-200" style={{ width: `${50 + (i * 23) % 40}%` }} />
+                                    <div className="h-3 rounded-full bg-gray-100 w-20" />
+                                </div>
+                                <div className="w-6 h-6 rounded-lg bg-gray-100 shrink-0" />
+                            </div>
+                        ))}
+                    </div>
                 ) : (
                     <div className="space-y-2 overflow-y-auto min-w-[256px]">
                         {notes.map(note => (

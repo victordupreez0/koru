@@ -211,9 +211,31 @@ export default function CohortManagerModal({ course, onClose }) {
         </div>
 
         {isLoading ? (
-          <div className="flex-1 flex flex-col items-center justify-center">
-            <div className="w-12 h-12 border-4 border-[#3C0078] border-t-transparent rounded-full animate-spin mb-4"></div>
-            <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Loading schedules & rosters...</p>
+          <div className="flex-1 flex flex-col lg:flex-row overflow-hidden gap-0 animate-pulse">
+            {/* Left panel skeleton */}
+            <div className="lg:w-3/5 border-r border-gray-100 p-8 space-y-6 overflow-y-auto">
+              <div className="bg-white rounded-3xl border border-gray-100 p-6 space-y-4">
+                <div className="h-3 rounded-full bg-gray-200 w-32" />
+                {[1, 2, 3].map(i => <div key={i} className="h-12 rounded-2xl bg-gray-100" />)}
+              </div>
+              <div className="bg-white rounded-3xl border border-gray-100 p-6 space-y-4">
+                <div className="h-3 rounded-full bg-gray-200 w-40" />
+                {[1, 2].map(i => <div key={i} className="h-20 rounded-2xl bg-gray-100" />)}
+              </div>
+            </div>
+            {/* Right panel skeleton */}
+            <div className="lg:flex-1 p-8 space-y-4">
+              <div className="h-3 rounded-full bg-gray-200 w-28 mb-2" />
+              {[1, 2, 3, 4, 5].map(i => (
+                <div key={i} className="flex items-center gap-3 p-3 bg-gray-50 rounded-2xl">
+                  <div className="w-9 h-9 rounded-full bg-gray-200 shrink-0" />
+                  <div className="flex-1 flex flex-col gap-1.5">
+                    <div className="h-3 rounded-full bg-gray-200" style={{ width: `${50 + i * 8}%` }} />
+                    <div className="h-3 rounded-full bg-gray-100 w-1/3" />
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         ) : (
           <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">

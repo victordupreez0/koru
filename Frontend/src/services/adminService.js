@@ -74,22 +74,6 @@ export const courseService = {
     }
   },
 
-  /**
-   * Updates an existing course with new details.
-   * @param {string} id - The GUID of the course
-   * @param {Object} courseData - The updated course details
-   */
-  async updateCourse(id, courseData) {
-    const res = await fetch(`${API_BASE}/Course/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(courseData)
-    });
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      throw new Error(data.message || "Failed to update course");
-    }
-  }
 };
 
 /**
@@ -118,7 +102,30 @@ export const userService = {
     });
     const users = await handleResponse(res);
     return users.filter(user => user.role?.toLowerCase() === "student");
-  }
+  },
+
+  async updateUser(id, data) {
+    const res = await fetch(`${API_BASE}/User/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}));
+      throw new Error(d.message || "Failed to update user");
+    }
+  },
+
+  async deleteUser(id) {
+    const res = await fetch(`${API_BASE}/User/${id}`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+    });
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}));
+      throw new Error(d.message || "Failed to delete user");
+    }
+  },
 };
 
 /**
@@ -140,6 +147,26 @@ export const subjectService = {
       body: JSON.stringify(subjectData)
     });
     return handleResponse(res);
+  },
+
+  async updateSubject(id, subjectData) {
+    const res = await fetch(`${API_BASE}/Subject/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(subjectData)
+    });
+    return handleResponse(res);
+  },
+
+  async deleteSubject(id) {
+    const res = await fetch(`${API_BASE}/Subject/${id}`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" }
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.message || "Failed to delete subject");
+    }
   }
 };
 
@@ -175,19 +202,38 @@ export const enrollmentService = {
       body: JSON.stringify(enrollmentData)
     });
     return handleResponse(res);
-  }
+  },
+
+  async deleteEnrollment(id) {
+    const res = await fetch(`${API_BASE}/Enrollment/${id}`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+    });
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}));
+      throw new Error(d.message || "Failed to remove enrollment");
+    }
+  },
 };
 
 /**
- * Registration Service - For creating teacher accounts from the admin dashboard.
+ * Registration Service - For creating teacher and student accounts from the admin dashboard.
  */
 export const registrationService = {
-  async registerTeacher({ firstName, lastName, email }) {
-    const tempPassword = `Change${Math.random().toString(36).slice(2, 10)}!`;
+  async registerTeacher({ firstName, lastName, email, tempPassword }) {
     const res = await fetch(`${API_BASE}/User/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ firstName, lastName, email, password: tempPassword, role: "teacher" })
+    });
+    return handleResponse(res);
+  },
+
+  async registerStudent({ firstName, lastName, email, tempPassword }) {
+    const res = await fetch(`${API_BASE}/User/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ firstName, lastName, email, password: tempPassword, role: "student" })
     });
     return handleResponse(res);
   }
