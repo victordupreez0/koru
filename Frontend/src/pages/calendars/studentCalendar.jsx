@@ -135,8 +135,12 @@ export default function StudentCalendar({ onDeleteClassEvent } = {}) {
   // Pre-loaded data — already fetching before the user opened this page
   const { events, setEvents, tasks, loading } = useCalendar();
 
-  // Inject recurring class slot events for each course the student is enrolled in
+  // Inject recurring class slot events for each course the student is enrolled in.
+  // When embedded inside AdminCalendar (signalled by the onDeleteClassEvent prop),
+  // skip — the admin calendar injects all classes itself, and an admin has no
+  // enrollments, so running this would wipe the admin's injected class events.
   useEffect(() => {
+    if (onDeleteClassEvent) return;
     if (!user?.userId) return;
     getStudentCourses(user.userId)
       .then(enrollments => {
