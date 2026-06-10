@@ -143,8 +143,10 @@ export default function CalendarDayBlock({
                 onDelete={
                   evt.id?.startsWith("task-local-")
                     ? () => onDeleteEvent?.(evt.id)
-                    : onDeleteClassEvent
+                    : evt.id?.startsWith("cls-gen-") && onDeleteClassEvent
                     ? () => onDeleteClassEvent(evt)
+                    : evt.id?.startsWith("evt-") && onDeleteEvent
+                    ? () => onDeleteEvent(evt.id)
                     : undefined
                 }
                 tooltipPosition={tooltipPosition}

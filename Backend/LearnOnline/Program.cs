@@ -11,11 +11,15 @@ builder.Services.AddControllers().AddJsonOptions(options =>
     options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
 });
 
-// Allow the React frontend (Vite dev server) to call our API
+// Allow the React frontend (Vite dev server and packaged Electron app) to call our API
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
-        policy.WithOrigins("http://localhost:5200", "http://localhost:5201")
+        policy.WithOrigins(
+                  "http://localhost:5200",
+                  "http://localhost:5201",
+                  "http://127.0.0.1:5200",
+                  "http://127.0.0.1:5201")
               .AllowAnyHeader()
               .AllowAnyMethod());
 });

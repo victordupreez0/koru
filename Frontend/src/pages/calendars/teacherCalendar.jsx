@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -9,6 +9,7 @@ import CalendarDayView from "./UI/CalendarDayView";
 import AddTaskModal from "./UI/AddTaskModal";
 
 import { getAllEvents, createEvent, updateEvent, deleteEvent } from "../../services/eventService";
+import { classService } from "../../services/classService";
 import { useAuth } from "../../contexts/AuthContext";
 import { useCalendar, mapBackendEventToCalendar } from "../../contexts/CalendarContext";
 
@@ -16,6 +17,41 @@ import { useCalendar, mapBackendEventToCalendar } from "../../contexts/CalendarC
 //  HELPERS — dynamic grid & event generation
 // ─────────────────────────────────────────────────────────────
 const WEEK_DAYS = ["M", "T", "W", "T", "F", "S", "S"];
+const DAY_MAP = { Monday: 1, Tuesday: 2, Wednesday: 3, Thursday: 4, Friday: 5, Saturday: 6, Sunday: 0 };
+
+function expandClassToCalendarEvents(cls, weeksForward = 20, weeksBack = 26) {
+  const targetDow = DAY_MAP[cls.dayOfWeek];
+  if (targetDow === undefined || !cls.startTime) return [];
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const pad = n => String(n).padStart(2, "0");
+  const fmtDate = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const [sh, sm] = cls.startTime.split(":");
+  const [eh, em] = (cls.endTime || cls.startTime).split(":");
+  const eventData = {
+    title: [cls.name, cls.courseName].filter(Boolean).join(" · "),
+    startTime: `${pad(parseInt(sh))}:${pad(parseInt(sm))}`,
+    endTime: `${pad(parseInt(eh))}:${pad(parseInt(em))}`,
+    type: cls.isGenerated ? "scheduled" : "class",
+    lecturer: cls.teacherName || "",
+    location: cls.room || "",
+    courseId: cls.courseId,
+  };
+  const daysBehind = (today.getDay() - targetDow + 7) % 7;
+  const events = [];
+  for (let w = 0; w < weeksBack; w++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - daysBehind - w * 7);
+    events.push({ ...eventData, id: `cls-gen-${cls.id}-${fmtDate(d)}`, date: fmtDate(d) });
+  }
+  const daysUntil = (targetDow - today.getDay() + 7) % 7 || 7;
+  for (let w = 0; w < weeksForward; w++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() + daysUntil + w * 7);
+    events.push({ ...eventData, id: `cls-gen-${cls.id}-${fmtDate(d)}`, date: fmtDate(d) });
+  }
+  return events;
+}
 const MONTH_NAMES = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December",
@@ -98,6 +134,33 @@ export default function TeacherCalendar() {
 
   // Pre-loaded data — already fetching before the user opened this page
   const { events, setEvents, courses, loading } = useCalendar();
+
+  // Inject recurring class slot events for all courses this teacher teaches
+  useEffect(() => {
+    if (!courses || courses.length === 0) return;
+    const courseIds = new Set(courses.map(c => c.id));
+    classService.getAll()
+      .then(allClasses => {
+        const myClasses = (allClasses || []).filter(c => courseIds.has(c.courseId));
+        const classEvents = myClasses.flatMap(c => expandClassToCalendarEvents(c));
+        setEvents(prev => {
+          const withoutOld = prev.filter(e => !e.id?.startsWith("cls-gen-"));
+          return [...withoutOld, ...classEvents];
+        });
+      })
+      .catch(err => console.error("Failed to load class slots for teacher calendar:", err));
+  }, [courses]);
+
+  async function handleDeleteClassEvent(evt) {
+    const classId = evt.id.replace(/^cls-gen-/, "").replace(/-\d{4}-\d{2}-\d{2}$/, "");
+    try {
+      await classService.delete(classId);
+      setEvents(prev => prev.filter(e => !e.id?.startsWith(`cls-gen-${classId}-`)));
+    } catch (err) {
+      console.error("Error deleting class slot:", err);
+      alert("Failed to delete class slot: " + err.message);
+    }
+  }
 
   const [activeView, setActiveView] = useState("month");
   // Track current month as { year, month } (month is 0-indexed)
@@ -313,6 +376,7 @@ export default function TeacherCalendar() {
                         onDrop={handleEventDrop}
                         onEditEvent={(evt) => setTaskModal({ open: true, editEvent: evt, defaultDate: evt.date })}
                         onDeleteEvent={handleDeleteTask}
+                        onDeleteClassEvent={handleDeleteClassEvent}
                         onDayClick={(d) => setTaskModal({ open: true, editEvent: null, defaultDate: d })}
                         tooltipPosition={wIdx === 0 ? "down" : "up"}
                       />
