@@ -46,6 +46,7 @@ export default function CalendarDayBlock({
   onEditEvent,
   onDeleteEvent,
   onDeleteClassEvent,
+  allowEvtDelete = false,
   onDayClick,
   tooltipPosition = "up",
 }) {
@@ -145,7 +146,7 @@ export default function CalendarDayBlock({
                     ? () => onDeleteEvent?.(evt.id)
                     : evt.id?.startsWith("cls-gen-") && onDeleteClassEvent
                     ? () => onDeleteClassEvent(evt)
-                    : evt.id?.startsWith("evt-") && onDeleteEvent
+                    : evt.id?.startsWith("evt-") && allowEvtDelete && onDeleteEvent
                     ? () => onDeleteEvent(evt.id)
                     : undefined
                 }

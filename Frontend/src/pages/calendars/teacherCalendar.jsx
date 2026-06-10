@@ -377,6 +377,7 @@ export default function TeacherCalendar() {
                         onEditEvent={(evt) => setTaskModal({ open: true, editEvent: evt, defaultDate: evt.date })}
                         onDeleteEvent={handleDeleteTask}
                         onDeleteClassEvent={handleDeleteClassEvent}
+                        allowEvtDelete={true}
                         onDayClick={(d) => setTaskModal({ open: true, editEvent: null, defaultDate: d })}
                         tooltipPosition={wIdx === 0 ? "down" : "up"}
                       />

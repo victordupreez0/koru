@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -9,11 +9,50 @@ import CalendarDayView from "./UI/CalendarDayView";
 import AddTaskModal from "./UI/AddTaskModal";
 
 import { useCalendar } from "../../contexts/CalendarContext";
+import { useAuth } from "../../contexts/AuthContext";
+import { classService } from "../../services/classService";
+import { getStudentCourses } from "../../services/courseService";
 
 // ─────────────────────────────────────────────────────────────
 //  HELPERS — dynamic grid & event generation
 // ─────────────────────────────────────────────────────────────
 const WEEK_DAYS = ["M", "T", "W", "T", "F", "S", "S"];
+const DAY_MAP = { Monday: 1, Tuesday: 2, Wednesday: 3, Thursday: 4, Friday: 5, Saturday: 6, Sunday: 0 };
+
+function expandClassToCalendarEvents(cls, weeksForward = 20, weeksBack = 26) {
+  const targetDow = DAY_MAP[cls.dayOfWeek];
+  if (targetDow === undefined || !cls.startTime) return [];
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const pad = n => String(n).padStart(2, "0");
+  const fmtDate = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const [sh, sm] = cls.startTime.split(":");
+  const [eh, em] = (cls.endTime || cls.startTime).split(":");
+  const eventData = {
+    title: [cls.name, cls.courseName].filter(Boolean).join(" · "),
+    startTime: `${pad(parseInt(sh))}:${pad(parseInt(sm))}`,
+    endTime: `${pad(parseInt(eh))}:${pad(parseInt(em))}`,
+    type: cls.isGenerated ? "scheduled" : "class",
+    lecturer: cls.teacherName || "",
+    location: cls.room || "",
+    courseId: cls.courseId,
+  };
+  const daysBehind = (today.getDay() - targetDow + 7) % 7;
+  const events = [];
+  for (let w = 0; w < weeksBack; w++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - daysBehind - w * 7);
+    events.push({ ...eventData, id: `cls-gen-${cls.id}-${fmtDate(d)}`, date: fmtDate(d) });
+  }
+  const daysUntil = (targetDow - today.getDay() + 7) % 7 || 7;
+  for (let w = 0; w < weeksForward; w++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() + daysUntil + w * 7);
+    events.push({ ...eventData, id: `cls-gen-${cls.id}-${fmtDate(d)}`, date: fmtDate(d) });
+  }
+  return events;
+}
+
 const MONTH_NAMES = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December",
@@ -92,8 +131,27 @@ const viewVariants = {
 
 // ─────────────────────────────────────────────────────────────
 export default function StudentCalendar({ onDeleteClassEvent } = {}) {
+  const { user } = useAuth();
   // Pre-loaded data — already fetching before the user opened this page
   const { events, setEvents, tasks, loading } = useCalendar();
+
+  // Inject recurring class slot events for each course the student is enrolled in
+  useEffect(() => {
+    if (!user?.userId) return;
+    getStudentCourses(user.userId)
+      .then(enrollments => {
+        const courseIds = new Set((enrollments || []).map(e => e.course?.id).filter(Boolean));
+        return classService.getAll().then(allClasses => {
+          const myClasses = (allClasses || []).filter(c => courseIds.has(c.courseId));
+          const classEvents = myClasses.flatMap(c => expandClassToCalendarEvents(c));
+          setEvents(prev => {
+            const withoutOld = prev.filter(e => !e.id?.startsWith("cls-gen-"));
+            return [...withoutOld, ...classEvents];
+          });
+        });
+      })
+      .catch(err => console.error("Failed to load class slots for student calendar:", err));
+  }, [user?.userId]);
 
   const [activeView, setActiveView] = useState("month");
   // Track current month as { year, month } (month is 0-indexed)
