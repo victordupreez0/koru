@@ -149,8 +149,9 @@ The application was developed as a native desktop experience using Electron, all
 * View daily and weekly schedules
 * Create personal calendar events
 * Monitor upcoming deadlines
-<img width="6337" height="3282" alt="TeacherView" src="https://github.com/user-attachments/assets/c3264ec9-ce62-4bea-acb4-e3ae01a8ffea" />
 
+
+<img width="6337" height="3282" alt="TeacherView (1)" src="https://github.com/user-attachments/assets/de93c026-2654-48a2-90c4-342dc6666953" />
 
 ### Teacher Features
 
