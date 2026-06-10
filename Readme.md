@@ -6,7 +6,8 @@
 Koru is a full-stack Learning Management System (LMS) built to centralise academic workflows into a single platform. Designed as a cross-platform desktop application, Koru provides dedicated experiences for Students, Teachers, and Administrators while ensuring compliance with South Africa's Protection of Personal Information Act (POPIA).
 
 By combining course management, scheduling, assessments, analytics, and communication tools into one ecosystem, Koru eliminates the inefficiencies caused by fragmented educational systems.
-<img width="6337" height="3282" alt="TeacherView" src="https://github.com/user-attachments/assets/c7baf3e0-ec35-43fd-84ae-981607a7a71d" />
+<img width="6337" height="3282" alt="TeacherView" src="https://github.com/user-attachments/assets/2840f1ff-d27f-4806-b7fe-9908730f6d4c" />
+
 
 
 ## Overview
