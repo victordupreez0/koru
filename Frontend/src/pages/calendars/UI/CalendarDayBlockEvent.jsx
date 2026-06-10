@@ -192,6 +192,8 @@ export default function CalendarDayBlockEvent({
           "flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-medium transition-all duration-150 shadow-xs hover:-translate-y-px hover:shadow-md",
           isUserTask
             ? "bg-amber-50 text-gray-800 hover:bg-amber-100"
+            : type === "scheduled"
+            ? "bg-green-50 text-green-900 hover:bg-green-100"
             : "bg-white text-black hover:bg-purple-100",
           isDraggable ? "cursor-grab active:cursor-grabbing active:opacity-60 active:scale-95" : "cursor-pointer",
         ].join(" ")}
@@ -202,7 +204,7 @@ export default function CalendarDayBlockEvent({
         } : undefined}
       >
         {/* Type icon */}
-        <span className={["shrink-0 mt-px", isUserTask ? "text-amber-600" : "text-purple-700"].join(" ")}>
+        <span className={["shrink-0 mt-px", isUserTask ? "text-amber-600" : type === "scheduled" ? "text-green-600" : "text-purple-700"].join(" ")}>
           {ICONS[type] ?? ICONS.class}
         </span>
 
@@ -250,7 +252,7 @@ export default function CalendarDayBlockEvent({
           </>
         ) : (
           (startTime || endTime) && (
-            <span className="shrink-0 text-[10px] text-gray-400 text-right leading-tight whitespace-nowrap">
+            <span className={`shrink-0 text-[10px] text-right leading-tight whitespace-nowrap ${type === "scheduled" ? "text-green-500" : "text-gray-400"}`}>
               {startTime && <span className="block">{startTime}</span>}
               {endTime && <span className="block">{endTime}</span>}
             </span>

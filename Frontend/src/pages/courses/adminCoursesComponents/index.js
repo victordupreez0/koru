@@ -5,6 +5,5 @@ export { default as FilterDropdown } from "./FilterDropdown";
 export { default as StatCard } from "./StatCard";
 export { default as StudentPerspectiveModal } from "./StudentPerspectiveModal";
 export { default as TeacherPerspectiveModal } from "./TeacherPerspectiveModal";
-export { default as TeacherAnalyticsModal } from "./TeacherAnalyticsModal";
 export { default as CohortManagerModal } from "./CohortManagerModal";
 

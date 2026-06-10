@@ -63,13 +63,21 @@ function buildGridWeeks(year, month) {
   return weeks;
 }
 
-// Build a date → events[] lookup map
+// Build a date → events[] lookup map, sorted earliest first within each day
 function buildEventMap(events) {
-  return events.reduce((map, evt) => {
-    if (!map[evt.date]) map[evt.date] = [];
-    map[evt.date].push(evt);
-    return map;
+  const map = events.reduce((m, evt) => {
+    if (!m[evt.date]) m[evt.date] = [];
+    m[evt.date].push(evt);
+    return m;
   }, {});
+  Object.values(map).forEach(arr =>
+    arr.sort((a, b) => {
+      if (!a.startTime) return 1;
+      if (!b.startTime) return -1;
+      return a.startTime.localeCompare(b.startTime);
+    })
+  );
+  return map;
 }
 
 // Framer Motion variants

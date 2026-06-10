@@ -1,5 +1,5 @@
 import React from "react";
-import { Plus, User, ExternalLink, X } from "lucide-react";
+import { Plus, User, X } from "lucide-react";
 import { motion } from "framer-motion";
 import { SearchInput } from "./SearchInput";
 
@@ -18,9 +18,6 @@ function StudentCard({ student }) {
         <p className="text-sm font-bold text-gray-800 truncate">{student.name}</p>
         <p className="text-xs text-gray-400 truncate">{student.email || student.major || ""}</p>
       </div>
-      <button className="w-8 h-8 rounded-lg hover:bg-gray-100 flex items-center justify-center transition-colors shrink-0">
-        <ExternalLink className="w-4 h-4 text-gray-400" />
-      </button>
     </motion.div>
   );
 }

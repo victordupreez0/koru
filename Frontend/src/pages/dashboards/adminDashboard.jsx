@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Users, BookOpen, GraduationCap, UserCheck } from "lucide-react";
 
-import { TeacherAnalyticsModal, CreateCourseModal } from "../courses/adminCoursesComponents";
+import { CreateCourseModal } from "../courses/adminCoursesComponents";
 import {
   courseService,
   userService,
@@ -18,9 +18,9 @@ import {
   AddStudentForm,
   SendNotificationModal,
 } from "./adminDashboardComponents";
-import { createEvent } from "../../services/eventService";
+import { createEvent, getAllEvents } from "../../services/eventService";
 import DashboardHeader from "../../components/DashboardHeader";
-import { getCourseCohorts, getCourseStudents } from "../../services/classGroupService";
+import { getCourseCohorts, getCourseStudents, getClassGroups } from "../../services/classGroupService";
 import { classService } from "../../services/classService";
 
 const column = {
@@ -47,6 +47,10 @@ export default function AdminDashboard() {
   const [lecturers, setLecturers] = useState([]);
   const [courses, setCourses] = useState([]);
   const [students, setStudents] = useState([]);
+  const [classes, setClasses] = useState([]);
+  const [enrollments, setEnrollments] = useState([]);
+  const [events, setEvents] = useState([]);
+  const [classGroups, setClassGroups] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // ── Selection state ──
@@ -65,8 +69,6 @@ export default function AdminDashboard() {
   const [isAddingLecturer, setIsAddingLecturer] = useState(false);
   const [isAddingStudent, setIsAddingStudent] = useState(false);
   const [isSendingNotification, setIsSendingNotification] = useState(false);
-  const [showTeacherAnalytics, setShowTeacherAnalytics] = useState(false);
-  const [analyticsTeacher, setAnalyticsTeacher] = useState(null);
 
   // ── Course creation state ──
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -77,10 +79,13 @@ export default function AdminDashboard() {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const [rawTeachers, rawCourses, rawEnrollments] = await Promise.all([
+      const [rawTeachers, rawCourses, rawEnrollments, rawClasses, rawEvents, rawClassGroups] = await Promise.all([
         userService.getTeachers(),
         courseService.getAllCourses(),
         enrollmentService.getAll(),
+        classService.getAll().catch(() => []),
+        getAllEvents().catch(() => []),
+        getClassGroups().catch(() => []),
       ]);
 
       const normalizedTeachers = rawTeachers.map(t => ({
@@ -113,6 +118,10 @@ export default function AdminDashboard() {
       setLecturers(normalizedTeachers);
       setCourses(normalizedCourses);
       setStudents(Object.values(studentMap));
+      setClasses(rawClasses);
+      setEnrollments(rawEnrollments);
+      setEvents(rawEvents);
+      setClassGroups(rawClassGroups);
     } catch (err) {
       console.error("Failed to load dashboard data:", err);
     } finally {
@@ -169,13 +178,70 @@ export default function AdminDashboard() {
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [students, selectedCourseId, studentSearch]);
 
-  // ── Warning: any group has 0 classes, OR ungrouped students with no fallback schedule ──
-  const selectedCourseHasWarning = useMemo(() => {
-    if (!selectedCourseId || filteredStudents.length === 0) return false;
-    if (courseCohorts.some(g => (g.classCount ?? 0) === 0)) return true;
-    if (unassignedClassCount === 0 && filteredStudents.some(s => !cohortStudentMap[s.id])) return true;
-    return false;
-  }, [selectedCourseId, filteredStudents, courseCohorts, cohortStudentMap, unassignedClassCount]);
+  // ── Compute warning course details: any course where at least 1 enrolled student has no class slots ──
+  const warningCourseDetails = useMemo(() => {
+    const warnings = new Map(); // Map of courseId -> descriptive error message
+    courses.forEach(course => {
+      // Filter for active enrollments in this course
+      const courseEnrollments = enrollments.filter(
+        e => e.courseId === course.id && e.status === "Active" && e.student
+      );
+      if (courseEnrollments.length === 0) return;
+
+      // Count course-level (unassigned) class slots from Classes table
+      const unassignedClassesCount = classes.filter(
+        c => c.courseId === course.id && (!c.classGroupId || c.classGroupId === "")
+      ).length;
+
+      // Count course-level (unassigned) class slots from Events table (filtered and deduplicated)
+      const seenEvents = new Set();
+      const courseClassEvents = events.filter(e => {
+        if (e.courseId !== course.id) return false;
+        const t = e.eventType?.toLowerCase();
+        if (t !== "class" && t !== "lecture" && t !== "workshop" && t !== "practical") return false;
+        
+        const start = e.startTime ? new Date(e.startTime) : null;
+        const key = `${(e.title || "").toLowerCase()}|${start ? start.getDay() : "?"}|${start ? `${start.getHours()}:${start.getMinutes()}` : "?"}`;
+        if (seenEvents.has(key)) return false;
+        seenEvents.add(key);
+        return true;
+      });
+
+      const totalUnassignedCount = unassignedClassesCount + courseClassEvents.length;
+
+      // Check if any cohort/group in this course has no classes assigned to it (but has students)
+      const cohortsWithStudents = new Set();
+      courseEnrollments.forEach(e => {
+        if (e.classGroupId) {
+          cohortsWithStudents.add(e.classGroupId);
+        }
+      });
+
+      let warningMessage = null;
+
+      // 1. Check if there are unassigned students but no course-level classes
+      const hasUnassignedStudents = courseEnrollments.some(e => !e.classGroupId);
+      if (hasUnassignedStudents && totalUnassignedCount === 0) {
+        warningMessage = "There are no classes for unassigned students";
+      } else {
+        // 2. Check if any cohort with students has no class slots
+        for (const cohortId of cohortsWithStudents) {
+          const cohortClassCount = classes.filter(c => c.classGroupId === cohortId).length;
+          if (cohortClassCount === 0) {
+            const cohort = classGroups.find(g => g.id === cohortId);
+            const cohortName = cohort ? cohort.name : "Group";
+            warningMessage = `${cohortName} doesn't have any assigned classes`;
+            break;
+          }
+        }
+      }
+
+      if (warningMessage) {
+        warnings.set(course.id, warningMessage);
+      }
+    });
+    return warnings;
+  }, [courses, enrollments, classes, events, classGroups]);
 
   // ── Auto-select first course on load / filter change ──
   useEffect(() => {
@@ -239,10 +305,7 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleOpenAnalytics = (lecturer) => {
-    setAnalyticsTeacher(lecturer);
-    setShowTeacherAnalytics(true);
-  };
+
 
   const handleSendNotification = async ({ title, description, startTime, endTime, selectedIds, eventType, bgColor, textColor }) => {
     try {
@@ -385,7 +448,7 @@ export default function AdminDashboard() {
               lecturers={lecturers}
               onAddCourse={() => setShowCreateModal(true)}
               isAddingCourse={showCreateModal}
-              warningCourseId={selectedCourseHasWarning ? selectedCourseId : null}
+              warningCourseDetails={warningCourseDetails}
             />
           </motion.div>
 
@@ -396,7 +459,6 @@ export default function AdminDashboard() {
               selectedCourseId={selectedCourseId}
               isAddingLecturer={isAddingLecturer}
               setIsAddingLecturer={setIsAddingLecturer}
-              onOpenAnalytics={handleOpenAnalytics}
               onOpenNotification={() => setIsSendingNotification(true)}
             />
           </motion.div>
@@ -418,16 +480,7 @@ export default function AdminDashboard() {
         </motion.section>
       )}
 
-      {/* ── Teacher Analytics Modal ── */}
-      <AnimatePresence>
-        {showTeacherAnalytics && analyticsTeacher && (
-          <TeacherAnalyticsModal
-            teacher={analyticsTeacher}
-            isOpen={showTeacherAnalytics}
-            onClose={() => setShowTeacherAnalytics(false)}
-          />
-        )}
-      </AnimatePresence>
+
 
       {/* ── Create Course Modal ── */}
       <AnimatePresence>

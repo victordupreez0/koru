@@ -208,7 +208,7 @@ function SlotForm({ form, setForm, teachers, onSave, onCancel, saving }) {
 }
 
 // ── Classes section (right panel) ─────────────────────────────────────────────
-function ClassesSection({ groupId, courseId, teachers, refreshKey }) {
+function ClassesSection({ groupId, courseId, teachers, refreshKey, onChanged }) {
   const [slots, setSlots] = useState([]);
   const [loading, setLoading] = useState(true);
   const [addOpen, setAddOpen] = useState(false);
@@ -220,14 +220,16 @@ function ClassesSection({ groupId, courseId, teachers, refreshKey }) {
   const loadSlots = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await classService.getByGroup(groupId);
+      const data = groupId
+        ? await classService.getByGroup(groupId)
+        : await classService.getUnassignedByCourse(courseId);
       setSlots(data || []);
     } catch {
       setSlots([]);
     } finally {
       setLoading(false);
     }
-  }, [groupId]);
+  }, [groupId, courseId]);
 
   useEffect(() => { loadSlots(); }, [loadSlots, refreshKey]);
 
@@ -254,7 +256,7 @@ function ClassesSection({ groupId, courseId, teachers, refreshKey }) {
         room: form.room || null,
         dayOfWeek: form.dayOfWeek || null,
         courseId,
-        classGroupId: groupId,
+        classGroupId: groupId || null,
         isGenerated: false,
       };
       if (editingId) {
@@ -268,6 +270,7 @@ function ClassesSection({ groupId, courseId, teachers, refreshKey }) {
         await classService.create(payload);
       }
       await loadSlots();
+      onChanged?.();
       setAddOpen(false);
       setEditingId(null);
       setForm(DEFAULT_SLOT_FORM);
@@ -283,6 +286,7 @@ function ClassesSection({ groupId, courseId, teachers, refreshKey }) {
     try {
       await classService.delete(id);
       setSlots(prev => prev.filter(s => s.id !== id));
+      onChanged?.();
       if (editingId === id) setEditingId(null);
     } catch (err) {
       alert("Failed to delete: " + err.message);
@@ -365,7 +369,7 @@ function AddClassManuallySection({ groupId, courseId, teachers, onAdded }) {
         startTime: form.startTime + ":00",
         endTime: form.endTime + ":00",
         courseId,
-        classGroupId: groupId,
+        classGroupId: groupId || null,
         isGenerated: false,
       });
       onAdded();
@@ -525,9 +529,15 @@ export function AdminCohortsView({ courseId, course }) {
       setCohorts(cohortsData || []);
       setTeachers(teacherList || []);
       setUnassignedClasses(unassignedClassesData || []);
+      const seen = new Set();
       setUnassignedEvents((courseEventsData || []).filter(e => {
         const t = e.eventType?.toLowerCase();
-        return t === "class" || t === "lecture" || t === "workshop" || t === "practical";
+        if (t !== "class" && t !== "lecture" && t !== "workshop" && t !== "practical") return false;
+        const start = e.startTime ? new Date(e.startTime) : null;
+        const key = `${(e.title || "").toLowerCase()}|${start ? start.getDay() : "?"}|${start ? `${start.getHours()}:${start.getMinutes()}` : "?"}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
       }));
       setUnassignedStudents((courseStudentsData || []).filter(s => !s.classGroupId));
       const ids = (allEnrollments || [])
@@ -728,48 +738,57 @@ export function AdminCohortsView({ courseId, course }) {
                         )}
                       </div>
 
-                      {/* Right: unassigned class slots + calendar events (read-only) */}
-                      <div className="flex-1 min-w-0 px-5 py-4">
-                        <div className="flex items-center gap-2 mb-3">
-                          <div className="w-1.5 h-1.5 rounded-full bg-gray-300 shrink-0" />
-                          <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">
-                            Schedule · {unassignedClasses.length + unassignedEvents.length}
-                          </span>
+                      {/* Right: Classes section + Add Manually (interactive, same as cohort groups) */}
+                      <div className="flex-1 min-w-0 flex flex-col">
+                        <div className="px-5 py-4">
+                          <ClassesSection
+                            groupId={null}
+                            courseId={courseId}
+                            teachers={courseTeachers}
+                            refreshKey={classRefreshKeys["unassigned"] || 0}
+                            onChanged={load}
+                          />
                         </div>
-                        {unassignedClasses.length === 0 && unassignedEvents.length === 0 ? (
-                          <div className="flex items-center gap-2 px-3 py-2.5 rounded-2xl bg-gray-50 border border-dashed border-gray-200">
-                            <BookOpen size={13} className="text-gray-300 shrink-0" />
-                            <span className="text-xs text-gray-400">No class slots configured yet.</span>
-                          </div>
-                        ) : (
-                          <div className="space-y-1.5 max-h-64 overflow-y-auto pr-1">
-                            {unassignedClasses.map(slot => (
-                              <ClassSlotCard key={slot.id} slot={slot} />
-                            ))}
-                            {unassignedEvents.map(evt => {
-                              const start = evt.startTime ? new Date(evt.startTime) : null;
-                              const end = evt.endTime ? new Date(evt.endTime) : null;
-                              const dayName = start ? start.toLocaleDateString("en-US", { weekday: "long" }) : null;
-                              const fmt = (d) => d ? `${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}` : null;
-                              return (
-                                <div key={evt.id} className="flex items-start gap-2 px-3 py-2 rounded-2xl bg-blue-50/60 border border-blue-100">
-                                  <Calendar size={12} className="text-blue-400 shrink-0 mt-0.5" />
-                                  <div className="min-w-0 flex-1">
-                                    <div className="flex items-center gap-1.5 flex-wrap">
-                                      <span className="text-[10px] font-black text-blue-700 uppercase tracking-wider truncate">{evt.title}</span>
-                                      <span className="text-[8px] font-bold text-blue-400 bg-blue-100 px-1 py-0.5 rounded shrink-0">Calendar Event</span>
+                        {unassignedEvents.length > 0 && (
+                          <div className="px-5 pb-4">
+                            <div className="flex items-center gap-2 mb-3">
+                              <div className="w-1.5 h-1.5 rounded-full bg-blue-300 shrink-0" />
+                              <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                                Calendar Events · {unassignedEvents.length}
+                              </span>
+                            </div>
+                            <div className="space-y-1.5 max-h-64 overflow-y-auto pr-1">
+                              {unassignedEvents.map(evt => {
+                                const start = evt.startTime ? new Date(evt.startTime) : null;
+                                const end = evt.endTime ? new Date(evt.endTime) : null;
+                                const dayName = start ? start.toLocaleDateString("en-US", { weekday: "long" }) : null;
+                                const fmt = (d) => d ? `${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}` : null;
+                                return (
+                                  <div key={evt.id} className="flex items-start gap-2 px-3 py-2 rounded-2xl bg-blue-50/60 border border-blue-100">
+                                    <Calendar size={12} className="text-blue-400 shrink-0 mt-0.5" />
+                                    <div className="min-w-0 flex-1">
+                                      <div className="flex items-center gap-1.5 flex-wrap">
+                                        <span className="text-[10px] font-black text-blue-700 uppercase tracking-wider truncate">{evt.title}</span>
+                                        <span className="text-[8px] font-bold text-blue-400 bg-blue-100 px-1 py-0.5 rounded shrink-0">Calendar Event</span>
+                                      </div>
+                                      {(dayName || fmt(start)) && (
+                                        <p className="text-[10px] text-blue-500 mt-0.5">
+                                          {dayName}{fmt(start) ? ` · ${fmt(start)}${fmt(end) ? `–${fmt(end)}` : ""}` : ""}
+                                        </p>
+                                      )}
                                     </div>
-                                    {(dayName || fmt(start)) && (
-                                      <p className="text-[10px] text-blue-500 mt-0.5">
-                                        {dayName}{fmt(start) ? ` · ${fmt(start)}${fmt(end) ? `–${fmt(end)}` : ""}` : ""}
-                                      </p>
-                                    )}
                                   </div>
-                                </div>
-                              );
-                            })}
+                                );
+                              })}
+                            </div>
                           </div>
                         )}
+                        <AddClassManuallySection
+                          groupId={null}
+                          courseId={courseId}
+                          teachers={courseTeachers}
+                          onAdded={() => { bumpRefresh("unassigned"); load(); }}
+                        />
                       </div>
                     </div>
                   </motion.div>

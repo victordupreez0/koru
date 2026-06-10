@@ -12,7 +12,7 @@ export function CourseColumn({
   lecturers,
   onAddCourse,
   isAddingCourse,
-  warningCourseId,
+  warningCourseDetails,
 }) {
   return (
     <div className="flex flex-col bg-white/70 border border-gray-100 rounded-3xl p-4 h-full">
@@ -38,7 +38,8 @@ export function CourseColumn({
         ) : (
           filteredCourses.map((course) => {
             const isSelected = course.id === selectedCourseId;
-            const hasWarning = course.id === warningCourseId;
+            const warningMessage = warningCourseDetails?.get(course.id);
+            const hasWarning = !!warningMessage;
             return (
               <ColumnCard
                 key={course.id}
@@ -55,13 +56,21 @@ export function CourseColumn({
                   </p>
                 </div>
                 {hasWarning && (
-                  <div className={`flex items-center gap-1 px-2 py-1 rounded-xl shrink-0 ${
-                    isSelected
-                      ? "bg-white/20 text-white"
-                      : "bg-amber-50 border border-amber-200 text-amber-600"
-                  }`}>
-                    <AlertTriangle size={10} />
-                    <span className="text-[9px] font-black uppercase tracking-wider">No classes</span>
+                  <div className="relative group/tooltip shrink-0">
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center cursor-help transition-all ${
+                      isSelected
+                        ? "bg-yellow-400 text-[#3C0078]"
+                        : "bg-amber-50 border border-amber-200 text-amber-600 hover:bg-amber-100"
+                    }`}>
+                      <AlertTriangle size={12} className="stroke-[2.5]" />
+                    </div>
+                    
+                    {/* Tooltip Content */}
+                    <div className="absolute right-full top-1/2 -translate-y-1/2 mr-2 hidden group-hover/tooltip:block z-50 bg-gray-900 text-white text-[10px] font-bold px-3 py-2 rounded-xl shadow-xl whitespace-nowrap pointer-events-none transition-all">
+                      {warningMessage}
+                      {/* Arrow */}
+                      <div className="absolute left-full top-1/2 -translate-y-1/2 border-4 border-transparent border-l-gray-900" />
+                    </div>
                   </div>
                 )}
               </ColumnCard>

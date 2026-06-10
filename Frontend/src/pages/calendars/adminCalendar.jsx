@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { classService } from "../../services/classService";
 import { useAuth } from "../../contexts/AuthContext";
+import { useCalendar } from "../../contexts/CalendarContext";
 import StudentCalendar from "./studentCalendar";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5299/api";
@@ -46,6 +47,37 @@ function detectConflicts(classes) {
   return conflicts;
 }
 
+const DAY_MAP = { Monday: 1, Tuesday: 2, Wednesday: 3, Thursday: 4, Friday: 5, Saturday: 6, Sunday: 0 };
+
+function expandClassToCalendarEvents(cls, weeksForward = 20) {
+  const targetDow = DAY_MAP[cls.dayOfWeek];
+  if (targetDow === undefined || !cls.startTime) return [];
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const pad = n => String(n).padStart(2, "0");
+  const fmtDate = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  let daysUntil = (targetDow - today.getDay() + 7) % 7 || 7;
+  const [sh, sm] = cls.startTime.split(":");
+  const [eh, em] = (cls.endTime || cls.startTime).split(":");
+  const events = [];
+  for (let w = 0; w < weeksForward; w++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() + daysUntil + w * 7);
+    events.push({
+      id: `cls-gen-${cls.id}-${fmtDate(d)}`,
+      date: fmtDate(d),
+      title: [cls.name, cls.courseName].filter(Boolean).join(" · "),
+      startTime: `${pad(parseInt(sh))}:${pad(parseInt(sm))}`,
+      endTime: `${pad(parseInt(eh))}:${pad(parseInt(em))}`,
+      type: "scheduled",
+      lecturer: cls.teacherName || "",
+      location: cls.room || "",
+      courseId: cls.courseId,
+    });
+  }
+  return events;
+}
+
 function SlotChip({ cls, conflict }) {
   return (
     <div className={`rounded-xl px-3 py-2 border text-[10px] ${
@@ -64,6 +96,7 @@ function SlotChip({ cls, conflict }) {
 
 export default function AdminCalendar() {
   const { user } = useAuth();
+  const { setEvents, loading: calLoading } = useCalendar();
   const [classes, setClasses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [panelOpen, setPanelOpen] = useState(true);
@@ -81,8 +114,21 @@ export default function AdminCalendar() {
 
   useEffect(() => { loadClasses(); }, []);
 
+  // Inject generated class records as recurring green events into the calendar.
+  // Wait for both CalendarContext AND classes to finish loading so we don't race
+  // against CalendarContext's setEvents(backendEvents) overwriting our injections.
+  useEffect(() => {
+    if (calLoading || loading) return;
+    const generated = classes.filter(c => c.dayOfWeek && c.startTime);
+    const classCalEvents = generated.flatMap(c => expandClassToCalendarEvents(c));
+    setEvents(prev => [
+      ...prev.filter(e => !e.id.startsWith("cls-gen-")),
+      ...classCalEvents,
+    ]);
+  }, [classes, calLoading, loading]);
+
   const conflicts = useMemo(() => detectConflicts(classes), [classes]);
-  const unscheduled = useMemo(() => classes.filter(c => c.classGroupId && !c.startTime && !c.isGenerated), [classes]);
+  const unscheduled = useMemo(() => classes.filter(c => c.classGroupId && !c.startTime), [classes]);
   const conflictIds = useMemo(() => new Set(conflicts.flatMap(c => [c.slot1.id, c.slot2.id])), [conflicts]);
 
   const handleGenerate = async () => {

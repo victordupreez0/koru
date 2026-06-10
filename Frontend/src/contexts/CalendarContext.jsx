@@ -107,7 +107,9 @@ export function CalendarProvider({ children }) {
             getStudentSubmissions(user.userId).catch(() => []),
           ]);
 
-          const classEvents      = (Array.isArray(backendEvents)     ? backendEvents     : []).map(mapBackendEventToCalendar);
+          const classEvents      = (Array.isArray(backendEvents) ? backendEvents : [])
+            .filter(evt => evt.eventType?.toLowerCase() !== "task")
+            .map(mapBackendEventToCalendar);
           const assignmentEvents = (Array.isArray(assignmentsData)   ? assignmentsData   : []).map(mapAssignmentToCalendarEvent);
 
           if (mounted) setEvents([...classEvents, ...assignmentEvents]);
@@ -150,7 +152,9 @@ export function CalendarProvider({ children }) {
         // ── Admin (mirrors student — read-only event view) ───────
         } else {
           const backendEvents = await getAllEvents().catch(() => []);
-          const classEvents = (Array.isArray(backendEvents) ? backendEvents : []).map(mapBackendEventToCalendar);
+          const classEvents = (Array.isArray(backendEvents) ? backendEvents : [])
+            .filter(evt => evt.eventType?.toLowerCase() !== "task")
+            .map(mapBackendEventToCalendar);
           if (mounted) setEvents(classEvents);
         }
       } catch (err) {
