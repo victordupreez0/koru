@@ -24,22 +24,42 @@ function formatTime(t) {
   return `${hour % 12 || 12}:${m} ${hour >= 12 ? "PM" : "AM"}`;
 }
 
+// End of a class in minutes — falls back to start + durationHours when endTime is missing
+function endMinutes(c) {
+  const s = parseMinutes(c.startTime);
+  if (s === null) return null;
+  const e = parseMinutes(c.endTime);
+  if (e !== null) return e;
+  return s + Math.round((parseFloat(c.durationHours) || 1) * 60);
+}
+
+// Flag overlapping classes that share a lecturer, a room, or a group —
+// mirrors the backend generator's conflict rules and the cohort slot form.
 function detectConflicts(classes) {
-  const scheduled = classes.filter(c => c.startTime && c.dayOfWeek && c.teacherId);
+  const scheduled = classes.filter(c => c.startTime && c.dayOfWeek);
   const conflicts = [];
   const seen = new Set();
   for (let i = 0; i < scheduled.length; i++) {
     for (let j = i + 1; j < scheduled.length; j++) {
       const a = scheduled[i], b = scheduled[j];
-      if (a.teacherId !== b.teacherId || a.dayOfWeek !== b.dayOfWeek) continue;
-      const aS = parseMinutes(a.startTime), aE = parseMinutes(a.endTime);
-      const bS = parseMinutes(b.startTime), bE = parseMinutes(b.endTime);
+      if (a.dayOfWeek !== b.dayOfWeek) continue;
+      const shared =
+        a.teacherId && a.teacherId === b.teacherId
+          ? `${a.teacherName || "Same lecturer"} double-booked`
+          : a.room && a.room === b.room
+          ? `Room ${a.room} double-booked`
+          : a.classGroupId && a.classGroupId === b.classGroupId
+          ? "Same group double-booked"
+          : null;
+      if (!shared) continue;
+      const aS = parseMinutes(a.startTime), aE = endMinutes(a);
+      const bS = parseMinutes(b.startTime), bE = endMinutes(b);
       if (aS === null || aE === null || bS === null || bE === null) continue;
       if (aS < bE && bS < aE) {
         const key = [a.id, b.id].sort().join("|");
         if (!seen.has(key)) {
           seen.add(key);
-          conflicts.push({ slot1: a, slot2: b, teacherName: a.teacherName || b.teacherName });
+          conflicts.push({ slot1: a, slot2: b, label: shared, teacherName: a.teacherName || b.teacherName });
         }
       }
     }
@@ -155,7 +175,7 @@ export default function AdminCalendar() {
   }, [classes, calLoading, loading]);
 
   const conflicts = useMemo(() => detectConflicts(classes), [classes]);
-  const unscheduled = useMemo(() => classes.filter(c => c.classGroupId && !c.startTime), [classes]);
+  const unscheduled = useMemo(() => classes.filter(c => !c.startTime), [classes]);
   const conflictIds = useMemo(() => new Set(conflicts.flatMap(c => [c.slot1.id, c.slot2.id])), [conflicts]);
 
   const handleGenerate = async () => {
@@ -214,7 +234,7 @@ export default function AdminCalendar() {
                 : "text-green-600"
               }`}>
                 {conflicts.length > 0
-                  ? `${conflicts.length} conflict${conflicts.length !== 1 ? "s" : ""} — teacher double-booked`
+                  ? `${conflicts.length} scheduling conflict${conflicts.length !== 1 ? "s" : ""} detected`
                   : unscheduled.length > 0
                   ? `${unscheduled.length} unscheduled slot${unscheduled.length !== 1 ? "s" : ""}`
                   : `No conflicts · ${classes.length} class slot${classes.length !== 1 ? "s" : ""} configured`}
@@ -268,7 +288,7 @@ export default function AdminCalendar() {
                         <div key={i} className="bg-red-50 border border-red-200 rounded-2xl p-3">
                           <p className="text-[10px] font-bold text-red-700 mb-2">
                             <User size={10} className="inline mr-1" />
-                            {c.teacherName || "Unknown"} — {c.slot1.dayOfWeek}
+                            {c.label} — {c.slot1.dayOfWeek}
                           </p>
                           <div className="grid grid-cols-2 gap-2">
                             <SlotChip cls={c.slot1} conflict />
