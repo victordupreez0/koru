@@ -91,7 +91,7 @@ const viewVariants = {
 };
 
 // ─────────────────────────────────────────────────────────────
-export default function StudentCalendar() {
+export default function StudentCalendar({ onDeleteClassEvent } = {}) {
   // Pre-loaded data — already fetching before the user opened this page
   const { events, setEvents, tasks, loading } = useCalendar();
 
@@ -246,6 +246,7 @@ export default function StudentCalendar() {
                         onDrop={handleEventDrop}
                         onEditEvent={(evt) => setTaskModal({ open: true, editEvent: evt, defaultDate: evt.date })}
                         onDeleteEvent={handleDeleteTask}
+                        onDeleteClassEvent={onDeleteClassEvent}
                         onDayClick={(d) => setTaskModal({ open: true, editEvent: null, defaultDate: d })}
                         tooltipPosition={wIdx === 0 ? "down" : "up"}
                       />

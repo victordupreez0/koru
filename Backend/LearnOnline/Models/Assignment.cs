@@ -56,5 +56,12 @@ namespace LearnOnline.Models
 
         [ForeignKey("CourseId")]
         public Course? Course { get; set; }
+
+        // When set, this assignment is only visible to students in this group.
+        // Null means the assignment targets all groups in the course.
+        public string? ClassGroupId { get; set; }
+
+        [ForeignKey("ClassGroupId")]
+        public ClassGroup? ClassGroup { get; set; }
     }
 }

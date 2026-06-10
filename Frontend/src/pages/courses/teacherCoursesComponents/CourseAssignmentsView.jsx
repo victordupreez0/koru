@@ -21,7 +21,7 @@ function AssignmentTypeIcon({ type, size = 18 }) {
     );
 }
 
-function CreateAssignmentDrawer({ onClose, onSave, initialData }) {
+function CreateAssignmentDrawer({ onClose, onSave, initialData, cohorts = [], defaultGroupId = null }) {
     const isEditing = !!initialData;
     const [form, setForm] = React.useState({
         title: initialData?.title ?? "",
@@ -38,6 +38,7 @@ function CreateAssignmentDrawer({ onClose, onSave, initialData }) {
         id: initialData?.id ?? null,
         submissions: initialData?.submissions ?? 0,
         totalStudents: initialData?.totalStudents ?? 0,
+        classGroupId: initialData?.classGroupId ?? defaultGroupId ?? null,
     });
 
     const parseInitialQuestions = () => {
@@ -58,6 +59,7 @@ function CreateAssignmentDrawer({ onClose, onSave, initialData }) {
         const payload = {
             ...form,
             maxPoints: form.points,
+            classGroupId: form.classGroupId || null,
             quizQuestionsJson: form.type === "quiz" && quizQuestions.length > 0 ? JSON.stringify(quizQuestions) : null,
             externalToolName: form.type === "external" ? (form.externalToolName || null) : null,
             externalToolUrl: form.type === "external" ? (form.externalToolUrl || null) : null,
@@ -84,6 +86,36 @@ function CreateAssignmentDrawer({ onClose, onSave, initialData }) {
             </div>
 
             <div className="flex-1 overflow-y-auto px-8 py-6 space-y-6">
+                    {cohorts.length > 0 && (
+                        <div>
+                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3 block">Assign To</label>
+                            <div className="flex flex-wrap gap-2">
+                                <button
+                                    onClick={() => handleChange("classGroupId", null)}
+                                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${
+                                        form.classGroupId === null
+                                            ? "bg-[#3C0078] text-white border-[#3C0078]"
+                                            : "bg-gray-50 text-gray-600 border-gray-200 hover:border-gray-300"
+                                    }`}
+                                >
+                                    All Groups
+                                </button>
+                                {cohorts.map(c => (
+                                    <button
+                                        key={c.id}
+                                        onClick={() => handleChange("classGroupId", c.id)}
+                                        className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${
+                                            form.classGroupId === c.id
+                                                ? "bg-[#3C0078] text-white border-[#3C0078]"
+                                                : "bg-gray-50 text-gray-600 border-gray-200 hover:border-gray-300"
+                                        }`}
+                                    >
+                                        {c.name}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                     <div>
                         <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3 block">Assignment Type</label>
                         <div className="grid grid-cols-3 gap-2">
@@ -1098,18 +1130,23 @@ export function CourseAssignmentsView({ subject, activeCourseId }) {
 
     React.useEffect(() => { loadData(); }, [loadData]);
 
+    const visibleAssignments = React.useMemo(() => {
+        if (!selectedCohortId) return assignments;
+        return assignments.filter(a => !a.classGroupId || a.classGroupId === selectedCohortId);
+    }, [assignments, selectedCohortId]);
+
     const groups = React.useMemo(() => [{
         id: "all",
         name: "All Assignments",
         weight: 100,
-        assignments: assignments.map(a => ({
+        assignments: visibleAssignments.map(a => ({
             ...a,
             points: a.maxPoints,
             submissions: submissionCounts[a.id] || 0,
             totalStudents: enrollmentCount,
             published: !a.isClosed,
         }))
-    }], [assignments, submissionCounts, enrollmentCount]);
+    }], [visibleAssignments, submissionCounts, enrollmentCount]);
 
     const handleDelete = async (groupId, assignmentId) => {
         try {
@@ -1154,6 +1191,7 @@ export function CourseAssignmentsView({ subject, activeCourseId }) {
                 quizQuestionsJson: formData.quizQuestionsJson ?? null,
                 externalToolName: formData.externalToolName ?? null,
                 externalToolUrl: formData.externalToolUrl ?? null,
+                classGroupId: formData.classGroupId ?? null,
             };
             if (editingAssignment) {
                 await updateAssignment(editingAssignment.id, { ...payload, id: editingAssignment.id });
@@ -1294,6 +1332,8 @@ export function CourseAssignmentsView({ subject, activeCourseId }) {
                         onClose={() => { setShowDrawer(false); setEditingAssignment(null); }}
                         onSave={handleSave}
                         initialData={editingAssignment}
+                        cohorts={cohorts}
+                        defaultGroupId={selectedCohortId}
                     />
                 )}
             </AnimatePresence>

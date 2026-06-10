@@ -54,4 +54,13 @@ export const classService = {
     if (res.status === 204) return { success: true };
     return handleResponse(res);
   },
+
+  // POST /api/Class/import-from-events/{courseId}
+  // Converts class-type calendar events to manual class slots and deletes the source events.
+  async importFromEvents(courseId) {
+    const res = await fetch(`${API_BASE}/Class/import-from-events/${encodeURIComponent(courseId)}`, {
+      method: "POST",
+    });
+    return handleResponse(res);
+  },
 };

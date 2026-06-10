@@ -45,6 +45,7 @@ export default function CalendarDayBlock({
   onDrop,
   onEditEvent,
   onDeleteEvent,
+  onDeleteClassEvent,
   onDayClick,
   tooltipPosition = "up",
 }) {
@@ -139,7 +140,13 @@ export default function CalendarDayBlock({
                 draggable={!!evt.id?.startsWith("task-local-")}
                 isUserTask={!!evt.id?.startsWith("task-local-")}
                 onEdit={() => onEditEvent?.(evt)}
-                onDelete={() => onDeleteEvent?.(evt.id)}
+                onDelete={
+                  evt.id?.startsWith("task-local-")
+                    ? () => onDeleteEvent?.(evt.id)
+                    : onDeleteClassEvent
+                    ? () => onDeleteClassEvent(evt)
+                    : undefined
+                }
                 tooltipPosition={tooltipPosition}
               />
             </div>

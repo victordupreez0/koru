@@ -16,6 +16,7 @@ import {
   StudentColumn,
   AddLecturerForm,
   AddStudentForm,
+  EditUserModal,
   SendNotificationModal,
 } from "./adminDashboardComponents";
 import { createEvent, getAllEvents } from "../../services/eventService";
@@ -69,6 +70,8 @@ export default function AdminDashboard() {
   const [isAddingLecturer, setIsAddingLecturer] = useState(false);
   const [isAddingStudent, setIsAddingStudent] = useState(false);
   const [isSendingNotification, setIsSendingNotification] = useState(false);
+  const [editingUser, setEditingUser] = useState(null); // { user, label }
+
 
   // ── Course creation state ──
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -339,6 +342,46 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleEditUser = async ({ firstName, lastName, email }) => {
+    if (!editingUser) return;
+    try {
+      await userService.updateUser(editingUser.user.id, {
+        ...editingUser.user,
+        firstName,
+        lastName,
+        email,
+      });
+      setEditingUser(null);
+      await fetchData();
+    } catch (err) {
+      alert("Failed to update: " + err.message);
+    }
+  };
+
+  const handleDeleteLecturer = async (lecturer) => {
+    if (!window.confirm(`Delete lecturer "${lecturer.name}"? This will permanently remove their account.`)) return;
+    try {
+      await userService.deleteUser(lecturer.id);
+      await fetchData();
+    } catch (err) {
+      alert("Failed to delete lecturer: " + err.message);
+    }
+  };
+
+  const handleDeleteStudent = async (student) => {
+    if (!window.confirm(`Remove "${student.name}" from this course?`)) return;
+    try {
+      const enrollment = enrollments.find(
+        (e) => e.student?.id === student.id && e.courseId === selectedCourseId
+      );
+      if (!enrollment) throw new Error("Enrollment not found");
+      await enrollmentService.deleteEnrollment(enrollment.id);
+      await fetchData();
+    } catch (err) {
+      alert("Failed to remove student: " + err.message);
+    }
+  };
+
   // ── Header KPIs ──
   const currentTermCourses = useMemo(
     () => courses.filter(c => c.year === parseInt(year) && c.semester === parseInt(semester)),
@@ -460,6 +503,8 @@ export default function AdminDashboard() {
               isAddingLecturer={isAddingLecturer}
               setIsAddingLecturer={setIsAddingLecturer}
               onOpenNotification={() => setIsSendingNotification(true)}
+              onEditLecturer={(l) => setEditingUser({ user: l, label: "Lecturer" })}
+              onDeleteLecturer={handleDeleteLecturer}
             />
           </motion.div>
 
@@ -475,6 +520,8 @@ export default function AdminDashboard() {
               filteredStudents={filteredStudents}
               cohorts={courseCohorts}
               cohortStudentMap={cohortStudentMap}
+              onEditStudent={(s) => setEditingUser({ user: s, label: "Student" })}
+              onDeleteStudent={handleDeleteStudent}
             />
           </motion.div>
         </motion.section>
@@ -523,6 +570,18 @@ export default function AdminDashboard() {
             lecturers={lecturers}
             onClose={() => setIsSendingNotification(false)}
             onSend={handleSendNotification}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* ── Edit User Modal ── */}
+      <AnimatePresence>
+        {editingUser && (
+          <EditUserModal
+            user={editingUser.user}
+            label={editingUser.label}
+            onSave={handleEditUser}
+            onCancel={() => setEditingUser(null)}
           />
         )}
       </AnimatePresence>

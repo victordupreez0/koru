@@ -49,32 +49,44 @@ function detectConflicts(classes) {
 
 const DAY_MAP = { Monday: 1, Tuesday: 2, Wednesday: 3, Thursday: 4, Friday: 5, Saturday: 6, Sunday: 0 };
 
-function expandClassToCalendarEvents(cls, weeksForward = 20) {
+function expandClassToCalendarEvents(cls, weeksForward = 20, weeksBack = 26) {
   const targetDow = DAY_MAP[cls.dayOfWeek];
   if (targetDow === undefined || !cls.startTime) return [];
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const pad = n => String(n).padStart(2, "0");
   const fmtDate = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-  let daysUntil = (targetDow - today.getDay() + 7) % 7 || 7;
   const [sh, sm] = cls.startTime.split(":");
   const [eh, em] = (cls.endTime || cls.startTime).split(":");
+  const eventData = {
+    title: [cls.name, cls.courseName].filter(Boolean).join(" · "),
+    startTime: `${pad(parseInt(sh))}:${pad(parseInt(sm))}`,
+    endTime: `${pad(parseInt(eh))}:${pad(parseInt(em))}`,
+    type: cls.isGenerated ? "scheduled" : "class",
+    lecturer: cls.teacherName || "",
+    location: cls.room || "",
+    courseId: cls.courseId,
+  };
+
+  // 0 = today is the target day; positive = that many days in the past
+  const daysBehind = (today.getDay() - targetDow + 7) % 7;
   const events = [];
+
+  // Past occurrences (includes today when daysBehind === 0)
+  for (let w = 0; w < weeksBack; w++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - daysBehind - w * 7);
+    events.push({ ...eventData, id: `cls-gen-${cls.id}-${fmtDate(d)}`, date: fmtDate(d) });
+  }
+
+  // Future occurrences — skip today (already covered above) with || 7
+  const daysUntil = (targetDow - today.getDay() + 7) % 7 || 7;
   for (let w = 0; w < weeksForward; w++) {
     const d = new Date(today);
     d.setDate(today.getDate() + daysUntil + w * 7);
-    events.push({
-      id: `cls-gen-${cls.id}-${fmtDate(d)}`,
-      date: fmtDate(d),
-      title: [cls.name, cls.courseName].filter(Boolean).join(" · "),
-      startTime: `${pad(parseInt(sh))}:${pad(parseInt(sm))}`,
-      endTime: `${pad(parseInt(eh))}:${pad(parseInt(em))}`,
-      type: "scheduled",
-      lecturer: cls.teacherName || "",
-      location: cls.room || "",
-      courseId: cls.courseId,
-    });
+    events.push({ ...eventData, id: `cls-gen-${cls.id}-${fmtDate(d)}`, date: fmtDate(d) });
   }
+
   return events;
 }
 
@@ -110,6 +122,21 @@ export default function AdminCalendar() {
       .then(d => setClasses(d || []))
       .catch(() => {})
       .finally(() => setLoading(false));
+  };
+
+  const handleDeleteClassEvent = async (evt) => {
+    // Event IDs for injected class slots are "cls-gen-{classId}-{YYYY-MM-DD}"
+    const classId = evt.id?.startsWith("cls-gen-")
+      ? evt.id.replace(/^cls-gen-/, "").replace(/-\d{4}-\d{2}-\d{2}$/, "")
+      : null;
+    if (!classId) return;
+    try {
+      await classService.delete(classId);
+      setClasses(prev => prev.filter(c => c.id !== classId));
+      setEvents(prev => prev.filter(e => !e.id.startsWith(`cls-gen-${classId}-`)));
+    } catch (err) {
+      alert("Failed to delete: " + err.message);
+    }
   };
 
   useEffect(() => { loadClasses(); }, []);
@@ -297,7 +324,7 @@ export default function AdminCalendar() {
 
       {/* ── Student calendar below ─────────────────────────────── */}
       <div className="flex-1 overflow-hidden min-h-0">
-        <StudentCalendar />
+        <StudentCalendar onDeleteClassEvent={handleDeleteClassEvent} />
       </div>
     </div>
   );

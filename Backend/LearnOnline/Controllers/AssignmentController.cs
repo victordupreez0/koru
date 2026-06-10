@@ -74,11 +74,14 @@ namespace LearnOnline.Controllers
                 .Where(o => cohortIds.Contains(o.ClassGroupId))
                 .ToListAsync();
 
-            // Fetch assignments for the student's enrolled courses
+            // Fetch assignments for the student's enrolled courses.
+            // Exclude assignments targeted at a specific group that isn't the student's group.
             var assignments = await _context.Assignments
                 .Include(a => a.Course)
                     .ThenInclude(c => c!.Subject)
-                .Where(a => enrolledCourseIds.Contains(a.CourseId))
+                .Where(a => enrolledCourseIds.Contains(a.CourseId) &&
+                    (a.ClassGroupId == null ||
+                     cohortIds.Contains(a.ClassGroupId)))
                 .ToListAsync();
 
             // Dynamically apply overrides to each assignment
@@ -209,6 +212,7 @@ namespace LearnOnline.Controllers
             assignment.QuizQuestionsJson = updated.QuizQuestionsJson;
             assignment.ExternalToolName = updated.ExternalToolName;
             assignment.ExternalToolUrl = updated.ExternalToolUrl;
+            assignment.ClassGroupId = updated.ClassGroupId;
 
             await _context.SaveChangesAsync();
             return NoContent();

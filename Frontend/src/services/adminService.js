@@ -102,7 +102,30 @@ export const userService = {
     });
     const users = await handleResponse(res);
     return users.filter(user => user.role?.toLowerCase() === "student");
-  }
+  },
+
+  async updateUser(id, data) {
+    const res = await fetch(`${API_BASE}/User/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}));
+      throw new Error(d.message || "Failed to update user");
+    }
+  },
+
+  async deleteUser(id) {
+    const res = await fetch(`${API_BASE}/User/${id}`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+    });
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}));
+      throw new Error(d.message || "Failed to delete user");
+    }
+  },
 };
 
 /**
@@ -179,7 +202,18 @@ export const enrollmentService = {
       body: JSON.stringify(enrollmentData)
     });
     return handleResponse(res);
-  }
+  },
+
+  async deleteEnrollment(id) {
+    const res = await fetch(`${API_BASE}/Enrollment/${id}`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+    });
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}));
+      throw new Error(d.message || "Failed to remove enrollment");
+    }
+  },
 };
 
 /**

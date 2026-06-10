@@ -149,5 +149,79 @@ namespace LearnOnline.Controllers
             await _context.SaveChangesAsync();
             return NoContent();
         }
+
+        // POST /api/Class/import-from-events/{courseId}
+        // Converts class-type calendar events into manual class slots, then deletes the source events.
+        // Deduplicates by title + day-of-week + start time so recurring occurrences produce one slot.
+        [HttpPost("import-from-events/{courseId}")]
+        public async Task<ActionResult<object>> ImportFromEvents(string courseId)
+        {
+            var classTypes = new HashSet<string> { "class", "lecture", "workshop", "practical" };
+
+            // Load in memory first to avoid EF Core translation issues with nullable EventType
+            var allCourseEvents = await _context.Events
+                .Where(e => e.CourseId == courseId && e.StartTime.HasValue)
+                .ToListAsync();
+
+            var events = allCourseEvents
+                .Where(e => e.EventType != null && classTypes.Contains(e.EventType.ToLower()))
+                .OrderByDescending(e => e.StartTime)
+                .ToList();
+
+            if (events.Count == 0) return Ok(new { created = 0, deleted = 0 });
+
+            // Load existing class slots so we can skip duplicates
+            var existingSlots = await _context.Classes
+                .Where(c => c.CourseId == courseId)
+                .ToListAsync();
+
+            var seen = new HashSet<string>();
+            var toCreate = new List<Class>();
+
+            foreach (var evt in events)
+            {
+                // Events are stored in UTC — convert to local so day and time are correct
+                var raw = DateTime.SpecifyKind(evt.StartTime!.Value, DateTimeKind.Utc);
+                var start = raw.ToLocalTime();
+                var dayName = start.DayOfWeek.ToString();
+                var key = $"{(evt.Title ?? "").ToLower()}|{(int)start.DayOfWeek}|{start.Hour}:{start.Minute}";
+
+                if (!seen.Add(key)) continue;
+
+                var startTimeOnly = new TimeOnly(start.Hour, start.Minute);
+
+                // Skip if a slot with the same name + day + time already exists for this course
+                var alreadyExists = existingSlots.Any(s =>
+                    string.Equals(s.Name, evt.Title, StringComparison.OrdinalIgnoreCase) &&
+                    s.DayOfWeek == dayName &&
+                    s.StartTime == startTimeOnly);
+
+                if (alreadyExists) continue;
+
+                var rawEnd = evt.EndTime.HasValue
+                    ? DateTime.SpecifyKind(evt.EndTime.Value, DateTimeKind.Utc).ToLocalTime()
+                    : start.AddHours(1);
+                var duration = (decimal)(rawEnd - start).TotalHours;
+
+                toCreate.Add(new Class
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    Name = evt.Title,
+                    CourseId = courseId,
+                    DayOfWeek = dayName,
+                    StartTime = startTimeOnly,
+                    EndTime = new TimeOnly(rawEnd.Hour, rawEnd.Minute),
+                    DurationHours = Math.Round(duration, 1),
+                    IsGenerated = false,
+                    ClassGroupId = null,
+                });
+            }
+
+            _context.Classes.AddRange(toCreate);
+            _context.Events.RemoveRange(events);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { created = toCreate.Count, deleted = events.Count });
+        }
     }
 }

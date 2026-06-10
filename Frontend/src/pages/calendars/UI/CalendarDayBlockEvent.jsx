@@ -250,6 +250,28 @@ export default function CalendarDayBlockEvent({
               </button>
             </div>
           </>
+        ) : onDelete ? (
+          <>
+            {(startTime || endTime) && (
+              <span className={`group-hover:hidden shrink-0 text-[10px] text-right leading-tight whitespace-nowrap ${type === "scheduled" ? "text-green-500" : "text-gray-400"}`}>
+                {startTime && <span className="block">{startTime}</span>}
+                {endTime && <span className="block">{endTime}</span>}
+              </span>
+            )}
+            <button
+              type="button"
+              title="Delete"
+              onClick={(e) => { e.stopPropagation(); onDelete?.(); }}
+              className="hidden group-hover:flex w-[18px] h-[18px] items-center justify-center rounded shrink-0 text-rose-400 hover:text-rose-600 hover:bg-rose-100 transition-colors"
+            >
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="3 6 5 6 21 6" />
+                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                <path d="M10 11v6" /><path d="M14 11v6" />
+                <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+              </svg>
+            </button>
+          </>
         ) : (
           (startTime || endTime) && (
             <span className={`shrink-0 text-[10px] text-right leading-tight whitespace-nowrap ${type === "scheduled" ? "text-green-500" : "text-gray-400"}`}>

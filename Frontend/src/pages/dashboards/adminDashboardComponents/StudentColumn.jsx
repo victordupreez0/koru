@@ -1,15 +1,15 @@
 import React from "react";
-import { Plus, User, X } from "lucide-react";
+import { Plus, User, X, Pencil, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { SearchInput } from "./SearchInput";
 
-function StudentCard({ student }) {
+function StudentCard({ student, onEdit, onDelete }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25, ease: "easeOut" }}
-      className="w-full rounded-2xl px-4 py-3.5 flex items-center gap-3 bg-white/80 border border-gray-100 hover:border-gray-200 transition-colors duration-150"
+      className="w-full rounded-2xl px-4 py-3.5 flex items-center gap-3 bg-white/80 border border-gray-100 hover:border-gray-200 transition-colors duration-150 group"
     >
       <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
         <User className="w-4 h-4 text-gray-500" />
@@ -17,6 +17,26 @@ function StudentCard({ student }) {
       <div className="flex-1 min-w-0">
         <p className="text-sm font-bold text-gray-800 truncate">{student.name}</p>
         <p className="text-xs text-gray-400 truncate">{student.email || student.major || ""}</p>
+      </div>
+      <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+        {onEdit && (
+          <button
+            onClick={() => onEdit(student)}
+            className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-[#3C0078]/10 hover:text-[#3C0078] flex items-center justify-center text-gray-400 transition-colors"
+            title="Edit student"
+          >
+            <Pencil className="w-3.5 h-3.5" />
+          </button>
+        )}
+        {onDelete && (
+          <button
+            onClick={() => onDelete(student)}
+            className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-red-50 hover:text-red-500 flex items-center justify-center text-gray-400 transition-colors"
+            title="Remove student"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        )}
       </div>
     </motion.div>
   );
@@ -32,6 +52,8 @@ export function StudentColumn({
   filteredStudents,
   cohorts = [],
   cohortStudentMap = {},
+  onEditStudent,
+  onDeleteStudent,
 }) {
   const hasCohorts = cohorts.length > 0;
 
@@ -88,7 +110,7 @@ export function StudentColumn({
                 ) : (
                   students.map((student) => (
                     <div key={student.id} className="mb-1.5">
-                      <StudentCard student={student} />
+                      <StudentCard student={student} onEdit={onEditStudent} onDelete={onDeleteStudent} />
                     </div>
                   ))
                 )}
@@ -108,7 +130,7 @@ export function StudentColumn({
                 </div>
                 {cohortGroups.unassigned.map((student) => (
                   <div key={student.id} className="mb-1.5">
-                    <StudentCard student={student} />
+                    <StudentCard student={student} onEdit={onEditStudent} onDelete={onDeleteStudent} />
                   </div>
                 ))}
               </div>
@@ -116,7 +138,7 @@ export function StudentColumn({
           </>
         ) : (
           filteredStudents.map((student) => (
-            <StudentCard key={student.id} student={student} />
+            <StudentCard key={student.id} student={student} onEdit={onEditStudent} onDelete={onDeleteStudent} />
           ))
         )}
       </div>

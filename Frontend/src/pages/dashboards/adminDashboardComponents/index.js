@@ -6,6 +6,7 @@ export * from "./AddStudentForm";
 export * from "./AddTodoModal";
 export * from "./AssignStudentsModal";
 export * from "./SendNotificationModal";
+export * from "./EditUserModal";
 export * from "./LecturerColumn";
 export * from "./CourseColumn";
 export * from "./StudentColumn";

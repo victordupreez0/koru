@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Plus, User, X, Bell } from "lucide-react";
+import { Plus, User, X, Bell, Pencil, Trash2 } from "lucide-react";
 import { ColumnCard } from "./ColumnCard";
 import { SearchInput } from "./SearchInput";
 
@@ -9,6 +9,8 @@ export function LecturerColumn({
   isAddingLecturer,
   setIsAddingLecturer,
   onOpenNotification,
+  onEditLecturer,
+  onDeleteLecturer,
 }) {
   const [search, setSearch] = useState("");
 
@@ -60,6 +62,26 @@ export function LecturerColumn({
             <div className="flex-1 min-w-0">
               <p className="text-[10px] uppercase tracking-wider font-semibold text-white/70">Lecturer</p>
               <p className="text-sm font-bold truncate text-white">{lecturer.name}</p>
+            </div>
+            <div className="flex items-center gap-1 shrink-0">
+              {onEditLecturer && (
+                <button
+                  onClick={() => onEditLecturer(lecturer)}
+                  className="w-7 h-7 rounded-lg bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors"
+                  title="Edit lecturer"
+                >
+                  <Pencil className="w-3.5 h-3.5 text-white" />
+                </button>
+              )}
+              {onDeleteLecturer && (
+                <button
+                  onClick={() => onDeleteLecturer(lecturer)}
+                  className="w-7 h-7 rounded-lg bg-white/20 hover:bg-red-500/70 flex items-center justify-center transition-colors"
+                  title="Delete lecturer"
+                >
+                  <Trash2 className="w-3.5 h-3.5 text-white" />
+                </button>
+              )}
             </div>
           </ColumnCard>
         )}

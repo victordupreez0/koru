@@ -16,12 +16,13 @@ import {
 import { enrollmentService, userService } from "../../../services/adminService";
 import { classService } from "../../../services/classService";
 import { getCourseEvents } from "../../../services/eventService";
+import { getCourseLecturers } from "../../../services/courseService";
 import { staggerContainer, slideUp } from "../teacherCoursesComponents/constants";
 import { useNavigate } from "react-router-dom";
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
 const QUICK_NAMES = ["Lecture", "Workshop", "Practical", "Tutorial"];
-const DEFAULT_SLOT_FORM = { name: "", durationHours: "2", teacherId: "", room: "", dayOfWeek: "" };
+const DEFAULT_SLOT_FORM = { name: "", durationHours: "2", teacherId: "", room: "", dayOfWeek: "", startTime: "", endTime: "" };
 const DEFAULT_MANUAL_FORM = { name: "", teacherId: "", room: "", dayOfWeek: "", startTime: "", endTime: "" };
 
 function shuffle(arr) {
@@ -154,19 +155,53 @@ function ClassSlotCard({ slot, onEdit, onDelete, deleting }) {
   );
 }
 
-// ── Slot form (template — no time fields) ──────────────────────────────────────
-function SlotForm({ form, setForm, teachers, onSave, onCancel, saving }) {
+function toMinutes(t) {
+  if (!t) return null;
+  const [h, m] = t.split(":").map(Number);
+  return h * 60 + m;
+}
+
+function detectSlotConflict(form, otherSlots, editingId) {
+  if (!form.dayOfWeek || !form.startTime || !form.endTime) return null;
+  const s = toMinutes(form.startTime);
+  const e = toMinutes(form.endTime);
+  if (s >= e) return "End time must be after start time.";
+  for (const slot of otherSlots) {
+    if (slot.id === editingId || slot.dayOfWeek !== form.dayOfWeek || !slot.startTime) continue;
+    const os = toMinutes(slot.startTime.slice(0, 5));
+    const oe = toMinutes((slot.endTime || slot.startTime).slice(0, 5));
+    if (s < oe && os < e) {
+      const conflictsWith = (form.teacherId && slot.teacherId === form.teacherId)
+        ? "same lecturer"
+        : (form.room && slot.room === form.room)
+        ? "same room"
+        : slot.classGroupId === form.classGroupId
+        ? "same group"
+        : null;
+      if (conflictsWith) return `Conflicts with "${slot.name || "another class"}" (${conflictsWith}).`;
+    }
+  }
+  return null;
+}
+
+// ── Slot form ──────────────────────────────────────────────────────────────────
+function SlotForm({ form, setForm, teachers, onSave, onCancel, saving, otherSlots = [], editingId = null }) {
+  const isScheduled = !!(form.startTime || form.endTime);
+  const conflict = isScheduled ? detectSlotConflict(form, otherSlots, editingId) : null;
+
   return (
     <div className="bg-white border border-[#3C0078]/15 rounded-2xl p-3 space-y-2.5">
       <NameField value={form.name} onChange={v => setForm(f => ({ ...f, name: v }))} />
       <div className="grid grid-cols-2 gap-2">
-        <div>
-          <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 block mb-1">Hours</label>
-          <input type="number" min={0.5} max={8} step={0.5} value={form.durationHours}
-            onChange={e => setForm(f => ({ ...f, durationHours: e.target.value }))}
-            className="w-full px-2.5 py-1.5 rounded-xl bg-gray-50 text-xs font-semibold text-gray-800 outline-none focus:ring-2 focus:ring-[#3C0078]/20"
-          />
-        </div>
+        {!isScheduled && (
+          <div>
+            <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 block mb-1">Hours</label>
+            <input type="number" min={0.5} max={8} step={0.5} value={form.durationHours}
+              onChange={e => setForm(f => ({ ...f, durationHours: e.target.value }))}
+              className="w-full px-2.5 py-1.5 rounded-xl bg-gray-50 text-xs font-semibold text-gray-800 outline-none focus:ring-2 focus:ring-[#3C0078]/20"
+            />
+          </div>
+        )}
         <div>
           <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 block mb-1">Room</label>
           <input type="text" placeholder="e.g. Room 201" value={form.room}
@@ -183,8 +218,8 @@ function SlotForm({ form, setForm, teachers, onSave, onCancel, saving }) {
             {teachers.map(t => <option key={t.id} value={t.id}>{t.firstName} {t.lastName}</option>)}
           </select>
         </div>
-        <div>
-          <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 block mb-1">Preferred Day</label>
+        <div className={isScheduled ? "col-span-2" : ""}>
+          <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 block mb-1">Day</label>
           <select value={form.dayOfWeek} onChange={e => setForm(f => ({ ...f, dayOfWeek: e.target.value }))}
             className="w-full px-2.5 py-1.5 rounded-xl bg-gray-50 text-xs text-gray-800 outline-none focus:ring-2 focus:ring-[#3C0078]/20"
           >
@@ -192,9 +227,33 @@ function SlotForm({ form, setForm, teachers, onSave, onCancel, saving }) {
             {DAYS.map(d => <option key={d} value={d}>{d}</option>)}
           </select>
         </div>
+        {isScheduled && (
+          <>
+            <div>
+              <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 block mb-1">Start Time</label>
+              <input type="time" value={form.startTime}
+                onChange={e => setForm(f => ({ ...f, startTime: e.target.value }))}
+                className="w-full px-2.5 py-1.5 rounded-xl bg-gray-50 text-xs text-gray-800 outline-none focus:ring-2 focus:ring-[#3C0078]/20"
+              />
+            </div>
+            <div>
+              <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 block mb-1">End Time</label>
+              <input type="time" value={form.endTime}
+                onChange={e => setForm(f => ({ ...f, endTime: e.target.value }))}
+                className="w-full px-2.5 py-1.5 rounded-xl bg-gray-50 text-xs text-gray-800 outline-none focus:ring-2 focus:ring-[#3C0078]/20"
+              />
+            </div>
+          </>
+        )}
       </div>
+      {conflict && (
+        <div className="flex items-start gap-2 px-2.5 py-2 bg-red-50 border border-red-200 rounded-xl">
+          <AlertCircle size={11} className="text-red-500 shrink-0 mt-0.5" />
+          <span className="text-[10px] font-semibold text-red-700">{conflict}</span>
+        </div>
+      )}
       <div className="flex gap-2 pt-0.5">
-        <button onClick={onSave} disabled={saving}
+        <button onClick={onSave} disabled={saving || !!conflict}
           className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-[#3C0078] text-white text-[11px] font-bold hover:bg-[#2a0055] transition-colors disabled:opacity-50"
         >
           <Check size={11} />{saving ? "Saving…" : "Save"}
@@ -242,6 +301,8 @@ function ClassesSection({ groupId, courseId, teachers, refreshKey, onChanged }) 
       teacherId: slot.teacherId || "",
       room: slot.room || "",
       dayOfWeek: slot.dayOfWeek || "",
+      startTime: slot.startTime ? slot.startTime.slice(0, 5) : "",
+      endTime: slot.endTime ? slot.endTime.slice(0, 5) : "",
     });
     setEditingId(slot.id);
   };
@@ -260,11 +321,10 @@ function ClassesSection({ groupId, courseId, teachers, refreshKey, onChanged }) 
         isGenerated: false,
       };
       if (editingId) {
-        const existing = slots.find(s => s.id === editingId);
         await classService.update(editingId, {
           ...payload, id: editingId,
-          startTime: existing?.startTime || null,
-          endTime: existing?.endTime || null,
+          startTime: form.startTime ? form.startTime + ":00" : null,
+          endTime: form.endTime ? form.endTime + ":00" : null,
         });
       } else {
         await classService.create(payload);
@@ -333,6 +393,8 @@ function ClassesSection({ groupId, courseId, teachers, refreshKey, onChanged }) 
                 onSave={handleSave}
                 onCancel={() => { setEditingId(null); setForm(DEFAULT_SLOT_FORM); }}
                 saving={saving}
+                otherSlots={slots}
+                editingId={editingId}
               />
             ) : (
               <ClassSlotCard key={slot.id} slot={slot}
@@ -503,13 +565,16 @@ export function AdminCohortsView({ courseId, course }) {
   const [unassignedEvents, setUnassignedEvents] = useState([]);
   const [unassignedStudents, setUnassignedStudents] = useState([]);
   const [unassignedExpanded, setUnassignedExpanded] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [courseLecturers, setCourseLecturers] = useState([]);
 
-  // Only show the teacher(s) assigned to this course
+  // All lecturers associated with this course; fall back to all teachers if not loaded yet
   const courseTeachers = useMemo(() => {
+    if (courseLecturers.length > 0) return courseLecturers;
     if (!course?.teacherId || teachers.length === 0) return teachers;
     const filtered = teachers.filter(t => t.id === course.teacherId);
     return filtered.length > 0 ? filtered : teachers;
-  }, [course, teachers]);
+  }, [courseLecturers, course, teachers]);
 
   const bumpRefresh = (groupId) =>
     setClassRefreshKeys(prev => ({ ...prev, [groupId]: (prev[groupId] || 0) + 1 }));
@@ -518,16 +583,18 @@ export function AdminCohortsView({ courseId, course }) {
     if (!courseId) return;
     setLoading(true);
     try {
-      const [cohortsData, allEnrollments, teacherList, courseStudentsData, unassignedClassesData, courseEventsData] = await Promise.all([
+      const [cohortsData, allEnrollments, teacherList, courseStudentsData, unassignedClassesData, courseEventsData, lecturersData] = await Promise.all([
         getCourseCohorts(courseId).catch(() => []),
         enrollmentService.getAllEnrollments().catch(() => []),
         userService.getTeachers().catch(() => []),
         getCourseStudents(courseId).catch(() => []),
         classService.getUnassignedByCourse(courseId).catch(() => []),
         getCourseEvents(courseId).catch(() => []),
+        getCourseLecturers(courseId).catch(() => []),
       ]);
       setCohorts(cohortsData || []);
       setTeachers(teacherList || []);
+      setCourseLecturers(lecturersData || []);
       setUnassignedClasses(unassignedClassesData || []);
       const seen = new Set();
       setUnassignedEvents((courseEventsData || []).filter(e => {
@@ -612,6 +679,19 @@ export function AdminCohortsView({ courseId, course }) {
     }
   };
 
+  const handleImportFromEvents = async () => {
+    setImporting(true);
+    try {
+      const result = await classService.importFromEvents(courseId);
+      await load();
+      bumpRefresh("unassigned");
+    } catch (err) {
+      alert("Import failed: " + err.message);
+    } finally {
+      setImporting(false);
+    }
+  };
+
   return (
     <motion.div className="flex-1 overflow-y-auto" initial="hidden" animate="visible" variants={staggerContainer}>
       <motion.header variants={slideUp} className="mb-6">
@@ -658,6 +738,30 @@ export function AdminCohortsView({ courseId, course }) {
           </div>
         )}
       </motion.div>
+
+      {/* Convert calendar events → class slots banner */}
+      {unassignedEvents.length > 0 && (
+        <motion.div variants={slideUp} className="flex items-center justify-between gap-4 px-5 py-4 bg-blue-50 border border-blue-100 rounded-3xl mb-6">
+          <div className="flex items-start gap-3">
+            <Calendar size={16} className="text-blue-500 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-xs font-black text-blue-800 uppercase tracking-widest mb-0.5">
+                {unassignedEvents.length} Calendar Event{unassignedEvents.length !== 1 ? "s" : ""} Found
+              </p>
+              <p className="text-[11px] text-blue-600">
+                These class-type events can be converted to editable class slots. The calendar events will be removed.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={handleImportFromEvents}
+            disabled={importing}
+            className="shrink-0 px-4 py-2.5 rounded-2xl bg-blue-600 text-white text-[11px] font-black uppercase tracking-wider hover:bg-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+          >
+            {importing ? "Converting…" : "Convert to Slots"}
+          </button>
+        </motion.div>
+      )}
 
       {/* Groups list */}
       <motion.div variants={slideUp} className="space-y-3">
