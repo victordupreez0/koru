@@ -65,9 +65,53 @@ namespace LearnOnline.Controllers
             }
             await _context.SaveChangesAsync();
 
-            // Classes to schedule: generated ones (just reset) + any new template slots in a group
+            // Manually-placed classes that clash with another class (same day, overlapping
+            // time, shared teacher/room/group) are reset too, so regeneration resolves the
+            // conflict by moving one of them. The earlier-starting class keeps its slot.
+            var manuallyPlaced = await _context.Classes
+                .Where(c => c.StartTime != null)
+                .ToListAsync();
+
+            var conflictReset = new HashSet<string>();
+            for (int i = 0; i < manuallyPlaced.Count; i++)
+            {
+                for (int j = i + 1; j < manuallyPlaced.Count; j++)
+                {
+                    var a = manuallyPlaced[i];
+                    var b = manuallyPlaced[j];
+                    if (conflictReset.Contains(a.Id) || conflictReset.Contains(b.Id)) continue;
+                    if (a.DayOfWeek == null || a.DayOfWeek != b.DayOfWeek) continue;
+
+                    bool sharesResource =
+                        (a.TeacherId != null && a.TeacherId == b.TeacherId) ||
+                        (a.Room != null && a.Room == b.Room) ||
+                        (a.ClassGroupId != null && a.ClassGroupId == b.ClassGroupId);
+                    if (!sharesResource) continue;
+
+                    var aStart = a.StartTime!.Value.ToTimeSpan();
+                    var aEnd = a.EndTime.HasValue ? a.EndTime.Value.ToTimeSpan()
+                        : aStart.Add(TimeSpan.FromHours((double)(a.DurationHours ?? 1m)));
+                    var bStart = b.StartTime!.Value.ToTimeSpan();
+                    var bEnd = b.EndTime.HasValue ? b.EndTime.Value.ToTimeSpan()
+                        : bStart.Add(TimeSpan.FromHours((double)(b.DurationHours ?? 1m)));
+
+                    if (aStart < bEnd && bStart < aEnd)
+                        conflictReset.Add(aStart <= bStart ? b.Id : a.Id);
+                }
+            }
+
+            foreach (var cls in manuallyPlaced.Where(c => conflictReset.Contains(c.Id)))
+            {
+                originalSchedules[cls.Id] = (cls.DayOfWeek, cls.StartTime, cls.EndTime);
+                cls.StartTime = null;
+                cls.EndTime   = null;
+            }
+            await _context.SaveChangesAsync();
+
+            // Classes to schedule: generated ones (just reset) + conflict-reset ones +
+            // any slot without a time, grouped or not
             var unlinked = await _context.Classes
-                .Where(c => c.ClassGroupId != null && c.ClassGroupId != "" && c.StartTime == null)
+                .Where(c => c.StartTime == null)
                 .ToListAsync();
 
             // Seed the conflict pool with manually-placed classes only
