@@ -1,7 +1,7 @@
 <img width="7188" height="4968" alt="KoruPromo (1)" src="https://github.com/user-attachments/assets/a761ac91-3da9-476c-80b9-ffda67503267" />
 
 
-# Kuro
+# Koru
 
 Koru is a full-stack Learning Management System (LMS) built to centralise academic workflows into a single platform. Designed as a cross-platform desktop application, Koru provides dedicated experiences for Students, Teachers, and Administrators while ensuring compliance with South Africa's Protection of Personal Information Act (POPIA).
 
