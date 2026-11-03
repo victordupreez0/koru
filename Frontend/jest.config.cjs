@@ -25,6 +25,8 @@ module.exports = {
     'src/pages/profile/profileUtils.jsx',
     'src/components/ProtectedRoute.jsx',
     'src/components/ChipListEditor.jsx',
+    'src/components/UI/{Alert,Button,Card,Input,Select,Badge,EmptyState,PageHeader,Skeleton,Modal}.jsx',
+    'src/utils/cn.js',
     '!src/**/*.test.{js,jsx}',
     '!src/services/eventService 2.jsx',
   ],

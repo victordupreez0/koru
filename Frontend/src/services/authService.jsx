@@ -39,6 +39,31 @@ export async function loginUser({ email, password, expectedRole }) {
   return data;
 }
 
+// POST /api/User/register – create a new account
+export async function registerUser({
+  email,
+  password,
+  firstName,
+  lastName,
+  role,
+  institution,
+}) {
+  const res = await fetch(`${API_BASE}/User/register`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      email,
+      password,
+      firstName,
+      lastName,
+      role,
+      institution,
+    }),
+  });
+
+  return handleResponse(res);
+}
+
 // PUT /api/User/profile/:id – update the user's profile information from settings
 export async function updateUserProfile(id, payload) {
   const res = await fetch(`${API_BASE}/User/profile/${encodeURIComponent(id)}`, {

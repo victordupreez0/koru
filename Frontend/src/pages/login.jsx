@@ -1,12 +1,20 @@
-﻿import React, { useState } from "react";
+﻿import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { GraduationCap, ArrowLeft, Eye, EyeOff, ShieldCheck, ShieldOff, Loader2 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-import Background from "../assets/backgrounds/background-3.jpeg";
+import {
+  ArrowLeft,
+  Eye,
+  EyeOff,
+  GraduationCap,
+  LockKeyhole,
+  Mail,
+  ShieldCheck,
+  ShieldOff,
+} from "lucide-react";
+import { motion as Motion, AnimatePresence } from "framer-motion";
 import KoruLogo from "../components/UI/KoruLogo";
-import AuthInput from "../components/UI/authInput";
 import GoogleAuthButton from "../components/UI/googleAuthButton";
 import TwoFactorSetupModal from "../components/UI/TwoFactorSetupModal";
+import { Alert, Badge, Button, Card, Input } from "../components/UI";
 import { loginUser, loginWithGoogle, validate2FA } from "../services/authService";
 import { useAuth } from "../contexts/AuthContext";
 
@@ -18,19 +26,19 @@ const ROLE_CONFIG = {
   student: {
     label: "Student",
     icon: StudentIcon,
-    accent: "#3C0078",
+    badgeVariant: "primary",
     subtitle: "Access your courses, assignments, and grades.",
   },
   teacher: {
     label: "Teacher",
     icon: TeacherIcon,
-    accent: "#0369A1",
+    badgeVariant: "secondary",
     subtitle: "Manage your classes, materials, and students.",
   },
   admin: {
     label: "Administrator",
     icon: AdminIcon,
-    accent: "#9F1239",
+    badgeVariant: "tertiary",
     subtitle: "Oversee the platform, users, and settings.",
   },
 };
@@ -65,7 +73,9 @@ export default function Login({ role = "student" }) {
   // After credentials or 2FA are validated, check if this is the user's
   // first login. If so, offer 2FA setup before entering the app.
   function afterAuth(userData) {
-    const alreadyPrompted = localStorage.getItem(`twoFactorPrompted_${userData.userId}`);
+    const alreadyPrompted = localStorage.getItem(
+      `twoFactorPrompted_${userData.userId}`,
+    );
     if (!alreadyPrompted && !userData.twoFactorEnabled) {
       setPendingUserData(userData);
       setStep("firstLoginPrompt");
@@ -157,83 +167,106 @@ export default function Login({ role = "student" }) {
   }
 
   function dismissFirstLoginPrompt() {
-    localStorage.setItem(`twoFactorPrompted_${pendingUserData.userId}`, "1");
+    localStorage.setItem(
+      `twoFactorPrompted_${pendingUserData.userId}`,
+      "1",
+    );
     finalizeLogin(pendingUserData);
   }
 
   function handleSetupComplete() {
     setShowSetupModal(false);
-    localStorage.setItem(`twoFactorPrompted_${pendingUserData.userId}`, "1");
+    localStorage.setItem(
+      `twoFactorPrompted_${pendingUserData.userId}`,
+      "1",
+    );
     finalizeLogin({ ...pendingUserData, twoFactorEnabled: true });
   }
+
+  const title =
+    step === "twoFactor"
+      ? "Two-factor authentication"
+      : step === "firstLoginPrompt"
+        ? "Secure your account"
+        : `${config.label} sign in`;
+
+  const subtitle =
+    step === "twoFactor"
+      ? "Enter the 6-digit code from your authenticator app."
+      : step === "firstLoginPrompt"
+        ? "Add a second sign-in step to keep your account protected."
+        : config.subtitle;
 
   return (
     <div
       data-tts-root="true"
-      className="fixed inset-0 flex min-h-screen items-center justify-center bg-cover bg-center px-4 py-8"
-      style={{ backgroundImage: `url(${Background})`, backgroundSize: "120%" }}
+      className="koru-auth-canvas relative flex min-h-screen items-center justify-center px-4 py-10"
     >
-      <div className="fixed inset-0 bg-black/55 backdrop-blur-[3px]" />
-
-      <motion.div
-        initial={{ opacity: 0, y: 24, scale: 0.97 }}
+      <Motion.div
+        initial={{ opacity: 0, y: 20, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.45, ease: "easeOut" }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
         className="relative z-10 w-full max-w-md"
       >
-        <div className="overflow-hidden rounded-[32px] bg-white/95 shadow-2xl backdrop-blur-md relative">
-          {/* Back button */}
-          {step === "credentials" && (
-            <div className="absolute top-4 left-4 z-20">
+        <Card
+          variant="elevated"
+          tone="low"
+          padding="none"
+          radius="3xl"
+          className="overflow-hidden shadow-koru-lg"
+        >
+          <div className="relative px-6 pb-6 pt-8 sm:px-8">
+            {step === "credentials" ? (
               <Link
                 to="/"
-                className="group inline-flex items-center gap-1.5 rounded-full bg-white/90 hover:bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-xs hover:shadow-sm border border-slate-100/50 transition duration-200"
+                className="absolute left-6 top-6 inline-flex items-center gap-1.5 rounded-koru-pill px-3 py-1.5 text-sm font-medium text-koru-on-surface-variant transition-colors hover:bg-koru-on-surface/8 hover:text-koru-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus sm:left-8"
               >
-                <ArrowLeft size={12} className="transition group-hover:-translate-x-0.5" />
-                <span>Back</span>
+                <ArrowLeft size={16} />
+                Back
               </Link>
-            </div>
-          )}
+            ) : null}
 
-          {/* Header strip */}
-          <div
-            className="flex flex-col items-center gap-3 px-6 pb-5 pt-8"
-            style={{
-              background: `linear-gradient(135deg, ${config.accent}15, ${config.accent}08)`,
-              borderBottom: `2px solid ${config.accent}20`,
-            }}
-          >
-            <div className="h-16 w-16 flex items-center justify-center filter drop-shadow-[0_4px_6px_rgba(0,0,0,0.1)]">
-              <KoruLogo />
-            </div>
-            <div className="text-center mt-1">
-              <h1 className="text-2xl font-bold text-slate-900">
-                {step === "twoFactor" ? "Two-Factor Auth" : step === "firstLoginPrompt" ? "Secure Your Account" : `${config.label} Login`}
+            <div className="flex flex-col items-center text-center">
+              <KoruLogo className="h-14 w-14" />
+              <Badge
+                variant={config.badgeVariant}
+                size="md"
+                className="mt-4 gap-2"
+              >
+                <img
+                  src={config.icon}
+                  alt=""
+                  className="h-4 w-4 object-contain"
+                />
+                {config.label}
+              </Badge>
+              <h1 className="mt-4 font-display text-koru-title text-koru-on-surface">
+                {title}
               </h1>
-              <p className="mt-1 text-sm text-slate-500">
-                {step === "twoFactor"
-                  ? "Enter the code from your authenticator app."
-                  : step === "firstLoginPrompt"
-                  ? "Add an extra layer of security to your account."
-                  : config.subtitle}
+              <p className="mt-2 max-w-sm text-koru-body text-koru-on-surface-variant">
+                {subtitle}
               </p>
             </div>
           </div>
 
-          {/* Body */}
-          <AnimatePresence mode="wait">
-            {step === "credentials" && (
-              <motion.form
-                key="credentials"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.15 }}
-                onSubmit={handleSubmit}
-                className="flex flex-col gap-4 px-6 pb-8 pt-6 sm:px-8"
-              >
-                <div className="relative">
-                  <AuthInput
+          <div
+            aria-hidden="true"
+            className="h-1.5 w-full bg-gradient-to-r from-koru-primary via-koru-secondary to-koru-tertiary"
+          />
+
+          <div className="px-6 pb-8 pt-6 sm:px-8">
+            <AnimatePresence mode="wait">
+              {step === "credentials" && (
+                <Motion.form
+                  key="credentials"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.15 }}
+                  onSubmit={handleSubmit}
+                  className="flex flex-col gap-4"
+                >
+                  <Input
                     label="Email address"
                     name="email"
                     type="email"
@@ -242,11 +275,11 @@ export default function Login({ role = "student" }) {
                     placeholder="you@example.com"
                     required
                     id="login-email"
+                    autoComplete="email"
+                    startIcon={<Mail size={16} />}
                   />
-                </div>
 
-                <div className="relative">
-                  <AuthInput
+                  <Input
                     label="Password"
                     name="password"
                     type={showPassword ? "text" : "password"}
@@ -255,166 +288,182 @@ export default function Login({ role = "student" }) {
                     placeholder="Enter your password"
                     required
                     id="login-password"
+                    autoComplete="current-password"
+                    startIcon={<LockKeyhole size={16} />}
+                    endAdornment={
+                      <Button
+                        type="button"
+                        variant="text"
+                        size="sm"
+                        className="h-8 w-8 p-0"
+                        onClick={() => setShowPassword((v) => !v)}
+                        tabIndex={-1}
+                        aria-label={
+                          showPassword ? "Hide password" : "Show password"
+                        }
+                      >
+                        {showPassword ? (
+                          <EyeOff size={16} />
+                        ) : (
+                          <Eye size={16} />
+                        )}
+                      </Button>
+                    }
                   />
-                  <button
+
+                  {error ? <Alert variant="error">{error}</Alert> : null}
+
+                  <Button
+                    type="submit"
+                    size="lg"
+                    fullWidth
+                    loading={loading}
+                    startIcon={<GraduationCap size={18} />}
+                    className="mt-1"
+                  >
+                    {loading ? "Signing in..." : "Let's Learn"}
+                  </Button>
+
+                  <div className="my-1 flex items-center gap-3 text-xs uppercase tracking-[0.3em] text-koru-on-surface-variant/70">
+                    <span className="h-px flex-1 bg-koru-outline-variant" />
+                    <span>or</span>
+                    <span className="h-px flex-1 bg-koru-outline-variant" />
+                  </div>
+
+                  <GoogleAuthButton
+                    text="signin_with"
+                    onCredential={handleGoogleLogin}
+                    onError={(err) =>
+                      setError(err.message || "Google sign-in failed.")
+                    }
+                  />
+
+                  <p className="text-center text-sm text-koru-on-surface-variant">
+                    New to Koru?{" "}
+                    <Link
+                      to="/signup"
+                      className="font-medium text-koru-primary hover:underline"
+                    >
+                      Create an account
+                    </Link>
+                  </p>
+                </Motion.form>
+              )}
+
+              {step === "twoFactor" && (
+                <Motion.form
+                  key="twoFactor"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.2 }}
+                  onSubmit={handleTwoFactorSubmit}
+                  className="flex flex-col gap-4"
+                >
+                  <p className="text-center text-sm text-koru-on-surface-variant">
+                    Open your authenticator app and enter the 6-digit code.
+                  </p>
+
+                  <Input
+                    label="Authentication code"
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    maxLength={6}
+                    value={twoFactorCode}
+                    onChange={handleTwoFactorCodeInput}
+                    placeholder="000000"
+                    autoFocus
+                    size="lg"
+                    className="text-center font-mono text-2xl tracking-[0.5em]"
+                  />
+
+                  {error ? <Alert variant="error">{error}</Alert> : null}
+
+                  <Button
+                    type="submit"
+                    size="lg"
+                    fullWidth
+                    loading={verifying}
+                    disabled={twoFactorCode.length < 6}
+                    startIcon={<ShieldCheck size={18} />}
+                  >
+                    Verify code
+                  </Button>
+
+                  <Button
                     type="button"
-                    onClick={() => setShowPassword((v) => !v)}
-                    className="absolute right-3 top-[38px] text-slate-400 transition hover:text-slate-600"
-                    tabIndex={-1}
-                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    variant="text"
+                    fullWidth
+                    onClick={() => {
+                      setStep("credentials");
+                      setError("");
+                      setTwoFactorCode("");
+                    }}
                   >
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
-                </div>
+                    Back to login
+                  </Button>
+                </Motion.form>
+              )}
 
-                {error ? (
-                  <motion.div
-                    initial={{ opacity: 0, y: -4 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
-                  >
-                    {error}
-                  </motion.div>
-                ) : null}
-
-                <button
-                  type="submit"
-                  disabled={loading}
-                  id="login-submit"
-                  className="flex items-center justify-center gap-2 rounded-2xl px-4 py-3 font-semibold text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-70 mt-2"
-                  style={{ backgroundColor: config.accent }}
+              {step === "firstLoginPrompt" && (
+                <Motion.div
+                  key="firstLoginPrompt"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.2 }}
+                  className="flex flex-col gap-4"
                 >
-                  <GraduationCap size={18} />
-                  <span>{loading ? "Signing in..." : "Let's Learn"}</span>
-                </button>
+                  <Alert variant="info" title="Two-factor authentication">
+                    Adds a one-time code from your phone as a second sign-in
+                    step, keeping your account safe even if your password is
+                    compromised.
+                  </Alert>
 
-                <div className="my-2 flex items-center gap-3 text-xs uppercase tracking-[0.3em] text-slate-400">
-                  <span className="h-px flex-1 bg-slate-200" />
-                  <span>or</span>
-                  <span className="h-px flex-1 bg-slate-200" />
-                </div>
-
-                <GoogleAuthButton
-                  text="signin_with"
-                  onCredential={handleGoogleLogin}
-                  onError={(err) => setError(err.message || "Google sign-in failed.")}
-                />
-              </motion.form>
-            )}
-
-            {step === "twoFactor" && (
-              <motion.form
-                key="twoFactor"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.2 }}
-                onSubmit={handleTwoFactorSubmit}
-                className="flex flex-col gap-4 px-6 pb-8 pt-6 sm:px-8"
-              >
-                <p className="text-sm text-slate-500 text-center">
-                  Open your authenticator app and enter the 6-digit code.
-                </p>
-
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  maxLength={6}
-                  value={twoFactorCode}
-                  onChange={handleTwoFactorCodeInput}
-                  placeholder="000000"
-                  autoFocus
-                  className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-4 text-center text-2xl font-mono tracking-[0.6em] text-gray-900 focus:border-[#3C0078]/40 focus:ring-4 focus:ring-[#3C0078]/10 outline-none transition-all"
-                />
-
-                {error ? (
-                  <motion.div
-                    initial={{ opacity: 0, y: -4 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
-                  >
-                    {error}
-                  </motion.div>
-                ) : null}
-
-                <button
-                  type="submit"
-                  disabled={twoFactorCode.length < 6 || verifying}
-                  className="flex items-center justify-center gap-2 rounded-2xl px-4 py-3 font-semibold text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-70"
-                  style={{ backgroundColor: config.accent }}
-                >
-                  {verifying ? (
-                    <><Loader2 size={18} className="animate-spin" /> Verifying…</>
-                  ) : (
-                    <><ShieldCheck size={18} /> Verify Code</>
-                  )}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => { setStep("credentials"); setError(""); setTwoFactorCode(""); }}
-                  className="text-xs text-slate-400 hover:text-slate-600 transition underline underline-offset-2 text-center"
-                >
-                  Back to login
-                </button>
-              </motion.form>
-            )}
-
-            {step === "firstLoginPrompt" && (
-              <motion.div
-                key="firstLoginPrompt"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.2 }}
-                className="flex flex-col gap-4 px-6 pb-8 pt-6 sm:px-8"
-              >
-                <p className="text-sm text-slate-500 text-center leading-relaxed">
-                  Two-factor authentication adds a one-time code from your phone
-                  as a second sign-in step — keeping your account safe even if
-                  your password is ever compromised.
-                </p>
-
-                <div className="flex flex-col gap-3">
-                  <button
+                  <Button
                     type="button"
+                    size="lg"
+                    fullWidth
+                    startIcon={<ShieldCheck size={18} />}
                     onClick={() => setShowSetupModal(true)}
-                    className="flex items-center justify-center gap-2 rounded-2xl bg-[#3C0078] hover:bg-[#2A0054] px-4 py-3 font-semibold text-white transition shadow-md shadow-[#3C0078]/15"
                   >
-                    <ShieldCheck size={18} />
-                    Enable 2FA Now
-                  </button>
+                    Enable 2FA now
+                  </Button>
 
-                  <button
+                  <Button
                     type="button"
+                    size="lg"
+                    fullWidth
+                    variant="tonal"
+                    startIcon={<ShieldOff size={18} />}
                     onClick={dismissFirstLoginPrompt}
-                    className="flex items-center justify-center gap-2 rounded-2xl border-2 border-gray-200 bg-white hover:bg-gray-50 px-4 py-3 font-semibold text-gray-600 transition"
                   >
-                    <ShieldOff size={18} />
-                    Maybe Later
-                  </button>
-                </div>
+                    Maybe later
+                  </Button>
 
-                <p className="text-[11px] text-slate-400 text-center">
-                  You can always enable this later in Settings → Password & Security.
-                </p>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </motion.div>
+                  <p className="text-center text-koru-caption text-koru-on-surface-variant">
+                    You can always enable this later in Settings → Password &
+                    Security.
+                  </p>
+                </Motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </Card>
 
-      {/* 2FA setup modal shown from the first-login prompt */}
-      <AnimatePresence>
-        {showSetupModal && pendingUserData && (
-          <TwoFactorSetupModal
-            userId={pendingUserData.userId}
-            onSuccess={handleSetupComplete}
-            onClose={() => setShowSetupModal(false)}
-          />
-        )}
-      </AnimatePresence>
+        <p className="mt-4 text-center text-koru-caption text-koru-on-surface-variant">
+          Protected by Koru · POPIA-compliant by design
+        </p>
+      </Motion.div>
+
+      {showSetupModal && pendingUserData ? (
+        <TwoFactorSetupModal
+          userId={pendingUserData.userId}
+          onSuccess={handleSetupComplete}
+          onClose={() => setShowSetupModal(false)}
+        />
+      ) : null}
     </div>
   );
 }
