@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { FcGoogle } from "react-icons/fc";
+import Alert from "./Alert";
 
 // Shared constants – used to load the Google Identity Services button safely
 const GOOGLE_SCRIPT_ID = "google-identity-services";
@@ -38,8 +38,30 @@ export default function GoogleAuthButton({
   onError,
 }) {
   const buttonRef = useRef(null);
+  const containerRef = useRef(null);
   const [isReady, setIsReady] = useState(false);
+  const [buttonWidth, setButtonWidth] = useState(320);
   const [clientId, setClientId] = useState(import.meta.env.VITE_GOOGLE_CLIENT_ID || "");
+
+  // Keep Google's fixed-width iframe aligned with the surrounding form.
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return undefined;
+
+    const updateWidth = () => {
+      const nextWidth = Math.max(
+        220,
+        Math.min(400, Math.floor(container.clientWidth)),
+      );
+      setButtonWidth((current) => (current === nextWidth ? current : nextWidth));
+    };
+
+    updateWidth();
+    const observer = new ResizeObserver(updateWidth);
+    observer.observe(container);
+
+    return () => observer.disconnect();
+  }, []);
 
   // Fetch the Google client ID from local env or the backend config endpoint
   useEffect(() => {
@@ -94,7 +116,7 @@ export default function GoogleAuthButton({
           size: "large",
           text,
           shape: "pill",
-          width: 320,
+          width: buttonWidth,
         });
         setIsReady(true);
       } catch (error) {
@@ -107,22 +129,26 @@ export default function GoogleAuthButton({
     return () => {
       isMounted = false;
     };
-  }, [clientId, onCredential, onError, text]);
+  }, [clientId, onCredential, onError, text, buttonWidth]);
 
   if (!clientId) {
     return (
-      <div className="rounded-2xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-        Add your Google Web Client ID in the frontend env or backend app settings to enable Google sign-in.
-      </div>
+      <Alert variant="warning">
+        Add your Google Web Client ID in the frontend env or backend app
+        settings to enable Google sign-in.
+      </Alert>
     );
   }
 
   return (
-    <div className="flex w-full flex-col items-center justify-center gap-2">
+    <div
+      ref={containerRef}
+      className="flex w-full flex-col items-center justify-center gap-2"
+    >
       {!isReady ? (
-        <div className="flex w-full h-[50px] items-center justify-center gap-3 rounded-2xl border border-slate-100 bg-white px-4 animate-pulse">
-          <div className="w-5 h-5 rounded bg-gray-200 shrink-0" />
-          <div className="h-4 rounded-full bg-gray-200 w-36" />
+        <div className="flex h-12 w-full animate-pulse items-center justify-center gap-3 rounded-koru-pill bg-koru-surface-variant px-4">
+          <div className="h-5 w-5 shrink-0 rounded-full bg-koru-outline-variant" />
+          <div className="h-4 w-36 rounded-koru-pill bg-koru-outline-variant/70" />
         </div>
       ) : null}
       <div ref={buttonRef} className={isReady ? "" : "hidden"} />

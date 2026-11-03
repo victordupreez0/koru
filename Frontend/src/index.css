@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Gabarito:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Gabarito:wght@400;500;600;700&family=Google+Sans:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap");
 @import url("https://fonts.cdnfonts.com/css/open-dyslexic");
 
 @import "tailwindcss";
@@ -9,16 +9,235 @@
 
 @theme {
   --color-white: rgba(255, 255, 255, 1);
+
+  /* ── Material 3 colour roles ────────────────────────────────────────── */
+  --color-koru-primary: #3c0078;
+  --color-koru-on-primary: #ffffff;
+  --color-koru-primary-container: #eadcff;
+  --color-koru-on-primary-container: #21005d;
+  --color-koru-primary-hover: #2a0054;
+  --color-koru-primary-soft: #eadcff;
+  --color-koru-primary-subtle: #f3edff;
+
+  --color-koru-secondary: #625b71;
+  --color-koru-on-secondary: #ffffff;
+  --color-koru-secondary-container: #e8def8;
+  --color-koru-on-secondary-container: #1d192b;
+  --color-koru-secondary-hover: #4f475d;
+
+  --color-koru-tertiary: #7d5260;
+  --color-koru-on-tertiary: #ffffff;
+  --color-koru-tertiary-container: #ffd8e4;
+  --color-koru-on-tertiary-container: #31111d;
+
+  --color-koru-accent: #ff8731;
+  --color-koru-accent-hover: #e0722a;
+  --color-koru-accent-soft: #fff3e8;
+  --color-koru-accent-ink: #9a3412;
+
+  --color-koru-error: #b3261e;
+  --color-koru-on-error: #ffffff;
+  --color-koru-error-container: #f9dedc;
+  --color-koru-on-error-container: #410e0b;
+
+  /* Existing danger naming kept as aliases */
+  --color-koru-danger: #b3261e;
+  --color-koru-danger-hover: #8c1d18;
+  --color-koru-danger-soft: #f9dedc;
+
+  --color-koru-success: #146c2e;
+  --color-koru-success-soft: #c4eed0;
+  --color-koru-warning: #8f4c00;
+  --color-koru-warning-soft: #ffdcc0;
+  --color-koru-info: #0b57d0;
+  --color-koru-info-soft: #d3e3fd;
+  --color-koru-sky: #87cefa;
+  --color-koru-focus: #3c0078;
+
+  /* Role accents */
+  --color-koru-role-student: #3c0078;
+  --color-koru-role-teacher: #0369a1;
+  --color-koru-role-admin: #9f1239;
+
+  /* ── Surfaces and content ───────────────────────────────────────────── */
+  --color-koru-surface: #fafbfd;
+  --color-koru-on-surface: #1b1b1f;
+  --color-koru-surface-variant: #e4e7f0;
+  --color-koru-on-surface-variant: #45464f;
+  --color-koru-surface-container-lowest: #ffffff;
+  --color-koru-surface-container-low: #f8fafe;
+  --color-koru-surface-container: #f4f6fc;
+  --color-koru-surface-container-high: #eff2f9;
+  --color-koru-surface-container-highest: #eaedf5;
+  --color-koru-outline: #767680;
+  --color-koru-outline-variant: #d0d4df;
+  --color-koru-inverse-surface: #303034;
+  --color-koru-inverse-on-surface: #f2f0f4;
+  --color-koru-inverse-primary: #d0bcff;
+  --color-koru-scrim: rgba(0, 0, 0, 0.32);
+
+  /* Legacy semantic aliases used by existing primitives */
+  --color-koru-ink: #1b1b1f;
+  --color-koru-ink-muted: #45464f;
+  --color-koru-ink-subtle: #767680;
+  --color-koru-surface-muted: #f4f6fc;
+  --color-koru-surface-sunken: #eaedf5;
+  --color-koru-border: #d0d4df;
+  --color-koru-border-strong: #767680;
+  --color-koru-overlay: rgba(0, 0, 0, 0.32);
+
+  /* ── Typography ──────────────────────────────────────────────────────── */
+  --font-sans: "Google Sans", "Google Sans Text", "Product Sans", "Poppins", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Gabarito", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-dyslexic: "OpenDyslexic", "Open-Dyslexic", "Poppins", sans-serif;
+
+  --text-koru-display: 2.25rem;
+  --text-koru-display--line-height: 1.1;
+  --text-koru-display--letter-spacing: -0.02em;
+  --text-koru-display--font-weight: 500;
+
+  --text-koru-title: 1.75rem;
+  --text-koru-title--line-height: 1.2;
+  --text-koru-title--letter-spacing: -0.01em;
+  --text-koru-title--font-weight: 500;
+
+  --text-koru-heading: 1.125rem;
+  --text-koru-heading--line-height: 1.4;
+  --text-koru-heading--letter-spacing: 0;
+  --text-koru-heading--font-weight: 500;
+
+  --text-koru-body: 0.9375rem;
+  --text-koru-body--line-height: 1.6;
+  --text-koru-body--letter-spacing: 0.01em;
+
+  --text-koru-label: 0.875rem;
+  --text-koru-label--line-height: 1.25rem;
+  --text-koru-label--letter-spacing: 0.01em;
+  --text-koru-label--font-weight: 500;
+
+  --text-koru-caption: 0.75rem;
+  --text-koru-caption--line-height: 1.4;
+  --text-koru-caption--letter-spacing: 0.02em;
+
+  /* ── Shape ───────────────────────────────────────────────────────────── */
+  --radius-koru-xs: 4px;
+  --radius-koru-sm: 8px;
+  --radius-koru-md: 12px;
+  --radius-koru-lg: 16px;
+  --radius-koru-xl: 20px;
+  --radius-koru-2xl: 24px;
+  --radius-koru-3xl: 28px;
+  --radius-koru-pill: 9999px;
+
+  /* ── Elevation ───────────────────────────────────────────────────────── */
+  --shadow-koru-xs: 0 1px 2px rgba(0, 0, 0, 0.08);
+  --shadow-koru-sm: 0 1px 2px rgba(0, 0, 0, 0.10), 0 2px 6px 2px rgba(0, 0, 0, 0.06);
+  --shadow-koru-md: 0 4px 8px 3px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.12);
+  --shadow-koru-lg: 0 8px 12px 6px rgba(0, 0, 0, 0.08), 0 4px 4px rgba(0, 0, 0, 0.12);
+  --shadow-koru-focus: 0 0 0 3px rgba(60, 0, 120, 0.24);
+
+  /* ── Motion ──────────────────────────────────────────────────────────── */
+  --ease-koru-out: cubic-bezier(0.2, 0, 0, 1);
+  --ease-koru-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --animate-koru-overlay-in: koru-overlay-in 150ms ease-out;
+  --animate-koru-dialog-in: koru-dialog-in 200ms cubic-bezier(0.2, 0, 0, 1);
+  --animate-koru-shimmer: koru-shimmer 1.6s linear infinite;
+}
+
+@keyframes koru-overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes koru-dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes koru-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  ::selection {
+    background: var(--color-koru-primary);
+    color: var(--color-koru-surface);
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+}
+
+@layer components {
+  .koru-auth-canvas {
+    background-color: var(--color-koru-surface);
+    background-image:
+      radial-gradient(
+        ellipse 70% 55% at 8% 0%,
+        color-mix(in srgb, var(--color-koru-primary-container) 80%, transparent) 0%,
+        transparent 70%
+      ),
+      radial-gradient(
+        ellipse 60% 50% at 100% 100%,
+        color-mix(in srgb, var(--color-koru-tertiary-container) 70%, transparent) 0%,
+        transparent 70%
+      ),
+      radial-gradient(
+        ellipse 45% 40% at 95% 8%,
+        color-mix(in srgb, var(--color-koru-accent-soft) 70%, transparent) 0%,
+        transparent 70%
+      );
+    background-attachment: fixed;
+    background-size: cover;
+    background-repeat: no-repeat;
+  }
+
+  .koru-skeleton {
+    background-image: linear-gradient(
+      90deg,
+      var(--color-koru-surface-variant) 25%,
+      var(--color-koru-outline-variant) 37%,
+      var(--color-koru-surface-variant) 63%
+    );
+    background-size: 400% 100%;
+    animation: var(--animate-koru-shimmer);
+  }
 }
 
 :root {
-  font-family: "Poppins", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-family: var(--font-sans);
   line-height: 1.5;
   font-weight: 400;
 
   color-scheme: light only;
-  color: rgba(0, 0, 0, 0.87);
-  background-color: transparent;
+  color: #1b1b1f;
+  background-color: #fafbfd;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -27,12 +246,12 @@
 
 a {
   font-weight: 500;
-  color: #000000;
+  color: var(--color-koru-primary);
   text-decoration: inherit;
 }
 
 a:hover {
-  color: #000000;
+  color: var(--color-koru-primary-hover);
 }
 
 .scrollbar-hide {
@@ -53,16 +272,9 @@ body {
   min-height: 100vh;
   scrollbar-width: none;
   /* Firefox */
-  /* background: #f0f0f2; */
-  background: hsla(233, 100%, 90%, 1);
 
-  background: linear-gradient(90deg, hsla(233, 100%, 90%, 1) 0%, rgb(255, 255, 255) 100%);
-
-  background: -moz-linear-gradient(90deg, hsla(233, 100%, 90%, 1) 0%, rgb(255, 255, 255) 100%);
-
-  background: -webkit-linear-gradient(90deg, hsla(233, 100%, 90%, 1) 0%, rgb(255, 255, 255) 100%);
-
-  filter: progid: DXImageTransform.Microsoft.gradient(startColorstr="#CAD0FF", endColorstr="#E3E3E3", GradientType=1);
+  /* Cool off-white canvas so component colour reads clearly. */
+  background-color: #fafbfd;
 
   position: relative;
   overflow-x: hidden;
@@ -163,17 +375,25 @@ body.dyslexic-font input,
 body.dyslexic-font select,
 body.dyslexic-font textarea,
 body.dyslexic-font button {
-  font-family: "OpenDyslexic", "Open-Dyslexic", "Poppins", sans-serif !important;
+  font-family: var(--font-dyslexic) !important;
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
+@layer base {
+  h1 {
+    font-size: 2.25rem;
+    line-height: 1.15;
+  }
 
-h1,
-h2 {
-  font-family: "Gabarito", system-ui, -apple-system, "Segoe UI", sans-serif;
+  h1,
+  h2 {
+    font-family: var(--font-display);
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-weight: 500;
+  }
 }
 
 button {
@@ -181,26 +401,23 @@ button {
   cursor: pointer;
 }
 
-button:focus,
 button:focus-visible {
-  outline: 3px solid #9BE9EA !important;
+  outline: 3px solid var(--color-koru-focus);
   outline-offset: 2px;
-  box-shadow: none !important;
 }
 
-button:focus,
-button:focus-visible {
-  outline: none !important;
-  box-shadow: none !important;
+/* Buttons keep Tailwind ring utilities; only remove the outline for pointer focus. */
+button:focus:not(:focus-visible) {
+  outline: none;
 }
 
 :root {
-  color: #213547;
-  background-color: transparent;
+  color: #1b1b1f;
+  background-color: #fafbfd;
 }
 
 a:hover {
-  color: #000000;
+  color: var(--color-koru-primary-hover);
 }
 
 
@@ -436,4 +653,25 @@ a:hover {
   display: none !important;
   opacity: 0 !important;
   visibility: hidden !important;
+}
+
+a:focus-visible {
+  outline: 2px solid var(--color-koru-focus);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  body::before {
+    animation: none;
+  }
 }

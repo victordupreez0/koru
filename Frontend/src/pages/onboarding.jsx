@@ -20,7 +20,9 @@ export default function Onboarding() {
     >
       {/* Welcome section – displays the platform branding and tagline */}
       <div className="absolute top-[12%] left-[6%] z-10 flex flex-col">
-        <h1 className="!text-3xl text-slate-800 font-medium tracking-tight mb-4">Welcome to</h1>
+        <h1 className="mb-4 font-display text-koru-title text-koru-on-surface">
+          Welcome to
+        </h1>
         <div className="h-20 sm:h-24 flex items-center justify-start">
           <KoruLogo showText={true} className="h-full w-auto" />
         </div>
@@ -28,7 +30,7 @@ export default function Onboarding() {
 
       {/* Role selection section – lets the user choose how they want to continue */}
       <div className="absolute bottom-[27%] left-[5%] z-10 flex flex-col gap-6">
-        <h1 className="text-center !text-2xl font-semibold text-black sm:text-3xl">
+        <h1 className="text-center font-display text-koru-title text-koru-on-surface">
           First tell us who you are
         </h1>
 
