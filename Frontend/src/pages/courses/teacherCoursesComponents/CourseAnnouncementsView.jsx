@@ -9,7 +9,7 @@ import {
     deleteAnnouncement,
 } from "../../../services/announcementService";
 import { useAuth } from "../../../contexts/AuthContext";
-import Avatar from "../../../components/UI/Avatar";
+import { Avatar, Button, Card, Input, PageHeader, Skeleton } from "../../../components/UI";
 
 export function CourseAnnouncementsView({ activeCourseId }) {
     const { user } = useAuth();
@@ -78,21 +78,22 @@ export function CourseAnnouncementsView({ activeCourseId }) {
 
     return (
         <motion.div className="flex-1 flex flex-col overflow-hidden h-full" initial="hidden" animate="visible" variants={staggerContainer}>
-            <motion.header variants={slideUp} className="mb-6 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 shrink-0">
-                <div>
-                    <h1 className="text-3xl font-semibold tracking-tight">Announcements</h1>
-                    <p className="text-gray-500 mt-2">Manage and post updates for your students</p>
-                </div>
-                {!isAdding && (
-                    <button
-                        onClick={() => setIsAdding(true)}
-                        className="bg-[#3C0078] text-white px-6 py-2.5 rounded-2xl font-bold text-xs uppercase tracking-widest flex items-center gap-2 shadow-lg shadow-[#3C0078]/20 self-start sm:self-auto"
-                    >
-                        <Plus size={16} />
-                        Create Announcement
-                    </button>
-                )}
-            </motion.header>
+            <motion.div variants={slideUp} className="shrink-0">
+                <PageHeader
+                    className="mb-6"
+                    title="Announcements"
+                    subtitle="Manage and post updates for your students"
+                    actions={!isAdding && (
+                        <Button
+                            variant="filled"
+                            startIcon={<Plus size={16} />}
+                            onClick={() => setIsAdding(true)}
+                        >
+                            Create Announcement
+                        </Button>
+                    )}
+                />
+            </motion.div>
 
             {/* Create form */}
             <AnimatePresence>
@@ -101,47 +102,57 @@ export function CourseAnnouncementsView({ activeCourseId }) {
                         initial={{ opacity: 0, y: -16, height: 0 }}
                         animate={{ opacity: 1, y: 0, height: "auto" }}
                         exit={{ opacity: 0, y: -16, height: 0, transition: { duration: 0.18, ease: "easeIn" } }}
-                        className="bg-white p-6 rounded-3xl border-2 border-dashed border-[#3C0078]/20 shadow-sm mb-6 overflow-hidden shrink-0"
+                        className="mb-6 overflow-hidden shrink-0"
                     >
-                        <div className="flex justify-between items-center mb-6">
-                            <h3 className="text-lg font-bold text-gray-900 italic">Drafting New Announcement</h3>
-                            <button onClick={() => setIsAdding(false)} className="text-gray-400 hover:text-gray-900 transition-colors">
-                                <CloseSquare size={22} />
-                            </button>
-                        </div>
+                        <Card variant="outlined" tone="low" padding="lg" radius="2xl">
+                            <div className="flex justify-between items-center mb-6">
+                                <h3 className="font-display text-koru-heading text-koru-on-surface">Drafting New Announcement</h3>
+                                <Button
+                                    variant="text"
+                                    size="icon"
+                                    aria-label="Close announcement form"
+                                    onClick={() => setIsAdding(false)}
+                                >
+                                    <CloseSquare size={22} />
+                                </Button>
+                            </div>
 
-                        <div className="flex flex-col gap-6 mb-6">
-                            <div>
-                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2 block">Announcement Title</label>
-                                <input
+                            <div className="flex flex-col gap-6 mb-6">
+                                <Input
+                                    label="Announcement Title"
                                     type="text"
                                     placeholder="What's the update about?"
-                                    className="w-full bg-gray-50 border-none rounded-2xl px-5 py-3.5 text-gray-900 font-medium focus:ring-2 focus:ring-[#3C0078]/20 transition-all"
                                     value={newAnnouncement.title}
                                     onChange={e => setNewAnnouncement({ ...newAnnouncement, title: e.target.value })}
                                 />
+                                <div>
+                                    <label
+                                        htmlFor="teacher-announcement-message"
+                                        className="mb-1.5 block text-koru-label text-koru-on-surface-variant"
+                                    >
+                                        Announcement Message
+                                    </label>
+                                    <textarea
+                                        id="teacher-announcement-message"
+                                        rows={5}
+                                        placeholder="Write your announcement details here..."
+                                        className="w-full resize-none rounded-koru-xs bg-koru-surface-container-lowest px-4 py-3 text-sm leading-relaxed text-koru-on-surface shadow-koru-xs outline-none transition placeholder:text-koru-on-surface-variant/70 hover:bg-koru-surface focus:bg-koru-surface-container-lowest focus:ring-1 focus:ring-inset focus:ring-koru-primary"
+                                        value={newAnnouncement.preview}
+                                        onChange={e => setNewAnnouncement({ ...newAnnouncement, preview: e.target.value })}
+                                    />
+                                </div>
                             </div>
-                            <div>
-                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2 block">Announcement Message</label>
-                                <textarea
-                                    rows={5}
-                                    placeholder="Write your announcement details here..."
-                                    className="w-full bg-gray-50 border-none rounded-2xl px-5 py-4 text-gray-900 font-medium focus:ring-2 focus:ring-[#3C0078]/20 transition-all resize-none leading-relaxed"
-                                    value={newAnnouncement.preview}
-                                    onChange={e => setNewAnnouncement({ ...newAnnouncement, preview: e.target.value })}
-                                />
-                            </div>
-                        </div>
 
-                        <div className="flex justify-end pt-4 border-t border-gray-50">
-                            <button
-                                onClick={handlePost}
-                                disabled={posting}
-                                className="bg-[#3C0078] text-white px-8 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-[#2A0054] transition-all shadow-lg shadow-[#3C0078]/20 disabled:opacity-50"
-                            >
-                                {posting ? "Posting…" : "Post Announcement"}
-                            </button>
-                        </div>
+                            <div className="flex justify-end pt-4">
+                                <Button
+                                    variant="filled"
+                                    onClick={handlePost}
+                                    disabled={posting}
+                                >
+                                    {posting ? "Posting…" : "Post Announcement"}
+                                </Button>
+                            </div>
+                        </Card>
                     </motion.div>
                 )}
             </AnimatePresence>
@@ -152,74 +163,68 @@ export function CourseAnnouncementsView({ activeCourseId }) {
                 <div
                     className={`${
                         selectedId ? "hidden lg:flex" : "flex"
-                    } flex-col gap-4 overflow-y-auto pr-2 transition-all duration-300 ${
+                    } flex-col gap-4 overflow-y-auto pr-2 transition-all duration-300 motion-reduce:transition-none ${
                         selectedId ? "w-full lg:w-[45%] lg:shrink-0" : "w-full"
                     }`}
                 >
                     {loading ? (
                         [1, 2, 3].map(i => (
-                            <div key={i} className="p-5 rounded-2xl border border-gray-100 bg-white animate-pulse flex gap-4 items-start">
-                                <div className="w-10 h-10 rounded-full bg-gray-100 shrink-0" />
+                            <Card key={i} variant="outlined" tone="surface" className="flex gap-4 items-start">
+                                <Skeleton variant="circle" width={40} height={40} className="shrink-0" />
                                 <div className="flex-1 space-y-2">
-                                    <div className="h-4 bg-gray-100 rounded w-3/4" />
-                                    <div className="h-3 bg-gray-100 rounded w-full" />
-                                    <div className="h-3 bg-gray-100 rounded w-1/2" />
+                                    <Skeleton variant="text" width="75%" height={16} />
+                                    <Skeleton variant="text" width="100%" />
+                                    <Skeleton variant="text" width="50%" />
                                 </div>
-                            </div>
+                            </Card>
                         ))
                     ) : announcements.map((post) => (
-                        <motion.div
+                        <Card
+                            as={motion.div}
                             key={post.id}
                             onClick={() => setSelectedId(post.id)}
                             variants={slideUp}
-                            className={`p-5 rounded-2xl border transition-all cursor-pointer relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-4 group shrink-0 ${
-                                selectedId === post.id
-                                    ? "bg-[#3C0078]/5 border-[#3C0078]/30 shadow-md"
-                                    : "bg-white border-gray-100 shadow-sm hover:shadow-md"
-                            }`}
+                            variant="interactive"
+                            tone={selectedId === post.id ? "brand" : "surface"}
+                            className="cursor-pointer relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-4 group shrink-0"
                         >
                             <div className="flex flex-1 items-start gap-4 pl-2 min-w-0">
                                 <Avatar
-
                                     src={post.lecturerProfileImageUrl}
-
                                     seed={post.lecturerId || post.lecturerName}
-
                                     name={post.lecturerName || "Lecturer"}
-
                                     size="md"
-
                                     className="mt-0.5"
-
                                 />
                                 <div className="flex-1 min-w-0">
-                                    <h2 className="text-lg font-bold text-gray-800 leading-snug group-hover:text-[#3C0078] transition-colors">
+                                    <h2 className="font-display text-koru-heading text-koru-on-surface leading-snug group-hover:text-koru-primary transition-colors">
                                         {post.title}
                                     </h2>
-                                    <p className="text-gray-500 text-sm leading-relaxed line-clamp-1 mt-0.5">
+                                    <p className="text-koru-on-surface-variant text-sm leading-relaxed line-clamp-1 mt-0.5">
                                         {post.preview}
                                     </p>
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-[#3C0078] mt-1.5 opacity-70">
+                                    <p className="text-koru-caption font-medium text-koru-primary mt-1.5">
                                         Posted by {post.lecturerName || post.lecturer?.name || post.lecturer || "Lecturer"}
                                     </p>
                                 </div>
                             </div>
 
-                            <div className="flex md:flex-col items-center md:items-end justify-end gap-2 pl-6 md:pl-0 shrink-0 self-stretch md:self-auto border-t md:border-t-0 pt-3 md:pt-0 border-gray-50">
-                                <span className="text-xs text-gray-400 font-semibold">
+                            <div className="flex md:flex-col items-center md:items-end justify-end gap-2 pl-6 md:pl-0 shrink-0 self-stretch md:self-auto pt-3 md:pt-0">
+                                <span className="text-koru-caption text-koru-on-surface-variant">
                                     {post.datePosted
                                         ? new Date(post.datePosted).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
                                         : (post.date || "")}
                                 </span>
                                 <button
                                     onClick={e => handleDelete(post.id, e)}
-                                    className="opacity-0 group-hover:opacity-100 p-1 text-gray-300 hover:text-red-500 transition-all"
+                                    className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 p-1 rounded-koru-xs text-koru-on-surface-variant hover:text-koru-error focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus transition-all"
                                     title="Delete announcement"
+                                    aria-label="Delete announcement"
                                 >
                                     <Trash2 size={13} />
                                 </button>
                             </div>
-                        </motion.div>
+                        </Card>
                     ))}
                 </div>
 
@@ -231,58 +236,64 @@ export function CourseAnnouncementsView({ activeCourseId }) {
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: 20, transition: { duration: 0.15, ease: "easeIn" } }}
                             transition={{ type: "spring", damping: 30, stiffness: 250 }}
-                            className="flex-1 w-full lg:w-[55%] bg-white border border-gray-100 rounded-3xl p-8 flex flex-col shadow-sm overflow-y-auto"
+                            className="flex-1 w-full lg:w-[55%] flex flex-col overflow-y-auto"
                         >
-                            <div className="flex justify-between items-start mb-6">
-                                <span className="text-sm font-medium text-gray-400">
-                                    {selectedAnnouncement.datePosted
-                                        ? new Date(selectedAnnouncement.datePosted).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
-                                        : (selectedAnnouncement.date || "")}
-                                </span>
-                                <div className="flex items-center gap-2">
-                                    <button
-                                        onClick={() => handleDelete(selectedId)}
-                                        className="w-10 h-10 flex items-center justify-center rounded-full bg-red-50 text-red-400 hover:bg-red-100 hover:text-red-600 transition-colors"
-                                        title="Delete announcement"
-                                    >
-                                        <Trash2 size={16} />
-                                    </button>
-                                    <button
-                                        onClick={() => setSelectedId(null)}
-                                        className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-50 text-gray-400 hover:bg-gray-100 hover:text-gray-900 transition-colors"
-                                    >
-                                        <CloseSquare size={22} />
-                                    </button>
+                            <Card variant="outlined" tone="surface" padding="xl" radius="2xl" className="flex-1 flex flex-col">
+                                <div className="flex justify-between items-start mb-6">
+                                    <span className="text-sm font-medium text-koru-on-surface-variant">
+                                        {selectedAnnouncement.datePosted
+                                            ? new Date(selectedAnnouncement.datePosted).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+                                            : (selectedAnnouncement.date || "")}
+                                    </span>
+                                    <div className="flex items-center gap-2">
+                                        <Button
+                                            variant="error"
+                                            size="icon"
+                                            onClick={() => handleDelete(selectedId)}
+                                            title="Delete announcement"
+                                            aria-label="Delete announcement"
+                                        >
+                                            <Trash2 size={16} />
+                                        </Button>
+                                        <Button
+                                            variant="tonal"
+                                            size="icon"
+                                            onClick={() => setSelectedId(null)}
+                                            aria-label="Close announcement"
+                                        >
+                                            <CloseSquare size={22} />
+                                        </Button>
+                                    </div>
                                 </div>
-                            </div>
 
-                            <h2 className="text-3xl font-black text-gray-900 leading-tight mb-4">
-                                {selectedAnnouncement.title}
-                            </h2>
+                                <h2 className="font-display text-koru-title text-koru-on-surface mb-4">
+                                    {selectedAnnouncement.title}
+                                </h2>
 
-                            <div className="flex items-center gap-3 mb-6 pb-6 border-b border-gray-100">
-                                <Avatar
-                                    src={selectedAnnouncement.lecturerProfileImageUrl}
-                                    seed={selectedAnnouncement.lecturerId || selectedAnnouncement.lecturerName}
-                                    name={selectedAnnouncement.lecturerName || "Lecturer"}
-                                    size="md"
-                                />
-                                <div>
-                                    <p className="text-xs font-black uppercase tracking-widest text-gray-400">Published By</p>
-                                    <p className="font-bold text-[#3C0078]">
-                                        {selectedAnnouncement.lecturerName || selectedAnnouncement.lecturer?.name || selectedAnnouncement.lecturer || "Lecturer"}
+                                <div className="flex items-center gap-3 mb-6 pb-6 border-b border-koru-outline-variant">
+                                    <Avatar
+                                        src={selectedAnnouncement.lecturerProfileImageUrl}
+                                        seed={selectedAnnouncement.lecturerId || selectedAnnouncement.lecturerName}
+                                        name={selectedAnnouncement.lecturerName || "Lecturer"}
+                                        size="md"
+                                    />
+                                    <div>
+                                        <p className="text-koru-caption font-medium text-koru-on-surface-variant">Published By</p>
+                                        <p className="font-medium text-koru-primary">
+                                            {selectedAnnouncement.lecturerName || selectedAnnouncement.lecturer?.name || selectedAnnouncement.lecturer || "Lecturer"}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="max-w-none flex-1">
+                                    <p className="text-lg leading-relaxed text-koru-on-surface-variant mb-6">
+                                        {selectedAnnouncement.preview}
+                                    </p>
+                                    <p className="text-koru-on-surface-variant/80 leading-relaxed text-sm">
+                                        Please make sure to check the attached documents in the resources section if any are mentioned. If you have any follow-up questions regarding this announcement, feel free to reach out during office hours or through the discussion forum.
                                     </p>
                                 </div>
-                            </div>
-
-                            <div className="prose prose-purple max-w-none flex-1">
-                                <p className="text-lg leading-relaxed text-gray-600 mb-6 font-medium">
-                                    {selectedAnnouncement.preview}
-                                </p>
-                                <p className="text-gray-400 leading-relaxed text-sm">
-                                    Please make sure to check the attached documents in the resources section if any are mentioned. If you have any follow-up questions regarding this announcement, feel free to reach out during office hours or through the discussion forum.
-                                </p>
-                            </div>
+                            </Card>
                         </motion.div>
                     )}
                 </AnimatePresence>

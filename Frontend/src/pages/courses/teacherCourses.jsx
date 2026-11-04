@@ -66,15 +66,15 @@ export default function TeacherCourses() {
         <div className="flex overflow-hidden gap-4 transition-all duration-300 md:h-[calc(100vh-32px)] md:w-full max-md:h-screen max-md:w-screen max-md:-ml-4 max-md:-mr-4 max-md:-mt-4 bg-transparent">
             <CourseSecondaryNav activeCourseId={activeCourseId || (visibleCourses[0]?.id)} />
 
-            <div className="flex-1 flex flex-col overflow-hidden transition-all duration-300 md:bg-koru-surface-container-lowest md:backdrop-blur-xl md:border md:border-white/20 md:rounded-koru-lg md:shadow-lg max-md:bg-white">
+            <div className="flex-1 flex flex-col overflow-hidden transition-all duration-300 md:bg-koru-surface-container-lowest md:backdrop-blur-xl md:rounded-koru-lg md:shadow-koru-md max-md:bg-koru-surface-container-lowest">
                 {course && (
-                    <div className="h-14 border-b border-gray-100 bg-white/60 backdrop-blur-md flex items-center justify-between px-8 z-10 shrink-0 select-none">
+                    <div className="h-14 bg-koru-surface-container-lowest/60 shadow-koru-xs backdrop-blur-md flex items-center justify-between px-8 z-10 shrink-0 select-none">
                         <div className="flex items-center gap-3">
-                            <span className="px-2.5 py-0.5 rounded-lg text-[10px] font-black text-white shadow-sm uppercase shrink-0" style={{ backgroundColor: course.color }}>
+                            <span className="px-2.5 py-0.5 rounded-koru-sm text-[10px] font-medium text-white shadow-koru-xs uppercase shrink-0" style={{ backgroundColor: course.color }}>
                                 {course.code}{course.number}
                             </span>
-                            <span className="text-gray-300 text-xs">/</span>
-                            <span className="text-xs font-bold text-gray-500 capitalize">{activeSubpageLabel}</span>
+                            <span className="text-koru-outline-variant text-xs">/</span>
+                            <span className="text-xs font-medium text-koru-on-surface-variant capitalize">{activeSubpageLabel}</span>
                         </div>
                     </div>
                 )}
