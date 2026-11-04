@@ -1,19 +1,13 @@
 import React from "react";
 import { Sparkles } from "lucide-react";
 import ChipListEditor from "./ChipListEditor";
-
-const PANEL_CLASS =
-  "rounded-[30px] border border-gray-200/50 bg-white p-6 shadow-2xs hover:shadow-xs transition-all duration-300";
+import ProfileSectionHeader from "./ProfileSectionHeader";
+import { Badge, Card } from "./UI";
 
 export default function ProfileSkills({ skillGroups, editMode, updateProfile }) {
   return (
-    <section className={PANEL_CLASS}>
-      <div className="mb-6 flex items-center gap-3 border-b border-gray-100 pb-3">
-        <span className="rounded-xl bg-[#3C0078]/5 p-2 text-[#3C0078]">
-          <Sparkles size={20} />
-        </span>
-        <h2 className="text-xl font-extrabold tracking-tight text-gray-900">Skills Matrix</h2>
-      </div>
+    <Card as="section" variant="outlined" tone="surface" padding="lg" radius="xl">
+      <ProfileSectionHeader icon={<Sparkles size={20} />}>Skills Matrix</ProfileSectionHeader>
 
       {editMode ? (
         <div className="grid gap-6 md:grid-cols-3">
@@ -30,29 +24,23 @@ export default function ProfileSkills({ skillGroups, editMode, updateProfile }) 
       ) : (
         <div className="grid gap-4 md:grid-cols-3">
           {skillGroups.map((group) => (
-            <div
-              key={group.key}
-              className="rounded-[22px] border border-gray-200/50 bg-gradient-to-b from-white to-gray-50/30 p-4 shadow-3xs hover:shadow-2xs transition-all duration-200"
-            >
-              <p className="text-[11px] font-black uppercase tracking-wider text-gray-500">{group.label}</p>
+            <Card key={group.key} variant="outlined" tone="low" padding="sm" radius="lg">
+              <p className="text-koru-caption uppercase text-koru-on-surface-variant">{group.label}</p>
               <div className="mt-3 flex flex-wrap gap-1.5">
                 {group.items.length > 0 ? (
                   group.items.map((item, index) => (
-                    <span
-                      key={`${group.key}-${index}`}
-                      className="rounded-full border border-purple-100 bg-purple-50/40 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-[#3C0078] shadow-3xs"
-                    >
+                    <Badge key={`${group.key}-${index}`} variant="primary">
                       {item}
-                    </span>
+                    </Badge>
                   ))
                 ) : (
-                  <span className="text-xs text-gray-400 font-medium italic">No skills listed.</span>
+                  <span className="text-xs italic text-koru-on-surface-variant">No skills listed.</span>
                 )}
               </div>
-            </div>
+            </Card>
           ))}
         </div>
       )}
-    </section>
+    </Card>
   );
 }

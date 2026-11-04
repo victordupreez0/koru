@@ -1,49 +1,36 @@
 import React from "react";
 import { GraduationCap } from "lucide-react";
 import ChipListEditor from "./ChipListEditor";
-
-const PANEL_CLASS =
-  "rounded-[30px] border border-gray-200/50 bg-white p-6 shadow-2xs hover:shadow-xs transition-all duration-300";
-const INPUT_CLASS =
-  "w-full text-sm rounded-xl border border-gray-200 bg-white px-4 py-2.5 transition focus:border-[#3C0078]/40 focus:outline-none focus:ring-4 focus:ring-[#3C0078]/10 text-gray-900";
-const LABEL_CLASS =
-  "text-gray-700 font-bold text-xs uppercase tracking-wider mb-1.5 block";
+import ProfileSectionHeader from "./ProfileSectionHeader";
+import { Badge, Card, Input } from "./UI";
 
 export default function ProfileEducation({ profile, editMode, updateProfile }) {
   return (
-    <section className={PANEL_CLASS}>
-      <div className="mb-6 flex items-center gap-3 border-b border-gray-100 pb-3">
-        <span className="rounded-xl bg-[#3C0078]/5 p-2 text-[#3C0078]">
-          <GraduationCap size={20} />
-        </span>
-        <h2 className="text-xl font-extrabold tracking-tight text-gray-900">Education Context</h2>
-      </div>
+    <Card as="section" variant="outlined" tone="surface" padding="lg" radius="xl">
+      <ProfileSectionHeader icon={<GraduationCap size={20} />}>Education Context</ProfileSectionHeader>
 
       {!editMode ? (
         <div className="flex flex-col gap-1.5">
-          <p className="text-lg font-extrabold tracking-tight text-gray-900">
+          <p className="font-display text-koru-heading text-koru-on-surface">
             {profile.education.institution || "No institution set"}
           </p>
           {profile.education.gpa && (
-            <p className="text-xs font-bold text-[#3C0078] uppercase tracking-wider">
-              GPA: <span className="text-sm font-extrabold text-gray-900 ml-1">{profile.education.gpa}</span>
+            <p className="text-koru-caption uppercase text-koru-primary">
+              GPA: <span className="ml-1 text-sm text-koru-on-surface">{profile.education.gpa}</span>
             </p>
           )}
 
-          <div className="mt-5 pt-4 border-t border-gray-100">
-            <p className="text-[11px] font-black uppercase tracking-wider text-gray-500 mb-3">Relevant Modules</p>
+          <div className="mt-5 border-t border-koru-outline-faint pt-4">
+            <p className="mb-3 text-koru-caption uppercase text-koru-on-surface-variant">Relevant Modules</p>
             <div className="flex flex-wrap gap-1.5">
               {profile.education.modules && profile.education.modules.filter(Boolean).length > 0 ? (
                 profile.education.modules.filter(Boolean).map((mod, index) => (
-                  <span
-                    key={`module-${index}`}
-                    className="rounded-full border border-purple-100 bg-purple-50/40 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-[#3C0078] shadow-3xs"
-                  >
+                  <Badge key={`module-${index}`} variant="primary">
                     {mod}
-                  </span>
+                  </Badge>
                 ))
               ) : (
-                <span className="text-xs text-gray-400 font-medium italic">No academic modules added yet.</span>
+                <span className="text-xs italic text-koru-on-surface-variant">No academic modules added yet.</span>
               )}
             </div>
           </div>
@@ -51,27 +38,21 @@ export default function ProfileEducation({ profile, editMode, updateProfile }) {
       ) : (
         <div className="flex flex-col gap-5">
           <div className="grid gap-4 md:grid-cols-[1.6fr_1fr]">
-            <div>
-              <label className={LABEL_CLASS}>Institution</label>
-              <input
-                value={profile.education.institution}
-                onChange={(e) => updateProfile("education.institution", e.target.value)}
-                placeholder="Institution name"
-                className={INPUT_CLASS}
-              />
-            </div>
-            <div>
-              <label className={LABEL_CLASS}>GPA</label>
-              <input
-                value={profile.education.gpa}
-                onChange={(e) => updateProfile("education.gpa", e.target.value)}
-                placeholder="GPA (e.g. 3.9)"
-                className={INPUT_CLASS}
-              />
-            </div>
+            <Input
+              label="Institution"
+              value={profile.education.institution}
+              onChange={(e) => updateProfile("education.institution", e.target.value)}
+              placeholder="Institution name"
+            />
+            <Input
+              label="GPA"
+              value={profile.education.gpa}
+              onChange={(e) => updateProfile("education.gpa", e.target.value)}
+              placeholder="GPA (e.g. 3.9)"
+            />
           </div>
 
-          <div className="mt-2 pt-4 border-t border-gray-100">
+          <div className="mt-2 border-t border-koru-outline-faint pt-4">
             <ChipListEditor
               title="Relevant Modules"
               items={profile.education.modules}
@@ -81,6 +62,6 @@ export default function ProfileEducation({ profile, editMode, updateProfile }) {
           </div>
         </div>
       )}
-    </section>
+    </Card>
   );
 }

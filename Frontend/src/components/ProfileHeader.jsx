@@ -1,62 +1,55 @@
 import React from "react";
-import { BadgeCheck, UserRound } from "lucide-react";
+import { BadgeCheck } from "lucide-react";
+import { Avatar, Badge, Card } from "./UI";
 
 export default function ProfileHeader({ profile, roleLabel }) {
   return (
-    <section className="relative overflow-hidden rounded-[30px] border border-gray-200/50 bg-white p-6 shadow-2xs hover:shadow-xs transition-shadow duration-300">
+    <Card as="section" variant="outlined" tone="surface" padding="lg" radius="xl" className="relative overflow-hidden">
       <div className="flex flex-wrap items-start gap-5">
-        {profile.header.photoUrl ? (
-          <img
-            src={profile.header.photoUrl}
-            alt="Profile"
-            className="h-20 w-20 rounded-2xl border border-gray-200/60 object-cover shadow-3xs"
-          />
-        ) : (
-          <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-[#3C0078]/5 to-[#3C0078]/10 text-[#3C0078] border border-gray-100 shadow-3xs">
-            <UserRound size={26} />
-          </div>
-        )}
+        <Avatar
+          size="xl"
+          src={profile.header.photoUrl || undefined}
+          seed={profile.header.email || profile.header.fullName}
+          name={profile.header.fullName}
+        />
 
-        <div className="flex-1 min-w-0">
-          <h2 className="text-3xl font-extrabold tracking-tight text-gray-900">{profile.header.fullName || "Name Not Set"}</h2>
-          <p className="mt-1.5 text-sm font-extrabold text-[#3C0078] tracking-tight">{profile.header.headline || "Headline Not Set"}</p>
-          <div className="mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-bold text-gray-400 uppercase tracking-wider">
+        <div className="min-w-0 flex-1">
+          <h2 className="font-display text-koru-title text-koru-on-surface">{profile.header.fullName || "Name Not Set"}</h2>
+          <p className="mt-1.5 text-sm font-medium text-koru-primary">{profile.header.headline || "Headline Not Set"}</p>
+          <div className="mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-koru-caption uppercase text-koru-on-surface-variant">
             <span>{profile.header.major || "No Faculty"}</span>
             {profile.header.degree && (
               <>
-                <span className="text-gray-300 select-none">•</span>
+                <span className="select-none text-koru-outline">•</span>
                 <span>{profile.header.degree}</span>
               </>
             )}
             {profile.header.expectedGraduation && (
               <>
-                <span className="text-gray-300 select-none">•</span>
+                <span className="select-none text-koru-outline">•</span>
                 <span>Class of {profile.header.expectedGraduation}</span>
               </>
             )}
           </div>
           {profile.header.email ? (
-            <p className="mt-2 text-xs font-bold text-gray-500">{profile.header.email}</p>
+            <p className="mt-2 text-xs text-koru-on-surface-variant">{profile.header.email}</p>
           ) : null}
         </div>
 
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-green-200 bg-green-50 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-green-700 shadow-3xs">
+        <Badge variant="success">
           <BadgeCheck size={12} /> {roleLabel} Profile
-        </span>
+        </Badge>
       </div>
 
-      <p className="mt-5 text-sm font-medium leading-relaxed text-gray-600">{profile.header.summary || "No professional summary set."}</p>
+      <p className="mt-5 text-sm leading-relaxed text-koru-on-surface-variant">{profile.header.summary || "No professional summary set."}</p>
 
       <div className="mt-5 flex flex-wrap gap-2">
         {profile.badges.map((badge, index) => (
-          <span
-            key={`badge-${index}`}
-            className="rounded-full border border-purple-100 bg-purple-50/50 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-[#3C0078] shadow-3xs"
-          >
+          <Badge key={`badge-${index}`} variant="primary">
             {badge}
-          </span>
+          </Badge>
         ))}
       </div>
-    </section>
+    </Card>
   );
 }

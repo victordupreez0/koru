@@ -17,9 +17,8 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-import AuthInput from "../components/UI/authInput";
 import TwoFactorSetupModal from "../components/UI/TwoFactorSetupModal";
-import { Alert, Avatar, Badge, Button, Card, Select } from "../components/UI";
+import { Alert, Avatar, Badge, Button, Card, Input, Select } from "../components/UI";
 import { dicebearUrl, getAvatarUrl } from "../utils/avatar";
 import { useTextToSpeech } from "../hooks/useTextToSpeech";
 import {
@@ -124,13 +123,13 @@ export default function SettingsPage() {
   const [savingProfile, setSavingProfile] = useState(false);
   const [savingPassword, setSavingPassword] = useState(false);
   const { speak } = useTextToSpeech(settings.ttsEnabled);
+  // Read field labels aloud on focus when assistive audio is on (kept from the old AuthInput).
+  const announceField = (label) => () => speak(label);
 
   const pageClasses = useMemo(
     () => ({
       wrapper: "text-koru-on-surface font-sans",
       muted: "text-koru-body text-koru-on-surface-variant",
-      input: "!rounded-koru-xs !border-0 !bg-koru-surface-container-lowest !text-koru-on-surface !shadow-koru-xs ring-1 ring-inset ring-koru-outline-variant focus:!translate-y-0 focus:!ring-1 focus:!ring-koru-primary disabled:!bg-koru-surface-container disabled:!text-koru-on-surface-variant disabled:cursor-not-allowed",
-      label: "!text-koru-label !text-koru-on-surface-variant",
     }),
     [],
   );
@@ -416,17 +415,16 @@ export default function SettingsPage() {
                         </div>
 
                         <div className="grid gap-4 sm:grid-cols-2">
-                          <AuthInput label="First name" name="firstName" value={profileForm.firstName} onChange={handleProfileChange} labelClassName={pageClasses.label} className={pageClasses.input} required />
-                          <AuthInput label="Last name" name="lastName" value={profileForm.lastName} onChange={handleProfileChange} labelClassName={pageClasses.label} className={pageClasses.input} required />
+                          <Input label="First name" onFocus={announceField("First name")} name="firstName" value={profileForm.firstName} onChange={handleProfileChange} required />
+                          <Input label="Last name" onFocus={announceField("Last name")} name="lastName" value={profileForm.lastName} onChange={handleProfileChange} required />
                           <div className="sm:col-span-2">
-                            <AuthInput
+                            <Input
                               label="Email address"
+                              onFocus={announceField("Email address")}
                               name="email"
                               type="email"
                               value={profileForm.email}
                               onChange={handleProfileChange}
-                              labelClassName={pageClasses.label}
-                              className={pageClasses.input}
                               disabled
                               required
                             />
@@ -516,9 +514,9 @@ export default function SettingsPage() {
                         </div>
 
                         <div className="grid gap-4">
-                          <AuthInput label="Current password" name="currentPassword" type="password" value={passwordForm.currentPassword} onChange={handlePasswordChange} labelClassName={pageClasses.label} className={pageClasses.input} required />
-                          <AuthInput label="New password" name="newPassword" type="password" value={passwordForm.newPassword} onChange={handlePasswordChange} labelClassName={pageClasses.label} className={pageClasses.input} required />
-                          <AuthInput label="Confirm new password" name="confirmPassword" type="password" value={passwordForm.confirmPassword} onChange={handlePasswordChange} labelClassName={pageClasses.label} className={pageClasses.input} required />
+                          <Input label="Current password" onFocus={announceField("Current password")} name="currentPassword" type="password" value={passwordForm.currentPassword} onChange={handlePasswordChange} required />
+                          <Input label="New password" onFocus={announceField("New password")} name="newPassword" type="password" value={passwordForm.newPassword} onChange={handlePasswordChange} required />
+                          <Input label="Confirm new password" onFocus={announceField("Confirm new password")} name="confirmPassword" type="password" value={passwordForm.confirmPassword} onChange={handlePasswordChange} required />
                         </div>
 
                         {passwordError ? <Alert variant="error" className="mt-4">{passwordError}</Alert> : null}
