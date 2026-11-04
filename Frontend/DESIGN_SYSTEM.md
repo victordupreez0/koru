@@ -2,7 +2,7 @@
 
 The foundation now follows Material 3 patterns while staying on Tailwind CSS. It does not add the MUI package; the primitives emulate Material 3 colour roles, shape, elevation and state treatment.
 
-The auth flow (login, signup, onboarding role cards and 2FA setup) has been migrated. The remaining application pages have not been migrated yet.
+Migrated so far: the auth flow (login, signup, onboarding role cards and 2FA setup), the app shell (canvas, sidebar and top bar), the dashboards, and the assignments, groups and settings pages. Other feature pages (course views, analytics, calendar, profile) still use legacy styling. Every page that shows a person uses the shared `Avatar`.
 
 ## Preview
 
@@ -66,6 +66,7 @@ Import from `src/components/UI`:
 ```jsx
 import {
   Alert,
+  Avatar,
   Badge,
   Button,
   Card,
@@ -185,6 +186,9 @@ Sizes: `xs`, `sm`, `md`, `lg`, `xl`, or a pixel number. Every user is randomly a
 [DiceBear "dylan"](https://www.dicebear.com/styles/dylan/) avatar (stored in `User.ProfileImageUrl`,
 seeded with the user id). When a response doesn't include the URL, the component rebuilds the same
 avatar from the id, so always pass something with an `id`.
+
+Use `Avatar` for every person (students, lecturers, the signed-in user). Don't render initials or a
+generic user icon in its place. Settings lets users shuffle to a new random avatar.
 
 ### Modal
 
