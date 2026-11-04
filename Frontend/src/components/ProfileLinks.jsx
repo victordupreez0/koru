@@ -1,21 +1,15 @@
 import React from "react";
 import { ExternalLink, Link as LinkIcon } from "lucide-react";
 import { isValidUrl } from "../pages/profile/profileUtils";
-
-const PANEL_CLASS =
-  "rounded-[30px] border border-gray-200/50 bg-white p-6 shadow-2xs hover:shadow-xs transition-all duration-300";
+import ProfileSectionHeader from "./ProfileSectionHeader";
+import { Card } from "./UI";
 
 // linkEntries: [[label, url], ...]  — all 4 links are shown,
 // invalid/empty ones are styled grey and clicks are prevented.
 export default function ProfileLinks({ linkEntries }) {
   return (
-    <section className={PANEL_CLASS}>
-      <div className="mb-6 flex items-center gap-3 border-b border-gray-100 pb-3">
-        <span className="rounded-xl bg-[#3C0078]/5 p-2 text-[#3C0078]">
-          <LinkIcon size={20} />
-        </span>
-        <h2 className="text-xl font-extrabold tracking-tight text-gray-900">Connected Platforms</h2>
-      </div>
+    <Card as="section" variant="outlined" tone="surface" padding="lg" radius="xl">
+      <ProfileSectionHeader icon={<LinkIcon size={20} />}>Connected Platforms</ProfileSectionHeader>
 
       <div className="flex flex-wrap gap-2.5">
         {linkEntries.map(([label, url]) => (
@@ -24,10 +18,10 @@ export default function ProfileLinks({ linkEntries }) {
             href={isValidUrl(url) ? url : undefined}
             target="_blank"
             rel="noreferrer"
-            className={`inline-flex items-center gap-1.5 rounded-xl border px-4 py-2 text-xs font-black uppercase tracking-wider transition-all duration-200 ${
+            className={`inline-flex h-8 items-center gap-1.5 rounded-koru-pill px-3 text-xs font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus focus-visible:ring-offset-2 focus-visible:ring-offset-koru-surface ${
               isValidUrl(url)
-                ? "border-purple-100 bg-purple-50/45 text-[#3C0078] hover:bg-purple-50 hover:scale-[1.02] shadow-3xs"
-                : "border-gray-200 bg-gray-50/20 text-gray-400 cursor-not-allowed"
+                ? "bg-koru-secondary-container text-koru-on-secondary-container hover:bg-koru-secondary-container/80"
+                : "cursor-not-allowed bg-koru-surface-container text-koru-on-surface-variant/60"
             }`}
             onClick={(e) => {
               if (!isValidUrl(url)) e.preventDefault();
@@ -38,6 +32,6 @@ export default function ProfileLinks({ linkEntries }) {
           </a>
         ))}
       </div>
-    </section>
+    </Card>
   );
 }
