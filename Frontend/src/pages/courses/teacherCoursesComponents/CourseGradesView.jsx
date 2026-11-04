@@ -9,6 +9,7 @@ import { getCourseCohorts, getCourseStudents } from "../../../services/classGrou
 import CohortFilterBar from "../../../components/CohortFilterBar";
 import { staggerContainer, slideUp, scaleIn } from "./constants";
 import Avatar from "../../../components/UI/Avatar";
+import { Badge, Button, Input } from "../../../components/UI";
 
 function downloadGradesCSV(studentRows, courseName) {
     const header = ["Student Name", "Email", "Points Earned", "Max Points", "Average (%)", "Mark Band", "Status"];
@@ -197,24 +198,19 @@ export function CourseGradesView({ activeCourseId, subject }) {
             <motion.div className="flex-1 overflow-y-auto" initial="hidden" animate="visible" variants={staggerContainer}>
                 <motion.header variants={slideUp} className="mb-6 flex justify-between items-end">
                     <div>
-                        <h1 className="text-3xl font-semibold tracking-tight text-gray-900">Grades & Performance</h1>
-                        <p className="text-gray-500 mt-2">{subject?.code || "Course"} | Class Performance Analytics</p>
+                        <h1 className="font-display text-koru-title text-koru-on-surface">Grades & Performance</h1>
+                        <p className="text-koru-on-surface-variant mt-2">{subject?.code || "Course"} | Class Performance Analytics</p>
                         <div className="mt-3">
                             <CohortFilterBar cohorts={cohorts} selected={selectedCohortId} onChange={setSelectedCohortId} />
                         </div>
                     </div>
                     <div className="flex gap-4">
-                        <button
-                            onClick={() => downloadGradesCSV(filteredStudentRows, subject?.name || subject?.code || activeCourseId)}
-                            className="px-6 py-3 rounded-2xl border border-gray-200 text-sm font-semibold hover:bg-gray-50 transition-colors flex items-center gap-2 shadow-sm cursor-pointer"
-                        >
-                            <Folder size={18} /> Export CSV
-                        </button>
+                        <Button variant="outlined" startIcon={<Folder size={18} />} onClick={() => downloadGradesCSV(filteredStudentRows, subject?.name || subject?.code || activeCourseId)}>Export CSV</Button>
                     </div>
                 </motion.header>
 
                 {/* KPI summary row */}
-                <motion.div variants={slideUp} className="flex flex-row mb-6 divide-x divide-gray-150">
+                <motion.div variants={slideUp} className="flex flex-row mb-6 divide-x divide-koru-outline-variant">
                     {[
                         {
                             label: "Class Average",
@@ -238,9 +234,9 @@ export function CourseGradesView({ activeCourseId, subject }) {
                         },
                     ].map((kpi, i) => (
                         <div key={i} className={`flex flex-col gap-1 py-1 flex-1 ${i === 0 ? "pr-6" : "px-6"}`}>
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">{kpi.label}</p>
-                            <p className="text-2xl font-black leading-none text-gray-900">{kpi.value}</p>
-                            <p className="text-xs text-gray-400 truncate mt-0.5">{kpi.sub}</p>
+                            <p className="text-[10px] font-medium uppercase tracking-widest text-koru-on-surface-variant">{kpi.label}</p>
+                            <p className="text-2xl font-medium leading-none text-koru-on-surface">{kpi.value}</p>
+                            <p className="text-xs text-koru-on-surface-variant truncate mt-0.5">{kpi.sub}</p>
                         </div>
                     ))}
                 </motion.div>
@@ -248,32 +244,32 @@ export function CourseGradesView({ activeCourseId, subject }) {
                 {/* Chart + leaderboard */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-8">
                     {/* Distribution chart */}
-                    <motion.div variants={scaleIn} className="lg:col-span-2 bg-white rounded-2xl border border-gray-100 p-6 flex flex-col">
+                    <motion.div variants={scaleIn} className="lg:col-span-2 rounded-koru-md bg-koru-surface-container-lowest ring-1 ring-inset ring-koru-outline-faint shadow-koru-card p-6 flex flex-col">
                         <div className="flex items-start justify-between mb-5">
                             <div>
-                                <h3 className="text-base font-bold text-gray-900">Grade Distribution</h3>
-                                <p className="text-xs text-gray-400 mt-0.5">{subject?.code || "Course"} · All assignments</p>
+                                <h3 className="font-display text-koru-heading text-koru-on-surface">Grade Distribution</h3>
+                                <p className="text-xs text-koru-on-surface-variant mt-0.5">{subject?.code || "Course"} · All assignments</p>
                             </div>
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-[#3C0078] bg-[#3C0078]/6 px-3 py-1.5 rounded-lg shrink-0">Target 75%</span>
+                            <Badge variant="primary" className="shrink-0">Target 75%</Badge>
                         </div>
 
                         {/* Grade band breakdown */}
-                        <div className="grid grid-cols-5 gap-3 mb-5 pb-5 border-b border-gray-50">
+                        <div className="grid grid-cols-5 gap-3 mb-5 pb-5 border-b border-koru-outline-faint">
                             {gradeBreakdown.map(({ label, count }) => {
                                 const pct = studentRows.length > 0 ? Math.round((count / studentRows.length) * 100) : 0;
                                 return (
                                     <div key={label} className="flex flex-col gap-2">
                                         <div className="flex items-center justify-between">
-                                            <span className="text-[10px] font-black text-gray-500 leading-tight">{label}</span>
-                                            <span className="text-xs font-black text-gray-800">{pct}%</span>
+                                            <span className="text-[10px] font-medium text-koru-on-surface-variant leading-tight">{label}</span>
+                                            <span className="text-xs font-medium text-koru-on-surface">{pct}%</span>
                                         </div>
-                                        <div className="h-1 bg-gray-100 rounded-full overflow-hidden">
+                                        <div className="h-1 bg-koru-surface-container rounded-koru-pill overflow-hidden">
                                             <div
-                                                className="h-full rounded-full bg-[#3C0078]/40"
+                                                className="h-full rounded-koru-pill bg-koru-primary/40"
                                                 style={{ width: `${pct}%` }}
                                             />
                                         </div>
-                                        <span className="text-[10px] text-gray-400">{count} student{count !== 1 ? "s" : ""}</span>
+                                        <span className="text-[10px] text-koru-on-surface-variant">{count} student{count !== 1 ? "s" : ""}</span>
                                     </div>
                                 );
                             })}
@@ -296,26 +292,26 @@ export function CourseGradesView({ activeCourseId, subject }) {
                     </motion.div>
 
                     {/* Top performers */}
-                    <motion.div variants={scaleIn} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex flex-col">
+                    <motion.div variants={scaleIn} className="rounded-koru-md bg-koru-surface-container-lowest ring-1 ring-inset ring-koru-outline-faint shadow-koru-card p-6 flex flex-col">
                         <div className="mb-5">
-                            <h3 className="text-base font-bold text-gray-900">Top Performers</h3>
-                            <p className="text-xs text-gray-400 mt-0.5">Ranked by average grade</p>
+                            <h3 className="font-display text-koru-heading text-koru-on-surface">Top Performers</h3>
+                            <p className="text-xs text-koru-on-surface-variant mt-0.5">Ranked by average grade</p>
                         </div>
                         {topPerformers.length === 0 ? (
                             <div className="flex-1 flex items-center justify-center">
-                                <p className="text-sm text-gray-400">No data yet</p>
+                                <p className="text-sm text-koru-on-surface-variant">No data yet</p>
                             </div>
                         ) : (
                             <div className="overflow-y-auto flex-1 space-y-3">
                                 {topPerformers.map((s, i) => (
                                     <div key={s.id} className="flex items-center gap-3">
-                                        <span className={`w-5 text-[11px] font-black text-right shrink-0 ${
-                                            i === 0 ? "text-yellow-500" : i === 1 ? "text-gray-400" : i === 2 ? "text-orange-400" : "text-gray-300"
+                                        <span className={`w-5 text-[11px] font-medium text-right shrink-0 ${
+                                            i === 0 ? "text-koru-warning" : i === 1 ? "text-koru-on-surface-variant" : i === 2 ? "text-koru-accent-ink" : "text-koru-outline"
                                         }`}>{i + 1}</span>
                                         <Avatar user={s} name={s.name} size={28} />
-                                        <span className="flex-1 text-xs font-semibold text-gray-800 truncate">{s.name}</span>
-                                        <span className={`text-xs font-black tabular-nums shrink-0 ${
-                                            s.avgGradePct >= 90 ? "text-green-600" : s.avgGradePct >= 75 ? "text-[#3C0078]" : "text-orange-500"
+                                        <span className="flex-1 text-xs font-medium text-koru-on-surface truncate">{s.name}</span>
+                                        <span className={`text-xs font-medium tabular-nums shrink-0 ${
+                                            s.avgGradePct >= 90 ? "text-koru-success" : s.avgGradePct >= 75 ? "text-koru-primary" : "text-koru-accent-ink"
                                         }`}>{s.avgGradePct}%</span>
                                     </div>
                                 ))}
@@ -328,14 +324,16 @@ export function CourseGradesView({ activeCourseId, subject }) {
                 <motion.div variants={slideUp} className="flex flex-row gap-5 items-start mb-8">
 
                     {/* Left: students table — shrinks when panel is open */}
-                    <div className={`bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden transition-all duration-300 min-w-0 ${
+                    <div className={`rounded-koru-lg bg-koru-surface-container-lowest ring-1 ring-inset ring-koru-outline-faint shadow-koru-card overflow-hidden transition-all duration-300 motion-reduce:transition-none min-w-0 ${
                         selectedStudent ? "w-[44%] shrink-0" : "w-full"
                     }`}>
-                        <div className="px-6 py-5 border-b border-gray-50 flex justify-between items-center">
-                            <h2 className="text-2xl font-bold">Students List</h2>
+                        <div className="px-6 py-5 border-b border-koru-outline-faint flex justify-between items-center">
+                            <h2 className="font-display text-koru-heading text-koru-on-surface">Students List</h2>
                             <button
                                 onClick={() => setShowFilter(!showFilter)}
-                                className={`p-2.5 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer ${showFilter ? "text-[#3C0078] bg-[#3C0078]/10" : "text-gray-400"}`}
+                                aria-label="Toggle filters"
+ aria-pressed={showFilter}
+ className={`p-2.5 rounded-koru-sm transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus ${showFilter ? "text-koru-primary bg-koru-primary-container" : "text-koru-on-surface-variant bg-koru-surface-container hover:bg-koru-surface-container-high"}`}
                             >
                                 <Filter size={20} />
                             </button>
@@ -348,43 +346,42 @@ export function CourseGradesView({ activeCourseId, subject }) {
                                     animate={{ height: "auto", opacity: 1 }}
                                     exit={{ height: 0, opacity: 0 }}
                                     transition={{ duration: 0.2 }}
-                                    className="px-6 py-4 border-b border-gray-50 bg-gray-50/20 flex flex-col sm:flex-row gap-3 items-center overflow-hidden"
+                                    className="px-6 py-4 border-b border-koru-outline-faint bg-koru-surface-container-low flex flex-col sm:flex-row gap-3 items-center overflow-hidden"
                                 >
-                                    <div className="relative flex-1 w-full">
-                                        <input
-                                            type="text"
-                                            placeholder="Search by student name..."
-                                            value={searchQuery}
-                                            onChange={(e) => setSearchQuery(e.target.value)}
-                                            className="w-full pl-10 pr-4 py-2 text-xs rounded-xl border border-gray-200 focus:outline-none focus:border-[#3C0078] focus:ring-1 focus:ring-[#3C0078] transition-all bg-white text-gray-800"
-                                        />
-                                        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400">
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                            </svg>
-                                        </span>
-                                        {searchQuery && (
-                                            <button
-                                                onClick={() => setSearchQuery("")}
-                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
-                                            >
-                                                <X size={14} />
-                                            </button>
-                                        )}
-                                    </div>
+                                    <Input
+    type="text"
+    size="sm"
+    aria-label="Search by student name"
+    placeholder="Search by student name..."
+    value={searchQuery}
+    onChange={(e) => setSearchQuery(e.target.value)}
+    containerClassName="flex-1 w-full"
+    startIcon={
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+    }
+    endAdornment={searchQuery ? (
+        <button
+            type="button"
+            aria-label="Clear search"
+            onClick={() => setSearchQuery("")}
+            className="text-koru-on-surface-variant hover:text-koru-on-surface cursor-pointer rounded-koru-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus"
+        >
+            <X size={14} />
+        </button>
+    ) : null}
+/>
                                     <div className="flex gap-2 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0 scrollbar-hide">
                                         {["All", "Excellent", "Good", "At Risk", "Critical"].map((status) => (
-                                            <button
-                                                key={status}
-                                                onClick={() => setStatusFilter(status)}
-                                                className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer ${
-                                                    statusFilter === status
-                                                        ? "bg-[#3C0078] text-white shadow-sm shadow-[#3C0078]/20"
-                                                        : "bg-gray-100 text-gray-500 hover:bg-gray-200"
-                                                }`}
-                                            >
-                                                {status}
-                                            </button>
+                                            <Button
+    key={status}
+    size="sm"
+    variant={statusFilter === status ? "filled" : "tonal"}
+    onClick={() => setStatusFilter(status)}
+>
+    {status}
+</Button>
                                         ))}
                                     </div>
                                 </motion.div>
@@ -392,22 +389,22 @@ export function CourseGradesView({ activeCourseId, subject }) {
                         </AnimatePresence>
                         <table className="w-full text-left border-collapse">
                             <thead>
-                                <tr className="border-b border-gray-50 bg-gray-50/30">
-                                    <th className="px-5 py-4 text-xs font-bold uppercase tracking-wider text-gray-400">Student</th>
-                                    <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-gray-400 text-center">Grade</th>
-                                    {!selectedStudent && <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-gray-400">Status</th>}
+                                <tr className="border-b border-koru-outline-faint bg-koru-surface-container-low">
+                                    <th className="px-5 py-4 text-xs font-medium uppercase tracking-wider text-koru-on-surface-variant">Student</th>
+                                    <th className="px-4 py-4 text-xs font-medium uppercase tracking-wider text-koru-on-surface-variant text-center">Grade</th>
+                                    {!selectedStudent && <th className="px-4 py-4 text-xs font-medium uppercase tracking-wider text-koru-on-surface-variant">Status</th>}
                                 </tr>
                             </thead>
                             <tbody>
                                 {studentRows.length === 0 ? (
                                     <tr>
-                                        <td colSpan={selectedStudent ? 2 : 3} className="px-8 py-12 text-center text-gray-400 text-sm">
+                                        <td colSpan={selectedStudent ? 2 : 3} className="px-8 py-12 text-center text-koru-on-surface-variant text-sm">
                                             No student grade records yet.
                                         </td>
                                     </tr>
                                 ) : filteredStudentRows.length === 0 ? (
                                     <tr>
-                                        <td colSpan={selectedStudent ? 2 : 3} className="px-8 py-12 text-center text-gray-400 text-sm">
+                                        <td colSpan={selectedStudent ? 2 : 3} className="px-8 py-12 text-center text-koru-on-surface-variant text-sm">
                                             No students match your filter criteria.
                                         </td>
                                     </tr>
@@ -418,37 +415,33 @@ export function CourseGradesView({ activeCourseId, subject }) {
                                             <tr
                                                 key={student.id}
                                                 onClick={() => setSelectedStudent(isActive ? null : student)}
-                                                className={`border-b border-gray-50 last:border-0 transition-all cursor-pointer group ${
+                                                className={`border-b border-koru-outline-faint last:border-0 transition-all cursor-pointer group ${
                                                     isActive
-                                                        ? "bg-[#3C0078]/5"
-                                                        : "hover:bg-gray-50/60"
+                                                        ? "bg-koru-primary-subtle"
+                                                        : "hover:bg-koru-surface-container-low"
                                                 }`}
                                             >
-                                                <td className={`py-3 pl-5 pr-3 ${isActive ? "border-l-2 border-[#3C0078]" : ""}`}>
+                                                <td className={`py-3 pl-5 pr-3 ${isActive ? "border-l-2 border-koru-primary" : ""}`}>
                                                     <div className="flex items-center gap-3">
                                                         <Avatar user={student} name={student.name} size={32} />
                                                         <div className="min-w-0">
-                                                            <div className={`font-bold text-sm truncate transition-colors ${
-                                                                isActive ? "text-[#3C0078]" : "text-gray-900 group-hover:text-[#3C0078]"
+                                                            <div className={`font-medium text-sm truncate transition-colors ${
+                                                                isActive ? "text-koru-primary" : "text-koru-on-surface group-hover:text-koru-primary"
                                                             }`}>{student.name}</div>
                                                             {!selectedStudent && (
-                                                                <div className="text-xs text-gray-400 mt-0.5 truncate">{student.email}</div>
+                                                                <div className="text-xs text-koru-on-surface-variant mt-0.5 truncate">{student.email}</div>
                                                             )}
                                                         </div>
                                                     </div>
                                                 </td>
                                                 <td className="px-4 py-3 text-center">
-                                                    <span className="text-base font-black italic text-gray-900">{student.avgGrade}</span>
+                                                    <span className="text-koru-heading font-medium italic text-koru-on-surface">{student.avgGrade}</span>
                                                 </td>
                                                 {!selectedStudent && (
                                                     <td className="px-4 py-3">
-                                                        <span className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${
-                                                            student.status === "Excellent" ? "bg-green-100 text-green-700" :
-                                                            student.status === "Good" ? "bg-blue-50 text-blue-700" :
-                                                            student.status === "At Risk" ? "bg-orange-50 text-orange-700" : "bg-red-50 text-red-700"
-                                                        }`}>
+                                                        <Badge variant={student.status === "Excellent" ? "success" : student.status === "Good" ? "info" : student.status === "At Risk" ? "warning" : "error"}>
                                                             {student.status}
-                                                        </span>
+                                                        </Badge>
                                                     </td>
                                                 )}
                                             </tr>
@@ -468,21 +461,21 @@ export function CourseGradesView({ activeCourseId, subject }) {
                                 animate={{ opacity: 1, x: 0 }}
                                 exit={{ opacity: 0, x: 20, transition: { duration: 0.15, ease: "easeIn" } }}
                                 transition={{ type: "spring", damping: 30, stiffness: 250 }}
-                                className="flex-1 min-w-0 bg-white border border-gray-100 rounded-3xl shadow-sm overflow-hidden flex flex-col"
+                                className="flex-1 min-w-0 rounded-koru-lg bg-koru-surface-container-lowest ring-1 ring-inset ring-koru-outline-faint shadow-koru-card overflow-hidden flex flex-col"
                                 style={{ maxHeight: "75vh" }}
                             >
                                 {/* Header */}
-                                <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 shrink-0">
+                                <div className="flex items-center justify-between px-5 py-4 border-b border-koru-outline-faint shrink-0">
                                     <div className="flex items-center gap-3 min-w-0">
                                         <Avatar user={selectedStudent} name={selectedStudent.name} size={36} />
                                         <div className="min-w-0">
-                                            <h2 className="text-sm font-bold text-gray-900 leading-tight truncate">{selectedStudent.name}</h2>
-                                            <p className="text-xs text-gray-400 mt-0.5 truncate">{selectedStudent.email}</p>
+                                            <h2 className="font-display text-sm text-koru-on-surface leading-tight truncate">{selectedStudent.name}</h2>
+                                            <p className="text-xs text-koru-on-surface-variant mt-0.5 truncate">{selectedStudent.email}</p>
                                         </div>
                                     </div>
                                     <button
                                         onClick={() => setSelectedStudent(null)}
-                                        className="w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer shrink-0 ml-2"
+                                        className="w-7 h-7 rounded-koru-pill flex items-center justify-center text-koru-on-surface-variant hover:text-koru-on-surface hover:bg-koru-surface-container-high transition-colors cursor-pointer shrink-0 ml-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus"
                                         aria-label="Close"
                                     >
                                         <X size={14} />
@@ -490,42 +483,42 @@ export function CourseGradesView({ activeCourseId, subject }) {
                                 </div>
 
                                 {/* Grade summary */}
-                                <div className="px-5 pt-4 pb-4 border-b border-gray-100 shrink-0">
+                                <div className="px-5 pt-4 pb-4 border-b border-koru-outline-faint shrink-0">
                                     <div className="grid grid-cols-3 gap-2 mb-3">
-                                        <div className="flex flex-col items-center bg-gray-50 rounded-2xl py-3">
-                                            <span className="text-xl font-black text-gray-900">{selectedStudent.avgGrade}</span>
-                                            <span className="text-[10px] text-gray-400 font-semibold mt-0.5">Overall</span>
+                                        <div className="flex flex-col items-center bg-koru-surface-container rounded-koru-md py-3">
+                                            <span className="text-xl font-medium text-koru-on-surface">{selectedStudent.avgGrade}</span>
+                                            <span className="text-[10px] text-koru-on-surface-variant font-medium mt-0.5">Overall</span>
                                         </div>
-                                        <div className="flex flex-col items-center bg-gray-50 rounded-2xl py-3">
-                                            <span className="text-xl font-black text-gray-900">{gradeBand(selectedStudent.avgGradePct)}</span>
-                                            <span className="text-[10px] text-gray-400 font-semibold mt-0.5">Mark Band</span>
+                                        <div className="flex flex-col items-center bg-koru-surface-container rounded-koru-md py-3">
+                                            <span className="text-xl font-medium text-koru-on-surface">{gradeBand(selectedStudent.avgGradePct)}</span>
+                                            <span className="text-[10px] text-koru-on-surface-variant font-medium mt-0.5">Mark Band</span>
                                         </div>
-                                        <div className="flex flex-col items-center bg-gray-50 rounded-2xl py-3">
-                                            <span className="text-xl font-black text-gray-900">{studentDetail.filter(d => d.isGraded).length}</span>
-                                            <span className="text-[10px] text-gray-400 font-semibold mt-0.5">Graded</span>
+                                        <div className="flex flex-col items-center bg-koru-surface-container rounded-koru-md py-3">
+                                            <span className="text-xl font-medium text-koru-on-surface">{studentDetail.filter(d => d.isGraded).length}</span>
+                                            <span className="text-[10px] text-koru-on-surface-variant font-medium mt-0.5">Graded</span>
                                         </div>
                                     </div>
-                                    <div className="bg-gray-50 rounded-xl px-3.5 py-2.5 flex items-center justify-between gap-2">
-                                        <div className="flex items-center gap-2 text-xs text-gray-500 min-w-0">
-                                            <TrendingUp size={12} className="text-gray-400 shrink-0" />
+                                    <div className="bg-koru-surface-container rounded-koru-sm px-3.5 py-2.5 flex items-center justify-between gap-2">
+                                        <div className="flex items-center gap-2 text-xs text-koru-on-surface-variant min-w-0">
+                                            <TrendingUp size={12} className="text-koru-on-surface-variant shrink-0" />
                                             <span className="truncate">
-                                                <span className="font-bold text-gray-800">{selectedStudent.totalEarned}</span>
-                                                <span className="text-gray-400"> / </span>
-                                                <span className="font-bold text-gray-800">{selectedStudent.totalMax}</span>
-                                                <span className="text-gray-400"> pts</span>
+                                                <span className="font-medium text-koru-on-surface">{selectedStudent.totalEarned}</span>
+                                                <span className="text-koru-on-surface-variant"> / </span>
+                                                <span className="font-medium text-koru-on-surface">{selectedStudent.totalMax}</span>
+                                                <span className="text-koru-on-surface-variant"> pts</span>
                                             </span>
                                         </div>
-                                        <span className="text-xs font-black text-[#3C0078] shrink-0">= {selectedStudent.avgGrade}</span>
+                                        <span className="text-xs font-medium text-koru-primary shrink-0">= {selectedStudent.avgGrade}</span>
                                     </div>
                                 </div>
 
                                 {/* Assignment list — scrollable */}
                                 <div className="flex-1 overflow-y-auto px-5 py-4">
-                                    <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-3">Assignments</p>
+                                    <p className="text-[10px] font-medium uppercase tracking-widest text-koru-on-surface-variant mb-3">Assignments</p>
                                     {studentDetail.length === 0 ? (
                                         <div className="flex flex-col items-center justify-center py-10 text-center">
-                                            <FileText size={28} className="text-gray-200 mb-2" />
-                                            <p className="text-sm font-semibold text-gray-400">No submissions found</p>
+                                            <FileText size={28} className="text-koru-outline mb-2" />
+                                            <p className="text-sm font-medium text-koru-on-surface-variant">No submissions found</p>
                                         </div>
                                     ) : (
                                         <div className="space-y-2">
@@ -535,46 +528,46 @@ export function CourseGradesView({ activeCourseId, subject }) {
                                                     initial={{ opacity: 0, y: 6 }}
                                                     animate={{ opacity: 1, y: 0 }}
                                                     transition={{ delay: idx * 0.04, duration: 0.2 }}
-                                                    className="bg-white border border-gray-100 rounded-xl px-3.5 py-3 hover:border-gray-200 transition-colors"
+                                                    className="bg-koru-surface-container-lowest border border-koru-outline-faint rounded-koru-sm px-3.5 py-3 hover:bg-koru-surface-container-low transition-colors"
                                                 >
                                                     <div className="flex items-start justify-between gap-2">
                                                         <div className="flex items-start gap-2 min-w-0">
-                                                            <div className="w-6 h-6 rounded-md bg-gray-50 border border-gray-100 flex items-center justify-center shrink-0 mt-0.5">
+                                                            <div className="w-6 h-6 rounded-koru-xs bg-koru-surface-container border border-koru-outline-faint flex items-center justify-center shrink-0 mt-0.5">
                                                                 {item.isGraded
-                                                                    ? <Award size={11} className="text-gray-500" />
-                                                                    : <AlertCircle size={11} className="text-gray-300" />
+                                                                    ? <Award size={11} className="text-koru-on-surface-variant" />
+                                                                    : <AlertCircle size={11} className="text-koru-outline" />
                                                                 }
                                                             </div>
                                                             <div className="min-w-0">
-                                                                <p className="text-xs font-semibold text-gray-800 leading-tight truncate">{item.title}</p>
-                                                                {item.dueLabel && <p className="text-[10px] text-gray-400 mt-0.5">Due {item.dueLabel}</p>}
+                                                                <p className="text-xs font-medium text-koru-on-surface leading-tight truncate">{item.title}</p>
+                                                                {item.dueLabel && <p className="text-[10px] text-koru-on-surface-variant mt-0.5">Due {item.dueLabel}</p>}
                                                             </div>
                                                         </div>
                                                         <div className="text-right shrink-0">
                                                             {item.isGraded ? (
                                                                 <>
-                                                                    <p className="text-xs font-black text-gray-900">
-                                                                        {item.pointsEarned ?? "—"}<span className="text-gray-400 font-semibold"> / {item.maxPoints}</span>
+                                                                    <p className="text-xs font-medium text-koru-on-surface">
+                                                                        {item.pointsEarned ?? "—"}<span className="text-koru-on-surface-variant font-medium"> / {item.maxPoints}</span>
                                                                     </p>
-                                                                    <p className="text-[10px] font-bold text-gray-500">{item.percentage}%</p>
+                                                                    <p className="text-[10px] font-medium text-koru-on-surface-variant">{item.percentage}%</p>
                                                                 </>
                                                             ) : (
-                                                                <span className="text-[10px] font-bold text-gray-300 uppercase">Pending</span>
+                                                                <span className="text-[10px] font-medium text-koru-outline uppercase">Pending</span>
                                                             )}
                                                         </div>
                                                     </div>
                                                     {item.isGraded && item.percentage !== null && (
-                                                        <div className="mt-2 h-1 bg-gray-100 rounded-full overflow-hidden">
+                                                        <div className="mt-2 h-1 bg-koru-surface-container rounded-koru-pill overflow-hidden">
                                                             <motion.div
-                                                                className="h-full rounded-full"
+                                                                className="h-full rounded-koru-pill"
                                                                 initial={{ width: 0 }}
                                                                 animate={{ width: `${item.percentage}%` }}
                                                                 transition={{ delay: idx * 0.04 + 0.15, duration: 0.5, ease: "easeOut" }}
                                                                 style={{
-                                                                    background: item.percentage >= 85 ? "#22c55e"
-                                                                        : item.percentage >= 70 ? "#64748b"
-                                                                        : item.percentage >= 50 ? "#f97316"
-                                                                        : "#ef4444"
+                                                                    background: item.percentage >= 85 ? "var(--color-koru-success)"
+                                                                        : item.percentage >= 70 ? "var(--color-koru-outline)"
+                                                                        : item.percentage >= 50 ? "var(--color-koru-accent)"
+                                                                        : "var(--color-koru-error)"
                                                                 }}
                                                             />
                                                         </div>
@@ -586,8 +579,8 @@ export function CourseGradesView({ activeCourseId, subject }) {
                                 </div>
 
                                 {/* Footer */}
-                                <div className="px-5 py-3 border-t border-gray-100 shrink-0">
-                                    <p className="text-[10px] text-gray-400 text-center">Grade = Points earned ÷ Max points × 100</p>
+                                <div className="px-5 py-3 border-t border-koru-outline-faint shrink-0">
+                                    <p className="text-[10px] text-koru-on-surface-variant text-center">Grade = Points earned ÷ Max points × 100</p>
                                 </div>
                             </motion.div>
                         )}

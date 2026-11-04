@@ -19,6 +19,7 @@ import {
 import NovelBlockMenu from "../../../components/NovelBlockMenu";
 import { getNotes, createNote, updateNote, deleteNote } from "../../../services/noteService";
 import { useAuth } from "../../../contexts/AuthContext";
+import { Button, Card, Skeleton } from "../../../components/UI";
 
 export function CourseNotesView({ activeCourseId }) {
     const suggestionItems = createSuggestionItems([
@@ -132,7 +133,7 @@ export function CourseNotesView({ activeCourseId }) {
         <div className="flex-1 flex h-full overflow-hidden">
             {/* Notes sidebar — animates width to 0 when expanded */}
             <div
-                className="flex flex-col h-full border-r border-gray-200 shrink-0 overflow-hidden"
+                className="flex flex-col h-full border-r border-koru-outline-variant shrink-0 overflow-hidden"
                 style={{
                     width: expanded ? 0 : 320,
                     padding: expanded ? '2rem 0' : '2rem',
@@ -142,34 +143,37 @@ export function CourseNotesView({ activeCourseId }) {
                 }}
             >
                 <div className="flex justify-between items-center mb-8 min-w-[256px]">
-                    <h2 className="text-2xl font-bold">Notes</h2>
-                    <button onClick={handleCreateNote} className="p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors">
-                        <Plus size={20} className="text-gray-700" />
-                    </button>
+                    <h2 className="font-display text-koru-title text-koru-on-surface">Notes</h2>
+                    <Button variant="tonal" size="icon" onClick={handleCreateNote} aria-label="Create note" title="Create note">
+                        <Plus size={20} />
+                    </Button>
                 </div>
                 {loading ? (
-                    <div className="space-y-2 overflow-y-auto min-w-[256px] animate-pulse">
+                    <div className="space-y-2 overflow-y-auto min-w-[256px]">
                         {[1, 2, 3].map(i => (
-                            <div key={i} className="p-4 rounded-2xl bg-gray-50 flex items-start justify-between gap-2">
+                            <Card key={i} tone="muted" padding="sm" className="flex items-start justify-between gap-2">
                                 <div className="flex-1 flex flex-col gap-2">
-                                    <div className="h-4 rounded-full bg-gray-200" style={{ width: `${50 + (i * 23) % 40}%` }} />
-                                    <div className="h-3 rounded-full bg-gray-100 w-20" />
+                                    <Skeleton variant="text" height={16} width={`${50 + (i * 23) % 40}%`} />
+                                    <Skeleton variant="text" width={80} />
                                 </div>
-                                <div className="w-6 h-6 rounded-lg bg-gray-100 shrink-0" />
-                            </div>
+                                <Skeleton width={24} height={24} className="shrink-0" />
+                            </Card>
                         ))}
                     </div>
                 ) : (
                     <div className="space-y-2 overflow-y-auto min-w-[256px]">
                         {notes.map(note => (
-                            <div
+                            <Card
                                 key={note.id}
-                                className={`group w-full text-left p-4 rounded-2xl transition-colors flex items-start justify-between gap-2 cursor-pointer ${activeNote?.id === note.id ? 'bg-[#3C0078] text-white' : 'bg-gray-50 hover:bg-gray-100 text-gray-800'}`}
+                                variant="interactive"
+                                tone={activeNote?.id === note.id ? 'brand' : 'muted'}
+                                padding="sm"
+                                className="group w-full text-left flex items-start justify-between gap-2 cursor-pointer"
                                 onClick={() => setActiveNote(note)}
                             >
                                 <div className="min-w-0">
-                                    <div className={`font-bold text-sm truncate ${!note.title ? 'opacity-40' : ''}`}>{note.title || "New Note"}</div>
-                                    <div className={`text-xs mt-1 ${activeNote?.id === note.id ? 'text-white/70' : 'text-gray-400'}`}>
+                                    <div className={`font-medium text-sm truncate text-koru-on-surface ${!note.title ? 'opacity-40' : ''}`}>{note.title || "New Note"}</div>
+                                    <div className={`text-xs mt-1 text-koru-on-surface-variant`}>
                                         {new Date(note.createdAt).toLocaleDateString()}
                                     </div>
                                 </div>
@@ -184,15 +188,16 @@ export function CourseNotesView({ activeCourseId }) {
                                             console.error("Failed to delete note:", err);
                                         }
                                     }}
-                                    className={`shrink-0 p-1 rounded-lg transition-all ${activeNote?.id === note.id ? 'text-white/60 hover:text-white hover:bg-white/10' : 'text-transparent group-hover:text-gray-400 hover:!text-red-500 hover:!bg-red-50'}`}
+                                    className={`shrink-0 p-1 rounded-koru-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus ${activeNote?.id === note.id ? 'text-koru-on-primary-container/70 hover:text-koru-on-primary-container hover:bg-koru-primary/10' : 'text-transparent group-hover:text-koru-on-surface-variant focus-visible:text-koru-on-surface-variant hover:!text-koru-error hover:!bg-koru-error-container'}`}
                                     title="Delete note"
+                                    aria-label="Delete note"
                                 >
                                     <Trash2 size={14} />
                                 </button>
-                            </div>
+                            </Card>
                         ))}
                         {notes.length === 0 && (
-                            <div className="text-sm text-gray-500 text-center py-4">No notes yet. Click + to create one.</div>
+                            <div className="text-sm text-koru-on-surface-variant text-center py-4">No notes yet. Click + to create one.</div>
                         )}
                     </div>
                 )}
@@ -210,19 +215,20 @@ export function CourseNotesView({ activeCourseId }) {
                         className={`relative flex flex-col border ${
                             expanded
                                 ? 'bg-transparent min-h-full border-transparent shadow-none rounded-none'
-                                : 'bg-white py-8 pr-8 pl-12 rounded-3xl border-gray-200 shadow-sm min-h-[600px]'
+                                : 'bg-koru-surface-container-lowest py-8 pr-8 pl-12 rounded-koru-2xl border-koru-outline-faint shadow-koru-card min-h-[600px]'
                         }`}
                         style={{ transition: 'padding 0.3s ease, border-radius 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease' }}
                     >
                         {/* Expand / Collapse button */}
                         <button
                             onClick={() => setExpanded(!expanded)}
-                            className={`absolute z-10 p-2 rounded-full transition-colors ${
+                            className={`absolute z-10 p-2 rounded-full text-koru-on-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus ${
                                 expanded
-                                    ? 'top-0 right-0 bg-gray-200/60 hover:bg-gray-300/80'
-                                    : 'top-6 right-6 bg-gray-100 hover:bg-gray-200'
+                                    ? 'top-0 right-0 bg-koru-surface-container-highest/60 hover:bg-koru-surface-container-highest'
+                                    : 'top-6 right-6 bg-koru-surface-container hover:bg-koru-surface-container-high'
                             }`}
                             title={expanded ? 'Collapse' : 'Expand'}
+                            aria-label={expanded ? 'Collapse' : 'Expand'}
                         >
                             {expanded ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
                         </button>
@@ -241,7 +247,7 @@ export function CourseNotesView({ activeCourseId }) {
                                     console.error("Failed to update note title", err);
                                 }
                             }}
-                            className="text-4xl font-bold mb-8 outline-none border-b border-transparent focus:border-gray-200 w-full pb-2 transition-colors text-gray-900 placeholder:text-gray-300 placeholder:font-bold"
+                            className="font-display text-koru-display mb-8 outline-none border-b border-transparent focus:border-koru-outline-variant w-full pb-2 transition-colors text-koru-on-surface bg-transparent placeholder:text-koru-outline-variant"
                             placeholder="New Note"
                         />
                         <div className="flex-1 relative novel-editor-wrapper" key={activeNote.id}>
@@ -267,87 +273,87 @@ export function CourseNotesView({ activeCourseId }) {
                                     className="w-full max-w-none focus:outline-none"
                                 >
                                     {/* Bubble menu — appears when you select text */}
-                                    <EditorBubble className="flex items-center gap-0.5 rounded-xl border border-gray-200 bg-white px-1.5 py-1 shadow-xl">
+                                    <EditorBubble className="flex items-center gap-0.5 rounded-koru-md bg-koru-surface-container-lowest px-1.5 py-1 shadow-koru-lg ring-1 ring-koru-outline-faint">
                                         <EditorBubbleItem
                                             onSelect={(editor) => editor.chain().focus().toggleBold().run()}
                                         >
-                                            <button className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors" title="Bold">
+                                            <button className="p-1.5 rounded-koru-sm text-koru-on-surface hover:bg-koru-surface-container-high transition-colors" title="Bold">
                                                 <Bold size={16} />
                                             </button>
                                         </EditorBubbleItem>
                                         <EditorBubbleItem
                                             onSelect={(editor) => editor.chain().focus().toggleItalic().run()}
                                         >
-                                            <button className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors" title="Italic">
+                                            <button className="p-1.5 rounded-koru-sm text-koru-on-surface hover:bg-koru-surface-container-high transition-colors" title="Italic">
                                                 <Italic size={16} />
                                             </button>
                                         </EditorBubbleItem>
                                         <EditorBubbleItem
                                             onSelect={(editor) => editor.chain().focus().toggleUnderline().run()}
                                         >
-                                            <button className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors" title="Underline">
+                                            <button className="p-1.5 rounded-koru-sm text-koru-on-surface hover:bg-koru-surface-container-high transition-colors" title="Underline">
                                                 <Underline size={16} />
                                             </button>
                                         </EditorBubbleItem>
                                         <EditorBubbleItem
                                             onSelect={(editor) => editor.chain().focus().toggleStrike().run()}
                                         >
-                                            <button className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors" title="Strikethrough">
+                                            <button className="p-1.5 rounded-koru-sm text-koru-on-surface hover:bg-koru-surface-container-high transition-colors" title="Strikethrough">
                                                 <Strikethrough size={16} />
                                             </button>
                                         </EditorBubbleItem>
                                         <EditorBubbleItem
                                             onSelect={(editor) => editor.chain().focus().toggleCode().run()}
                                         >
-                                            <button className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors" title="Inline Code">
+                                            <button className="p-1.5 rounded-koru-sm text-koru-on-surface hover:bg-koru-surface-container-high transition-colors" title="Inline Code">
                                                 <Code size={16} />
                                             </button>
                                         </EditorBubbleItem>
 
-                                        <div className="w-px h-5 bg-gray-200 mx-1" />
+                                        <div className="w-px h-5 bg-koru-outline-variant mx-1" />
 
                                         <EditorBubbleItem
                                             onSelect={(editor) => editor.chain().focus().toggleHeading({ level: 1 }).run()}
                                         >
-                                            <button className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors" title="Heading 1">
+                                            <button className="p-1.5 rounded-koru-sm text-koru-on-surface hover:bg-koru-surface-container-high transition-colors" title="Heading 1">
                                                 <Heading1 size={16} />
                                             </button>
                                         </EditorBubbleItem>
                                         <EditorBubbleItem
                                             onSelect={(editor) => editor.chain().focus().toggleHeading({ level: 2 }).run()}
                                         >
-                                            <button className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors" title="Heading 2">
+                                            <button className="p-1.5 rounded-koru-sm text-koru-on-surface hover:bg-koru-surface-container-high transition-colors" title="Heading 2">
                                                 <Heading2 size={16} />
                                             </button>
                                         </EditorBubbleItem>
                                         <EditorBubbleItem
                                             onSelect={(editor) => editor.chain().focus().toggleHeading({ level: 3 }).run()}
                                         >
-                                            <button className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors" title="Heading 3">
+                                            <button className="p-1.5 rounded-koru-sm text-koru-on-surface hover:bg-koru-surface-container-high transition-colors" title="Heading 3">
                                                 <Heading3 size={16} />
                                             </button>
                                         </EditorBubbleItem>
 
-                                        <div className="w-px h-5 bg-gray-200 mx-1" />
+                                        <div className="w-px h-5 bg-koru-outline-variant mx-1" />
 
                                         <EditorBubbleItem
                                             onSelect={(editor) => editor.chain().focus().toggleBulletList().run()}
                                         >
-                                            <button className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors" title="Bullet List">
+                                            <button className="p-1.5 rounded-koru-sm text-koru-on-surface hover:bg-koru-surface-container-high transition-colors" title="Bullet List">
                                                 <List size={16} />
                                             </button>
                                         </EditorBubbleItem>
                                         <EditorBubbleItem
                                             onSelect={(editor) => editor.chain().focus().toggleOrderedList().run()}
                                         >
-                                            <button className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors" title="Numbered List">
+                                            <button className="p-1.5 rounded-koru-sm text-koru-on-surface hover:bg-koru-surface-container-high transition-colors" title="Numbered List">
                                                 <ListOrdered size={16} />
                                             </button>
                                         </EditorBubbleItem>
                                         <EditorBubbleItem
                                             onSelect={(editor) => editor.chain().focus().toggleBlockquote().run()}
                                         >
-                                            <button className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors" title="Quote">
+                                            <button className="p-1.5 rounded-koru-sm text-koru-on-surface hover:bg-koru-surface-container-high transition-colors" title="Quote">
                                                 <Quote size={16} />
                                             </button>
                                         </EditorBubbleItem>
@@ -357,14 +363,14 @@ export function CourseNotesView({ activeCourseId }) {
                                     <NovelBlockMenu />
 
                                     {/* Slash command menu */}
-                                    <EditorCommand className="z-50 h-auto max-h-[330px] overflow-y-auto rounded-xl border border-gray-200 bg-white px-1 py-2 shadow-xl transition-all">
-                                        <EditorCommandEmpty className="px-2 text-gray-500">No results</EditorCommandEmpty>
+                                    <EditorCommand className="z-50 h-auto max-h-[330px] overflow-y-auto rounded-koru-md bg-koru-surface-container-lowest px-1 py-2 shadow-koru-lg ring-1 ring-koru-outline-faint transition-all">
+                                        <EditorCommandEmpty className="px-2 text-koru-on-surface-variant">No results</EditorCommandEmpty>
                                         <EditorCommandList>
                                             {suggestionItems.map((item) => (
                                                 <EditorCommandItem
                                                     value={item.title}
                                                     onCommand={(val) => item.command(val)}
-                                                    className="flex w-full items-center gap-2 rounded-md px-2 py-1 text-left text-sm hover:bg-gray-100 cursor-pointer"
+                                                    className="flex w-full items-center gap-2 rounded-koru-sm px-2 py-1 text-left text-sm text-koru-on-surface hover:bg-koru-surface-container-high aria-selected:bg-koru-surface-container-high cursor-pointer"
                                                     key={item.title}
                                                 >
                                                     <span>{item.title}</span>
@@ -377,7 +383,7 @@ export function CourseNotesView({ activeCourseId }) {
                         </div>
                     </div>
                 ) : (
-                    <div className="h-full flex items-center justify-center text-gray-400">
+                    <div className="h-full flex items-center justify-center text-koru-on-surface-variant">
                         Select a note or create a new one to start writing.
                     </div>
                 )}
