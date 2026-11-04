@@ -2,3 +2,4 @@
 **/obj/
 LearnOnline.Tests/
 **/*.user
+**/.env
