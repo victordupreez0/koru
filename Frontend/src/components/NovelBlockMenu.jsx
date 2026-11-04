@@ -328,7 +328,7 @@ export default function NovelBlockMenu() {
             {/* Plus button */}
             <button
                 onClick={handleAddBlock}
-                className="p-1 rounded-md text-gray-300 hover:text-gray-600 hover:bg-gray-100 transition-all"
+                className="rounded-koru-sm p-1 text-koru-outline transition-all hover:bg-koru-surface-container-high hover:text-koru-on-surface-variant focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus"
                 title="Add block below"
             >
                 <Plus size={16} />
@@ -343,7 +343,7 @@ export default function NovelBlockMenu() {
                     setMenuOpen(!menuOpen);
                     setSubMenu(null);
                 }}
-                className="p-1 rounded-md text-gray-300 hover:text-gray-600 hover:bg-gray-100 transition-all cursor-grab"
+                className="rounded-koru-sm p-1 text-koru-outline transition-all hover:bg-koru-surface-container-high hover:text-koru-on-surface-variant focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus cursor-grab"
                 title="Block menu"
             >
                 <GripVertical size={16} />
@@ -353,26 +353,26 @@ export default function NovelBlockMenu() {
             {menuOpen && (
                 <div
                     ref={menuRef}
-                    className="absolute left-0 top-8 w-56 bg-white rounded-xl border border-gray-200 shadow-2xl py-1 z-50 text-sm"
+                    className="absolute left-0 top-8 w-56 rounded-koru-md bg-koru-surface-container-lowest py-1 text-sm text-koru-on-surface shadow-koru-lg ring-1 ring-inset ring-koru-outline-faint z-50"
                 >
                     {/* Turn Into */}
                     <div className="relative">
                         <button
-                            className="flex items-center justify-between w-full px-3 py-2 hover:bg-gray-50 transition-colors"
+                            className="flex items-center justify-between w-full px-3 py-2 hover:bg-koru-surface-container transition-colors"
                             onMouseEnter={() => setSubMenu("turnInto")}
                         >
                             <span className="flex items-center gap-2"><Type size={14} /> Turn into</span>
-                            <ChevronRight size={14} className="text-gray-400" />
+                            <ChevronRight size={14} className="text-koru-on-surface-variant" />
                         </button>
                         {subMenu === "turnInto" && (
-                            <div className="absolute left-full top-0 ml-1 w-48 bg-white rounded-xl border border-gray-200 shadow-2xl py-1 z-50">
+                            <div className="absolute left-full top-0 ml-1 w-48 rounded-koru-md bg-koru-surface-container-lowest py-1 text-koru-on-surface shadow-koru-lg ring-1 ring-inset ring-koru-outline-faint z-50">
                                 {TURN_INTO_OPTIONS.map((opt) => (
                                     <button
                                         key={opt.label}
-                                        className="flex items-center gap-2 w-full px-3 py-2 hover:bg-gray-50 transition-colors text-left"
+                                        className="flex items-center gap-2 w-full px-3 py-2 hover:bg-koru-surface-container transition-colors text-left"
                                         onClick={() => handleTurnInto(opt)}
                                     >
-                                        <opt.icon size={14} className="text-gray-500" />
+                                        <opt.icon size={14} className="text-koru-on-surface-variant" />
                                         {opt.label}
                                     </button>
                                 ))}
@@ -383,34 +383,34 @@ export default function NovelBlockMenu() {
                     {/* Color */}
                     <div className="relative">
                         <button
-                            className="flex items-center justify-between w-full px-3 py-2 hover:bg-gray-50 transition-colors"
+                            className="flex items-center justify-between w-full px-3 py-2 hover:bg-koru-surface-container transition-colors"
                             onMouseEnter={() => setSubMenu("color")}
                         >
                             <span className="flex items-center gap-2"><Palette size={14} /> Color</span>
-                            <ChevronRight size={14} className="text-gray-400" />
+                            <ChevronRight size={14} className="text-koru-on-surface-variant" />
                         </button>
                         {subMenu === "color" && (
-                            <div className="absolute left-full top-0 ml-1 w-48 bg-white rounded-xl border border-gray-200 shadow-2xl py-1 z-50">
-                                <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-gray-400">Text Color</div>
+                            <div className="absolute left-full top-0 ml-1 w-48 rounded-koru-md bg-koru-surface-container-lowest py-1 text-koru-on-surface shadow-koru-lg ring-1 ring-inset ring-koru-outline-faint z-50">
+                                <div className="px-3 py-1.5 text-koru-caption font-medium uppercase tracking-widest text-koru-on-surface-variant">Text Color</div>
                                 {TEXT_COLORS.map((c) => (
                                     <button
                                         key={c.label + "-text"}
-                                        className="flex items-center gap-2 w-full px-3 py-1.5 hover:bg-gray-50 transition-colors text-left"
+                                        className="flex items-center gap-2 w-full px-3 py-1.5 hover:bg-koru-surface-container transition-colors text-left"
                                         onClick={() => handleTextColor(c.color)}
                                     >
-                                        <span className="w-4 h-4 rounded-full border border-gray-200 shrink-0" style={{ backgroundColor: c.color || "#1a1a1a" }} />
+                                        <span className="w-4 h-4 rounded-full border border-koru-outline-variant shrink-0" style={{ backgroundColor: c.color || "var(--color-koru-on-surface)" }} />
                                         {c.label}
                                     </button>
                                 ))}
-                                <div className="border-t border-gray-100 my-1" />
-                                <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-gray-400">Background</div>
+                                <div className="my-1 border-t border-koru-outline-faint" />
+                                <div className="px-3 py-1.5 text-koru-caption font-medium uppercase tracking-widest text-koru-on-surface-variant">Background</div>
                                 {BG_COLORS.map((c) => (
                                     <button
                                         key={c.label + "-bg"}
-                                        className="flex items-center gap-2 w-full px-3 py-1.5 hover:bg-gray-50 transition-colors text-left"
+                                        className="flex items-center gap-2 w-full px-3 py-1.5 hover:bg-koru-surface-container transition-colors text-left"
                                         onClick={() => handleBgColor(c.color)}
                                     >
-                                        <span className="w-4 h-4 rounded border border-gray-200 shrink-0" style={{ backgroundColor: c.color || "#ffffff" }} />
+                                        <span className="w-4 h-4 rounded border border-koru-outline-variant shrink-0" style={{ backgroundColor: c.color || "var(--color-koru-surface-container-lowest)" }} />
                                         {c.label}
                                     </button>
                                 ))}
@@ -418,31 +418,31 @@ export default function NovelBlockMenu() {
                         )}
                     </div>
 
-                    <div className="border-t border-gray-100 my-1" />
+                    <div className="my-1 border-t border-koru-outline-faint" />
 
                     {/* Copy */}
                     <button
-                        className="flex items-center gap-2 w-full px-3 py-2 hover:bg-gray-50 transition-colors"
+                        className="flex items-center gap-2 w-full px-3 py-2 hover:bg-koru-surface-container transition-colors"
                         onClick={handleCopy}
                         onMouseEnter={() => setSubMenu(null)}
                     >
-                        <Copy size={14} className="text-gray-500" /> Copy
+                        <Copy size={14} className="text-koru-on-surface-variant" /> Copy
                     </button>
 
                     {/* Duplicate */}
                     <button
-                        className="flex items-center gap-2 w-full px-3 py-2 hover:bg-gray-50 transition-colors"
+                        className="flex items-center gap-2 w-full px-3 py-2 hover:bg-koru-surface-container transition-colors"
                         onClick={handleDuplicate}
                         onMouseEnter={() => setSubMenu(null)}
                     >
-                        <CopyPlus size={14} className="text-gray-500" /> Duplicate
+                        <CopyPlus size={14} className="text-koru-on-surface-variant" /> Duplicate
                     </button>
 
-                    <div className="border-t border-gray-100 my-1" />
+                    <div className="my-1 border-t border-koru-outline-faint" />
 
                     {/* Delete */}
                     <button
-                        className="flex items-center gap-2 w-full px-3 py-2 hover:bg-red-50 text-red-600 transition-colors"
+                        className="flex items-center gap-2 w-full px-3 py-2 text-koru-error hover:bg-koru-error-container transition-colors"
                         onClick={handleDelete}
                         onMouseEnter={() => setSubMenu(null)}
                     >
