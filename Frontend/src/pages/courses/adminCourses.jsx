@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useCourses } from "../../contexts/CoursesContext";
+import { Skeleton } from "../../components/UI";
 import CourseSecondaryNav from "../../components/courseSecondaryNav";
 import { courseService } from "../../services/adminService";
 import {
@@ -111,19 +112,19 @@ export default function AdminCourses() {
                     onDeleteCourse={handleCourseDeleted}
                 />
 
-                <div className="flex-1 flex flex-col overflow-hidden transition-all duration-300 md:bg-koru-surface-container-lowest md:backdrop-blur-xl md:border md:border-white/20 md:rounded-koru-lg md:shadow-lg max-md:bg-white">
+                <div className="flex-1 flex flex-col overflow-hidden transition-all duration-300 md:bg-koru-surface-container-lowest md:rounded-koru-lg md:shadow-koru-card max-md:bg-koru-surface-container-lowest">
                     {/* Breadcrumb bar */}
                     {ctxCourse && (
-                        <div className="h-14 border-b border-gray-100 bg-white/60 backdrop-blur-md flex items-center justify-between px-8 z-10 shrink-0 select-none">
+                        <div className="h-14 border-b border-koru-outline-faint bg-koru-surface-container-lowest/60 backdrop-blur-md flex items-center justify-between px-8 z-10 shrink-0 select-none">
                             <div className="flex items-center gap-3">
                                 <span
-                                    className="px-2.5 py-0.5 rounded-lg text-[10px] font-black text-white shadow-sm uppercase shrink-0"
-                                    style={{ backgroundColor: ctxCourse.color || "#3C0078" }}
+                                    className="px-2.5 py-0.5 rounded-koru-sm text-koru-caption font-medium text-koru-on-primary shadow-koru-xs uppercase shrink-0"
+                                    style={{ backgroundColor: ctxCourse.color || "var(--color-koru-primary)" }}
                                 >
                                     {ctxCourse.code}{ctxCourse.number}
                                 </span>
-                                <span className="text-gray-300 text-xs">/</span>
-                                <span className="text-xs font-bold text-gray-500 capitalize">{activeSubpageLabel}</span>
+                                <span className="text-koru-outline-variant text-xs">/</span>
+                                <span className="text-xs font-medium text-koru-on-surface-variant capitalize">{activeSubpageLabel}</span>
                             </div>
                         </div>
                     )}
@@ -131,15 +132,15 @@ export default function AdminCourses() {
                     {/* Content area */}
                     <div className="flex-1 overflow-y-auto pt-6 px-8 pb-12">
                         {ctxLoading || detailsLoading ? (
-                            <div className="flex flex-col gap-5 animate-pulse">
-                                <div className="h-8 rounded-2xl bg-gray-200 w-48" />
+                            <div className="flex flex-col gap-5" role="status" aria-label="Loading course">
+                                <Skeleton className="h-8 w-48" />
                                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                                     {[1, 2, 3, 4].map(i => (
-                                        <div key={i} className="h-24 rounded-3xl bg-gray-100" />
+                                        <Skeleton key={i} className="h-24" />
                                     ))}
                                 </div>
-                                <div className="h-44 rounded-3xl bg-gray-100" />
-                                <div className="h-36 rounded-3xl bg-gray-100" />
+                                <Skeleton className="h-44" />
+                                <Skeleton className="h-36" />
                             </div>
                         ) : activeSubpage === "overview" ? (
                             <AdminCourseOverviewView

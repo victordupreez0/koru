@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Award, ChevronUp, ChevronDown } from "lucide-react";
 import { getCourseGrades } from "../../../services/gradeService";
 import { staggerContainer, slideUp } from "../teacherCoursesComponents/constants";
-import Avatar from "../../../components/UI/Avatar";
+import { Avatar, Badge, EmptyState, Skeleton } from "../../../components/UI";
 
 function formatDate(dateStr) {
   if (!dateStr) return "—";
@@ -27,17 +27,14 @@ function pct(points, max) {
 
 function GradeChip({ points, maxPoints }) {
   const p = pct(points, maxPoints);
-  if (p === null) return <span className="text-sm font-bold text-gray-700">{points ?? "—"}</span>;
+  if (p === null) return <span className="text-sm font-medium text-koru-on-surface-variant">{points ?? "—"}</span>;
 
-  const color =
-    p >= 75 ? "bg-green-50 text-green-700" :
-    p >= 50 ? "bg-amber-50 text-amber-700" :
-    "bg-red-50 text-red-600";
+  const variant = p >= 75 ? "success" : p >= 50 ? "warning" : "error";
 
   return (
-    <span className={`text-xs font-black px-3 py-1 rounded-full ${color}`}>
+    <Badge variant={variant} size="md">
       {points} / {maxPoints} <span className="opacity-60">({p}%)</span>
-    </span>
+    </Badge>
   );
 }
 
@@ -114,68 +111,66 @@ export function AdminGradeActivityView({ courseId }) {
   return (
     <motion.div className="flex-1 overflow-y-auto" initial="hidden" animate="visible" variants={staggerContainer}>
       <motion.header variants={slideUp} className="mb-6">
-        <h1 className="text-3xl font-semibold tracking-tight text-gray-900">Grade Activity</h1>
-        <p className="text-gray-500 mt-1 text-sm">{grades.length} graded submissions</p>
+        <h1 className="font-display text-koru-title text-koru-on-surface">Grade Activity</h1>
+        <p className="text-koru-on-surface-variant mt-1 text-sm">{grades.length} graded submissions</p>
       </motion.header>
 
-      <motion.div variants={slideUp} className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+      <motion.div variants={slideUp} className="bg-koru-surface-container-lowest rounded-koru-2xl ring-1 ring-inset ring-koru-outline-faint shadow-koru-card overflow-hidden">
         {loading ? (
-          <div className="animate-pulse">
+          <div role="status" aria-label="Loading grades">
             <table className="w-full text-left">
               <thead>
-                <tr className="bg-gray-50/50 border-b border-gray-100">
+                <tr className="bg-koru-surface-container/50 border-b border-koru-outline-faint">
                   {["w-20", "w-16", "w-24", "w-16", "w-16", "w-16"].map((w, i) => (
-                    <th key={i} className="px-6 py-4"><div className={`h-2.5 rounded-full bg-gray-200 ${w}`} /></th>
+                    <th key={i} className="px-6 py-4"><Skeleton variant="text" className={w} /></th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {[1, 2, 3, 4, 5].map(i => (
-                  <tr key={i} className="border-b border-gray-50">
-                    <td className="px-6 py-4"><div className="h-3 rounded-full bg-gray-100 w-28" /></td>
+                  <tr key={i} className="border-b border-koru-outline-faint">
+                    <td className="px-6 py-4"><Skeleton variant="text" className="w-28" /></td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2.5">
-                        <div className="w-7 h-7 rounded-full bg-gray-100 shrink-0" />
-                        <div className="h-4 rounded-full bg-gray-200" style={{ width: `${65 + (i * 19) % 40}px` }} />
+                        <Skeleton variant="circle" className="w-7 h-7 shrink-0" />
+                        <Skeleton variant="text" className="h-4" style={{ width: `${65 + (i * 19) % 40}px` }} />
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="h-4 rounded-full bg-gray-200 mb-1" style={{ width: `${75 + (i * 13) % 50}px` }} />
-                      <div className="h-3 rounded-full bg-gray-100 w-16" />
+                      <Skeleton variant="text" className="h-4 mb-1" style={{ width: `${75 + (i * 13) % 50}px` }} />
+                      <Skeleton variant="text" className="w-16" />
                     </td>
-                    <td className="px-6 py-4"><div className="h-5 rounded-full bg-gray-100 w-24" /></td>
-                    <td className="px-6 py-4"><div className="h-3 rounded-full bg-gray-100 w-20" /></td>
-                    <td className="px-6 py-4"><div className="h-5 rounded-full bg-gray-100 w-10" /></td>
+                    <td className="px-6 py-4"><Skeleton variant="text" className="h-5 w-24" /></td>
+                    <td className="px-6 py-4"><Skeleton variant="text" className="w-20" /></td>
+                    <td className="px-6 py-4"><Skeleton variant="text" className="h-5 w-10" /></td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         ) : sorted.length === 0 ? (
-          <div className="px-8 py-16 text-center">
-            <div className="w-14 h-14 rounded-3xl bg-[#3C0078]/5 flex items-center justify-center mx-auto mb-4">
-              <Award size={24} className="text-[#3C0078]/40" />
-            </div>
-            <p className="text-gray-500 font-semibold mb-1">No grades recorded yet</p>
-            <p className="text-xs text-gray-400">Grades will appear here once teachers start grading submissions.</p>
-          </div>
+          <EmptyState
+            icon={<Award size={24} aria-hidden="true" />}
+            title="No grades recorded yet"
+            description="Grades will appear here once teachers start grading submissions."
+          />
         ) : (
           <table className="w-full text-left">
             <thead>
-              <tr className="bg-gray-50/50 border-b border-gray-100">
+              <tr className="bg-koru-surface-container/50 border-b border-koru-outline-faint">
                 {SORT_OPTIONS.map(opt => (
                   <th
                     key={opt.key}
                     onClick={() => handleSort(opt.key)}
-                    className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400 cursor-pointer hover:text-gray-600 transition-colors select-none"
+                    className="px-6 py-4 text-koru-caption font-medium uppercase tracking-widest text-koru-on-surface-variant cursor-pointer hover:text-koru-on-surface transition-colors select-none"
                   >
                     <span className="flex items-center gap-1">
                       {opt.label} <SortIcon k={opt.key} />
                     </span>
                   </th>
                 ))}
-                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Graded By</th>
-                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Released</th>
+                <th className="px-6 py-4 text-koru-caption font-medium uppercase tracking-widest text-koru-on-surface-variant">Graded By</th>
+                <th className="px-6 py-4 text-koru-caption font-medium uppercase tracking-widest text-koru-on-surface-variant">Released</th>
               </tr>
             </thead>
             <tbody>
@@ -187,17 +182,17 @@ export function AdminGradeActivityView({ courseId }) {
                   : "Unknown";
 
                 return (
-                  <tr key={grade.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/40 transition-colors">
+                  <tr key={grade.id} className="border-b border-koru-outline-faint last:border-0 hover:bg-koru-surface-container/40 transition-colors">
                     {/* Date */}
                     <td className="px-6 py-4">
-                      <span className="text-xs text-gray-500">{formatDate(grade.gradedAt)}</span>
+                      <span className="text-xs text-koru-on-surface-variant">{formatDate(grade.gradedAt)}</span>
                     </td>
 
                     {/* Student */}
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2.5">
                         <Avatar user={student} seed={studentName} name={studentName} size={28} />
-                        <span className="text-sm font-semibold text-gray-800 truncate max-w-[140px]">
+                        <span className="text-sm font-medium text-koru-on-surface truncate max-w-[140px]">
                           {studentName}
                         </span>
                       </div>
@@ -205,11 +200,11 @@ export function AdminGradeActivityView({ courseId }) {
 
                     {/* Assignment */}
                     <td className="px-6 py-4">
-                      <span className="text-sm text-gray-700 font-medium truncate max-w-[180px] block">
+                      <span className="text-sm text-koru-on-surface-variant font-medium truncate max-w-[180px] block">
                         {assignment?.title || "—"}
                       </span>
                       {assignment?.type && (
-                        <span className="text-[10px] text-gray-400 uppercase tracking-wider">{assignment.type}</span>
+                        <span className="text-koru-caption text-koru-on-surface-variant uppercase tracking-wider">{assignment.type}</span>
                       )}
                     </td>
 
@@ -223,18 +218,14 @@ export function AdminGradeActivityView({ courseId }) {
 
                     {/* Graded by */}
                     <td className="px-6 py-4">
-                      <span className="text-xs text-gray-500 font-medium">{grade.gradedBy || "—"}</span>
+                      <span className="text-xs text-koru-on-surface-variant font-medium">{grade.gradedBy || "—"}</span>
                     </td>
 
                     {/* Released */}
                     <td className="px-6 py-4">
-                      <span className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full ${
-                        grade.isReleased
-                          ? "bg-green-50 text-green-700"
-                          : "bg-gray-100 text-gray-400"
-                      }`}>
+                      <Badge variant={grade.isReleased ? "success" : "neutral"}>
                         {grade.isReleased ? "Yes" : "No"}
-                      </span>
+                      </Badge>
                     </td>
                   </tr>
                 );

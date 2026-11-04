@@ -9,15 +9,15 @@ export default function CohortFilterBar({ cohorts = [], selected, onChange }) {
 
   return (
     <div className="flex items-center gap-2 flex-wrap">
-      <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 flex items-center gap-1 shrink-0">
+      <span className="text-koru-caption font-medium uppercase tracking-wider text-koru-on-surface-variant flex items-center gap-1 shrink-0">
         <Users size={12} /> Group
       </span>
       <button
         onClick={() => onChange(null)}
-        className={`px-3 py-1.5 rounded-full text-[11px] font-bold transition-all ${
+        className={`px-3 py-1.5 rounded-koru-pill text-koru-caption font-medium transition-colors motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus ${
           selected === null
-            ? "bg-[#3C0078] text-white shadow-sm shadow-[#3C0078]/20"
-            : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+            ? "bg-koru-primary text-koru-on-primary shadow-koru-xs"
+            : "bg-koru-surface-container-high text-koru-on-surface-variant hover:bg-koru-surface-container-highest"
         }`}
       >
         All
@@ -26,10 +26,10 @@ export default function CohortFilterBar({ cohorts = [], selected, onChange }) {
         <button
           key={c.id}
           onClick={() => onChange(c.id)}
-          className={`px-3 py-1.5 rounded-full text-[11px] font-bold transition-all ${
+          className={`px-3 py-1.5 rounded-koru-pill text-koru-caption font-medium transition-colors motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus ${
             selected === c.id
-              ? "bg-[#3C0078] text-white shadow-sm shadow-[#3C0078]/20"
-              : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+              ? "bg-koru-primary text-koru-on-primary shadow-koru-xs"
+              : "bg-koru-surface-container-high text-koru-on-surface-variant hover:bg-koru-surface-container-highest"
           }`}
         >
           {c.name}
