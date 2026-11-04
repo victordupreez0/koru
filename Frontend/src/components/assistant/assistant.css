@@ -1,0 +1,147 @@
+/* ── AI loader (From Uiverse.io by andrew-manzyk) ─────────────────────────── */
+.koru-ai-loader-slot {
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
+  position: relative;
+}
+.koru-pending-loader { display: inline-block; margin-left: 0.5rem; vertical-align: middle; }
+
+.koru-ai-loader {
+  --color-one: #ffbf48;
+  --color-two: #be4a1d;
+  --color-three: #ffbf4780;
+  --color-four: #bf4a1d80;
+  --color-five: #ffbf4740;
+  --time-animation: 2s;
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: top left;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  /* glow is scaled with the loader (transform), so it stays subtle at small sizes */
+  box-shadow: 0 0 25px 0 var(--color-three), 0 20px 50px 0 var(--color-four);
+  animation: koru-ai-colorize calc(var(--time-animation) * 3) ease-in-out infinite;
+}
+.koru-ai-loader::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  border-top: solid 1px var(--color-one);
+  border-bottom: solid 1px var(--color-two);
+  background: linear-gradient(180deg, var(--color-five), var(--color-four));
+  box-shadow: inset 0 10px 10px 0 var(--color-three), inset 0 -10px 10px 0 var(--color-four);
+}
+.koru-ai-loader .koru-ai-box {
+  display: block;
+  position: relative;
+  width: 100px;
+  height: 100px;
+  background: linear-gradient(180deg, var(--color-one) 30%, var(--color-two) 70%);
+}
+.koru-ai-loader svg { position: absolute; }
+.koru-ai-loader .koru-ai-mask {
+  filter: contrast(15);
+  animation: koru-ai-roundness calc(var(--time-animation) / 2) linear infinite;
+}
+.koru-ai-loader .koru-ai-mask polygon { filter: blur(7px); }
+.koru-ai-loader .koru-ai-mask polygon:nth-child(1) { transform-origin: 75% 25%; transform: rotate(90deg); }
+.koru-ai-loader .koru-ai-mask polygon:nth-child(2) { transform-origin: 50% 50%; animation: koru-ai-rotation var(--time-animation) linear infinite reverse; }
+.koru-ai-loader .koru-ai-mask polygon:nth-child(3) { transform-origin: 50% 60%; animation: koru-ai-rotation var(--time-animation) linear infinite; animation-delay: calc(var(--time-animation) / -3); }
+.koru-ai-loader .koru-ai-mask polygon:nth-child(4) { transform-origin: 40% 40%; animation: koru-ai-rotation var(--time-animation) linear infinite reverse; }
+.koru-ai-loader .koru-ai-mask polygon:nth-child(5) { transform-origin: 40% 40%; animation: koru-ai-rotation var(--time-animation) linear infinite reverse; animation-delay: calc(var(--time-animation) / -2); }
+.koru-ai-loader .koru-ai-mask polygon:nth-child(6) { transform-origin: 60% 40%; animation: koru-ai-rotation var(--time-animation) linear infinite; }
+.koru-ai-loader .koru-ai-mask polygon:nth-child(7) { transform-origin: 60% 40%; animation: koru-ai-rotation var(--time-animation) linear infinite; animation-delay: calc(var(--time-animation) / -1.5); }
+
+@keyframes koru-ai-rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+@keyframes koru-ai-roundness {
+  0% { filter: contrast(15); } 20% { filter: contrast(3); } 40% { filter: contrast(3); }
+  60% { filter: contrast(15); } 100% { filter: contrast(15); }
+}
+@keyframes koru-ai-colorize {
+  0% { filter: hue-rotate(0deg); } 20% { filter: hue-rotate(-30deg); } 40% { filter: hue-rotate(-60deg); }
+  60% { filter: hue-rotate(-90deg); } 80% { filter: hue-rotate(-45deg); } 100% { filter: hue-rotate(0deg); }
+}
+
+/* ── Reveal and message entrance ──────────────────────────────────────────── */
+.koru-reveal-live [data-reveal] {
+  opacity: 0;
+  animation: koru-reveal 260ms ease-out forwards;
+  animation-delay: calc(var(--i) * 120ms);
+}
+@keyframes koru-reveal {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.koru-rise { animation: koru-rise 420ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+@keyframes koru-rise {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Ambient glow ─────────────────────────────────────────────────────────── */
+.koru-glow { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.koru-glow-stage {
+  position: absolute;
+  inset: 0;
+  transform: translateY(0);
+  transition: transform 1s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.koru-glow-stage.is-settled { transform: translateY(58%); }
+.koru-glow-orb {
+  position: absolute;
+  width: 70%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  will-change: transform;
+  --c: var(--color-koru-primary);
+  background: radial-gradient(circle closest-side,
+    color-mix(in srgb, var(--c) 34%, transparent) 0%,
+    color-mix(in srgb, var(--c) 30%, transparent) 12%,
+    color-mix(in srgb, var(--c) 24%, transparent) 24%,
+    color-mix(in srgb, var(--c) 18%, transparent) 36%,
+    color-mix(in srgb, var(--c) 12%, transparent) 50%,
+    color-mix(in srgb, var(--c) 7%, transparent) 63%,
+    color-mix(in srgb, var(--c) 3%, transparent) 78%,
+    transparent 100%);
+}
+.koru-glow-orb--a { --c: var(--color-koru-primary); top: -10%; left: -8%; animation: koru-glow-a 19s ease-in-out infinite; }
+.koru-glow-orb--b { --c: var(--color-koru-accent); top: 20%; right: -12%; animation: koru-glow-b 23s ease-in-out infinite; }
+.koru-glow-orb--c { --c: var(--color-koru-sky); bottom: -20%; left: 18%; animation: koru-glow-c 27s ease-in-out infinite; }
+.koru-glow.is-paused .koru-glow-orb { animation-play-state: paused; }
+
+@keyframes koru-glow-a {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  25% { transform: translate3d(22%, 12%, 0); }
+  50% { transform: translate3d(10%, 28%, 0); }
+  75% { transform: translate3d(-8%, 10%, 0); }
+}
+@keyframes koru-glow-b {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  30% { transform: translate3d(-24%, -10%, 0); }
+  60% { transform: translate3d(-12%, 18%, 0); }
+  80% { transform: translate3d(6%, 8%, 0); }
+}
+@keyframes koru-glow-c {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  33% { transform: translate3d(26%, -16%, 0); }
+  66% { transform: translate3d(-18%, -8%, 0); }
+}
+
+/* ── Reduced motion: fade instead of move; loaders hold still but stay visible ── */
+@media (prefers-reduced-motion: reduce) {
+  .koru-ai-loader,
+  .koru-ai-loader .koru-ai-mask,
+  .koru-ai-loader .koru-ai-mask polygon { animation: none !important; }
+  .koru-reveal-live [data-reveal] { animation-name: koru-fade; }
+  .koru-rise { animation: koru-fade 300ms ease-out both; }
+  .koru-glow-orb { animation: none; }
+  .koru-glow-stage { transition: none; }
+}
+@keyframes koru-fade { from { opacity: 0; } to { opacity: 1; } }
