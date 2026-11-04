@@ -2,6 +2,7 @@ import React from "react";
 import PageCanvas from "../../../components/PageCanvas";
 import { getCourseById, getCourseLecturers } from "../../../services/courseService";
 import { Loader } from "lucide-react";
+import Avatar from "../../../components/UI/Avatar";
 
 export default function CourseHomeView({ subject, course, loading }) {
   const [pageLoading, setPageLoading] = React.useState(true);
@@ -171,18 +172,8 @@ export default function CourseHomeView({ subject, course, loading }) {
             <div className="flex flex-wrap justify-center gap-8 w-full max-w-4xl">
               {lecturers.map(lecturer => (
                 <div key={lecturer.id} className="flex items-center gap-4 bg-gray-50/50 hover:bg-gray-50 border border-gray-100 p-4 rounded-2xl transition-all shadow-2xs min-w-[280px]">
-                  {/* Profile Image / Initials Fallback */}
-                  {lecturer.profileImageUrl ? (
-                    <img
-                      src={lecturer.profileImageUrl}
-                      alt={`${lecturer.firstName} ${lecturer.lastName}`}
-                      className="w-16 h-16 rounded-full object-cover border-2 border-white shadow-md select-none"
-                    />
-                  ) : (
-                    <div className="w-16 h-16 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center font-bold text-lg border-2 border-white shadow-md select-none">
-                      {`${lecturer.firstName?.[0] || ""}${lecturer.lastName?.[0] || ""}`.toUpperCase()}
-                    </div>
-                  )}
+                  {/* Profile picture */}
+                  <Avatar user={lecturer} size={64} className="shadow-md ring-2 ring-white" />
                   {/* Name and Email */}
                   <div className="flex flex-col text-left">
                     <span className="text-sm font-black text-gray-900 leading-tight">

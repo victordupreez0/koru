@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Award, ChevronUp, ChevronDown } from "lucide-react";
 import { getCourseGrades } from "../../../services/gradeService";
 import { staggerContainer, slideUp } from "../teacherCoursesComponents/constants";
+import Avatar from "../../../components/UI/Avatar";
 
 function formatDate(dateStr) {
   if (!dateStr) return "—";
@@ -184,9 +185,6 @@ export function AdminGradeActivityView({ courseId }) {
                 const studentName = student
                   ? `${student.firstName} ${student.lastName}`
                   : "Unknown";
-                const initials = student
-                  ? `${student.firstName?.[0]}${student.lastName?.[0]}`
-                  : "?";
 
                 return (
                   <tr key={grade.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/40 transition-colors">
@@ -198,9 +196,7 @@ export function AdminGradeActivityView({ courseId }) {
                     {/* Student */}
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2.5">
-                        <div className="w-7 h-7 rounded-full bg-[#3C0078]/5 border border-[#3C0078]/10 flex items-center justify-center text-[#3C0078] font-black text-[9px] shrink-0">
-                          {initials}
-                        </div>
+                        <Avatar user={student} seed={studentName} name={studentName} size={28} />
                         <span className="text-sm font-semibold text-gray-800 truncate max-w-[140px]">
                           {studentName}
                         </span>

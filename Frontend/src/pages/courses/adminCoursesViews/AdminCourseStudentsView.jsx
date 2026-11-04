@@ -4,6 +4,7 @@ import { UserMinus, UserPlus, Search } from "lucide-react";
 import { userService, enrollmentService } from "../../../services/adminService";
 import { getCourseCohorts, getCourseStudents, assignStudents } from "../../../services/classGroupService";
 import { staggerContainer, slideUp } from "../teacherCoursesComponents/constants";
+import Avatar from "../../../components/UI/Avatar";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5299/api";
 
@@ -261,16 +262,13 @@ export function AdminCourseStudentsView({ courseId }) {
                 const student = enrollment.student;
                 const studentId = student?.id || enrollment.studentId;
                 const name = student ? `${student.firstName} ${student.lastName}` : "Unknown";
-                const initials = student ? `${student.firstName?.[0]}${student.lastName?.[0]}` : "?";
                 const assignedCohortId = studentCohortMap[studentId] || "";
 
                 return (
                   <tr key={enrollment.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors group">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-[#3C0078]/5 border border-[#3C0078]/10 flex items-center justify-center text-[#3C0078] font-black text-xs shrink-0">
-                          {initials}
-                        </div>
+                        <Avatar user={student || { id: studentId }} name={name} size={36} />
                         <div>
                           <p className="text-sm font-bold text-gray-900">{name}</p>
                           <p className="text-xs text-gray-400">{student?.email}</p>

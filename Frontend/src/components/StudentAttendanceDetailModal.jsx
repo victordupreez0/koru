@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, AlertCircle } from "lucide-react";
+import Avatar from "./UI/Avatar";
 
 const getTimestamp = (record) => {
     if (!record.date) return 0;
@@ -90,9 +91,7 @@ export default function StudentAttendanceDetailModal({
                 {/* Header */}
                 <div className="px-8 pt-8 pb-6 border-b border-gray-100 flex items-start justify-between bg-gray-50/50">
                     <div className="flex items-center gap-4">
-                        <div className="w-14 h-14 rounded-full bg-[#3C0078]/10 border-2 border-[#3C0078]/25 flex items-center justify-center font-black text-lg text-[#3C0078] shadow-sm select-none">
-                            {student.avatar}
-                        </div>
+                        <Avatar user={student} name={student.name} size={56} />
                         <div>
                             <h2 className="text-xl font-bold text-gray-900 tracking-tight">{student.name}</h2>
                             <p className="text-sm text-gray-500 font-medium mt-0.5">{student.email}</p>

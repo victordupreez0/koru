@@ -1,7 +1,8 @@
 import React from "react";
-import { Plus, User, X, Pencil, Trash2 } from "lucide-react";
+import { Plus, X, Pencil, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { SearchInput } from "./SearchInput";
+import Avatar from "../../../components/UI/Avatar";
 
 function StudentCard({ student, onEdit, onDelete }) {
   return (
@@ -11,9 +12,7 @@ function StudentCard({ student, onEdit, onDelete }) {
       transition={{ duration: 0.25, ease: "easeOut" }}
       className="w-full rounded-2xl px-4 py-3.5 flex items-center gap-3 bg-white/80 border border-gray-100 hover:border-gray-200 transition-colors duration-150 group"
     >
-      <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
-        <User className="w-4 h-4 text-gray-500" />
-      </div>
+      <Avatar user={student} name={student.name} size={36} />
       <div className="flex-1 min-w-0">
         <p className="text-sm font-bold text-gray-800 truncate">{student.name}</p>
         <p className="text-xs text-gray-400 truncate">{student.email || student.major || ""}</p>

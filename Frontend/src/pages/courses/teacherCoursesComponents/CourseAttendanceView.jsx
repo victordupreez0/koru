@@ -7,6 +7,7 @@ import { getCourseAttendance, updateAttendanceRecord } from "../../../services/a
 import { getCourseCohorts, getCourseStudents } from "../../../services/classGroupService";
 import CohortFilterBar from "../../../components/CohortFilterBar";
 import { staggerContainer, slideUp, scaleIn } from "./constants";
+import Avatar from "../../../components/UI/Avatar";
 
 function downloadAttendanceCSV(studentStats, courseName) {
     const header = ["Student Name", "Email", "Sessions Present", "Total Sessions", "Attendance Rate (%)", "Status"];
@@ -99,6 +100,7 @@ export function CourseAttendanceView({ activeCourseId, subject }) {
                     id:      r.studentId,
                     name:    `${r.student.firstName} ${r.student.lastName}`,
                     email:   r.student.email,
+                    profileImageUrl: r.student.profileImageUrl,
                     avatar:  `${r.student.firstName[0]}${r.student.lastName[0]}`,
                     present: 0,
                     total:   0,
@@ -236,9 +238,7 @@ export function CourseAttendanceView({ activeCourseId, subject }) {
                                         <span className={`w-5 text-[11px] font-black text-right shrink-0 ${
                                             i === 0 ? "text-yellow-500" : i === 1 ? "text-gray-400" : i === 2 ? "text-orange-400" : "text-gray-300"
                                         }`}>{i + 1}</span>
-                                        <div className="w-7 h-7 rounded-full bg-[#3C0078]/8 border border-[#3C0078]/10 flex items-center justify-center text-[10px] font-black text-[#3C0078] shrink-0">
-                                            {s.avatar}
-                                        </div>
+                                        <Avatar user={s} name={s.name} size={28} />
                                         <span className="flex-1 text-xs font-semibold text-gray-800 truncate">{s.name}</span>
                                         <span className={`text-xs font-black tabular-nums shrink-0 ${
                                             rate >= 90 ? "text-green-600" : rate >= 80 ? "text-[#3C0078]" : "text-orange-500"
@@ -378,13 +378,7 @@ export function CourseAttendanceView({ activeCourseId, subject }) {
                                         >
                                             <td className={`py-3 pl-5 pr-3 ${isActive ? "border-l-2 border-[#3C0078]" : ""}`}>
                                                 <div className="flex items-center gap-3">
-                                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-xs shrink-0 ${
-                                                        isActive
-                                                            ? "bg-[#3C0078]/15 border-2 border-[#3C0078]/30 text-[#3C0078]"
-                                                            : "bg-[#3C0078]/5 border-2 border-[#3C0078]/10 text-[#3C0078]"
-                                                    }`}>
-                                                        {student.avatar}
-                                                    </div>
+                                                    <Avatar user={student} name={student.name} size={32} />
                                                     <div className="min-w-0">
                                                         <div className={`font-bold text-sm truncate transition-colors ${
                                                             isActive ? "text-[#3C0078]" : "text-gray-900 group-hover:text-[#3C0078]"
@@ -432,9 +426,7 @@ export function CourseAttendanceView({ activeCourseId, subject }) {
                             {/* Header */}
                             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 shrink-0">
                                 <div className="flex items-center gap-3 min-w-0">
-                                    <div className="w-9 h-9 rounded-full bg-[#3C0078]/8 border-2 border-[#3C0078]/15 flex items-center justify-center font-black text-sm text-[#3C0078] shrink-0">
-                                        {selectedStudent.avatar}
-                                    </div>
+                                    <Avatar user={selectedStudent} name={selectedStudent.name} size={36} />
                                     <div className="min-w-0">
                                         <h2 className="text-sm font-bold text-gray-900 leading-tight truncate">{selectedStudent.name}</h2>
                                         <p className="text-xs text-gray-400 mt-0.5 truncate">{selectedStudent.email}</p>
