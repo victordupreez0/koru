@@ -13,7 +13,7 @@ export const ANNOUNCEMENTS_DATA = [
         date: "Today, 10:45 AM",
         preview: "The brief for Project 3: High-Fidelity Prototyping is now available in the Modules section. Please review the technical requirements before Monday's lecture.",
         label: "Notice",
-        color: "#3C0078"
+        color: "var(--color-koru-primary)"
     },
     {
         id: 2,
@@ -22,7 +22,7 @@ export const ANNOUNCEMENTS_DATA = [
         date: "Yesterday, 2:15 PM",
         preview: "We have an exciting guest speaker from a leading fintech startup joining us next week Tuesday. Attendance is mandatory for UX300 students.",
         label: "Event",
-        color: "#FF8731"
+        color: "var(--color-koru-accent)"
     },
     {
         id: 3,
@@ -31,16 +31,16 @@ export const ANNOUNCEMENTS_DATA = [
         date: "18 Apr 2026",
         preview: "The practical session for Friday will be moved to Lab 402 in Block D due to maintenance in the main studio.",
         label: "Update",
-        color: "#87CEFA"
+        color: "var(--color-koru-sky)"
     }
 ];
 
 // Hardcoded static references preserved for Attendance/Grades until their respective phases
 
 export const ATTENDANCE_STATS = [
-    { label: "Total Sessions", value: "42", color: "#3C0078" },
-    { label: "Attended", value: "38", color: "#87CEFA" },
-    { label: "Missed", value: "4", color: "#FF8731" },
+    { label: "Total Sessions", value: "42", color: "var(--color-koru-primary)" },
+    { label: "Attended", value: "38", color: "var(--color-koru-sky)" },
+    { label: "Missed", value: "4", color: "var(--color-koru-accent)" },
     { label: "Percentage", value: "90%", variant: "large" },
 ];
 
