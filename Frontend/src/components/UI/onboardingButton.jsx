@@ -1,5 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { ChevronRight } from "lucide-react";
 
 // Default routes – each role button navigates to its own login portal
 const defaultRoutes = {
@@ -9,35 +10,44 @@ const defaultRoutes = {
 };
 
 const TONES = {
-  student: "bg-koru-primary-container text-koru-on-primary-container",
-  teacher: "bg-koru-secondary-container text-koru-on-secondary-container",
-  admin: "bg-koru-tertiary-container text-koru-on-tertiary-container",
+  student: "bg-koru-primary-container text-koru-primary",
+  teacher: "bg-koru-info-soft text-koru-role-teacher",
+  admin: "bg-koru-tertiary-container text-koru-role-admin",
 };
 
-// Reusable onboarding button – displays a role card and links to the correct page
-export default function OnboardingButton({ role, icon, to }) {
-  // Resolve the destination based on the selected role
+// Reusable onboarding button – a role row that links to the correct login portal
+export default function OnboardingButton({ role, icon, description, to }) {
+  const Icon = icon;
   const key = (role || "").toLowerCase();
   const destination = to || defaultRoutes[key] || "/";
 
   return (
     <Link
       to={destination}
-      className={`group flex aspect-square w-[180px] flex-col items-center justify-center gap-3 rounded-koru-2xl shadow-koru-sm backdrop-blur-md transition duration-200 hover:-translate-y-1 hover:shadow-koru-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus focus-visible:ring-offset-2 sm:w-[220px] md:w-[200px] ${TONES[key] ?? TONES.student}`}
+      className="group flex items-center gap-4 rounded-koru-xl bg-koru-surface-container-lowest p-3 pr-4 shadow-koru-card ring-1 ring-inset ring-koru-outline-faint transition duration-200 ease-koru-out hover:-translate-y-0.5 hover:shadow-koru-card-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus"
     >
-      {/* Icon container – keeps the role image centered inside the card */}
-      <div className="flex h-24 w-24 items-center justify-center">
-        <img
-          src={icon}
-          alt={`${role} icon`}
-          className="h-16 w-16 object-contain sm:h-24 sm:w-24"
-        />
-      </div>
-
-      {/* Role label – shown below the icon */}
-      <span className="text-center text-koru-label">
-        {role}
+      <span
+        className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-koru-lg transition-transform duration-200 ease-koru-out group-hover:scale-105 ${TONES[key] ?? TONES.student}`}
+      >
+        <Icon size={26} strokeWidth={1.75} aria-hidden="true" />
       </span>
+
+      <span className="min-w-0 flex-1">
+        <span className="block text-koru-body font-medium text-koru-on-surface">
+          {role}
+        </span>
+        {description ? (
+          <span className="mt-0.5 block text-koru-caption text-koru-on-surface-variant">
+            {description}
+          </span>
+        ) : null}
+      </span>
+
+      <ChevronRight
+        size={18}
+        aria-hidden="true"
+        className="shrink-0 text-koru-on-surface-variant transition-transform duration-200 ease-koru-out group-hover:translate-x-0.5 group-hover:text-koru-primary"
+      />
     </Link>
   );
 }

@@ -27,7 +27,7 @@ Tokens live in the `@theme` block in `src/index.css`.
 | Accent | `koru-accent`, `koru-accent-soft`, `koru-accent-ink` |
 | Surface | `koru-surface`, `koru-surface-container-low`, `koru-surface-container`, `koru-surface-container-high`, `koru-surface-container-highest` |
 | Content | `koru-on-surface`, `koru-on-surface-variant` |
-| Outline | `koru-outline`, `koru-outline-variant` |
+| Outline | `koru-outline`, `koru-outline-variant`, `koru-outline-faint` |
 | Status | `koru-success`, `koru-warning`, `koru-info` plus their `-soft` containers |
 | Scrim | `koru-scrim` |
 
@@ -53,6 +53,7 @@ Gabarito carries display and page headings; Google Sans carries body and UI text
 - Radius: `rounded-koru-xs` (4px) → `rounded-koru-3xl` (28px), plus `rounded-koru-pill`
 - Cards use `rounded-koru-md` (12px)
 - Elevation: `shadow-koru-xs`, `shadow-koru-sm`, `shadow-koru-md`, `shadow-koru-lg`
+- Card edge: `shadow-koru-card` (resting) and `shadow-koru-card-hover` (hover), a soft, diffuse lift
 - Motion: `ease-koru-out`, `ease-koru-in-out`
 - Animations: `animate-koru-overlay-in`, `animate-koru-dialog-in`, `animate-koru-shimmer`
 
@@ -115,6 +116,8 @@ Use `size="icon"` with an `aria-label` for icon-only actions.
 ```
 
 Variants: `filled`, `elevated`, `outlined`, `interactive`.
+
+Card edges are soft: no strong borders. `outlined` and `interactive` use a faint 1px ring (`ring-koru-outline-faint`) plus `shadow-koru-card`. `interactive` lifts on hover (`-translate-y-0.5` + `shadow-koru-card-hover`). Keep `koru-outline-variant` for dividers and form fields, not card edges. Clickable list rows (for example the onboarding role rows) follow the same recipe.
 Tones: `neutral`, `muted`, `low`, `surface`, `brand`, `secondary`, `tertiary`, `accent`, `info`, `success`, `warning`, `error`.
 Padding: `none`, `sm`, `md`, `lg`, `xl`.
 Radius: `md`, `lg`, `xl`, `2xl`, `3xl`.
