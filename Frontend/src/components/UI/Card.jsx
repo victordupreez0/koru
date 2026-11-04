@@ -4,9 +4,9 @@ import { cn } from "../../utils/cn";
 const VARIANTS = {
   filled: "",
   elevated: "shadow-koru-sm",
-  outlined: "ring-1 ring-inset ring-koru-outline-variant",
+  outlined: "ring-1 ring-inset ring-koru-outline-faint shadow-koru-card",
   interactive:
-    "transition duration-200 ease-koru-out hover:-translate-y-0.5 hover:shadow-koru-sm",
+    "ring-1 ring-inset ring-koru-outline-faint shadow-koru-card transition duration-200 ease-koru-out hover:-translate-y-0.5 hover:shadow-koru-card-hover",
 };
 
 const ALIASES = {

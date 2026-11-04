@@ -11,6 +11,7 @@ import Courses from './pages/courses'
 import Onboarding from "./pages/onboarding";
 import Login from "./pages/login";
 import Signup from "./pages/signup";
+import { AuthShell } from "./components/AuthLayout";
 import SettingsPage from "./pages/settings";
 import ProtectedRoute from "./components/ProtectedRoute";
 import TeacherAssistant from "./pages/Assistant/teacherAssistant";
@@ -49,11 +50,13 @@ function AppShell() {
       >
         <Routes>
           {/* Public routes – landing & role-specific login portals */}
-          <Route path="/" element={<Onboarding />} />
-          <Route path="/student/login" element={<Login role="student" />} />
-          <Route path="/teacher/login" element={<Login role="teacher" />} />
-          <Route path="/admin/login" element={<Login role="admin" />} />
-          <Route path="/signup" element={<Signup />} />
+          <Route element={<AuthShell />}>
+            <Route path="/" element={<Onboarding />} />
+            <Route path="/student/login" element={<Login role="student" />} />
+            <Route path="/teacher/login" element={<Login role="teacher" />} />
+            <Route path="/admin/login" element={<Login role="admin" />} />
+            <Route path="/signup" element={<Signup />} />
+          </Route>
 
           {/* Protected routes – require authentication */}
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
