@@ -6,7 +6,7 @@ namespace LearnOnline.Services.Assistant;
 
 public sealed record ProviderMessage(string Role, string Content);
 
-public sealed record ProviderRequest(IReadOnlyList<ProviderMessage> Messages, bool Advanced);
+public sealed record ProviderRequest(IReadOnlyList<ProviderMessage> Messages);
 
 /// <summary>Outcome of one provider call. Never carries secrets or raw error bodies.</summary>
 public sealed record ProviderResult(bool Success, string? Content, string? Failure)
@@ -35,31 +35,28 @@ public sealed record ProviderSettings(
     string KeyEnv,
     string ModelConfig,
     string DefaultModel,
-    string? AdvancedModelConfig,
-    string? DefaultAdvancedModel,
     string MaxTokensField,
-    bool ThinkingAdvanced)
+    bool DisableThinking)
 {
     public static readonly ProviderSettings DeepSeek = new(
         "deepseek", "https://api.deepseek.com/chat/completions",
         "DeepSeek:ApiKey", "DEEPSEEK_API_KEY",
-        "DeepSeek:Model", "deepseek-chat",
-        "DeepSeek:AdvancedModel", "deepseek-reasoner",
-        "max_tokens", ThinkingAdvanced: true);
+        "DeepSeek:Model", "deepseek-flash",
+        // Flash reasons by default; that eats the max_tokens budget and cuts long replies off mid-JSON.
+        "max_tokens", DisableThinking: true);
 
     public static readonly ProviderSettings Groq = new(
         "groq", "https://api.groq.com/openai/v1/chat/completions",
         "Groq:ApiKey", "GROQ_API_KEY",
         "Groq:Model", "llama-3.3-70b-versatile",
-        null, null,
-        "max_completion_tokens", ThinkingAdvanced: false);
+        "max_completion_tokens", DisableThinking: false);
 }
 
 /// <summary>OpenAI-compatible chat client (DeepSeek and Groq).</summary>
 public sealed class ChatProvider : IChatProvider
 {
-    private static readonly TimeSpan StandardTimeout = TimeSpan.FromSeconds(30);
-    private static readonly TimeSpan AdvancedTimeout = TimeSpan.FromSeconds(90);
+    private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(60);
+    private const int MaxReplyTokens = 4096;
 
     private readonly ProviderSettings _settings;
     private readonly IConfiguration _configuration;
@@ -86,13 +83,8 @@ public sealed class ChatProvider : IChatProvider
         return string.IsNullOrWhiteSpace(key) ? null : key.Trim();
     }
 
-    private string ResolveModel(bool advanced)
+    private string ResolveModel()
     {
-        if (advanced && _settings.AdvancedModelConfig != null)
-        {
-            var m = _configuration[_settings.AdvancedModelConfig];
-            return string.IsNullOrWhiteSpace(m) ? _settings.DefaultAdvancedModel! : m.Trim();
-        }
         var model = _configuration[_settings.ModelConfig];
         return string.IsNullOrWhiteSpace(model) ? _settings.DefaultModel : model.Trim();
     }
@@ -102,22 +94,18 @@ public sealed class ChatProvider : IChatProvider
         var key = ResolveKey();
         if (key == null) return ProviderResult.Fail("no key configured");
 
-        // Thinking model: no temperature, no json response_format (relies on prompt + validator).
-        var thinking = request.Advanced && _settings.ThinkingAdvanced;
         var body = new Dictionary<string, object?>
         {
-            ["model"] = ResolveModel(request.Advanced),
+            ["model"] = ResolveModel(),
             ["messages"] = request.Messages.Select(m => new { role = m.Role, content = m.Content }).ToList(),
-            [_settings.MaxTokensField] = request.Advanced ? 4096 : 2048,
+            [_settings.MaxTokensField] = MaxReplyTokens,
+            ["temperature"] = 0.4,
+            ["response_format"] = new { type = "json_object" },
         };
-        if (!thinking)
-        {
-            body["temperature"] = 0.4;
-            body["response_format"] = new { type = "json_object" };
-        }
+        if (_settings.DisableThinking) body["thinking"] = new { type = "disabled" };
 
         using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
-        timeoutCts.CancelAfter(request.Advanced ? AdvancedTimeout : StandardTimeout);
+        timeoutCts.CancelAfter(Timeout);
 
         try
         {

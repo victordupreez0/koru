@@ -44,15 +44,11 @@ namespace LearnOnline.Controllers
 
             [JsonPropertyName("role")]
             public string? Role { get; set; }
-
-            /// <summary>"standard" (default) or "advanced".</summary>
-            [JsonPropertyName("mode")]
-            public string? Mode { get; set; }
         }
 
         private static AssistantRequest ToAssistantRequest(ChatRequest r) => new(
             r.Messages.Where(m => m != null).Select(m => new AssistantTurn(m.Role ?? string.Empty, m.Content ?? string.Empty)).ToList(),
-            r.UserId, r.Role, r.Mode);
+            r.UserId, r.Role);
 
         [HttpPost("chat")]
         public async Task<IActionResult> Chat([FromBody] ChatRequest request)

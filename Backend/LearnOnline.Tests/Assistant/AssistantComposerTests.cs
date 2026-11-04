@@ -38,9 +38,9 @@ public class AssistantComposerTests
     private static AssistantComposer Make(params IChatProvider[] providers) =>
         new(new FakeContext(), new ProviderFallback(providers, NullLogger<ProviderFallback>.Instance), NullLogger<AssistantComposer>.Instance);
 
-    private static AssistantRequest Req(string mode = "standard") => new(
+    private static AssistantRequest Req() => new(
         new[] { new AssistantTurn("user", "hi"), new AssistantTurn("assistant", "hello"), new AssistantTurn("user", "<b>help</b> me") },
-        "u1", "student", mode);
+        "u1", "student");
 
     private static (List<(string stage, string text)> stages, Func<string, string, Task> cb) Collect()
     {
@@ -69,18 +69,23 @@ public class AssistantComposerTests
         var sent = deepseek.Requests.Single();
         sent.Messages[0].Role.Should().Be("system");
         sent.Messages[1].Content.Should().Be("<user_message>hi</user_message>");
-        sent.Messages[2].Content.Should().Be("hello");
+        sent.Messages[2].Content.Should().Be("{\"message\":\"hello\",\"question\":null}");
         sent.Messages[3].Content.Should().Be("<user_message>bhelp/b me</user_message>");
     }
 
     [Fact]
-    public async Task Advanced_mode_changes_planning_text_and_flag()
+    public async Task Long_history_drops_oldest_turns_but_keeps_latest()
     {
         var p = new FakeProvider("deepseek", true, Reply("ok"));
-        var (stages, cb) = Collect();
-        await Make(p).ComposeAsync(Req("advanced"), cb, default);
-        stages.Single(s => s.stage == "planning").text.Should().Be("Thinking it through carefully");
-        p.Requests.Single().Advanced.Should().BeTrue();
+        var big = new string('x', 3900);
+        var turns = Enumerable.Range(0, 20)
+            .Select(i => new AssistantTurn(i % 2 == 0 ? "user" : "assistant", i == 19 ? "latest" : big))
+            .ToList();
+        turns[19] = new AssistantTurn("user", "latest");
+        await Make(p).ComposeAsync(new AssistantRequest(turns, "u1", "student"), null, default);
+        var sent = p.Requests.Single().Messages.Skip(1).ToList();
+        sent.Sum(m => m.Content.Length).Should().BeLessThan(26000);
+        sent[^1].Content.Should().Be("<user_message>latest</user_message>");
     }
 
     [Fact]

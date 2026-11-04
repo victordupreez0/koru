@@ -2,11 +2,7 @@ namespace LearnOnline.Services.Assistant;
 
 public sealed record AssistantTurn(string Role, string Content);
 
-public sealed record AssistantRequest(
-    IReadOnlyList<AssistantTurn> Messages, string? UserId, string? Role, string? Mode)
-{
-    public bool Advanced => string.Equals(Mode?.Trim(), "advanced", StringComparison.OrdinalIgnoreCase);
-}
+public sealed record AssistantRequest(IReadOnlyList<AssistantTurn> Messages, string? UserId, string? Role);
 
 public sealed record AssistantResult
 {
@@ -42,6 +38,8 @@ public sealed class AssistantComposer : IAssistantComposer
 
     private const int MaxTurns = 20;
     private const int MaxTurnLength = 4000;
+    // Total characters of chat history sent per request (~6k tokens); oldest turns are dropped first.
+    private const int MaxHistoryChars = 24000;
 
     private readonly IAssistantContextBuilder _contextBuilder;
     private readonly ProviderFallback _providers;
@@ -66,6 +64,7 @@ public sealed class AssistantComposer : IAssistantComposer
             .Select(m => new AssistantTurn(m.Role, m.Content.Length > MaxTurnLength ? m.Content[..MaxTurnLength] : m.Content))
             .ToList();
         if (turns.Count > MaxTurns) turns = turns.Skip(turns.Count - MaxTurns).ToList();
+        while (turns.Count > 1 && turns.Sum(t => t.Content.Length) > MaxHistoryChars) turns.RemoveAt(0);
         if (turns.Count == 0) return AssistantResult.Failure(NoMessageError);
 
         if (!_providers.AnyConfigured) return AssistantResult.Failure(NotConfiguredError);
@@ -81,13 +80,13 @@ public sealed class AssistantComposer : IAssistantComposer
             new("system", AssistantPrompt.BuildSystemPrompt(request.Role, context.Text))
         };
         foreach (var t in turns)
-            messages.Add(new(t.Role, t.Role == "user" ? AssistantPrompt.WrapUserText(t.Content) : t.Content));
+            messages.Add(new(t.Role, t.Role == "user" ? AssistantPrompt.WrapUserText(t.Content) : AssistantPrompt.AsReplyJson(t.Content)));
 
         // 2. First provider call (with provider fallback).
-        await Stage(PlanningStage, request.Advanced ? "Thinking it through carefully" : "Working out a reply");
+        await Stage(PlanningStage, "Working out a reply");
         Func<Task> onSwitch = () => Stage(PlanningStage, BackupText);
 
-        var outcome = await _providers.CompleteAsync(new ProviderRequest(messages, request.Advanced), null, onSwitch, ct);
+        var outcome = await _providers.CompleteAsync(new ProviderRequest(messages), null, onSwitch, ct);
         if (outcome == null) return AssistantResult.Failure(UnavailableError);
 
         // 3. Validate; retry once with the reasons; then fixed fallback.
@@ -103,7 +102,7 @@ public sealed class AssistantComposer : IAssistantComposer
             new("assistant", outcome.Content.Length > 2000 ? outcome.Content[..2000] : outcome.Content),
             new("user", AssistantPrompt.BuildRetryMessage(validation.Errors)),
         };
-        var retry = await _providers.CompleteAsync(new ProviderRequest(retryMessages, request.Advanced), outcome.Provider, null, ct);
+        var retry = await _providers.CompleteAsync(new ProviderRequest(retryMessages), outcome.Provider, null, ct);
         if (retry != null)
         {
             await Stage(CheckingStage, "Checking the reply");

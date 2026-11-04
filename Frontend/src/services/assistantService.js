@@ -80,7 +80,7 @@ const isAbort = (err) => err?.name === "AbortError";
  * Resolves with the result object ({ ok:true, ... } or { ok:false, error }).
  * Rejects only with an AbortError when `signal` aborts.
  */
-export async function streamAssistant({ messages, userId, role, mode = "standard", signal, onStage } = {}) {
+export async function streamAssistant({ messages, userId, role, signal, onStage } = {}) {
   let result = null;
 
   const onEvent = ({ event, data }) => {
@@ -103,7 +103,6 @@ export async function streamAssistant({ messages, userId, role, mode = "standard
         messages: (messages || []).filter((m) => m.role === "user" || m.role === "assistant"),
         userId,
         role,
-        mode,
       }),
       signal,
     });
