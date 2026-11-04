@@ -5,6 +5,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useCourses } from "../contexts/CoursesContext";
 import { updateCourseVisibility } from "../services/courseService";
 import { courseService } from "../services/adminService";
+import { Badge, Button } from "./UI";
 import {
     Home,
     Megaphone,
@@ -123,14 +124,14 @@ export default function CourseSecondaryNav({ activeCourseId, hideNav, onDeleteCo
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             className="flex flex-col shrink-0 transition-all duration-300
-              md:h-full md:w-64 md:bg-koru-surface-container-lowest md:backdrop-blur-xl md:border md:border-white/20 md:rounded-koru-lg md:shadow-lg md:overflow-hidden
-              max-md:h-full max-md:w-64 max-md:bg-koru-surface-container-lowest max-md:backdrop-blur-md max-md:border-r max-md:border-gray-200/50"
+              md:h-full md:w-64 md:bg-koru-surface-container-lowest md:rounded-koru-lg md:shadow-koru-card md:overflow-hidden
+              max-md:h-full max-md:w-64 max-md:bg-koru-surface-container-lowest max-md:shadow-koru-card"
         >
             {/* Course Header Info */}
             {course && (
-                <div className="px-6 pt-6 pb-5 border-b border-gray-100 shrink-0">
-                    <h3 className="text-sm font-black text-gray-900 leading-tight">{course.subjectName}</h3>
-                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mt-1">{course.code} {course.number}</p>
+                <div className="px-6 pt-6 pb-5 border-b border-koru-outline-faint shrink-0">
+                    <h3 className="font-display text-sm font-medium text-koru-on-surface leading-tight">{course.subjectName}</h3>
+                    <p className="text-xs font-medium text-koru-on-surface-variant uppercase tracking-wider mt-1">{course.code} {course.number}</p>
                 </div>
             )}
 
@@ -156,10 +157,10 @@ export default function CourseSecondaryNav({ activeCourseId, hideNav, onDeleteCo
                                         to={toPath}
                                         end={item.end}
                                         className={({ isActive }) =>
-                                            `relative flex items-center gap-3 px-4 py-2.5 text-xs font-semibold transition-all duration-200 mx-3 my-0.5 rounded-xl group select-none cursor-pointer
+                                            `relative flex items-center gap-3 px-4 py-2.5 text-xs font-medium transition-all duration-200 mx-3 my-0.5 rounded-koru-xl group select-none cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus motion-reduce:transition-none
                                             ${isActive
-                                                ? "bg-[#3C0078]/5 text-[#3C0078]"
-                                                : "text-gray-600 hover:bg-gray-50/80 hover:text-gray-900"
+                                                ? "bg-koru-primary-container text-koru-on-primary-container"
+                                                : "text-koru-on-surface-variant hover:bg-koru-surface-container hover:text-koru-on-surface"
                                             }`
                                         }
                                     >
@@ -168,7 +169,7 @@ export default function CourseSecondaryNav({ activeCourseId, hideNav, onDeleteCo
                                                 {isActive && (
                                                     <motion.div
                                                         layoutId="activeSecondaryLeftAccent"
-                                                        className="absolute left-0 top-1/4 bottom-1/4 w-0.75 bg-[#3C0078] rounded-r-md shrink-0"
+                                                        className="absolute left-0 top-1/4 bottom-1/4 w-0.75 bg-koru-primary rounded-r-md shrink-0"
                                                         transition={{
                                                             type: "spring",
                                                             stiffness: 300,
@@ -177,7 +178,7 @@ export default function CourseSecondaryNav({ activeCourseId, hideNav, onDeleteCo
                                                     />
                                                 )}
 
-                                                <span className={`transition-colors shrink-0 ${isActive ? "text-[#3C0078]" : "text-gray-400 group-hover:text-gray-600"}`}>
+                                                <span className={`transition-colors shrink-0 ${isActive ? "text-koru-on-primary-container" : "text-koru-on-surface-variant group-hover:text-koru-on-surface"}`}>
                                                     {getIcon(item.label)}
                                                 </span>
 
@@ -198,25 +199,23 @@ export default function CourseSecondaryNav({ activeCourseId, hideNav, onDeleteCo
 
             {/* Teacher controls footer */}
             {isTeacher && (
-                <div className="p-4 border-t border-gray-100 flex flex-col gap-3 bg-gray-50/50 shrink-0">
+                <div className="p-4 bg-koru-surface-container-low flex flex-col gap-3 shrink-0">
                     <div className="flex flex-col gap-1 px-2">
-                        <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none">
+                        <span className="text-[9px] font-medium text-koru-on-surface-variant uppercase tracking-widest leading-none">
                             Course Controls
                         </span>
 
                         <div className="flex items-center justify-between mt-2.5">
-                            <span className="text-[10px] font-bold text-gray-500">Course Status</span>
-                            <button
+                            <span className="text-[10px] font-medium text-koru-on-surface-variant">Course Status</span>
+                            <Badge
+                                as="button"
+                                variant={isPublished ? "success" : "warning"}
+                                dot
                                 onClick={togglePublished}
-                                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer shadow-xs
-                                    ${isPublished
-                                        ? "bg-green-50 text-green-600 border border-green-200/50 hover:bg-green-100/50"
-                                        : "bg-amber-50 text-amber-600 border border-amber-200/50 hover:bg-amber-100/50"
-                                    }`}
+                                className="cursor-pointer uppercase tracking-wider transition-colors hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus"
                             >
-                                <span className={`w-1.5 h-1.5 rounded-full ${isPublished ? "bg-green-500 animate-pulse" : "bg-amber-500"}`} />
-                                <span>{isPublished ? "Published" : "Draft"}</span>
-                            </button>
+                                {isPublished ? "Published" : "Draft"}
+                            </Badge>
                         </div>
                     </div>
                 </div>
@@ -224,36 +223,36 @@ export default function CourseSecondaryNav({ activeCourseId, hideNav, onDeleteCo
 
             {/* Admin controls footer */}
             {isAdmin && (
-                <div className="p-4 border-t border-gray-100 bg-gray-50/50 shrink-0 space-y-2.5">
-                    <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest px-2 block">
+                <div className="p-4 bg-koru-surface-container-low shrink-0 space-y-2.5">
+                    <span className="text-[9px] font-medium text-koru-on-surface-variant uppercase tracking-widest px-2 block">
                         Admin Controls
                     </span>
 
                     {/* Publish toggle */}
                     <div className="flex items-center justify-between px-2">
-                        <span className="text-[10px] font-bold text-gray-500">Course Status</span>
-                        <button
-                            onClick={togglePublished}
-                            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer shadow-xs
-                                ${isPublished
-                                    ? "bg-green-50 text-green-600 border border-green-200/50 hover:bg-green-100/50"
-                                    : "bg-amber-50 text-amber-600 border border-amber-200/50 hover:bg-amber-100/50"
-                                }`}
-                        >
-                            <span className={`w-1.5 h-1.5 rounded-full ${isPublished ? "bg-green-500 animate-pulse" : "bg-amber-500"}`} />
-                            <span>{isPublished ? "Published" : "Draft"}</span>
-                        </button>
+                        <span className="text-[10px] font-medium text-koru-on-surface-variant">Course Status</span>
+                        <Badge
+                                as="button"
+                                variant={isPublished ? "success" : "warning"}
+                                dot
+                                onClick={togglePublished}
+                                className="cursor-pointer uppercase tracking-wider transition-colors hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus"
+                            >
+                                {isPublished ? "Published" : "Draft"}
+                            </Badge>
                     </div>
 
                     {/* Delete course */}
-                    <button
+                    <Button
+                        variant="error"
+                        size="sm"
+                        fullWidth
                         onClick={handleDeleteCourse}
                         disabled={deletingCourse}
-                        className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest text-red-500 bg-red-50 border border-red-100 hover:bg-red-100 transition-all disabled:opacity-50 cursor-pointer"
+                        startIcon={<Trash2 size={12} />}
                     >
-                        <Trash2 size={12} />
                         {deletingCourse ? "Deleting…" : "Delete Course"}
-                    </button>
+                    </Button>
                 </div>
             )}
         </motion.div>
