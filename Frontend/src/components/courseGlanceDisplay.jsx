@@ -137,6 +137,7 @@ export default function CourseGlanceDisplay({ activeCourseId }) {
                         message={a.preview}
                         time={new Date(a.datePosted).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                         isRead={a.isRead}
+                        author={{ profileImageUrl: a.lecturerProfileImageUrl, id: a.lecturerId, name: a.lecturerName }}
                         onClick={async () => {
                             try {
                                 if (user?.userId && !a.isRead) {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Plus, Trash2 } from "lucide-react";
-import { Bell, CloseSquare, User } from "@solar-icons/react";
+import { CloseSquare } from "@solar-icons/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { staggerContainer, slideUp } from "./constants";
 import {
@@ -9,6 +9,7 @@ import {
     deleteAnnouncement,
 } from "../../../services/announcementService";
 import { useAuth } from "../../../contexts/AuthContext";
+import Avatar from "../../../components/UI/Avatar";
 
 export function CourseAnnouncementsView({ activeCourseId }) {
     const { user } = useAuth();
@@ -50,6 +51,7 @@ export function CourseAnnouncementsView({ activeCourseId }) {
             const payload = {
                 ...newAnnouncement,
                 courseId: activeCourseId,
+                lecturerId: user?.userId,
                 lecturerName: user?.name || user?.fullName || "Lecturer",
             };
             const created = await createAnnouncement(payload);
@@ -177,15 +179,19 @@ export function CourseAnnouncementsView({ activeCourseId }) {
                             }`}
                         >
                             <div className="flex flex-1 items-start gap-4 pl-2 min-w-0">
-                                <div
-                                    className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 mt-0.5"
-                                    style={{
-                                        backgroundColor: selectedId === post.id ? "#3C007820" : "#3C007815",
-                                        color: "#3C0078"
-                                    }}
-                                >
-                                    <Bell size={20} />
-                                </div>
+                                <Avatar
+
+                                    src={post.lecturerProfileImageUrl}
+
+                                    seed={post.lecturerId || post.lecturerName}
+
+                                    name={post.lecturerName || "Lecturer"}
+
+                                    size="md"
+
+                                    className="mt-0.5"
+
+                                />
                                 <div className="flex-1 min-w-0">
                                     <h2 className="text-lg font-bold text-gray-800 leading-snug group-hover:text-[#3C0078] transition-colors">
                                         {post.title}
@@ -255,9 +261,12 @@ export function CourseAnnouncementsView({ activeCourseId }) {
                             </h2>
 
                             <div className="flex items-center gap-3 mb-6 pb-6 border-b border-gray-100">
-                                <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-[#3C0078]">
-                                    <User size={20} />
-                                </div>
+                                <Avatar
+                                    src={selectedAnnouncement.lecturerProfileImageUrl}
+                                    seed={selectedAnnouncement.lecturerId || selectedAnnouncement.lecturerName}
+                                    name={selectedAnnouncement.lecturerName || "Lecturer"}
+                                    size="md"
+                                />
                                 <div>
                                     <p className="text-xs font-black uppercase tracking-widest text-gray-400">Published By</p>
                                     <p className="font-bold text-[#3C0078]">
