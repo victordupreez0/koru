@@ -111,7 +111,7 @@ export default function AdminCourses() {
                     onDeleteCourse={handleCourseDeleted}
                 />
 
-                <div className="flex-1 flex flex-col overflow-hidden transition-all duration-300 md:bg-white/75 md:backdrop-blur-xl md:border md:border-white/20 md:rounded-[28px] md:shadow-lg max-md:bg-white">
+                <div className="flex-1 flex flex-col overflow-hidden transition-all duration-300 md:bg-koru-surface-container-lowest md:backdrop-blur-xl md:border md:border-white/20 md:rounded-koru-lg md:shadow-lg max-md:bg-white">
                     {/* Breadcrumb bar */}
                     {ctxCourse && (
                         <div className="h-14 border-b border-gray-100 bg-white/60 backdrop-blur-md flex items-center justify-between px-8 z-10 shrink-0 select-none">

@@ -31,7 +31,9 @@ Tokens live in the `@theme` block in `src/index.css`.
 | Status | `koru-success`, `koru-warning`, `koru-info` plus their `-soft` containers |
 | Scrim | `koru-scrim` |
 
-Canvas: `#FAFBFD` cool near-white page background.
+Canvas: `koru-canvas` (`#3A2A55`) dark brand purple (matched to the lightness of #343434) page background behind the sidebar and floating shells. `koru-surface` (`#FAFBFD`) remains the near-white surface role.
+
+Stat tile fills: `koru-stat-violet`, `koru-stat-sky`, `koru-stat-orange`, `koru-stat-green`, `koru-stat-slate` (vivid, white text on top; used only by `dashboardStatTile`).
 
 Role accents: `koru-role-student`, `koru-role-teacher`, `koru-role-admin`.
 

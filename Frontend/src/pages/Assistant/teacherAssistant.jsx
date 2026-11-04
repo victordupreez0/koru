@@ -332,7 +332,7 @@ export default function TeacherAssistant() {
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <div className="flex flex-col overflow-hidden transition-all duration-300 md:h-[calc(100vh-32px)] md:w-full md:bg-white/55 md:backdrop-blur-xl md:border md:border-white/20 md:rounded-[28px] md:shadow-lg max-md:h-screen max-md:w-screen max-md:-ml-4 max-md:-mr-4 max-md:-mt-4 max-md:bg-transparent text-slate-900">
+    <div className="flex flex-col overflow-hidden transition-all duration-300 md:h-[calc(100vh-32px)] md:w-full md:bg-koru-surface-container-lowest md:backdrop-blur-xl md:border md:border-white/20 md:rounded-koru-lg md:shadow-lg max-md:h-screen max-md:w-screen max-md:-ml-4 max-md:-mr-4 max-md:-mt-4 max-md:bg-transparent text-slate-900">
 
       {/* ── Top header bar ─────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between pr-4 border-b border-gray-100/60 bg-white/30 backdrop-blur-md shrink-0">

@@ -66,7 +66,7 @@ export default function TeacherCourses() {
         <div className="flex overflow-hidden gap-4 transition-all duration-300 md:h-[calc(100vh-32px)] md:w-full max-md:h-screen max-md:w-screen max-md:-ml-4 max-md:-mr-4 max-md:-mt-4 bg-transparent">
             <CourseSecondaryNav activeCourseId={activeCourseId || (visibleCourses[0]?.id)} />
 
-            <div className="flex-1 flex flex-col overflow-hidden transition-all duration-300 md:bg-white/75 md:backdrop-blur-xl md:border md:border-white/20 md:rounded-[28px] md:shadow-lg max-md:bg-white">
+            <div className="flex-1 flex flex-col overflow-hidden transition-all duration-300 md:bg-koru-surface-container-lowest md:backdrop-blur-xl md:border md:border-white/20 md:rounded-koru-lg md:shadow-lg max-md:bg-white">
                 {course && (
                     <div className="h-14 border-b border-gray-100 bg-white/60 backdrop-blur-md flex items-center justify-between px-8 z-10 shrink-0 select-none">
                         <div className="flex items-center gap-3">
