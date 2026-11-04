@@ -1,3 +1,4 @@
+import { getAvatarUrl } from "../../utils/avatar";
 import {
   LEGACY_DEMO_TEXT_PATTERNS,
   LINK_FIELD_CONFIG,
@@ -122,7 +123,7 @@ export function buildDefaultProfile(role, session) {
       major: "",
       degree: "",
       expectedGraduation: "",
-      photoUrl: session?.profileImageUrl || "",
+      photoUrl: session ? getAvatarUrl(session) : "",
       photoName: "",
       summary: "",
       email: session?.email || "",

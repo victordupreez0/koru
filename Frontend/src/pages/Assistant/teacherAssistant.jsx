@@ -10,6 +10,7 @@ import AssistantInput from "../../components/assistantInput";
 import HeaderTopBar from "../../components/HeaderTopBar";
 import { getAssistantResponse } from "../../services/assistantService";
 import { useAuth } from "../../contexts/AuthContext";
+import Avatar from "../../components/UI/Avatar";
 
 // ─── Persistence helpers ──────────────────────────────────────────────────────
 
@@ -524,6 +525,9 @@ export default function TeacherAssistant() {
                         className={`flex items-end gap-2.5 group ${isUser ? "flex-row-reverse" : "flex-row"}`}
                       >
                         {/* Avatar */}
+                        {isUser ? (
+                          <Avatar user={user} size={28} className="mb-1" />
+                        ) : (
                         <div
                           className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 mb-1 text-xs font-bold ${
                             isUser
@@ -531,10 +535,9 @@ export default function TeacherAssistant() {
                               : "bg-[#3C0078]/10 text-[#3C0078]"
                           }`}
                         >
-                          {isUser
-                            ? (firstName?.[0]?.toUpperCase() || "U")
-                            : <Bot className="w-3.5 h-3.5" />}
+                          <Bot className="w-3.5 h-3.5" />
                         </div>
+                        )}
 
                         {/* Bubble */}
                         <div className={`relative max-w-[78%] ${isUser ? "" : ""}`}>

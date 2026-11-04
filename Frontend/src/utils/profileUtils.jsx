@@ -1,3 +1,4 @@
+import { getAvatarUrl } from "./avatar";
 import { LINK_FIELD_CONFIG, SKILL_GROUP_CONFIG } from "../constants/profileConfig";
 
 // Accept only absolute http(s) links for safe external navigation and embeds.
@@ -72,7 +73,7 @@ export function buildDefaultProfile(role, session) {
       major: "",
       degree: "",
       expectedGraduation: "",
-      photoUrl: session?.profileImageUrl || "",
+      photoUrl: session ? getAvatarUrl(session) : "",
       photoName: "",
       summary: "",
       email: session?.email || "",

@@ -8,7 +8,6 @@ import {
   Calendar,
   Stars,
   PieChart2,
-  User,
   Settings,
   Eye,
 } from "@solar-icons/react";
@@ -16,7 +15,7 @@ import { Menu as MenuIcon, X } from "lucide-react";
 import { useCourses } from "../contexts/CoursesContext";
 import { useAuth } from "../contexts/AuthContext";
 import CourseManagerModal from "./courseManagerModal";
-import { Button, EmptyState } from "./UI";
+import { Avatar, Button, EmptyState } from "./UI";
 
 // ── Framer Motion Variants ──────────────────────────────────────────────────
 const sidebarVariants = {
@@ -135,7 +134,7 @@ function SidebarNavItem({
 // ── Main AppSidebar Component ───────────────────────────────────────────────
 export default function AppSidebar() {
   const location = useLocation();
-  const { role } = useAuth();
+  const { role, user } = useAuth();
   const { visibleCourses } = useCourses();
   const [modalOpen, setModalOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -213,8 +212,8 @@ export default function AppSidebar() {
           {
             label: "Profile",
             href: "/profile",
-            icon: <User weight="Outline" size={22} color="currentColor" />,
-            filledIcon: <User weight="Bold" size={22} color="currentColor" />,
+            icon: <Avatar user={user} size="xs" />,
+            filledIcon: <Avatar user={user} size="xs" className="ring-2 ring-koru-on-primary" />,
           },
         ]),
     {

@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { motion } from "framer-motion";
 import DashboardStatTile from "./UI/dashboardStatTile";
 import { useAuth } from "../contexts/AuthContext";
+import Avatar from "./UI/Avatar";
 
 function getGreeting(hour) {
   if (hour < 5)  return "Working late";
@@ -34,7 +35,9 @@ export default function DashboardHeader({
       <div className="flex flex-col gap-4">
         {/* Greeting row */}
         <div className="flex items-end justify-between gap-4 flex-wrap">
-          <div className="min-w-0">
+          <div className="flex min-w-0 items-center gap-4">
+            {user && <Avatar user={user} size="lg" className="hidden sm:inline-flex" />}
+            <div className="min-w-0">
             <h1 className="font-display text-koru-title text-koru-on-surface">
               {greeting}{firstName ? `, ${firstName}` : ""}
               <span className="text-koru-primary">.</span>
@@ -43,6 +46,7 @@ export default function DashboardHeader({
             {contextLine && (
               <p className="mt-1 text-koru-body text-koru-on-surface-variant">{contextLine}</p>
             )}
+            </div>
           </div>
 
           {actions && (
