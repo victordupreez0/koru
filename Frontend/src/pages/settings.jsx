@@ -12,13 +12,15 @@ import {
   Bell,
   ShieldCheck,
   Palette,
-  Eye
+  Eye,
+  Shuffle
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 import AuthInput from "../components/UI/authInput";
 import TwoFactorSetupModal from "../components/UI/TwoFactorSetupModal";
-import { Alert, Badge, Button, Card, Select } from "../components/UI";
+import { Alert, Avatar, Badge, Button, Card, Select } from "../components/UI";
+import { dicebearUrl, getAvatarUrl } from "../utils/avatar";
 import { useTextToSpeech } from "../hooks/useTextToSpeech";
 import {
   changeUserPassword,
@@ -106,6 +108,7 @@ export default function SettingsPage() {
     lastName: session?.lastName || "",
     email: session?.email || "",
     role: session?.role?.toLowerCase?.() || "student",
+    profileImageUrl: getAvatarUrl(session),
   });
 
   const [passwordForm, setPasswordForm] = useState({
@@ -160,6 +163,13 @@ export default function SettingsPage() {
     setProfileForm((current) => ({ ...current, [name]: value }));
   }
 
+  // Pick a fresh random DiceBear avatar; saved together with the profile form
+  function handleShuffleAvatar() {
+    const seed = `${session?.userId || "user"}-${Math.random().toString(36).slice(2, 10)}`;
+    setProfileForm((current) => ({ ...current, profileImageUrl: dicebearUrl(seed) }));
+    setProfileMessage("");
+  }
+
   function handlePasswordChange(event) {
     const { name, value } = event.target;
     setPasswordForm((current) => ({ ...current, [name]: value }));
@@ -178,6 +188,7 @@ export default function SettingsPage() {
         lastName: profileForm.lastName,
         email: profileForm.email,
         role: profileForm.role,
+        profileImageUrl: profileForm.profileImageUrl,
       };
 
       if (userId) {
@@ -384,6 +395,24 @@ export default function SettingsPage() {
                         <div className="mb-6 flex items-center gap-3 border-b border-koru-outline-faint pb-3">
                           <span className="rounded-koru-md bg-koru-primary-container/60 p-2 text-koru-primary"><UserRound size={20} /></span>
                           <h2 className="font-display text-koru-heading text-koru-on-surface">User Information</h2>
+                        </div>
+
+                        <div className="mb-6 flex flex-wrap items-center gap-5">
+                          <Avatar
+                            src={profileForm.profileImageUrl}
+                            seed={session?.userId}
+                            name={`${profileForm.firstName} ${profileForm.lastName}`.trim()}
+                            size="xl"
+                          />
+                          <div className="flex min-w-[220px] flex-1 flex-col gap-2">
+                            <p className="text-koru-label text-koru-on-surface">Profile picture</p>
+                            <p className={pageClasses.muted}>Your avatar is randomly assigned. Shuffle for a new one, then save.</p>
+                            <div>
+                              <Button type="button" variant="outlined" size="sm" onClick={handleShuffleAvatar} startIcon={<Shuffle size={14} />}>
+                                Shuffle avatar
+                              </Button>
+                            </div>
+                          </div>
                         </div>
 
                         <div className="grid gap-4 sm:grid-cols-2">
