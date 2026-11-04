@@ -32,8 +32,8 @@ public class ClassControllerTests
         var controller = new ClassController(db);
         var result = await controller.GetAll();
 
-        result.Value!.Single().Course.Should().NotBeNull();
-        result.Value!.Single().Timetable.Should().NotBeNull();
+        ((object?)((dynamic)result.Value!.Single()).Course).Should().NotBeNull();
+        ((object?)((dynamic)result.Value!.Single()).Timetable).Should().NotBeNull();
     }
 
     [Fact]

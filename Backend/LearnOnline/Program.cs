@@ -33,6 +33,17 @@ builder.Services.AddOpenApi();
 // Register HttpClient so controllers can call external services like Google token validation
 builder.Services.AddHttpClient();
 
+// Assistant: DeepSeek first, Groq as the backup
+builder.Services.AddSingleton<LearnOnline.Services.Assistant.IChatProvider>(sp => new LearnOnline.Services.Assistant.ChatProvider(
+    LearnOnline.Services.Assistant.ProviderSettings.DeepSeek, sp.GetRequiredService<IConfiguration>(),
+    sp.GetRequiredService<IHttpClientFactory>(), sp.GetRequiredService<ILogger<LearnOnline.Services.Assistant.ChatProvider>>()));
+builder.Services.AddSingleton<LearnOnline.Services.Assistant.IChatProvider>(sp => new LearnOnline.Services.Assistant.ChatProvider(
+    LearnOnline.Services.Assistant.ProviderSettings.Groq, sp.GetRequiredService<IConfiguration>(),
+    sp.GetRequiredService<IHttpClientFactory>(), sp.GetRequiredService<ILogger<LearnOnline.Services.Assistant.ChatProvider>>()));
+builder.Services.AddSingleton<LearnOnline.Services.Assistant.ProviderFallback>();
+builder.Services.AddScoped<LearnOnline.Services.Assistant.IAssistantContextBuilder, LearnOnline.Services.Assistant.AssistantContextBuilder>();
+builder.Services.AddScoped<LearnOnline.Services.Assistant.IAssistantComposer, LearnOnline.Services.Assistant.AssistantComposer>();
+
 // Register the EF Core database context with the PostgreSQL connection string
 // PendingModelChangesWarning is suppressed because migrations in this project use raw SQL
 // and intentionally don't update the EF snapshot.
