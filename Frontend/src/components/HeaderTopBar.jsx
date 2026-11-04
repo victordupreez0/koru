@@ -14,7 +14,7 @@ export default function HeaderTopBar({ children }) {
   const navInfo = useMemo(() => {
     // Default fallback values
     let badgeText = "System";
-    let badgeColor = "#3C0078";
+    let badgeColor = "var(--color-koru-primary)";
     let titleText = "";
     let sectionText = "Overview";
     let showBadge = false;
@@ -74,21 +74,21 @@ export default function HeaderTopBar({ children }) {
   }, [path, pathParts, role, visibleCourses]);
 
   return (
-    <div className="h-14 border-b border-gray-100 bg-white/60 backdrop-blur-md flex items-center justify-between px-8 z-10 shrink-0 select-none">
+    <div className="z-10 flex h-14 shrink-0 select-none items-center justify-between border-b border-koru-outline-faint bg-koru-surface-container-lowest/70 px-8 backdrop-blur-md">
       <div className="flex items-center gap-3">
         {navInfo.showBadge && (
           <span
-            className="px-2.5 py-0.5 rounded-lg text-[10px] font-black text-white shadow-sm uppercase shrink-0"
+            className="shrink-0 rounded-koru-sm px-2.5 py-0.5 text-koru-caption font-medium text-koru-on-primary shadow-koru-xs"
             style={{ backgroundColor: navInfo.badgeColor }}
           >
             {navInfo.badgeText}
           </span>
         )}
         {navInfo.titleText && (
-          <h2 className="text-sm font-extrabold text-gray-900 truncate max-w-[200px] sm:max-w-xs">{navInfo.titleText}</h2>
+          <h2 className="max-w-[200px] truncate font-display text-koru-label text-koru-on-surface sm:max-w-xs">{navInfo.titleText}</h2>
         )}
-        {navInfo.showBadge && <span className="text-gray-300 text-xs select-none">/</span>}
-        <span className="text-xs font-bold text-gray-500 capitalize truncate">{navInfo.sectionText}</span>
+        {navInfo.showBadge && <span aria-hidden="true" className="select-none text-xs text-koru-outline-variant">/</span>}
+        <span className="truncate text-koru-caption font-medium capitalize text-koru-on-surface-variant">{navInfo.sectionText}</span>
       </div>
       {children && <div className="flex items-center gap-2 shrink-0">{children}</div>}
     </div>

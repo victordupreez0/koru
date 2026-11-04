@@ -16,6 +16,7 @@ import { Menu as MenuIcon, X } from "lucide-react";
 import { useCourses } from "../contexts/CoursesContext";
 import { useAuth } from "../contexts/AuthContext";
 import CourseManagerModal from "./courseManagerModal";
+import { Button, EmptyState } from "./UI";
 
 // ── Framer Motion Variants ──────────────────────────────────────────────────
 const sidebarVariants = {
@@ -73,13 +74,14 @@ function SidebarNavItem({
   onClick,
   isButton = false,
   buttonRef,
+  ariaExpanded,
 }) {
   const content = (
     <>
       {isActive && (
         <motion.div
           layoutId="active-sidebar-pill"
-          className="absolute inset-0 bg-[#3C0078] rounded-[20px] -z-10 shadow-md shadow-[#3C0078]/25"
+          className="absolute inset-0 -z-10 rounded-koru-md bg-koru-primary shadow-koru-sm"
           transition={{
             type: "spring",
             stiffness: 380,
@@ -90,14 +92,15 @@ function SidebarNavItem({
       <div className="flex items-center justify-center w-6 h-6 z-10 !text-inherit">
         {isActive && filledIcon ? filledIcon : icon}
       </div>
-      <span className="text-[9px] font-bold leading-tight tracking-wide z-10 !text-inherit mt-1 select-none">{label}</span>
+      <span className="z-10 mt-1 select-none text-[10px] font-medium leading-tight tracking-wide !text-inherit">{label}</span>
     </>
   );
 
-  const baseClassName = `relative flex flex-col items-center justify-center w-full py-3.5 px-1.5 transition-all duration-200 group select-none cursor-pointer rounded-2xl
+  const baseClassName = `group relative flex w-full cursor-pointer select-none flex-col items-center justify-center rounded-koru-md px-1.5 py-3.5 transition-colors duration-200 ease-koru-out
+    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus focus-visible:ring-offset-2 focus-visible:ring-offset-koru-surface
     ${isActive
-      ? "!text-white"
-      : "!text-gray-500 hover:!text-[#3C0078]"
+      ? "!text-koru-on-primary"
+      : "!text-koru-on-surface-variant hover:bg-koru-primary/8 hover:!text-koru-primary"
     }`;
 
   return (
@@ -105,9 +108,12 @@ function SidebarNavItem({
       {isButton ? (
         <button
           ref={buttonRef}
+          type="button"
           onClick={onClick}
           className={baseClassName}
           aria-label={label}
+          aria-current={isActive ? "page" : undefined}
+          aria-expanded={ariaExpanded}
         >
           {content}
         </button>
@@ -117,6 +123,7 @@ function SidebarNavItem({
           onClick={onClick}
           className={baseClassName}
           aria-label={label}
+          aria-current={isActive ? "page" : undefined}
         >
           {content}
         </Link>
@@ -234,17 +241,21 @@ export default function AppSidebar() {
   const sidebarContent = (
     <motion.aside
       className={`fixed z-50 flex flex-col items-center justify-between transition-all duration-300
-        md:left-4 md:top-4 md:bottom-4 md:w-20 md:bg-white/70 md:backdrop-blur-xl md:border md:border-white/20 md:rounded-[32px] md:shadow-xl md:py-5
-        max-md:left-0 max-md:top-0 max-md:h-screen max-md:w-[76px] max-md:bg-white/90 max-md:backdrop-blur-2xl max-md:border-r max-md:border-gray-200/50 max-md:py-3
+        md:left-4 md:top-4 md:bottom-4 md:w-20 md:bg-koru-surface-container-lowest md:backdrop-blur-xl md:ring-1 md:ring-koru-outline-faint md:rounded-koru-lg md:shadow-koru-card md:py-5
+        max-md:left-0 max-md:top-0 max-md:h-screen max-md:w-[76px] max-md:bg-koru-surface-container-lowest/95 max-md:backdrop-blur-2xl max-md:border-r max-md:border-koru-outline-faint max-md:py-3
         ${mobileOpen ? "max-md:translate-x-0" : "max-md:-translate-x-full"}
-        max-md:shadow-2xl`}
+        max-md:shadow-koru-lg`}
       variants={sidebarVariants}
       initial="hidden"
       animate="visible"
     >
       {/* ── Logo ── */}
       <div className="pt-5 pb-3 flex items-center justify-center shrink-0">
-        <Link to="/dashboard" className="group" aria-label="Home">
+        <Link
+          to="/dashboard"
+          className="group rounded-koru-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus focus-visible:ring-offset-2"
+          aria-label="Home"
+        >
           <div className="w-12 h-12 flex items-center justify-center transition-transform duration-300 group-hover:scale-105">
             <KoruLogo className="w-9 h-9" />
           </div>
@@ -263,6 +274,7 @@ export default function AppSidebar() {
                 isActive={isActive(item.href)}
                 isButton={isCourses}
                 buttonRef={isCourses ? coursesButtonRef : undefined}
+                ariaExpanded={isCourses ? showCourseNav : undefined}
                 onClick={
                   isCourses
                     ? () => setShowCourseNav(!showCourseNav)
@@ -278,7 +290,7 @@ export default function AppSidebar() {
       </nav>
 
       {/* ── Divider ── */}
-      <div className="w-10 h-px bg-gray-200/50 my-1.5 shrink-0" />
+      <div className="my-1.5 h-px w-10 shrink-0 bg-koru-outline-variant/60" />
 
       {/* ── Utility Nav (Profile / Settings) ── */}
       <div className="py-2 flex flex-col items-center gap-1.5 w-full shrink-0">
@@ -301,7 +313,8 @@ export default function AppSidebar() {
     <>
       {/* ── Mobile hamburger button ── */}
       <button
-        className="fixed top-4 left-4 z-[60] md:hidden w-10 h-10 rounded-2xl bg-white/80 backdrop-blur-xl border border-gray-200/50 shadow-lg flex items-center justify-center text-gray-600 hover:text-[#3C0078] transition-colors"
+        type="button"
+        className="fixed left-4 top-4 z-[60] flex h-10 w-10 items-center justify-center rounded-koru-pill bg-koru-surface-container-lowest/90 text-koru-on-surface-variant shadow-koru-card ring-1 ring-koru-outline-faint backdrop-blur-xl transition-colors duration-150 ease-koru-out hover:text-koru-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus md:hidden"
         onClick={() => setMobileOpen(!mobileOpen)}
         aria-label={mobileOpen ? "Close menu" : "Open menu"}
       >
@@ -312,7 +325,7 @@ export default function AppSidebar() {
       <AnimatePresence>
         {mobileOpen && (
           <motion.div
-            className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40 md:hidden"
+            className="fixed inset-0 z-40 bg-koru-scrim backdrop-blur-sm md:hidden"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -336,15 +349,15 @@ export default function AppSidebar() {
             animate="visible"
             exit="exit"
             className="fixed z-40 flex flex-col pt-6 overflow-hidden transition-all duration-300
-              md:left-[104px] md:top-4 md:bottom-4 md:w-72 md:bg-white/80 md:backdrop-blur-2xl md:border md:border-white/20 md:rounded-[28px] md:shadow-2xl
-              max-md:left-[76px] max-md:top-0 max-md:h-screen max-md:w-72 max-md:bg-white/95 max-md:backdrop-blur-2xl max-md:border-r max-md:border-gray-200/50 max-md:shadow-2xl"
+              md:left-[104px] md:top-4 md:bottom-4 md:w-72 md:bg-koru-surface-container-lowest md:backdrop-blur-2xl md:ring-1 md:ring-koru-outline-faint md:rounded-koru-lg md:shadow-koru-lg
+              max-md:left-[76px] max-md:top-0 max-md:h-screen max-md:w-72 max-md:bg-koru-surface-container-lowest/95 max-md:backdrop-blur-2xl max-md:border-r max-md:border-koru-outline-faint max-md:shadow-koru-lg"
           >
             {/* Header */}
-            <div className="px-5 pb-4 border-b border-gray-100 flex flex-col gap-1">
-              <h3 className="text-base font-extrabold tracking-tight !text-gray-900">
+            <div className="flex flex-col gap-1 border-b border-koru-outline-faint px-5 pb-4">
+              <h3 className="font-display text-koru-heading text-koru-on-surface">
                 My Courses
               </h3>
-              <p className="text-[11px] text-gray-500 font-medium">
+              <p className="text-koru-caption text-koru-on-surface-variant">
                 Select a course to view details
               </p>
             </div>
@@ -352,9 +365,11 @@ export default function AppSidebar() {
             {/* Scrollable Course Cards List */}
             <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-2 scrollbar-hide">
               {visibleCourses.length === 0 ? (
-                <div className="text-center py-8">
-                  <p className="text-xs text-gray-400 font-medium">No courses enrolled</p>
-                </div>
+                <EmptyState
+                  size="sm"
+                  icon={<Book weight="Outline" size={24} color="currentColor" />}
+                  title="No courses enrolled"
+                />
               ) : (
                 visibleCourses.map((course) => (
                   <motion.div
@@ -368,34 +383,35 @@ export default function AppSidebar() {
                         setShowCourseNav(false);
                         closeMobile();
                       }}
-                      className={`flex items-center gap-3 p-3 rounded-2xl border transition-all duration-200 group select-none
+                      aria-current={isActiveCourse(course.id) ? "page" : undefined}
+                      className={`group flex select-none items-center gap-3 rounded-koru-lg p-3 transition-colors duration-200 ease-koru-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus
                         ${isActiveCourse(course.id)
-                          ? "bg-[#3C0078]/5 border-[#3C0078]/20"
-                          : "bg-transparent border-gray-100/50 hover:bg-gray-50/80 hover:border-gray-200"
+                          ? "bg-koru-primary-container/60"
+                          : "bg-transparent hover:bg-koru-surface-container"
                         }`}
                     >
                       {/* Dynamic Colored Badge */}
                       <div
                         style={{ backgroundColor: course.color }}
-                        className="w-10 h-10 rounded-xl flex flex-col items-center justify-center text-white shrink-0 shadow-sm transition-transform group-hover:scale-105 duration-200"
+                        className="flex h-10 w-10 shrink-0 flex-col items-center justify-center rounded-koru-md text-koru-on-primary shadow-koru-xs transition-transform duration-200 ease-koru-out group-hover:scale-105"
                       >
-                        <span className="text-[10px] font-black tracking-wider leading-none uppercase">{course.code}</span>
+                        <span className="text-koru-caption font-black leading-none">{course.code}</span>
                         <span className="text-[8px] font-black leading-none mt-0.5">{course.number}</span>
                       </div>
 
                       {/* Course info */}
                       <div className="flex-1 min-w-0">
-                        <h4 className="text-xs font-bold !text-gray-900 truncate group-hover:text-[#3C0078] transition-colors">
+                        <h4 className="truncate text-koru-label text-koru-on-surface transition-colors group-hover:text-koru-primary">
                           {course.subjectName}
                         </h4>
-                        <p className="text-[10px] text-gray-500 truncate mt-0.5">
+                        <p className="mt-0.5 truncate text-koru-caption text-koru-on-surface-variant">
                           {course.description || `${course.code} ${course.number}`}
                         </p>
                       </div>
 
                       {/* Indicator dot */}
                       <div className={`w-1.5 h-1.5 rounded-full shrink-0 transition-colors
-                        ${isActiveCourse(course.id) ? "bg-[#3C0078]" : "bg-transparent group-hover:bg-gray-300"}`}
+                        ${isActiveCourse(course.id) ? "bg-koru-primary" : "bg-transparent group-hover:bg-koru-outline-variant"}`}
                       />
                     </Link>
                   </motion.div>
@@ -404,17 +420,18 @@ export default function AppSidebar() {
             </div>
 
             {/* Footer / Actions */}
-            <div className="p-4 border-t border-gray-100 flex flex-col gap-2 bg-gray-50/50">
-              <button
+            <div className="flex flex-col gap-2 border-t border-koru-outline-faint bg-koru-surface-container-low p-4">
+              <Button
+                variant="tonal"
+                fullWidth
+                startIcon={<Eye size={16} />}
                 onClick={() => {
                   setModalOpen(true);
                   setShowCourseNav(false);
                 }}
-                className="flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl text-xs font-semibold border border-gray-200 bg-white hover:bg-gray-50 !text-gray-700 transition-all cursor-pointer shadow-xs"
               >
-                <Eye size={16} />
-                <span>Manage Courses</span>
-              </button>
+                Manage Courses
+              </Button>
             </div>
           </motion.div>
         )}
