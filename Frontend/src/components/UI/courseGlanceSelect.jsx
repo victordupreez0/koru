@@ -45,10 +45,10 @@ export default function CourseGlanceSelect({ activeCourseId, setActiveCourseId, 
                             }}
                             aria-pressed={isActive}
                             aria-label={course.label || course.code}
-                            className={`btn !rounded-koru-pill !border-transparent !shadow-none flex items-center overflow-hidden transition-colors duration-200 ease-koru-out cursor-pointer !outline-none focus-visible:!ring-2 focus-visible:!ring-koru-focus focus-visible:!ring-offset-2 hover:!border-transparent
+                            className={`rounded-koru-pill flex items-center overflow-hidden transition-colors duration-200 ease-koru-out cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-koru-focus focus-visible:ring-offset-2
                                 ${isActive
-                                    ? "!bg-koru-secondary-container !text-koru-on-secondary-container !pl-1 !pr-3 justify-start"
-                                    : "!bg-koru-primary-container/50 !text-koru-primary p-0 justify-center items-center hover:!bg-koru-primary-container"
+                                    ? "bg-koru-secondary-container text-koru-on-secondary-container pl-1 pr-3 justify-start"
+                                    : "bg-koru-primary-container/50 text-koru-primary p-0 justify-center items-center hover:bg-koru-primary-container"
                                 }`}
                             style={{
                                 minWidth: 0, minHeight: 0,
@@ -66,10 +66,10 @@ export default function CourseGlanceSelect({ activeCourseId, setActiveCourseId, 
                                   Circle: diameter=32px (radius=16). Left padding=4px so circle
                                   center sits at x=20 — matching the pill's left arc centre (radius=20
                                   for a 40px-tall rounded-full). Always white so the code is legible
-                                  against both the active (purple-300) and inactive (purple-100) pill.
+                                  against both the active (secondary container) and inactive (primary container) pill.
                                 */}
                                 <span className="flex-shrink-0 flex items-center justify-center" style={{ height: "100%" }}>
-                                    <span className="flex aspect-square h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-koru-surface-container-lowest font-semibold transition-colors duration-150">
+                                    <span className="flex aspect-square h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-koru-surface-container-lowest font-medium transition-colors duration-150">
                                         <span className={`text-xs ${isActive ? "text-koru-on-surface" : "text-koru-primary"}`}>
                                             {course.code}
                                         </span>

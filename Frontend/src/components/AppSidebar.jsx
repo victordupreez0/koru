@@ -394,8 +394,8 @@ export default function AppSidebar() {
                         style={{ backgroundColor: course.color }}
                         className="flex h-10 w-10 shrink-0 flex-col items-center justify-center rounded-koru-md text-koru-on-primary shadow-koru-xs transition-transform duration-200 ease-koru-out group-hover:scale-105"
                       >
-                        <span className="text-koru-caption font-black leading-none">{course.code}</span>
-                        <span className="text-[8px] font-black leading-none mt-0.5">{course.number}</span>
+                        <span className="text-koru-caption font-medium leading-none">{course.code}</span>
+                        <span className="text-[8px] font-medium leading-none mt-0.5">{course.number}</span>
                       </div>
 
                       {/* Course info */}

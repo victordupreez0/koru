@@ -1,9 +1,15 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { Card } from "../../../components/UI";
 
 export function ColumnCard({ children, isSelected, onClick, className = "" }) {
   return (
-    <motion.div
+    <Card
+      as={motion.div}
+      variant={isSelected ? "filled" : "interactive"}
+      tone={isSelected ? "brand" : "surface"}
+      radius="2xl"
+      padding="none"
       onClick={onClick}
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
@@ -11,13 +17,11 @@ export function ColumnCard({ children, isSelected, onClick, className = "" }) {
       tabIndex={0}
       role="button"
       onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") onClick?.(); }}
-      className={`w-full text-left rounded-2xl px-4 py-3.5 flex items-center gap-3 transition-all duration-200 cursor-pointer border
-        ${isSelected
-          ? "bg-[#3C0078] text-white border-[#3C0078]"
-          : "bg-white/80 border-gray-100 hover:border-gray-200"
-        } ${className}`}
+      className={`flex w-full cursor-pointer items-center gap-3 px-4 py-3.5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus motion-reduce:transition-none ${
+        isSelected ? "text-koru-on-primary-container" : "text-koru-on-surface"
+      } ${className}`}
     >
       {children}
-    </motion.div>
+    </Card>
   );
 }

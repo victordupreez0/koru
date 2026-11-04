@@ -9,7 +9,7 @@ export default function NavItem({ label, href = "#", icon, filledIcon, className
       {isActive && (
         <motion.div
           layoutId="nav-pill"
-          className="absolute inset-0 bg-purple-400 rounded-full"
+          className="absolute inset-0 rounded-koru-pill bg-koru-primary"
           transition={{
             layout: {
               type: "spring",
@@ -24,10 +24,10 @@ export default function NavItem({ label, href = "#", icon, filledIcon, className
 
       <Link
         to={href}
-        className={`relative z-10 rounded-xl px-3 py-2 inline-flex flex-col items-center justify-center gap-1 select-none
-          ${isActive ? "text-white" : "text-gray-400"}
+        className={`relative z-10 rounded-koru-xl px-3 py-2 inline-flex flex-col items-center justify-center gap-1 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus
+          ${isActive ? "text-koru-on-primary" : "text-koru-on-surface-variant"}
           ${className}`.trim()}
-        style={{ WebKitTapHighlightColor: "transparent", color: isActive ? "white" : undefined }}
+        style={{ WebKitTapHighlightColor: "transparent", color: isActive ? "var(--color-koru-on-primary)" : undefined }}
         aria-label={label}
       >
         <div className="flex items-center justify-center">
