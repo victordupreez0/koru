@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { Bell, CloseSquare, User } from "@solar-icons/react";
+import { CloseSquare } from "@solar-icons/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { staggerContainer, slideUp } from "./constants";
 import { getCourseAnnouncements, markAnnouncementAsRead, markAllAnnouncementsAsRead } from "../../../services/announcementService";
 import { useAuth } from "../../../contexts/AuthContext";
+import Avatar from "../../../components/UI/Avatar";
 
 export default function CourseAnnouncementsView({ activeCourseId }) {
     const [selectedId, setSelectedId] = useState(null);
@@ -116,16 +117,19 @@ export default function CourseAnnouncementsView({ activeCourseId }) {
 
                             {/* Left & Middle detail content */}
                             <div className="flex flex-1 items-start gap-4 pl-2 min-w-0">
-                                {/* Icon avatar */}
-                                <div 
-                                    className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 mt-0.5"
-                                    style={{ 
-                                        backgroundColor: selectedId === post.id ? "#3C007820" : "#3C007815", 
-                                        color: "#3C0078" 
-                                    }}
-                                >
-                                    <Bell size={20} />
-                                </div>
+                                <Avatar
+
+                                    src={post.lecturerProfileImageUrl}
+
+                                    seed={post.lecturerId || post.lecturerName}
+
+                                    name={post.lecturerName || "Lecturer"}
+
+                                    size="md"
+
+                                    className="mt-0.5"
+
+                                />
 
                                 {/* Title, author, preview */}
                                 <div className="flex-1 min-w-0">
@@ -192,9 +196,12 @@ export default function CourseAnnouncementsView({ activeCourseId }) {
                             </h2>
 
                             <div className="flex items-center gap-3 mb-6 pb-6 border-b border-gray-100">
-                                <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-[#3C0078]">
-                                    <User size={20} />
-                                </div>
+                                <Avatar
+                                    src={selectedAnnouncement.lecturerProfileImageUrl}
+                                    seed={selectedAnnouncement.lecturerId || selectedAnnouncement.lecturerName}
+                                    name={selectedAnnouncement.lecturerName || "Lecturer"}
+                                    size="md"
+                                />
                                 <div>
                                     <p className="text-xs font-black uppercase tracking-widest text-gray-400">Published By</p>
                                     <p className="font-bold text-[#3C0078]">{selectedAnnouncement.lecturerName || selectedAnnouncement.lecturer?.name || selectedAnnouncement.lecturer || "Lecturer"}</p>
