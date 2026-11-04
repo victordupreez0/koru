@@ -36,7 +36,8 @@ namespace LearnOnline.Controllers
                         a.Student.Id,
                         a.Student.FirstName,
                         a.Student.LastName,
-                        a.Student.Email
+                        a.Student.Email,
+                        a.Student.ProfileImageUrl
                     }
                 })
                 .ToListAsync();

@@ -33,6 +33,8 @@ namespace LearnOnline.Controllers
                     a.Color,
                     a.DatePosted,
                     lecturerName = a.Lecturer != null ? $"{a.Lecturer.FirstName} {a.Lecturer.LastName}" : "Unknown",
+                    a.LecturerId,
+                    lecturerProfileImageUrl = a.Lecturer != null ? a.Lecturer.ProfileImageUrl : null,
                     isRead = userId != null ? _context.AnnouncementReadStates.Any(ars => ars.AnnouncementId == a.Id && ars.UserId == userId) : false
                 })
                 .ToListAsync();
@@ -79,6 +81,8 @@ namespace LearnOnline.Controllers
                 announcement.Color,
                 announcement.DatePosted,
                 lecturerName = lecturer != null ? $"{lecturer.FirstName} {lecturer.LastName}" : "Unknown",
+                announcement.LecturerId,
+                lecturerProfileImageUrl = lecturer?.ProfileImageUrl,
                 isRead = true
             });
         }

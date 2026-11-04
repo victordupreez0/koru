@@ -161,6 +161,22 @@ using (var scope = app.Services.CreateScope())
     {
         logger.LogError(ex, "RealDataSeeder threw an exception. Database may be in a partial state.");
     }
+
+    // Backfill a random DiceBear avatar for any user without a profile picture
+    try
+    {
+        var usersWithoutAvatar = context.Users
+            .Where(u => u.ProfileImageUrl == null || u.ProfileImageUrl == "")
+            .ToList();
+        foreach (var u in usersWithoutAvatar)
+            u.ProfileImageUrl = LearnOnline.Helpers.AvatarHelper.ForSeed(u.Id);
+        if (usersWithoutAvatar.Count > 0)
+            context.SaveChanges();
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Avatar backfill failed.");
+    }
 }
 // ---------------------------------------
 
