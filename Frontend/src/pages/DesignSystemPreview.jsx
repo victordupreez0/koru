@@ -8,6 +8,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import {
+  Avatar,
   Badge,
   Button,
   Card,
@@ -348,6 +349,26 @@ export default function DesignSystemPreview() {
               <Badge size="md" variant="primary" dot>
                 Medium
               </Badge>
+            </div>
+          </Card>
+        </Section>
+
+        <Section
+          id="avatars"
+          eyebrow="Components"
+          title="Avatars"
+          description="Randomly assigned DiceBear profile pictures, stable per user id."
+        >
+          <Card padding="lg" className="space-y-6">
+            <div className="flex flex-wrap items-end gap-4">
+              {["xs", "sm", "md", "lg", "xl"].map((size) => (
+                <Avatar key={size} seed="preview-user" name="Preview user" size={size} />
+              ))}
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              {["ada", "grace", "alan", "linus", "margaret", "tim"].map((seed) => (
+                <Avatar key={seed} seed={seed} name={seed} size="md" />
+              ))}
             </div>
           </Card>
         </Section>
