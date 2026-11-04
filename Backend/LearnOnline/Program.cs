@@ -219,7 +219,10 @@ app.MapControllers();
 
 app.Run();
 
-// Minimal .env reader: KEY=VALUE lines, '#' comments, optional surrounding quotes.
+// Loads KEY=VALUE lines from a local, gitignored .env file into the environment
+// (e.g. DEEPSEEK_API_KEY). Variables that are already set win, so real
+// environment variables and Docker settings always take precedence.
+// Supports optional surrounding matching quotes in values.
 static void LoadDotEnv(string path)
 {
     if (!File.Exists(path)) return;
