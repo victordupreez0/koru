@@ -5,6 +5,7 @@ import { courseService, userService, enrollmentService } from "../../../services
 import { getCourseLecturers } from "../../../services/courseService";
 import { getCourseCohorts } from "../../../services/classGroupService";
 import { staggerContainer, slideUp, scaleIn } from "../teacherCoursesComponents/constants";
+import Avatar from "../../../components/UI/Avatar";
 
 export function AdminCourseOverviewView({ course, onSaved }) {
   const [teachers, setTeachers] = useState([]);
@@ -112,7 +113,6 @@ export function AdminCourseOverviewView({ course, onSaved }) {
 
   const enrollFill = form.capacity > 0 ? Math.min(Math.round(((studentCount ?? 0) / form.capacity) * 100), 100) : 0;
 
-  const initials = (t) => `${t.firstName?.[0] ?? ""}${t.lastName?.[0] ?? ""}`.toUpperCase();
 
   return (
     <motion.div className="flex-1 overflow-y-auto" initial="hidden" animate="visible" variants={staggerContainer}>
@@ -316,9 +316,7 @@ export function AdminCourseOverviewView({ course, onSaved }) {
               {courseLecturers.length > 0 ? (
                 courseLecturers.map(t => (
                   <div key={t.id} className="flex items-center gap-3.5 p-3 rounded-2xl bg-[#3C0078]/4 border border-[#3C0078]/8">
-                    <div className="w-10 h-10 rounded-xl bg-[#3C0078] text-white flex items-center justify-center font-bold text-sm shrink-0 select-none">
-                      {initials(t)}
-                    </div>
+                    <Avatar user={t} size="md" />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-bold text-gray-900">{t.firstName} {t.lastName}</p>
                       <p className="text-xs text-gray-400 mt-0.5 truncate">{t.email}</p>

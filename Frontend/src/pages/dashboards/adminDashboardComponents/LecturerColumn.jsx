@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { Plus, User, X, Bell, Pencil, Trash2 } from "lucide-react";
+import { Plus, X, Bell, Pencil, Trash2 } from "lucide-react";
 import { ColumnCard } from "./ColumnCard";
 import { SearchInput } from "./SearchInput";
+import Avatar from "../../../components/UI/Avatar";
 
 export function LecturerColumn({
   lecturer,
@@ -56,9 +57,7 @@ export function LecturerColumn({
           <p className="text-sm text-gray-400 text-center py-8">No match.</p>
         ) : (
           <ColumnCard isSelected>
-            <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center shrink-0">
-              <User className="w-4 h-4 text-white" />
-            </div>
+            <Avatar user={lecturer} name={lecturer.name} size={36} className="ring-2 ring-white/40" />
             <div className="flex-1 min-w-0">
               <p className="text-[10px] uppercase tracking-wider font-semibold text-white/70">Lecturer</p>
               <p className="text-sm font-bold truncate text-white">{lecturer.name}</p>

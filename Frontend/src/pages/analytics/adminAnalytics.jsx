@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { BarChart3, ChevronDown } from "lucide-react";
+import Avatar from "../../components/UI/Avatar";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5299/api";
 
@@ -230,6 +231,7 @@ export default function AdminAnalytics() {
           id: st.id,
           name,
           email: st.email,
+          profileImageUrl: st.profileImageUrl,
           avatar: name.split(" ").map(n => n[0] || "").join("").toUpperCase().substring(0, 2),
           totalEarned: 0,
           totalMax: 0,
@@ -321,9 +323,7 @@ export default function AdminAnalytics() {
                     <tr key={l.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center font-bold text-xs text-gray-600 shrink-0">
-                            {l.avatar}
-                          </div>
+                          <Avatar user={l} name={l.name} size={36} />
                           <div>
                             <p className="font-semibold text-sm text-gray-900">{l.fullName}</p>
                             <p className="text-xs text-gray-400">{l.email}</p>
@@ -654,9 +654,7 @@ export default function AdminAnalytics() {
                           <tr key={s.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors">
                             <td className="px-6 py-4">
                               <div className="flex items-center gap-3">
-                                <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center font-bold text-xs text-gray-600 shrink-0">
-                                  {s.avatar}
-                                </div>
+                                <Avatar user={s} name={s.name} size={36} />
                                 <div>
                                   <p className="font-semibold text-sm text-gray-900">{s.name}</p>
                                   <p className="text-xs text-gray-400">{s.email}</p>

@@ -8,6 +8,7 @@ import { getCourseAssignments } from "../../services/assignmentService";
 import { getCourseSubmissions } from "../../services/submissionService";
 import { getCourseGrades } from "../../services/gradeService";
 import { YEARS, SEMESTERS, YEAR_LEVELS } from "./teacherMockData";
+import Avatar from "../../components/UI/Avatar";
 
 /* ─── animation variants ─── */
 const stagger = {
@@ -171,6 +172,7 @@ export default function TeacherAnalytics() {
             id: student.id,
             name: student.name || `${student.firstName || ""} ${student.lastName || ""}`.trim() || "Student",
             email: student.email,
+            profileImageUrl: student.profileImageUrl,
             avatar:
               (student.name || `${student.firstName || ""} ${student.lastName || ""}`)
                 .split(" ")
@@ -438,9 +440,7 @@ export default function TeacherAnalytics() {
                     <tr key={s.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center font-bold text-xs text-gray-600 shrink-0">
-                            {s.avatar}
-                          </div>
+                          <Avatar user={s} name={s.name} size={36} />
                           <div>
                             <p className="font-semibold text-sm text-gray-900">{s.name}</p>
                             <p className="text-xs text-gray-400">{s.email}</p>
@@ -563,9 +563,7 @@ export default function TeacherAnalytics() {
                         s.status === "Critical" ? "border-red-100 bg-red-50/30" : "border-amber-100 bg-amber-50/30"
                       }`}
                     >
-                      <div className="w-9 h-9 rounded-full bg-white border border-gray-100 flex items-center justify-center font-bold text-[10px] text-gray-600 shrink-0">
-                        {s.avatar}
-                      </div>
+                      <Avatar user={s} name={s.name} size={36} />
                       <div className="flex-1 min-w-0">
                         <p className="font-semibold text-sm text-gray-900 truncate">{s.name}</p>
                         <p className="text-xs text-gray-400">{s.submissions}/{s.totalAssignments} submitted</p>
