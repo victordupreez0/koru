@@ -19,7 +19,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="flex flex-col overflow-hidden transition-all duration-300 md:h-[calc(100vh-32px)] md:w-full md:bg-white/75 md:backdrop-blur-xl md:border md:border-white/20 md:rounded-[28px] md:shadow-lg max-md:h-screen max-md:w-screen max-md:-ml-4 max-md:-mr-4 max-md:-mt-4 max-md:bg-white text-slate-900">
+    <div className="flex flex-col overflow-hidden text-koru-on-surface transition-all duration-300 md:h-[calc(100vh-32px)] md:w-full md:rounded-koru-lg md:bg-koru-surface-container-lowest md:shadow-koru-card md:ring-1 md:ring-koru-outline-faint md:backdrop-blur-xl max-md:-ml-4 max-md:-mr-4 max-md:-mt-4 max-md:h-screen max-md:w-screen max-md:bg-koru-surface-container-lowest">
       {/* Reusable breadcrumb header top bar */}
       <HeaderTopBar />
 
