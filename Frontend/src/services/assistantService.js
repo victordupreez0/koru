@@ -1,104 +1,150 @@
-// Service to handle interactions with the Groq AI model
+// Client for the streaming assistant endpoint (see the assistant contract).
+// Provider fallback lives on the server; the browser never holds an API key.
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5299/api";
 
-function buildSystemInstruction(role) {
-  const roleContext = role === "student"
-    ? "You are conversing with a student. Help them understand course material, assignments, study strategies, and academic concepts. Provide encouraging, clear explanations tailored to a learner."
-    : "You are conversing with a teacher/administrator. Assist with creating structured timetables, writing detailed and encouraging student feedback, creating detailed module/lesson plans, explaining academic analytics, and drafting class announcements.";
+const GENERIC_ERROR = "Unable to reach the assistant. Please try again in a moment.";
+
+/**
+ * Incremental Server-Sent Events parser. Feed it text chunks (which may split
+ * mid-line); it calls onEvent({ event, data }) at every blank-line dispatch.
+ */
+export function createSseParser(onEvent) {
+  let buffer = "";
+  let eventName = "message";
+  let dataLines = [];
+
+  const dispatch = () => {
+    if (dataLines.length > 0) onEvent({ event: eventName, data: dataLines.join("\n") });
+    eventName = "message";
+    dataLines = [];
+  };
+
+  const handleLine = (line) => {
+    if (line === "") return dispatch();
+    if (line.startsWith(":")) return; // comment
+    const idx = line.indexOf(":");
+    const field = idx === -1 ? line : line.slice(0, idx);
+    let value = idx === -1 ? "" : line.slice(idx + 1);
+    if (value.startsWith(" ")) value = value.slice(1);
+    if (field === "event") eventName = value;
+    else if (field === "data") dataLines.push(value);
+  };
 
   return {
-    role: "system",
-    content: "You are a helpful, professional, and knowledgeable AI Assistant for the LearnOnline educational platform. " +
-              roleContext + " " +
-              "Always respond in clear, professional, and engaging English. Use clean Markdown formatting with bolding, " +
-              "bullet points, and structured tables where appropriate to present information beautifully."
+    push(chunk) {
+      buffer += chunk;
+      let match;
+      while ((match = /\r\n|\n|\r/.exec(buffer))) {
+        // A lone trailing \r may be the first half of \r\n; wait for more.
+        if (match[0] === "\r" && match.index === buffer.length - 1) break;
+        const line = buffer.slice(0, match.index);
+        buffer = buffer.slice(match.index + match[0].length);
+        handleLine(line);
+      }
+    },
+    end() {
+      if (buffer) handleLine(buffer.replace(/\r$/, ""));
+      buffer = "";
+      dispatch();
+    },
   };
 }
 
+/** Hand validation of the result payload. Returns a normalised result or null. */
+export function normalizeResult(raw) {
+  if (!raw || typeof raw !== "object") return null;
+  if (raw.ok === false) {
+    return {
+      ok: false,
+      error: typeof raw.error === "string" && raw.error.trim() ? raw.error : GENERIC_ERROR,
+    };
+  }
+  if (raw.ok !== true) return null;
+  if (typeof raw.message !== "string" || !raw.message.trim()) return null;
+  const question = typeof raw.question === "string" && raw.question.trim() ? raw.question.trim() : null;
+  const summary = typeof raw.context?.summary === "string" ? raw.context.summary : "";
+  return {
+    ok: true,
+    message: raw.message,
+    question,
+    context: { summary },
+    provider: typeof raw.provider === "string" ? raw.provider : "none",
+    fallback: raw.fallback === true,
+  };
+}
+
+const isAbort = (err) => err?.name === "AbortError";
+
 /**
- * Sends chat messages to the AI Assistant and returns the response content.
- * First, it tries the secure backend proxy. If that fails because the backend is
- * missing the API key, it falls back to a direct call if VITE_GROQ_API_KEY is available.
- * 
- * @param {Array} chatHistory - Array of { role, content } messages
- * @param {string} userId - ID of the logged-in user
- * @param {string} role - Role of the logged-in user
- * @returns {Promise<Object>} Object containing { role: "assistant", content: string }
+ * Streams an assistant reply.
+ * Resolves with the result object ({ ok:true, ... } or { ok:false, error }).
+ * Rejects only with an AbortError when `signal` aborts.
  */
-export async function getAssistantResponse(chatHistory, userId, role) {
-  // 1. Try to call the secure backend proxy first
+export async function streamAssistant({ messages, userId, role, mode = "standard", signal, onStage } = {}) {
+  let result = null;
+
+  const onEvent = ({ event, data }) => {
+    let payload;
+    try { payload = JSON.parse(data); } catch { return; }
+    if (event === "stage") {
+      if (payload && typeof payload.text === "string" && payload.text) {
+        try { onStage?.({ stage: payload.stage, text: payload.text }); } catch { /* UI callback must not break parsing */ }
+      }
+    } else if (event === "result") {
+      result = normalizeResult(payload) ?? { ok: false, error: "The assistant sent a reply I could not read. Please try again." };
+    }
+  };
+
   try {
-    const res = await fetch(`${API_BASE}/Assistant/chat`, {
+    const res = await fetch(`${API_BASE}/Assistant/chat/stream`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", Accept: "text/event-stream" },
       body: JSON.stringify({
-        messages: chatHistory.filter(m => m.role === "user" || m.role === "assistant"),
-        userId: userId,
-        role: role
-      })
+        messages: (messages || []).filter((m) => m.role === "user" || m.role === "assistant"),
+        userId,
+        role,
+        mode,
+      }),
+      signal,
     });
 
-    if (res.ok) {
-      const data = await res.json();
-      return data;
-    }
-
-    // If it failed, let's see why. If it is a bad request or unauthorized, we can fallback
-    const errorData = await res.json().catch(() => ({}));
-    console.warn("Backend proxy returned error, attempting client-side fallback:", errorData.message || res.statusText);
-    
-    // Throw an error with backend message so we can inspect and decide
-    throw new Error(errorData.message || "Backend error");
-  } catch (backendError) {
-    // 2. Fall back to direct Groq API client-side call if key is set in .env
-    const clientApiKey = import.meta.env.VITE_GROQ_API_KEY;
-    if (clientApiKey && clientApiKey.trim().length > 0) {
-      console.log("Using client-side VITE_GROQ_API_KEY direct fallback to Groq Cloud.");
-      
-      const messagesToSend = [
-        buildSystemInstruction(role),
-        ...chatHistory.filter(msg => msg.role !== "system" && msg.content && msg.content.trim())
-      ];
-
+    if (!res.ok) {
+      let msg = GENERIC_ERROR;
       try {
-        const groqRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${clientApiKey}`
-          },
-          body: JSON.stringify({
-            model: "llama-3.1-8b-instant",
-            messages: messagesToSend,
-            temperature: 0.7,
-            max_completion_tokens: 4096
-          })
-        });
-
-        if (!groqRes.ok) {
-          const groqError = await groqRes.json().catch(() => ({}));
-          throw new Error(groqError?.error?.message || `Groq direct API error (status ${groqRes.status})`);
-        }
-
-        const data = await groqRes.json();
-        const content = data?.choices?.[0]?.message?.content;
-        if (content) {
-          return { role: "assistant", content };
-        } else {
-          throw new Error("Empty response from Groq Cloud.");
-        }
-      } catch (clientError) {
-        throw new Error(`Direct API fallback failed: ${clientError.message}`);
-      }
+        const body = await res.json();
+        if (typeof body?.message === "string" && body.message) msg = body.message;
+        else if (typeof body?.error === "string" && body.error) msg = body.error;
+      } catch { /* keep generic */ }
+      return { ok: false, error: msg };
     }
 
-    // Surface the actual error — never show a misleading "key not configured" message
-    // when the real cause is a rate limit, timeout, or any other backend/Groq error.
-    const userMessage =
-      backendError.message && backendError.message !== "Backend error"
-        ? backendError.message
-        : "Unable to reach the assistant. Please try again in a moment.";
+    if (!res.body?.getReader) return { ok: false, error: GENERIC_ERROR };
 
-    throw new Error(userMessage);
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    const parser = createSseParser(onEvent);
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      parser.push(decoder.decode(value, { stream: true }));
+      if (result) break;
+    }
+    if (!result) {
+      parser.push(decoder.decode());
+      parser.end();
+    } else {
+      try { reader.cancel?.(); } catch { /* ignore */ }
+    }
+  } catch (err) {
+    if (isAbort(err) || signal?.aborted) {
+      const abort = new Error("Aborted");
+      abort.name = "AbortError";
+      throw abort;
+    }
+    return { ok: false, error: GENERIC_ERROR };
   }
+
+  return result ?? { ok: false, error: "The assistant stopped before it finished a reply. Please try again." };
 }
+
+export { isAbort as isAbortError };

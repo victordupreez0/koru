@@ -5,10 +5,14 @@ import {
   GraduationCap, BookOpen, ShieldCheck, PanelLeft,
 } from "lucide-react";
 
-import Orb from "../../components/UI/Orb";
 import AssistantInput from "../../components/assistantInput";
 import HeaderTopBar from "../../components/HeaderTopBar";
-import { getAssistantResponse } from "../../services/assistantService";
+import { streamAssistant } from "../../services/assistantService";
+import ChatGlow from "../../components/assistant/ChatGlow";
+import Emerge from "../../components/assistant/Emerge";
+import PendingLine from "../../components/assistant/PendingLine";
+import AssistantReply from "../../components/assistant/AssistantReply";
+import "../../components/assistant/assistant.css";
 import { useAuth } from "../../contexts/AuthContext";
 import { Avatar, Badge, Button, Alert } from "../../components/UI";
 
@@ -41,6 +45,15 @@ function relativeTime(iso) {
   if (d === 1) return "Yesterday";
   return `${d}d ago`;
 }
+
+// Text of a turn as the server sees it (assistant turns carry their question too).
+const toWire = (m) => ({
+  role: m.role,
+  content: m.role === "assistant" && m.question ? `${m.content}\n\n${m.question}` : m.content,
+});
+
+const initialStage = (hasHistory) =>
+  hasHistory ? "Looking at this chat and what is saved" : "Looking at what is saved";
 
 // ─── Role configuration ───────────────────────────────────────────────────────
 
@@ -83,115 +96,6 @@ const ROLE_CONFIG = {
   },
 };
 
-// ─── Markdown renderer ────────────────────────────────────────────────────────
-
-function renderMessageContent(content) {
-  if (!content) return null;
-
-  const lines = content.split("\n");
-  const elements = [];
-  let currentList = [];
-  let currentListType = null;
-  let inCodeBlock = false;
-  let codeBlockContent = [];
-
-  const flushList = (key) => {
-    if (currentList.length === 0) return;
-    const Tag = currentListType === "ul" ? "ul" : "ol";
-    elements.push(
-      <Tag
-        key={`list-${key}`}
-        className={`${currentListType === "ul" ? "list-disc" : "list-decimal"} pl-5 my-2 space-y-1 text-koru-on-surface-variant`}
-      >
-        {currentList.map((item, i) => (
-          <li key={i} className="leading-relaxed text-sm">{parseInline(item)}</li>
-        ))}
-      </Tag>
-    );
-    currentList = [];
-    currentListType = null;
-  };
-
-  const parseInline = (text) => {
-    const parts = text.split(/\*\*([^*]+)\*\*/g);
-    return parts.map((part, i) => {
-      if (i % 2 === 1)
-        return <strong key={i} className="font-medium text-koru-on-surface">{part}</strong>;
-      const sub = part.split(/\*([^*]+)\*/g);
-      return sub.map((s, j) => {
-        if (j % 2 === 1) return <em key={j} className="italic text-koru-on-surface-variant">{s}</em>;
-        const code = s.split(/`([^`]+)`/g);
-        return code.map((c, k) =>
-          k % 2 === 1 ? (
-            <code key={k} className="px-1.5 py-0.5 rounded-koru-sm bg-koru-primary-container text-koru-on-primary-container text-[0.8em] font-mono">
-              {c}
-            </code>
-          ) : c
-        );
-      });
-    });
-  };
-
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-
-    if (line.trim().startsWith("```")) {
-      if (inCodeBlock) {
-        inCodeBlock = false;
-        elements.push(
-          <pre key={`code-${i}`} className="p-4 rounded-koru-lg bg-koru-inverse-surface text-koru-inverse-on-surface text-xs font-mono my-3 overflow-x-auto select-all">
-            <code>{codeBlockContent.join("\n")}</code>
-          </pre>
-        );
-        codeBlockContent = [];
-      } else {
-        flushList(i);
-        inCodeBlock = true;
-      }
-      continue;
-    }
-    if (inCodeBlock) { codeBlockContent.push(line); continue; }
-
-    if (line.startsWith("### ")) {
-      flushList(i);
-      elements.push(<h4 key={`h4-${i}`} className="font-display text-sm font-medium text-koru-on-surface mt-4 mb-1.5">{parseInline(line.slice(4))}</h4>);
-      continue;
-    }
-    if (line.startsWith("## ")) {
-      flushList(i);
-      elements.push(<h3 key={`h3-${i}`} className="font-display text-base font-medium text-koru-on-surface mt-4 mb-2">{parseInline(line.slice(3))}</h3>);
-      continue;
-    }
-    if (line.startsWith("# ")) {
-      flushList(i);
-      elements.push(<h2 key={`h2-${i}`} className="font-display text-lg font-medium text-koru-on-surface mt-5 mb-2">{parseInline(line.slice(2))}</h2>);
-      continue;
-    }
-
-    if (line.trim().startsWith("- ") || line.trim().startsWith("* ")) {
-      if (currentListType && currentListType !== "ul") flushList(i);
-      currentListType = "ul";
-      currentList.push(line.trim().slice(2));
-      continue;
-    }
-    const olMatch = line.trim().match(/^(\d+)\.\s(.*)/);
-    if (olMatch) {
-      if (currentListType && currentListType !== "ol") flushList(i);
-      currentListType = "ol";
-      currentList.push(olMatch[2]);
-      continue;
-    }
-    if (line.trim() === "") { flushList(i); continue; }
-
-    flushList(i);
-    elements.push(
-      <p key={`p-${i}`} className="leading-relaxed text-sm text-koru-on-surface-variant my-1">{parseInline(line)}</p>
-    );
-  }
-  flushList(lines.length);
-  return <div className="space-y-0.5">{elements}</div>;
-}
-
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function TeacherAssistant() {
@@ -206,7 +110,12 @@ export default function TeacherAssistant() {
   const [chats, setChats]             = useState(() => loadChats(userId));
   const [activeChatId, setActiveChatId] = useState(() => loadChats(userId)[0]?.id ?? null);
 
-  const [isTyping, setIsTyping]       = useState(false);
+  const [pending, setPending]       = useState(null); // { chatId, text }
+  const [mode, setMode]             = useState("standard");
+  const [fresh, setFresh]           = useState(null); // { chatId, idx } of the newest arrival (animated)
+  const abortRef = useRef(null);
+  const isTyping = pending !== null;
+  const showPending = pending && pending.chatId === activeChatId;
   const [copiedIndex, setCopiedIndex] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(() => typeof window !== "undefined" && window.innerWidth >= 768);
 
@@ -243,10 +152,12 @@ export default function TeacherAssistant() {
     };
     setChats((prev) => [chat, ...prev]);
     setActiveChatId(id);
+    setFresh(null);
   }, []);
 
   const handleSelectChat = useCallback((id) => {
     setActiveChatId(id);
+    setFresh(null);
   }, []);
 
   const handleDeleteChat = useCallback(
@@ -308,21 +219,44 @@ export default function TeacherAssistant() {
         );
 
       setChats(patch(withUser));
-      setIsTyping(true);
+      setFresh({ chatId, idx: withUser.length - 1 });
+      setPending({ chatId, text: initialStage(prevMsgs.length > 0) });
+
+      const controller = new AbortController();
+      abortRef.current = controller;
 
       try {
-        const res = await getAssistantResponse(withUser, user?.userId, user?.role);
-        setChats(patch([...withUser, { role: "assistant", content: res.content }]));
+        const res = await streamAssistant({
+          messages: withUser.map(toWire),
+          userId: user?.userId,
+          role: user?.role,
+          mode,
+          signal: controller.signal,
+          onStage: ({ text: stageText }) => setPending({ chatId, text: stageText }),
+        });
+        if (res.ok) {
+          setChats(patch([...withUser, { role: "assistant", content: res.message, question: res.question, context: res.context }]));
+          setFresh({ chatId, idx: withUser.length });
+        } else {
+          setChats(patch([...withUser, { role: "error", content: res.error || "An unexpected error occurred." }]));
+        }
       } catch (err) {
-        setChats(
-          patch([...withUser, { role: "error", content: err.message || "An unexpected error occurred." }])
-        );
+        if (err?.name === "AbortError") {
+          setChats(patch([...withUser, { role: "note", content: "Stopped." }]));
+        } else {
+          setChats(patch([...withUser, { role: "error", content: err.message || "An unexpected error occurred." }]));
+        }
       } finally {
-        setIsTyping(false);
+        abortRef.current = null;
+        setPending(null);
       }
     },
-    [activeChatId, chats, user]
+    [activeChatId, chats, user, mode]
   );
+
+  const handleStop = useCallback(() => abortRef.current?.abort(), []);
+
+  useEffect(() => () => abortRef.current?.abort(), []);
 
   const handleCopy = useCallback((text, idx) => {
     navigator.clipboard.writeText(text);
@@ -455,13 +389,11 @@ export default function TeacherAssistant() {
         </AnimatePresence>
 
         {/* ── Main chat area ────────────────────────────────────────────────── */}
-        <div className="flex-1 flex flex-col relative min-w-0 overflow-hidden">
+        <Emerge className="flex-1 flex flex-col relative min-w-0 overflow-hidden">
 
-          {/* Gradient + Orb background */}
+          {/* Gradient + ambient glow background */}
           <div className="absolute inset-0 bg-gradient-to-br from-koru-primary-subtle via-koru-accent-soft to-koru-info-soft overflow-hidden">
-            <div className="w-full h-full opacity-50">
-              <Orb hoverIntensity={2} rotateOnHover={true} hue={0} forceHoverState={false} backgroundColor="#f3edff" />
-            </div>
+            <ChatGlow settled={activeMessages.length > 0} />
           </div>
 
           {/* Chat content layer */}
@@ -504,31 +436,33 @@ export default function TeacherAssistant() {
               <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 pt-6 pb-2">
                 <div className="max-w-3xl mx-auto space-y-5 pb-2">
                   {activeMessages.map((msg, idx) => {
+                    const isFresh = fresh?.chatId === activeChatId && fresh.idx === idx;
 
                     if (msg.role === "error") {
                       return (
-                        <motion.div
-                          key={idx}
-                          initial={{ opacity: 0, y: 8 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          className="max-w-2xl"
-                        >
+                        <div key={idx} className={`max-w-2xl ${isFresh ? "koru-rise" : ""}`}>
                           <Alert variant="warning" title="Assistant unavailable">
                             {msg.content}
                           </Alert>
-                        </motion.div>
+                        </div>
+                      );
+                    }
+
+                    if (msg.role === "note") {
+                      return (
+                        <p key={idx} className="text-koru-caption text-koru-on-surface-variant pl-[38px]">
+                          {msg.content}
+                        </p>
                       );
                     }
 
                     const isUser = msg.role === "user";
+                    const copyText = !isUser && msg.question ? `${msg.content}\n\n${msg.question}` : msg.content;
 
                     return (
-                      <motion.div
+                      <div
                         key={idx}
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.2 }}
-                        className={`flex items-end gap-2.5 group ${isUser ? "flex-row-reverse" : "flex-row"}`}
+                        className={`flex items-end gap-2.5 group ${isUser ? "flex-row-reverse" : "flex-row"} ${isUser && isFresh ? "koru-rise" : ""}`}
                       >
                         {/* Avatar */}
                         {isUser ? (
@@ -555,14 +489,19 @@ export default function TeacherAssistant() {
                                 {msg.content}
                               </p>
                             ) : (
-                              renderMessageContent(msg.content)
+                              <AssistantReply
+                                message={msg.content}
+                                question={msg.question}
+                                summary={msg.context?.summary}
+                                animate={isFresh}
+                              />
                             )}
                           </div>
 
                           {/* Copy button */}
                           {!isUser && (
                             <button
-                              onClick={() => handleCopy(msg.content, idx)}
+                              onClick={() => handleCopy(copyText, idx)}
                               className="absolute -bottom-2.5 left-2 p-1.5 rounded-koru-md bg-koru-surface-container-lowest shadow-koru-card ring-1 ring-inset ring-koru-outline-faint text-koru-on-surface-variant hover:text-koru-primary opacity-0 group-hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus transition-all cursor-pointer"
                               aria-label="Copy response"
                             >
@@ -572,33 +511,20 @@ export default function TeacherAssistant() {
                             </button>
                           )}
                         </div>
-                      </motion.div>
+                      </div>
                     );
                   })}
 
-                  {/* Typing indicator */}
-                  {isTyping && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="flex items-end gap-2.5"
-                    >
+                  {/* Pending line: where the reply will appear */}
+                  {showPending && (
+                    <div className="flex items-end gap-2.5">
                       <div className="w-7 h-7 rounded-full bg-koru-primary-container flex items-center justify-center shrink-0 mb-1">
                         <Bot className="w-3.5 h-3.5 text-koru-on-primary-container" />
                       </div>
-                      <div className="px-4 py-3.5 rounded-koru-xl rounded-bl-sm bg-koru-surface-container-lowest shadow-koru-card">
-                        <div className="flex items-center gap-1.5">
-                          {[0, 0.15, 0.3].map((delay, i) => (
-                            <motion.div
-                              key={i}
-                              className="w-2 h-2 rounded-full bg-koru-primary/40"
-                              animate={{ y: [0, -5, 0] }}
-                              transition={{ repeat: Infinity, duration: 0.9, delay }}
-                            />
-                          ))}
-                        </div>
+                      <div className="px-4 py-3 rounded-koru-xl rounded-bl-sm bg-koru-surface-container-lowest shadow-koru-card">
+                        <PendingLine text={pending.text} onStop={handleStop} />
                       </div>
-                    </motion.div>
+                    </div>
                   )}
                 </div>
               </div>
@@ -610,10 +536,12 @@ export default function TeacherAssistant() {
                 onSend={handleSend}
                 disabled={isTyping}
                 role={role}
+                mode={mode}
+                onModeChange={setMode}
               />
             </div>
           </div>
-        </div>
+        </Emerge>
       </div>
     </div>
   );
