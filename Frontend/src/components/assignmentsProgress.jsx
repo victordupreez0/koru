@@ -6,18 +6,19 @@ import { useAuth } from "../contexts/AuthContext";
 import { getStudentAssignments } from "../services/assignmentService";
 import { getStudentSubmissions } from "../services/submissionService";
 import { getStudentStats } from "../services/attendanceService";
+import { Card, Skeleton } from "./UI";
 
 const MIN_LOADING_MS = 1500;
 
 function SkeletonAssignment() {
   return (
-    <div className="rounded-2xl border border-gray-100 p-4 flex items-center gap-3">
-      <div className="w-10 h-10 rounded-xl bg-gray-100 animate-pulse shrink-0" />
+    <div className="my-2 flex min-h-14 w-full items-center gap-3 rounded-koru-md px-3 py-2.5 ring-1 ring-inset ring-koru-outline-faint">
+      <Skeleton variant="circle" className="h-9 w-9 shrink-0" />
       <div className="flex-1 space-y-2">
-        <div className="h-3 bg-gray-100 rounded-full animate-pulse w-3/4" />
-        <div className="h-2.5 bg-gray-100 rounded-full animate-pulse w-1/2" />
+        <Skeleton variant="text" className="w-3/4" />
+        <Skeleton variant="text" className="h-2.5 w-1/2" />
       </div>
-      <div className="w-6 h-6 rounded-full bg-gray-100 animate-pulse shrink-0" />
+      <Skeleton variant="circle" className="h-6 w-6 shrink-0" />
     </div>
   );
 }
@@ -25,8 +26,8 @@ function SkeletonAssignment() {
 function SkeletonRing() {
   return (
     <div className="p-4 flex flex-col items-center gap-3">
-      <div className="w-20 h-2.5 bg-gray-100 rounded-full animate-pulse" />
-      <div className="w-28 h-28 rounded-full bg-gray-100 animate-pulse" />
+      <Skeleton variant="text" className="h-2.5 w-20" />
+      <Skeleton variant="circle" className="h-28 w-28" />
     </div>
   );
 }
@@ -94,7 +95,10 @@ export default function AssignmentsProgress() {
   }, [user?.userId]);
 
   function fireConfetti() {
-    const colors = ["#3C0078", "#FF8731", "#87CEFA"];
+    const rootStyle = getComputedStyle(document.documentElement);
+    const colors = ["--color-koru-primary", "--color-koru-accent", "--color-koru-sky"]
+      .map((token) => rootStyle.getPropertyValue(token).trim())
+      .filter(Boolean);
     confetti({ particleCount: 80, spread: 70, origin: { x: 0.25, y: 0.3 }, colors, gravity: 0.8, scalar: 1.1 });
     confetti({ particleCount: 80, spread: 70, origin: { x: 0.75, y: 0.3 }, colors, gravity: 0.8, scalar: 1.1 });
     document.body.classList.add("orbs-vibrant");
@@ -121,17 +125,17 @@ export default function AssignmentsProgress() {
   );
 
   return (
-    <div className="w-full h-full flex flex-col bg-white/70 border border-gray-100 rounded-3xl p-4">
+    <Card variant="outlined" tone="low" radius="lg" padding="sm" className="flex h-full w-full flex-col">
       <div className="flex items-center justify-between mt-5 mb-5">
-        <h2 className="text-2xl font-['Gabarito']">Assignments</h2>
+        <h2 className="font-display text-koru-heading text-koru-on-surface">Assignments</h2>
       </div>
 
       <div className="flex flex-col pr-2">
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col">
           {loading ? (
             <>{[0, 1, 2].map(i => <SkeletonAssignment key={i} />)}</>
           ) : nextThree.length === 0 ? (
-            <p className="text-sm text-gray-400 font-medium text-center mt-8">No upcoming assignments.</p>
+            <div className="my-2 flex min-h-14 w-full items-center justify-center rounded-koru-md border border-dashed border-koru-outline-variant px-3 text-koru-caption text-koru-on-surface-variant">No upcoming assignments.</div>
           ) : (
             nextThree.map((assignment) => (
               <AssignmentItem
@@ -150,24 +154,24 @@ export default function AssignmentsProgress() {
         </div>
 
         {/* Progress section pushed to bottom of equalised card via mt-auto */}
-        <h2 className="text-2xl font-['Gabarito'] mt-auto pt-8 mb-4">Progress & Stats</h2>
+        <h2 className="mb-4 mt-auto pt-8 font-display text-koru-heading text-koru-on-surface">Progress & Stats</h2>
         <div className="grid grid-cols-2 gap-4">
           {loading ? (
             <>{[0, 1].map(i => <SkeletonRing key={i} />)}</>
           ) : (
             <>
               <div className="p-4 flex flex-col items-center">
-                <span className="text-[10px] font-black uppercase tracking-widest text-[#3C0078] opacity-60 mb-2">Assignments</span>
+                <span className="mb-2 text-koru-caption font-medium text-koru-primary/70">Assignments</span>
                 <ProgressRing percentage={progress} size={110} strokeWidth={8} />
               </div>
               <div className="p-4 flex flex-col items-center">
-                <span className="text-[10px] font-black uppercase tracking-widest text-[#3C0078] opacity-60 mb-2">Attendance</span>
+                <span className="mb-2 text-koru-caption font-medium text-koru-primary/70">Attendance</span>
                 <ProgressRing percentage={attendanceRate} size={110} strokeWidth={8} />
               </div>
             </>
           )}
         </div>
       </div>
-    </div>
+    </Card>
   );
 }

@@ -1,19 +1,20 @@
 import { motion } from "framer-motion";
+import Card from "./Card";
+import Skeleton from "./Skeleton";
 
-const ICON_COLORS = {
-  purple:  "text-[#3C0078]/60",
-  orange:  "text-[#FF8731]/70",
-  sky:     "text-sky-400",
-  emerald: "text-emerald-500",
-  slate:   "text-slate-400",
-};
-
-const HINT_COLORS = {
-  purple:  "text-[#3C0078]/70",
-  orange:  "text-[#FF8731]/80",
-  sky:     "text-sky-500",
-  emerald: "text-emerald-600",
-  slate:   "text-slate-500",
+// Vivid fill + matching coloured glow per variant. The fill is a soft same-hue
+// sheen (solid colour fading to 80%) so the tile reads as one colour.
+const FILLS = {
+  purple:
+    "bg-linear-to-br from-koru-stat-violet to-koru-stat-violet/80 shadow-[0_14px_28px_-14px_var(--color-koru-stat-violet)]",
+  orange:
+    "bg-linear-to-br from-koru-stat-orange to-koru-stat-orange/80 shadow-[0_14px_28px_-14px_var(--color-koru-stat-orange)]",
+  sky:
+    "bg-linear-to-br from-koru-stat-sky to-koru-stat-sky/80 shadow-[0_14px_28px_-14px_var(--color-koru-stat-sky)]",
+  emerald:
+    "bg-linear-to-br from-koru-stat-green to-koru-stat-green/80 shadow-[0_14px_28px_-14px_var(--color-koru-stat-green)]",
+  slate:
+    "bg-linear-to-br from-koru-stat-slate to-koru-stat-slate/80 shadow-[0_14px_28px_-14px_var(--color-koru-stat-slate)]",
 };
 
 export default function DashboardStatTile({
@@ -25,51 +26,56 @@ export default function DashboardStatTile({
   variant = "purple",
   loading = false,
 }) {
-  const iconColor = ICON_COLORS[variant] ?? ICON_COLORS.purple;
-  const hintColor = HINT_COLORS[variant] ?? HINT_COLORS.purple;
+  const fill = FILLS[variant] ?? FILLS.purple;
 
   return (
-    <motion.div
-      whileHover={{ y: -1 }}
+    <Card
+      as={motion.div}
+      variant="filled"
+      padding="none"
+      radius="lg"
+      whileHover={{ y: -2 }}
       transition={{ type: "spring", stiffness: 340, damping: 28 }}
-      className="bg-white/70 border border-gray-100 rounded-2xl px-5 py-4 hover:border-gray-200 transition-colors duration-150"
+      className={`relative isolate overflow-hidden px-5 py-5 text-koru-on-primary ${fill}`}
     >
-      {/* Icon + hint row */}
-      <div className="flex items-center justify-between mb-3">
-        {Icon && (
-          <Icon
-            size={16}
-            className={`${iconColor} shrink-0`}
-            aria-hidden="true"
-          />
-        )}
-        {hint && (
-          <span className={`text-[10px] font-semibold uppercase tracking-wider ${hintColor}`}>
-            {hint}
-          </span>
-        )}
-      </div>
+      {/* Oversized faded icon bleeding off the right edge. Opacity sits on the
+          whole SVG (not the stroke colour) so overlapping strokes don't double up. */}
+      {Icon && (
+        <Icon
+          size={104}
+          strokeWidth={1.75}
+          aria-hidden="true"
+          className="pointer-events-none absolute -bottom-5 -right-4 -z-10 rotate-[-8deg] text-koru-on-primary opacity-20"
+        />
+      )}
+
+      {/* Hint chip */}
+      {hint && (
+        <span className="absolute right-4 top-4 rounded-koru-pill bg-koru-on-primary/20 px-2 py-0.5 text-koru-caption font-medium text-koru-on-primary">
+          {hint}
+        </span>
+      )}
 
       {/* Value */}
       <div className="flex items-baseline gap-1">
         {loading ? (
-          <span className="inline-block h-6 w-10 rounded-lg bg-gray-100 animate-pulse" />
+          <Skeleton className="h-8 w-12 !bg-none !bg-koru-on-primary/25" />
         ) : (
           <>
-            <span className="text-2xl font-bold font-['Gabarito'] tabular-nums text-slate-800 leading-none">
+            <span className="font-display text-3xl font-medium leading-none tabular-nums">
               {value}
             </span>
             {suffix && (
-              <span className="text-xs font-medium text-slate-400">{suffix}</span>
+              <span className="text-sm font-medium text-koru-on-primary/85">{suffix}</span>
             )}
           </>
         )}
       </div>
 
       {/* Label */}
-      <p className="mt-1 text-[11px] font-medium text-slate-400 uppercase tracking-wider">
+      <p className="mt-2 font-display text-koru-heading text-koru-on-primary">
         {label}
       </p>
-    </motion.div>
+    </Card>
   );
 }

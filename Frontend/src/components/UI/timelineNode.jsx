@@ -3,35 +3,34 @@
 // Visual state changes based on whether the event is active (next up), past, first, or last
 export default function TimelineNode({ isActive = false, isPast = false, isFirst = false, isLast = false }) {
   // Past events get a lighter connecting line
-  const lineColor = isPast ? "bg-gray-200" : "bg-purple-200";
+  const lineColor = isPast ? "bg-koru-outline-faint" : "bg-koru-primary-container";
 
   return (
-    <div className="flex flex-col items-center w-6 shrink-0">
+    <div className="flex w-6 shrink-0 flex-col items-center">
       {/* Top connecting line – hidden for the first event */}
       {!isFirst ? (
-        <div className={`w-[2px] flex-1 min-h-[20px] ${lineColor}`} />
+        <div className={`min-h-[20px] w-[2px] flex-1 ${lineColor}`} />
       ) : (
-        <div className="flex-1 min-h-[20px]" />
+        <div className="min-h-[20px] flex-1" />
       )}
 
-      {/* Centre dot – active = large purple, past = grey filled, future = outlined */}
+      {/* Centre dot – active = large primary, past = grey filled, future = outlined */}
       <div
-        className={`rounded-full shrink-0 transition-all duration-300 ${
+        className={`shrink-0 rounded-full transition-all duration-300 ease-koru-out ${
           isActive
-            ? "w-4 h-4 bg-purple-500 shadow-[0_0_0_4px_rgba(60,0,120,0.12)]"
+            ? "h-4 w-4 bg-koru-primary ring-4 ring-koru-primary/12"
             : isPast
-            ? "w-3 h-3 bg-gray-300"
-            : "w-3 h-3 border-2 border-purple-300 bg-white"
+            ? "h-3 w-3 bg-koru-outline-variant"
+            : "h-3 w-3 border-2 border-koru-primary/40 bg-koru-surface-container-lowest"
         }`}
       />
 
       {/* Bottom connecting line – hidden for the last event */}
       {!isLast ? (
-        <div className={`w-[2px] flex-1 min-h-[20px] ${lineColor}`} />
+        <div className={`min-h-[20px] w-[2px] flex-1 ${lineColor}`} />
       ) : (
-        <div className="flex-1 min-h-[20px]" />
+        <div className="min-h-[20px] flex-1" />
       )}
     </div>
   );
 }
-

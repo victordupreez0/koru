@@ -8,18 +8,20 @@ import { getCourseSubmissions } from "../services/submissionService";
 import { getCourseAttendance } from "../services/attendanceService";
 import { getAllEvents } from "../services/eventService";
 import { getCourseGrades } from "../services/gradeService";
+import { Badge, Skeleton } from "./UI";
 
-const BRAND = "#3C0078";
-const BRAND_TINT = "#3C007812";
 const MIN_LOADING_MS = 1500;
+
+const ROW_CLASS =
+    "my-2 flex min-h-14 w-full items-center gap-3 rounded-koru-md bg-koru-surface-container-lowest px-3 py-2.5 text-left shadow-koru-card ring-1 ring-inset ring-koru-outline-faint cursor-pointer transition duration-150 ease-koru-out hover:bg-koru-surface-container-low hover:shadow-koru-card-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus";
 
 function SkeletonRow() {
     return (
-        <div className="my-2 rounded-xl border border-gray-100 w-full h-12 flex flex-row items-center space-x-3 px-3">
-            <div className="w-9 h-9 rounded-full bg-gray-100 animate-pulse shrink-0" />
+        <div className="my-2 flex min-h-14 w-full items-center gap-3 rounded-koru-md px-3 py-2.5 ring-1 ring-inset ring-koru-outline-faint">
+            <Skeleton variant="circle" className="h-9 w-9 shrink-0" />
             <div className="flex-1 space-y-1.5">
-                <div className="h-3 bg-gray-100 rounded-full animate-pulse w-3/4" />
-                <div className="h-2.5 bg-gray-100 rounded-full animate-pulse w-1/2" />
+                <Skeleton variant="text" className="w-3/4" />
+                <Skeleton variant="text" className="h-2.5 w-1/2" />
             </div>
         </div>
     );
@@ -27,7 +29,7 @@ function SkeletonRow() {
 
 function SectionLabel({ children, className = "" }) {
     return (
-        <p className={`text-[11px] font-semibold text-gray-400 uppercase tracking-wider ${className}`}>
+        <p className={`text-koru-caption font-medium text-koru-on-surface-variant ${className}`}>
             {children}
         </p>
     );
@@ -123,7 +125,7 @@ export default function TeacherCourseGlanceDisplay({ activeCourseId }) {
     }, [activeCourseId]);
 
     if (!activeCourseId) {
-        return <p className="text-xs text-gray-400 py-2">Select a course to see details.</p>;
+        return <div className="my-2 flex min-h-14 w-full items-center justify-center rounded-koru-md border border-dashed border-koru-outline-variant px-3 text-koru-caption text-koru-on-surface-variant">Select a course to see details.</div>;
     }
 
     if (loading) {
@@ -137,37 +139,33 @@ export default function TeacherCourseGlanceDisplay({ activeCourseId }) {
     }
 
     return (
-        <div className="w-full h-fit rounded-2xl mt-4">
+        <div className="mt-4 h-fit w-full">
             <SectionLabel>Pending Grading</SectionLabel>
             {gradingTasks.length === 0 ? (
-                <div className="my-2 bg-white rounded-xl border border-dashed border-gray-200 w-full h-12 flex items-center justify-center">
-                    <span className="text-xs text-gray-400 font-medium">All assignments graded</span>
-                </div>
+                <div className="my-2 flex min-h-14 w-full items-center justify-center rounded-koru-md border border-dashed border-koru-outline-variant px-3 text-koru-caption text-koru-on-surface-variant">All assignments graded</div>
             ) : (
                 gradingTasks.map(task => (
-                    <div
+                    <button
+                        type="button"
                         key={task.id}
-                        className="my-2 bg-white rounded-xl border border-gray-100 w-full h-12 flex flex-row items-center space-x-2 transition-colors duration-150 hover:bg-gray-50/60 hover:border-gray-200 cursor-pointer"
+                        className={ROW_CLASS}
                         onClick={() => navigate(`/courses/${activeCourseId}/assignments`)}
                     >
-                        <div
-                            className="w-9 h-9 rounded-full ml-2 flex items-center justify-center shrink-0"
-                            style={{ backgroundColor: BRAND_TINT }}
-                        >
-                            <MdEditNote className="w-5 h-5" style={{ color: BRAND }} />
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-koru-primary-container/60">
+                            <MdEditNote className="h-5 w-5 text-koru-primary" />
                         </div>
 
-                        <div className="ml-2 flex flex-col justify-center space-y-0.5 flex-1 min-w-0">
-                            <h3 className="text-sm font-semibold text-gray-800 truncate">{task.title}</h3>
-                            <p className="text-xs text-gray-400">
+                        <div className="flex min-w-0 flex-1 flex-col justify-center gap-0.5">
+                            <h3 className="truncate text-koru-label text-koru-on-surface">{task.title}</h3>
+                            <p className="text-koru-caption text-koru-on-surface-variant">
                                 {task.pendingCount} submission{task.pendingCount !== 1 ? "s" : ""} to grade
                             </p>
                         </div>
 
-                        <div className="w-9 h-9 flex items-center justify-center mr-2 shrink-0">
-                            <ChevronRight className="w-4 h-4 text-gray-300" />
+                        <div className="flex h-9 w-6 shrink-0 items-center justify-center">
+                            <ChevronRight className="h-4 w-4 text-koru-outline" />
                         </div>
-                    </div>
+                    </button>
                 ))
             )}
 
@@ -175,42 +173,39 @@ export default function TeacherCourseGlanceDisplay({ activeCourseId }) {
             {nextClass ? (
                 <NextClassItem subject={nextClass.subject} date={nextClass.date} time={nextClass.time} room={nextClass.room} />
             ) : (
-                <p className="text-xs text-gray-400 py-2">No upcoming classes scheduled</p>
+                <div className="my-2 flex min-h-14 w-full items-center justify-center rounded-koru-md border border-dashed border-koru-outline-variant px-3 text-koru-caption text-koru-on-surface-variant">No upcoming classes scheduled</div>
             )}
 
             <SectionLabel className="mt-5">Attendance Rate</SectionLabel>
             {attendanceStats ? (
-                <div
-                    className="my-2 bg-white rounded-xl border border-gray-100 w-full h-14 flex flex-row items-center space-x-2 transition-colors duration-150 hover:bg-gray-50/60 hover:border-gray-200 cursor-pointer"
+                <button
+                    type="button"
+                    className={ROW_CLASS}
                     onClick={() => navigate(`/courses/${activeCourseId}/attendance`)}
                 >
-                    <div className="w-9 h-9 bg-teal-50 rounded-full ml-2 flex items-center justify-center shrink-0">
-                        <MdPeopleOutline className="w-5 h-5 text-teal-500" />
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-koru-info-soft">
+                        <MdPeopleOutline className="h-5 w-5 text-koru-info" />
                     </div>
 
-                    <div className="ml-2 flex flex-col justify-center space-y-0.5 flex-1 min-w-0">
-                        <h3 className="text-sm font-semibold text-gray-800">Class Presence</h3>
-                        <p className="text-xs text-gray-400">
+                    <div className="flex min-w-0 flex-1 flex-col justify-center gap-0.5">
+                        <h3 className="text-koru-label text-koru-on-surface">Class Presence</h3>
+                        <p className="text-koru-caption text-koru-on-surface-variant">
                             Across {attendanceStats.sessions} session{attendanceStats.sessions !== 1 ? "s" : ""}
                         </p>
                     </div>
 
-                    <div className="mr-2 shrink-0">
-                        <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
-                            attendanceStats.rate >= 80
-                                ? "bg-green-50 text-green-600"
-                                : "bg-red-50 text-red-500"
-                        }`}>
+                    <div className="shrink-0">
+                        <Badge variant={attendanceStats.rate >= 80 ? "success" : "error"}>
                             {attendanceStats.rate}%
-                        </span>
+                        </Badge>
                     </div>
 
-                    <div className="w-9 h-9 flex items-center justify-center mr-1 shrink-0">
-                        <ChevronRight className="w-4 h-4 text-gray-300" />
+                    <div className="flex h-9 w-6 shrink-0 items-center justify-center">
+                        <ChevronRight className="h-4 w-4 text-koru-outline" />
                     </div>
-                </div>
+                </button>
             ) : (
-                <p className="text-xs text-gray-400 py-2">No attendance records logged yet</p>
+                <div className="my-2 flex min-h-14 w-full items-center justify-center rounded-koru-md border border-dashed border-koru-outline-variant px-3 text-koru-caption text-koru-on-surface-variant">No attendance records logged yet</div>
             )}
         </div>
     );

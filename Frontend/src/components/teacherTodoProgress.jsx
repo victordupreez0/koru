@@ -9,33 +9,34 @@ import { useCourses } from "../contexts/CoursesContext";
 import { getTeacherTodos, createTodo, toggleTodo as apiToggleTodo } from "../services/todoService";
 import { getCourseSubmissions } from "../services/submissionService";
 import { getCourseGrades } from "../services/gradeService";
+import { Badge, Button, Card, Input, Skeleton } from "./UI";
 
 const MIN_LOADING_MS = 1500;
 
 const theme = {
   teacher: {
-    icon: "bg-[#3C0078]/8",
-    iconText: "text-[#3C0078]",
-    checkbox: "border-[#3C0078] bg-[#3C0078]",
-    checkboxHover: "hover:border-[#3C0078]",
-    badge: "bg-[#3C0078]/10 text-[#3C0078]",
-    dot: "bg-[#3C0078]",
+    icon: "bg-koru-primary-container/60",
+    iconText: "text-koru-primary",
+    checkbox: "border-koru-primary bg-koru-primary",
+    checkboxHover: "hover:border-koru-primary",
+    badge: "primary",
+    dot: "bg-koru-primary",
   },
   admin: {
-    icon: "bg-[#FF8731]/10",
-    iconText: "text-[#FF8731]",
-    checkbox: "border-[#FF8731] bg-[#FF8731]",
-    checkboxHover: "hover:border-[#FF8731]",
-    badge: "bg-[#FF8731]/10 text-[#FF8731]",
-    dot: "bg-[#FF8731]",
+    icon: "bg-koru-accent-soft",
+    iconText: "text-koru-accent",
+    checkbox: "border-koru-accent bg-koru-accent",
+    checkboxHover: "hover:border-koru-accent",
+    badge: "accent",
+    dot: "bg-koru-accent",
   },
   shared: {
-    icon: "bg-emerald-50",
-    iconText: "text-emerald-600",
-    checkbox: "border-emerald-500 bg-emerald-500",
-    checkboxHover: "hover:border-emerald-500",
-    badge: "bg-emerald-50 text-emerald-700",
-    dot: "bg-emerald-500",
+    icon: "bg-koru-success-soft",
+    iconText: "text-koru-success",
+    checkbox: "border-koru-success bg-koru-success",
+    checkboxHover: "hover:border-koru-success",
+    badge: "success",
+    dot: "bg-koru-success",
   },
 };
 
@@ -52,13 +53,13 @@ function formatDueDate(raw) {
 
 function SkeletonTodo() {
   return (
-    <div className="rounded-2xl border border-gray-100 px-4 py-3.5 flex items-center gap-3">
-      <div className="w-10 h-10 rounded-xl bg-gray-100 animate-pulse shrink-0" />
+    <div className="my-2 flex min-h-14 w-full items-center gap-3 rounded-koru-md px-3 py-2.5 ring-1 ring-inset ring-koru-outline-faint">
+      <Skeleton variant="circle" className="h-9 w-9 shrink-0" />
       <div className="flex-1 space-y-2">
-        <div className="h-3.5 bg-gray-100 rounded-full animate-pulse w-3/4" />
-        <div className="h-2.5 bg-gray-100 rounded-full animate-pulse w-1/2" />
+        <Skeleton variant="text" className="w-3/4" />
+        <Skeleton variant="text" className="h-2.5 w-1/2" />
       </div>
-      <div className="w-7 h-7 rounded-lg bg-gray-100 animate-pulse shrink-0" />
+      <Skeleton className="h-7 w-7 shrink-0 rounded-koru-sm" />
     </div>
   );
 }
@@ -116,7 +117,10 @@ export default function TeacherTodoProgress() {
   }, [user?.userId, visibleCourses]);
 
   function fireConfetti() {
-    const colors = ["#3C0078", "#FF8731", "#87CEFA"];
+    const rootStyle = getComputedStyle(document.documentElement);
+    const colors = ["--color-koru-primary", "--color-koru-accent", "--color-koru-sky"]
+      .map((token) => rootStyle.getPropertyValue(token).trim())
+      .filter(Boolean);
     confetti({ particleCount: 60, spread: 55, origin: { x: 0.75, y: 0.3 }, colors, gravity: 0.8, scalar: 1 });
     document.body.classList.add("orbs-vibrant");
     setTimeout(() => document.body.classList.remove("orbs-vibrant"), 3000);
@@ -161,16 +165,18 @@ export default function TeacherTodoProgress() {
   }, [todos]);
 
   return (
-    <div className="w-full h-full flex flex-col bg-white/70 border border-gray-100 rounded-3xl p-4">
+    <Card variant="outlined" tone="low" radius="lg" padding="sm" className="flex h-full w-full flex-col">
       <div className="flex items-center justify-between mt-5 mb-1">
-        <h2 className="text-2xl font-['Gabarito']">To Do</h2>
-        <button
+        <h2 className="font-display text-koru-heading text-koru-on-surface">To Do</h2>
+        <Button
+          variant="tonal"
+          size="icon"
           onClick={() => setIsAdding(!isAdding)}
-          className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
           aria-label="Add to-do"
+          aria-expanded={isAdding}
         >
-          <Plus className="w-4 h-4 text-gray-600" />
-        </button>
+          <Plus className="h-4 w-4" />
+        </Button>
       </div>
 
       <AnimatePresence>
@@ -181,61 +187,59 @@ export default function TeacherTodoProgress() {
             exit={{ opacity: 0, height: 0 }}
             className="overflow-hidden mb-4"
           >
-            <div className="bg-white border border-gray-200 rounded-2xl p-4 flex flex-col gap-3">
-              <input
+            <Card tone="muted" padding="sm" className="flex flex-col gap-3">
+              <Input
+                size="sm"
                 type="text"
+                aria-label="Task title"
                 placeholder="Task title"
                 value={newTitle}
                 onChange={(e) => setNewTitle(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleAdd()}
-                className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-[#3C0078] transition-colors"
               />
-              <input
+              <Input
+                size="sm"
                 type="datetime-local"
+                aria-label="Due date"
                 value={newDue}
                 onChange={(e) => setNewDue(e.target.value)}
-                className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-[#3C0078] transition-colors"
               />
-              <div className="flex rounded-lg border border-gray-200 overflow-hidden text-xs font-semibold">
+              <div className="flex gap-1 rounded-koru-pill bg-koru-surface-container-high p-1 text-xs font-medium">
                 <button
                   type="button"
+                  aria-pressed={!shareMode}
                   onClick={() => setShareMode(false)}
-                  className={`flex-1 py-2 transition-colors ${!shareMode ? "bg-[#3C0078] text-white" : "bg-white text-gray-500 hover:bg-gray-50"}`}
+                  className={`flex-1 rounded-koru-pill py-2 transition-colors duration-150 ease-koru-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus ${!shareMode ? "bg-koru-primary text-koru-on-primary shadow-koru-xs" : "text-koru-on-surface-variant hover:text-koru-on-surface"}`}
                 >
                   Just me
                 </button>
                 <button
                   type="button"
+                  aria-pressed={shareMode}
                   onClick={() => setShareMode(true)}
-                  className={`flex-1 py-2 border-l border-gray-200 transition-colors ${shareMode ? "bg-[#3C0078] text-white" : "bg-white text-gray-500 hover:bg-gray-50"}`}
+                  className={`flex-1 rounded-koru-pill py-2 transition-colors duration-150 ease-koru-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus ${shareMode ? "bg-koru-primary text-koru-on-primary shadow-koru-xs" : "text-koru-on-surface-variant hover:text-koru-on-surface"}`}
                 >
                   Share with co-lecturers
                 </button>
               </div>
-              <div className="flex gap-2 justify-end">
-                <button
-                  type="button"
-                  onClick={() => setIsAdding(false)}
-                  className="px-3 py-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 transition-colors"
-                >
+              <div className="flex justify-end gap-2">
+                <Button variant="text" size="sm" onClick={() => setIsAdding(false)}>
                   Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={handleAdd}
-                  className="px-4 py-1.5 text-xs font-bold text-white bg-[#3C0078] rounded-lg hover:bg-[#2a0055] transition-colors"
-                >
+                </Button>
+                <Button size="sm" onClick={handleAdd}>
                   Add
-                </button>
+                </Button>
               </div>
-            </div>
+            </Card>
           </motion.div>
         )}
       </AnimatePresence>
 
-      <div className="flex flex-col gap-3 pr-2">
+      <div className="flex flex-col">
         {loading ? (
           <>{[0, 1, 2].map(i => <SkeletonTodo key={i} />)}</>
+        ) : todos.length === 0 ? (
+          <div className="my-2 flex min-h-14 w-full items-center justify-center rounded-koru-md border border-dashed border-koru-outline-variant px-3 text-koru-caption text-koru-on-surface-variant">No tasks yet</div>
         ) : (
           <AnimatePresence>
             {todos.map((todo) => {
@@ -249,36 +253,38 @@ export default function TeacherTodoProgress() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, x: 20 }}
                   transition={{ duration: 0.3, ease: "easeOut" }}
-                  className={`w-full border rounded-2xl px-4 py-3.5 flex items-center gap-3 transition-all duration-300 cursor-pointer
-                    ${todo.isCompleted ? "bg-gray-50/60 border-gray-100 opacity-40" : "bg-white/80 border-gray-100 hover:border-gray-200"}`}
+                  className={`my-2 flex min-h-14 w-full cursor-pointer items-center gap-3 rounded-koru-md px-3 py-2.5 ring-1 ring-inset ring-koru-outline-faint transition-all duration-300 ease-koru-out
+                    ${todo.isCompleted ? "bg-koru-surface-container opacity-40" : "bg-koru-surface-container-lowest shadow-koru-card hover:shadow-koru-card-hover"}`}
                 >
                   <div className="relative shrink-0">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${todo.isCompleted ? "bg-gray-100" : colors.icon}`}>
-                      <MdEditNote className={`w-5 h-5 ${todo.isCompleted ? "text-gray-400" : colors.iconText}`} />
+                    <div className={`flex h-9 w-9 items-center justify-center rounded-full ${todo.isCompleted ? "bg-koru-surface-container-high" : colors.icon}`}>
+                      <MdEditNote className={`h-5 w-5 ${todo.isCompleted ? "text-koru-outline" : colors.iconText}`} />
                     </div>
-                    <span className={`absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 border-white ${todo.isCompleted ? "bg-gray-300" : colors.dot}`} />
+                    <span className={`absolute -right-1 -top-1 h-3 w-3 rounded-full border-2 border-koru-surface-container-lowest ${todo.isCompleted ? "bg-koru-outline-variant" : colors.dot}`} />
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <h4 className={`text-base font-semibold leading-tight font-['Gabarito'] ${todo.isCompleted ? "text-gray-400 line-through" : "text-black"}`}>
+                    <h4 className={`text-koru-label ${todo.isCompleted ? "text-koru-outline line-through" : "text-koru-on-surface"}`}>
                       {todo.title}
                     </h4>
-                    <p className="text-xs text-gray-400 mt-0.5 flex flex-wrap items-center gap-2">
+                    <p className="mt-0.5 flex flex-wrap items-center gap-2 text-koru-caption text-koru-on-surface-variant">
                       {todo.dueDate && <span>{todo.dueDate}</span>}
-                      {todo.courseCode && <span className="font-bold text-black">{todo.courseCode}</span>}
+                      {todo.courseCode && <span className="font-semibold text-koru-on-surface">{todo.courseCode}</span>}
                       {isAdminTodo && todo.createdByAdminName && (
-                        <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${colors.badge}`}>{todo.createdByAdminName}</span>
+                        <Badge variant={colors.badge}>{todo.createdByAdminName}</Badge>
                       )}
                       {isSharedTodo && todo.sharedByTeacherName && (
-                        <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${colors.badge}`}>{todo.sharedByTeacherName}</span>
+                        <Badge variant={colors.badge}>{todo.sharedByTeacherName}</Badge>
                       )}
                     </p>
                   </div>
 
                   <button
+                    type="button"
                     onClick={(e) => { e.stopPropagation(); handleToggle(todo.id); }}
-                    className={`w-7 h-7 rounded-lg border-2 flex items-center justify-center shrink-0 transition-all duration-200
-                      ${todo.isCompleted ? colors.checkbox : `border-gray-300 ${colors.checkboxHover}`}`}
+                    aria-pressed={todo.isCompleted}
+                    className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-koru-sm border-2 transition-all duration-200 ease-koru-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus focus-visible:ring-offset-2
+                      ${todo.isCompleted ? colors.checkbox : `border-koru-outline-variant ${colors.checkboxHover}`}`}
                     aria-label={`Toggle ${todo.title}`}
                   >
                     {todo.isCompleted && (
@@ -286,7 +292,7 @@ export default function TeacherTodoProgress() {
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
                         transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                        className="w-4 h-4 text-white"
+                        className="h-4 w-4 text-koru-on-primary"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -304,28 +310,28 @@ export default function TeacherTodoProgress() {
       </div>
 
       {/* Progress section anchored to bottom of equalised card via mt-auto */}
-      <h2 className="text-2xl font-['Gabarito'] mt-auto pt-8 mb-4">Progress & Stats</h2>
+      <h2 className="mb-4 mt-auto pt-8 font-display text-koru-heading text-koru-on-surface">Progress & Stats</h2>
       <div className="grid grid-cols-2 gap-4">
         {loading ? (
           <>{[0, 1].map(i => (
             <div key={i} className="p-4 flex flex-col items-center gap-3">
-              <div className="w-20 h-2.5 bg-gray-100 rounded-full animate-pulse" />
-              <div className="w-28 h-28 rounded-full bg-gray-100 animate-pulse" />
+              <Skeleton variant="text" className="h-2.5 w-20" />
+              <Skeleton variant="circle" className="h-28 w-28" />
             </div>
           ))}</>
         ) : (
           <>
             <div className="p-4 flex flex-col items-center">
-              <span className="text-[10px] font-black uppercase tracking-widest text-[#3C0078] opacity-60 mb-2">To-do</span>
+              <span className="mb-2 text-koru-caption font-medium text-koru-primary/70">To-do</span>
               <ProgressRing percentage={progress} size={110} strokeWidth={8} />
             </div>
             <div className="p-4 flex flex-col items-center">
-              <span className="text-[10px] font-black uppercase tracking-widest text-[#3C0078] opacity-60 mb-2">Graded</span>
+              <span className="mb-2 text-koru-caption font-medium text-koru-primary/70">Graded</span>
               <ProgressRing percentage={gradingProgress} size={110} strokeWidth={8} />
             </div>
           </>
         )}
       </div>
-    </div>
+    </Card>
   );
 }

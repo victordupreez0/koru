@@ -21,6 +21,7 @@ import {
 } from "./adminDashboardComponents";
 import { createEvent, getAllEvents } from "../../services/eventService";
 import DashboardHeader from "../../components/DashboardHeader";
+import { Card, Skeleton } from "../../components/UI";
 import { getCourseCohorts, getCourseStudents, getClassGroups } from "../../services/classGroupService";
 import { classService } from "../../services/classService";
 
@@ -434,40 +435,44 @@ export default function AdminDashboard() {
       />
 
       {isLoading ? (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full max-w-[1400px] mx-auto min-h-[520px] animate-pulse">
+        <div
+          className="grid min-h-[520px] w-full grid-cols-1 gap-6 lg:grid-cols-3"
+          aria-busy="true"
+          aria-label="Loading admin dashboard"
+        >
           {/* Column 1 — course list */}
-          <div className="flex flex-col gap-3 bg-white rounded-[28px] p-5 shadow-sm border border-gray-100">
-            <div className="h-5 rounded-full bg-gray-200 w-24 mb-1" />
-            <div className="h-8 rounded-2xl bg-gray-100 w-full mb-2" />
+          <Card variant="outlined" tone="low" radius="3xl" className="flex flex-col gap-3">
+            <Skeleton variant="text" className="mb-1 h-5 w-24" />
+            <Skeleton className="mb-2 h-8 w-full rounded-koru-pill" />
             {[1, 2, 3, 4].map(i => (
-              <div key={i} className="h-16 rounded-2xl bg-gray-100" />
+              <Skeleton key={i} className="h-16 rounded-koru-lg" />
             ))}
-          </div>
+          </Card>
           {/* Column 2 — lecturer */}
-          <div className="flex flex-col gap-3 bg-white rounded-[28px] p-5 shadow-sm border border-gray-100">
-            <div className="h-5 rounded-full bg-gray-200 w-28 mb-1" />
-            <div className="flex items-center gap-3 p-3 rounded-2xl bg-[#3C0078]/10 mt-2">
-              <div className="w-10 h-10 rounded-full bg-[#3C0078]/20 shrink-0" />
-              <div className="flex-1 flex flex-col gap-2">
-                <div className="h-2 rounded-full bg-[#3C0078]/20 w-2/5" />
-                <div className="h-3 rounded-full bg-[#3C0078]/20 w-3/5" />
+          <Card variant="outlined" tone="low" radius="3xl" className="flex flex-col gap-3">
+            <Skeleton variant="text" className="mb-1 h-5 w-28" />
+            <div className="mt-2 flex items-center gap-3 rounded-koru-lg bg-koru-primary-container/50 p-3">
+              <Skeleton variant="circle" className="h-10 w-10 shrink-0" />
+              <div className="flex flex-1 flex-col gap-2">
+                <Skeleton variant="text" className="h-2 w-2/5" />
+                <Skeleton variant="text" className="w-3/5" />
               </div>
             </div>
-          </div>
+          </Card>
           {/* Column 3 — student list */}
-          <div className="flex flex-col gap-3 bg-white rounded-[28px] p-5 shadow-sm border border-gray-100">
-            <div className="h-5 rounded-full bg-gray-200 w-28 mb-1" />
-            <div className="h-8 rounded-2xl bg-gray-100 w-full mb-2" />
+          <Card variant="outlined" tone="low" radius="3xl" className="flex flex-col gap-3">
+            <Skeleton variant="text" className="mb-1 h-5 w-28" />
+            <Skeleton className="mb-2 h-8 w-full rounded-koru-pill" />
             {[1, 2, 3, 4, 5].map(i => (
-              <div key={i} className="flex items-center gap-3 p-3 rounded-2xl bg-gray-50">
-                <div className="w-10 h-10 rounded-full bg-gray-200 shrink-0" />
-                <div className="flex-1 flex flex-col gap-2">
-                  <div className="h-3 rounded-full bg-gray-200" style={{ width: `${45 + i * 12}%` }} />
-                  <div className="h-3 rounded-full bg-gray-100 w-1/3" />
+              <div key={i} className="flex items-center gap-3 rounded-koru-lg bg-koru-surface-container p-3">
+                <Skeleton variant="circle" className="h-10 w-10 shrink-0" />
+                <div className="flex flex-1 flex-col gap-2">
+                  <Skeleton variant="text" width={`${45 + i * 12}%`} />
+                  <Skeleton variant="text" className="w-1/3" />
                 </div>
               </div>
             ))}
-          </div>
+          </Card>
         </div>
       ) : (
         <motion.section
@@ -477,7 +482,7 @@ export default function AdminDashboard() {
             hidden: {},
             show: { transition: { staggerChildren: 0.08, delayChildren: 0.15 } },
           }}
-          className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full max-w-[1400px] mx-auto h-[68vh] min-h-[520px]"
+          className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full h-[68vh] min-h-[520px]"
           aria-label="Admin dashboard overview"
         >
           {/* Column 1: Courses */}
