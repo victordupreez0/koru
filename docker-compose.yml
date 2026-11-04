@@ -4,4 +4,7 @@ services:
     container_name: learnonline-api
     ports:
       - "5299:5299"
+    env_file:
+      - path: ./Backend/LearnOnline/.env
+        required: false
     restart: unless-stopped

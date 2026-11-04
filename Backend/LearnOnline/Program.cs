@@ -2,6 +2,8 @@ using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using LearnOnline.Data;
 
+LoadDotEnv(Path.Combine(Directory.GetCurrentDirectory(), ".env"));
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Register MVC controllers so ASP.NET can discover our API endpoints
@@ -213,3 +215,22 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+// Loads KEY=VALUE lines from a local, gitignored .env file into the environment
+// (e.g. DEEPSEEK_API_KEY). Variables that are already set win, so real
+// environment variables and Docker settings always take precedence.
+static void LoadDotEnv(string path)
+{
+    if (!File.Exists(path)) return;
+    foreach (var raw in File.ReadAllLines(path))
+    {
+        var line = raw.Trim();
+        if (line.Length == 0 || line.StartsWith('#')) continue;
+        var eq = line.IndexOf('=');
+        if (eq <= 0) continue;
+        var key = line[..eq].Trim();
+        var value = line[(eq + 1)..].Trim().Trim('"', '\'');
+        if (Environment.GetEnvironmentVariable(key) == null)
+            Environment.SetEnvironmentVariable(key, value);
+    }
+}
