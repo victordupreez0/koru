@@ -5,7 +5,7 @@ export const YEAR_LEVELS = ["2nd Year", "3rd Year"];
 
 // ── Courses this teacher gives (one combo shown: 2026 / Semester 1) ──
 export const MOCK_TEACHER_COURSES = [
-  { id: "c1", code: "DV300", name: "Development 300", yearLevel: "3rd Year", semester: "Semester 1", year: 2026, enrolled: 28, color: "#3C0078" },
+  { id: "c1", code: "DV300", name: "Development 300", yearLevel: "3rd Year", semester: "Semester 1", year: 2026, enrolled: 28, color: "var(--color-koru-primary)" },
   { id: "c2", code: "UX300", name: "User Experience 300", yearLevel: "3rd Year", semester: "Semester 1", year: 2026, enrolled: 32, color: "#14B8A6" },
   { id: "c3", code: "DV200", name: "Development 200", yearLevel: "2nd Year", semester: "Semester 1", year: 2026, enrolled: 45, color: "#6366F1" },
 ];
@@ -44,7 +44,7 @@ export const MOCK_STUDENTS = [
 // ── Grade distribution buckets (for the selected course) ──
 export const MOCK_GRADE_DISTRIBUTION = [
   { range: "90-100", count: 4, color: "#22c55e" },
-  { range: "80-89", count: 8, color: "#3C0078" },
+  { range: "80-89", count: 8, color: "var(--color-koru-primary)" },
   { range: "70-79", count: 9, color: "#6366F1" },
   { range: "60-69", count: 5, color: "#F59E0B" },
   { range: "50-59", count: 2, color: "#f97316" },

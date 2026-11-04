@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Bot, Trash2, Copy, Check, AlertCircle, Plus, MessageSquare,
+  Bot, Trash2, Copy, Check, Plus, MessageSquare,
   GraduationCap, BookOpen, ShieldCheck, PanelLeft,
 } from "lucide-react";
 
@@ -10,7 +10,7 @@ import AssistantInput from "../../components/assistantInput";
 import HeaderTopBar from "../../components/HeaderTopBar";
 import { getAssistantResponse } from "../../services/assistantService";
 import { useAuth } from "../../contexts/AuthContext";
-import Avatar from "../../components/UI/Avatar";
+import { Avatar, Badge, Button, Alert } from "../../components/UI";
 
 // ─── Persistence helpers ──────────────────────────────────────────────────────
 
@@ -48,7 +48,7 @@ const ROLE_CONFIG = {
   student: {
     label: "Student",
     Icon: GraduationCap,
-    badge: "bg-blue-50 text-blue-700 border border-blue-100",
+    badgeVariant: "info",
     subtitle: "What are we studying today?",
     chips: [
       { label: "Explain a concept",   message: "Can you explain a key concept from one of my current courses?" },
@@ -60,7 +60,7 @@ const ROLE_CONFIG = {
   teacher: {
     label: "Teacher",
     Icon: BookOpen,
-    badge: "bg-purple-50 text-[#3C0078] border border-purple-100",
+    badgeVariant: "primary",
     subtitle: "Where should we start?",
     chips: [
       { label: "Analyse class performance", message: "Analyse my class performance and highlight any areas of concern." },
@@ -72,7 +72,7 @@ const ROLE_CONFIG = {
   admin: {
     label: "Administrator",
     Icon: ShieldCheck,
-    badge: "bg-amber-50 text-amber-700 border border-amber-100",
+    badgeVariant: "warning",
     subtitle: "What can I help you with?",
     chips: [
       { label: "Platform overview",    message: "Give me an overview of the platform's current performance and activity." },
@@ -101,7 +101,7 @@ function renderMessageContent(content) {
     elements.push(
       <Tag
         key={`list-${key}`}
-        className={`${currentListType === "ul" ? "list-disc" : "list-decimal"} pl-5 my-2 space-y-1 text-slate-700`}
+        className={`${currentListType === "ul" ? "list-disc" : "list-decimal"} pl-5 my-2 space-y-1 text-koru-on-surface-variant`}
       >
         {currentList.map((item, i) => (
           <li key={i} className="leading-relaxed text-sm">{parseInline(item)}</li>
@@ -116,14 +116,14 @@ function renderMessageContent(content) {
     const parts = text.split(/\*\*([^*]+)\*\*/g);
     return parts.map((part, i) => {
       if (i % 2 === 1)
-        return <strong key={i} className="font-semibold text-gray-900">{part}</strong>;
+        return <strong key={i} className="font-medium text-koru-on-surface">{part}</strong>;
       const sub = part.split(/\*([^*]+)\*/g);
       return sub.map((s, j) => {
-        if (j % 2 === 1) return <em key={j} className="italic text-slate-600">{s}</em>;
+        if (j % 2 === 1) return <em key={j} className="italic text-koru-on-surface-variant">{s}</em>;
         const code = s.split(/`([^`]+)`/g);
         return code.map((c, k) =>
           k % 2 === 1 ? (
-            <code key={k} className="px-1.5 py-0.5 rounded-md bg-purple-50 text-[#3C0078] text-[0.8em] font-mono border border-purple-100">
+            <code key={k} className="px-1.5 py-0.5 rounded-koru-sm bg-koru-primary-container text-koru-on-primary-container text-[0.8em] font-mono">
               {c}
             </code>
           ) : c
@@ -139,7 +139,7 @@ function renderMessageContent(content) {
       if (inCodeBlock) {
         inCodeBlock = false;
         elements.push(
-          <pre key={`code-${i}`} className="p-4 rounded-xl bg-gray-900 text-gray-100 text-xs font-mono my-3 overflow-x-auto border border-gray-800 select-all">
+          <pre key={`code-${i}`} className="p-4 rounded-koru-lg bg-koru-inverse-surface text-koru-inverse-on-surface text-xs font-mono my-3 overflow-x-auto select-all">
             <code>{codeBlockContent.join("\n")}</code>
           </pre>
         );
@@ -154,17 +154,17 @@ function renderMessageContent(content) {
 
     if (line.startsWith("### ")) {
       flushList(i);
-      elements.push(<h4 key={`h4-${i}`} className="text-sm font-semibold text-gray-900 mt-4 mb-1.5">{parseInline(line.slice(4))}</h4>);
+      elements.push(<h4 key={`h4-${i}`} className="font-display text-sm font-medium text-koru-on-surface mt-4 mb-1.5">{parseInline(line.slice(4))}</h4>);
       continue;
     }
     if (line.startsWith("## ")) {
       flushList(i);
-      elements.push(<h3 key={`h3-${i}`} className="text-base font-semibold text-gray-900 mt-4 mb-2">{parseInline(line.slice(3))}</h3>);
+      elements.push(<h3 key={`h3-${i}`} className="font-display text-base font-medium text-koru-on-surface mt-4 mb-2">{parseInline(line.slice(3))}</h3>);
       continue;
     }
     if (line.startsWith("# ")) {
       flushList(i);
-      elements.push(<h2 key={`h2-${i}`} className="text-lg font-bold text-gray-900 mt-5 mb-2">{parseInline(line.slice(2))}</h2>);
+      elements.push(<h2 key={`h2-${i}`} className="font-display text-lg font-medium text-koru-on-surface mt-5 mb-2">{parseInline(line.slice(2))}</h2>);
       continue;
     }
 
@@ -185,7 +185,7 @@ function renderMessageContent(content) {
 
     flushList(i);
     elements.push(
-      <p key={`p-${i}`} className="leading-relaxed text-sm text-slate-700 my-1">{parseInline(line)}</p>
+      <p key={`p-${i}`} className="leading-relaxed text-sm text-koru-on-surface-variant my-1">{parseInline(line)}</p>
     );
   }
   flushList(lines.length);
@@ -200,7 +200,7 @@ export default function TeacherAssistant() {
   const role     = (user?.role || "teacher").toLowerCase();
   const firstName = user?.firstName || user?.name?.split(" ")?.[0] || "";
   const config   = ROLE_CONFIG[role] || ROLE_CONFIG.teacher;
-  const { Icon: RoleIcon, label: roleLabel, badge: badgeClass, subtitle, chips } = config;
+  const { Icon: RoleIcon, label: roleLabel, badgeVariant, subtitle, chips } = config;
 
   // Chat history persisted in localStorage
   const [chats, setChats]             = useState(() => loadChats(userId));
@@ -333,18 +333,20 @@ export default function TeacherAssistant() {
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <div className="flex flex-col overflow-hidden transition-all duration-300 md:h-[calc(100vh-32px)] md:w-full md:bg-koru-surface-container-lowest md:backdrop-blur-xl md:border md:border-white/20 md:rounded-koru-lg md:shadow-lg max-md:h-screen max-md:w-screen max-md:-ml-4 max-md:-mr-4 max-md:-mt-4 max-md:bg-transparent text-slate-900">
+    <div className="flex flex-col overflow-hidden transition-all duration-300 md:h-[calc(100vh-32px)] md:w-full md:bg-koru-surface-container-lowest md:rounded-koru-lg md:shadow-koru-md max-md:h-screen max-md:w-screen max-md:-ml-4 max-md:-mr-4 max-md:-mt-4 max-md:bg-transparent text-koru-on-surface">
 
       {/* ── Top header bar ─────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between pr-4 border-b border-gray-100/60 bg-white/30 backdrop-blur-md shrink-0">
+      <div className="flex items-center justify-between pr-4 border-b border-koru-outline-faint bg-koru-surface-container-lowest shrink-0">
         <div className="flex items-center gap-1 flex-1">
-          <button
+          <Button
+            variant="text"
+            size="icon"
             onClick={() => setSidebarOpen((o) => !o)}
-            className="p-2 ml-2 rounded-lg hover:bg-gray-100/70 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+            className="ml-2"
             aria-label="Toggle conversation history"
           >
             <PanelLeft className="w-4 h-4" />
-          </button>
+          </Button>
           <div className="flex-1">
             <HeaderTopBar />
           </div>
@@ -352,16 +354,21 @@ export default function TeacherAssistant() {
 
         <AnimatePresence>
           {activeMessages.length > 0 && (
-            <motion.button
+            <motion.div
               initial={{ opacity: 0, scale: 0.85 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.85 }}
-              onClick={handleClearActive}
-              className="flex items-center gap-1.5 px-3 py-1.5 mr-1 rounded-full bg-white/50 hover:bg-red-50 border border-gray-200/50 text-gray-400 hover:text-red-500 text-xs font-medium transition-all cursor-pointer"
+              className="mr-1"
             >
-              <Trash2 className="w-3.5 h-3.5" />
-              Clear chat
-            </motion.button>
+              <Button
+                variant="outlined"
+                size="sm"
+                onClick={handleClearActive}
+                startIcon={<Trash2 className="w-3.5 h-3.5" />}
+              >
+                Clear chat
+              </Button>
+            </motion.div>
           )}
         </AnimatePresence>
       </div>
@@ -378,23 +385,24 @@ export default function TeacherAssistant() {
               animate={{ width: 248, opacity: 1 }}
               exit={{ width: 0, opacity: 0 }}
               transition={{ duration: 0.22, ease: "easeInOut" }}
-              className="shrink-0 bg-white border-r border-gray-100 flex flex-col overflow-hidden z-10"
+              className="shrink-0 bg-koru-surface-container-lowest border-r border-koru-outline-faint flex flex-col overflow-hidden z-10"
             >
               {/* New conversation */}
               <div className="p-3 pb-2">
-                <button
+                <Button
+                  variant="tonal"
+                  fullWidth
                   onClick={handleNewChat}
-                  className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-[#3C0078]/5 hover:bg-[#3C0078]/10 border border-[#3C0078]/10 text-[#3C0078] text-sm font-semibold transition-colors cursor-pointer"
+                  startIcon={<Plus className="w-4 h-4 shrink-0" />}
                 >
-                  <Plus className="w-4 h-4 shrink-0" />
                   New conversation
-                </button>
+                </Button>
               </div>
 
               {/* Chat list */}
               <div className="flex-1 overflow-y-auto px-2 pb-2 space-y-px">
                 {chats.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center h-36 gap-2 text-gray-300 select-none">
+                  <div className="flex flex-col items-center justify-center h-36 gap-2 text-koru-outline select-none">
                     <MessageSquare className="w-7 h-7" />
                     <p className="text-xs font-medium">No conversations yet</p>
                   </div>
@@ -404,28 +412,28 @@ export default function TeacherAssistant() {
                       key={chat.id}
                       layout
                       onClick={() => handleSelectChat(chat.id)}
-                      className={`group w-full text-left px-3 py-2.5 rounded-xl flex items-start gap-2.5 transition-all cursor-pointer ${
+                      className={`group w-full text-left px-3 py-2.5 rounded-koru-lg flex items-start gap-2.5 transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus ${
                         chat.id === activeChatId
-                          ? "bg-[#3C0078]/8 text-gray-900"
-                          : "hover:bg-gray-50 text-gray-500"
+                          ? "bg-koru-primary-container text-koru-on-primary-container"
+                          : "hover:bg-koru-surface-container text-koru-on-surface-variant"
                       }`}
                     >
                       <MessageSquare
                         className={`w-4 h-4 shrink-0 mt-0.5 transition-colors ${
-                          chat.id === activeChatId ? "text-[#3C0078]" : "text-gray-300 group-hover:text-gray-400"
+                          chat.id === activeChatId ? "text-koru-primary" : "text-koru-outline group-hover:text-koru-on-surface-variant"
                         }`}
                       />
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium truncate leading-snug text-gray-800">
+                        <p className="text-xs font-medium truncate leading-snug text-koru-on-surface">
                           {chat.title}
                         </p>
-                        <p className="text-[10px] text-gray-400 mt-0.5 leading-none">
+                        <p className="text-koru-caption text-koru-on-surface-variant mt-0.5 leading-none">
                           {relativeTime(chat.updatedAt)}
                         </p>
                       </div>
                       <button
                         onClick={(e) => handleDeleteChat(e, chat.id)}
-                        className="opacity-0 group-hover:opacity-100 p-1 rounded-md hover:bg-red-50 hover:text-red-500 text-gray-300 transition-all shrink-0 cursor-pointer"
+                        className="opacity-0 group-hover:opacity-100 p-1 rounded-koru-sm hover:bg-koru-error-container hover:text-koru-error focus-visible:opacity-100 text-koru-outline transition-all shrink-0 cursor-pointer"
                         aria-label="Delete conversation"
                       >
                         <Trash2 className="w-3 h-3" />
@@ -436,11 +444,11 @@ export default function TeacherAssistant() {
               </div>
 
               {/* Role badge footer */}
-              <div className="p-3 border-t border-gray-100 shrink-0">
-                <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${badgeClass}`}>
+              <div className="p-3 border-t border-koru-outline-faint shrink-0">
+                <Badge variant={badgeVariant} size="md">
                   <RoleIcon className="w-3 h-3" />
                   {roleLabel}
-                </div>
+                </Badge>
               </div>
             </motion.aside>
           )}
@@ -450,9 +458,9 @@ export default function TeacherAssistant() {
         <div className="flex-1 flex flex-col relative min-w-0 overflow-hidden">
 
           {/* Gradient + Orb background */}
-          <div className="absolute inset-0 bg-gradient-to-br from-[#F3ebff] via-[#fff1e7] to-[#e6f4ff] overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-koru-primary-subtle via-koru-accent-soft to-koru-info-soft overflow-hidden">
             <div className="w-full h-full opacity-50">
-              <Orb hoverIntensity={2} rotateOnHover={true} hue={0} forceHoverState={false} backgroundColor="#F3ebff" />
+              <Orb hoverIntensity={2} rotateOnHover={true} hue={0} forceHoverState={false} backgroundColor="#f3edff" />
             </div>
           </div>
 
@@ -468,10 +476,10 @@ export default function TeacherAssistant() {
                   transition={{ duration: 0.35 }}
                   className="flex flex-col items-center text-center max-w-lg w-full"
                 >
-                  <h2 className="text-4xl font-bold font-['Gabarito'] text-[#3C0078] mb-1">
+                  <h2 className="font-display text-koru-display text-koru-primary mb-1">
                     Hi {firstName || "there"},
                   </h2>
-                  <h3 className="text-3xl font-bold font-['Gabarito'] text-slate-700 mb-10">
+                  <h3 className="font-display text-koru-title text-koru-on-surface-variant mb-10">
                     {subtitle}
                   </h3>
 
@@ -483,7 +491,7 @@ export default function TeacherAssistant() {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.1 + i * 0.055, duration: 0.25 }}
                         onClick={() => handleSend(chip.message)}
-                        className="px-4 py-3 rounded-xl bg-white/70 hover:bg-white/95 border border-white/60 shadow-sm backdrop-blur-sm text-sm font-medium text-slate-700 hover:text-slate-900 text-left transition-all cursor-pointer leading-snug"
+                        className="px-4 py-3 rounded-koru-lg bg-koru-surface-container-lowest hover:bg-koru-surface shadow-koru-card hover:shadow-koru-card-hover ring-1 ring-inset ring-koru-outline-faint text-sm font-medium text-koru-on-surface text-left transition-all cursor-pointer leading-snug focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus"
                       >
                         {chip.label}
                       </motion.button>
@@ -503,13 +511,11 @@ export default function TeacherAssistant() {
                           key={idx}
                           initial={{ opacity: 0, y: 8 }}
                           animate={{ opacity: 1, y: 0 }}
-                          className="flex gap-3 p-4 rounded-2xl bg-amber-50 border border-amber-200/60 max-w-2xl"
+                          className="max-w-2xl"
                         >
-                          <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-                          <div>
-                            <p className="text-sm font-semibold text-amber-900 mb-0.5">Assistant unavailable</p>
-                            <p className="text-xs text-amber-700 leading-relaxed">{msg.content}</p>
-                          </div>
+                          <Alert variant="warning" title="Assistant unavailable">
+                            {msg.content}
+                          </Alert>
                         </motion.div>
                       );
                     }
@@ -529,27 +535,23 @@ export default function TeacherAssistant() {
                           <Avatar user={user} size={28} className="mb-1" />
                         ) : (
                         <div
-                          className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 mb-1 text-xs font-bold ${
-                            isUser
-                              ? "bg-gray-200 text-gray-600"
-                              : "bg-[#3C0078]/10 text-[#3C0078]"
-                          }`}
+                          className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 mb-1 text-xs bg-koru-primary-container text-koru-on-primary-container"
                         >
                           <Bot className="w-3.5 h-3.5" />
                         </div>
                         )}
 
                         {/* Bubble */}
-                        <div className={`relative max-w-[78%] ${isUser ? "" : ""}`}>
+                        <div className={`relative max-w-[78%]`}>
                           <div
-                            className={`px-4 py-3 rounded-2xl ${
+                            className={`px-4 py-3 rounded-koru-xl ${
                               isUser
-                                ? "bg-white/85 backdrop-blur-sm border border-white/70 shadow-sm rounded-br-sm"
-                                : "bg-white/60 backdrop-blur-sm border border-white/50 shadow-sm rounded-bl-sm"
+                                ? "bg-koru-primary-container text-koru-on-primary-container rounded-br-sm"
+                                : "bg-koru-surface-container-lowest shadow-koru-card rounded-bl-sm"
                             }`}
                           >
                             {isUser ? (
-                              <p className="text-sm font-medium text-slate-800 leading-relaxed whitespace-pre-wrap">
+                              <p className="text-sm text-koru-on-primary-container leading-relaxed whitespace-pre-wrap">
                                 {msg.content}
                               </p>
                             ) : (
@@ -561,11 +563,11 @@ export default function TeacherAssistant() {
                           {!isUser && (
                             <button
                               onClick={() => handleCopy(msg.content, idx)}
-                              className="absolute -bottom-2.5 left-2 p-1.5 rounded-lg bg-white border border-gray-100 shadow-sm text-gray-400 hover:text-[#3C0078] opacity-0 group-hover:opacity-100 transition-all cursor-pointer"
+                              className="absolute -bottom-2.5 left-2 p-1.5 rounded-koru-md bg-koru-surface-container-lowest shadow-koru-card ring-1 ring-inset ring-koru-outline-faint text-koru-on-surface-variant hover:text-koru-primary opacity-0 group-hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus transition-all cursor-pointer"
                               aria-label="Copy response"
                             >
                               {copiedIndex === idx
-                                ? <Check className="w-3 h-3 text-green-600" />
+                                ? <Check className="w-3 h-3 text-koru-success" />
                                 : <Copy className="w-3 h-3" />}
                             </button>
                           )}
@@ -581,15 +583,15 @@ export default function TeacherAssistant() {
                       animate={{ opacity: 1, y: 0 }}
                       className="flex items-end gap-2.5"
                     >
-                      <div className="w-7 h-7 rounded-full bg-[#3C0078]/10 flex items-center justify-center shrink-0 mb-1">
-                        <Bot className="w-3.5 h-3.5 text-[#3C0078]" />
+                      <div className="w-7 h-7 rounded-full bg-koru-primary-container flex items-center justify-center shrink-0 mb-1">
+                        <Bot className="w-3.5 h-3.5 text-koru-on-primary-container" />
                       </div>
-                      <div className="px-4 py-3.5 rounded-2xl rounded-bl-sm bg-white/60 backdrop-blur-sm border border-white/50 shadow-sm">
+                      <div className="px-4 py-3.5 rounded-koru-xl rounded-bl-sm bg-koru-surface-container-lowest shadow-koru-card">
                         <div className="flex items-center gap-1.5">
                           {[0, 0.15, 0.3].map((delay, i) => (
                             <motion.div
                               key={i}
-                              className="w-2 h-2 rounded-full bg-[#3C0078]/40"
+                              className="w-2 h-2 rounded-full bg-koru-primary/40"
                               animate={{ y: [0, -5, 0] }}
                               transition={{ repeat: Infinity, duration: 0.9, delay }}
                             />

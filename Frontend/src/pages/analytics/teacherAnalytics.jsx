@@ -8,7 +8,7 @@ import { getCourseAssignments } from "../../services/assignmentService";
 import { getCourseSubmissions } from "../../services/submissionService";
 import { getCourseGrades } from "../../services/gradeService";
 import { YEARS, SEMESTERS, YEAR_LEVELS } from "./teacherMockData";
-import Avatar from "../../components/UI/Avatar";
+import { Avatar, Select } from "../../components/UI";
 
 /* ─── animation variants ─── */
 const stagger = {
@@ -24,26 +24,27 @@ const fadeUp = {
 function FilterSelect({ label, value, options, onChange }) {
   return (
     <label className="flex items-center gap-2">
-      <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">{label}</span>
-      <select
+      <span className="text-koru-caption font-medium uppercase tracking-widest text-koru-on-surface-variant">{label}</span>
+      <Select
+        size="sm"
+        containerClassName="w-auto min-w-40"
         value={value}
         onChange={e => onChange(e.target.value)}
-        className="rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 outline-none focus:border-[#3C0078] focus:ring-2 focus:ring-[#3C0078]/20 transition-all cursor-pointer"
-      >
+        >
         {options.map(o => <option key={o} value={o}>{o}</option>)}
-      </select>
+      </Select>
     </label>
   );
 }
 
 /* ─── progress ring ─── */
-function ProgressRing({ percent, size = 56, stroke = 5, color = "#3C0078" }) {
+function ProgressRing({ percent, size = 56, stroke = 5, color = "var(--color-koru-primary)" }) {
   const r = (size - stroke) / 2;
   const circ = 2 * Math.PI * r;
   const offset = circ - (percent / 100) * circ;
   return (
     <svg width={size} height={size} className="transform -rotate-90">
-      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#f1f5f9" strokeWidth={stroke} />
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--color-koru-surface-container-high)" strokeWidth={stroke} />
       <circle
         cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth={stroke}
         strokeDasharray={circ} strokeDashoffset={offset} strokeLinecap="round"
@@ -83,7 +84,7 @@ export default function TeacherAnalytics() {
           semester: c.term || c.semester || "Semester 1",
           year: String(c.year || c.academicYear || new Date().getFullYear()),
           enrolled: c.enrollments?.length || 0,
-          color: "#3C0078",
+          color: "var(--color-koru-primary)",
         }));
         if (mounted) setTeacherCourses(mapped);
       } catch (err) {
@@ -253,7 +254,7 @@ export default function TeacherAnalytics() {
       >
 
         {/* ─── Filter Bar ─── */}
-        <motion.div variants={fadeUp} className="bg-white rounded-2xl border border-gray-100 shadow-sm px-6 py-4">
+        <motion.div variants={fadeUp} className="bg-koru-surface-container-lowest rounded-koru-lg ring-1 ring-inset ring-koru-outline-faint shadow-koru-card px-6 py-4">
           <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
             <FilterSelect
               label="Year"
@@ -273,24 +274,25 @@ export default function TeacherAnalytics() {
               options={["All", ...YEAR_LEVELS]}
               onChange={v => { setSelectedYearLevel(v); setSelectedCourseId("all"); }}
             />
-            <div className="ml-auto flex items-center gap-3 pl-6 border-l border-gray-100">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Course</span>
-              <select
+            <div className="ml-auto flex items-center gap-3 pl-6 border-l border-koru-outline-faint">
+              <span className="text-koru-caption font-medium uppercase tracking-widest text-koru-on-surface-variant">Course</span>
+              <Select
+                size="sm"
+                containerClassName="w-auto min-w-48"
                 value={selectedCourseId}
                 onChange={e => setSelectedCourseId(e.target.value)}
-                className="rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 outline-none focus:border-[#3C0078] focus:ring-2 focus:ring-[#3C0078]/20 transition cursor-pointer"
               >
                 <option value="all">All Courses</option>
                 {filteredCourses.map(c => (
                   <option key={c.id} value={c.id}>{c.code} – {c.name}</option>
                 ))}
-              </select>
+              </Select>
             </div>
           </div>
         </motion.div>
 
         {/* ─── KPI Row ─── */}
-        <motion.div variants={fadeUp} className="flex flex-row divide-x divide-gray-100 bg-white rounded-2xl border border-gray-100 shadow-sm px-6 py-5">
+        <motion.div variants={fadeUp} className="flex flex-row divide-x divide-koru-outline-faint bg-koru-surface-container-lowest rounded-koru-lg ring-1 ring-inset ring-koru-outline-faint shadow-koru-card px-6 py-5">
           {[
             {
               label: "Class Average",
@@ -302,9 +304,9 @@ export default function TeacherAnalytics() {
             { label: "Pending to Grade", value: pendingGrading, sub: "submissions" },
           ].map((kpi, i) => (
             <div key={i} className={`flex flex-col gap-1 flex-1 ${i === 0 ? "pr-6" : "px-6"}`}>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">{kpi.label}</p>
-              <p className="text-2xl font-black leading-none text-gray-900">{kpi.value}</p>
-              <p className="text-xs text-gray-400 truncate mt-0.5">{kpi.sub}</p>
+              <p className="text-koru-caption font-medium uppercase tracking-widest text-koru-on-surface-variant">{kpi.label}</p>
+              <p className="text-2xl font-medium leading-none text-koru-on-surface">{kpi.value}</p>
+              <p className="text-xs text-koru-on-surface-variant truncate mt-0.5">{kpi.sub}</p>
             </div>
           ))}
         </motion.div>
@@ -317,7 +319,7 @@ export default function TeacherAnalytics() {
 
             {/* Course Averages */}
             <motion.div variants={fadeUp}>
-              <h2 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-3">Course Averages</h2>
+              <h2 className="font-display text-koru-caption font-medium uppercase tracking-widest text-koru-on-surface-variant mb-3">Course Averages</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 {filteredCourses.map(course => {
                   const avg = gradedAssignments.filter(a => a.courseId === course.id);
@@ -327,21 +329,21 @@ export default function TeacherAnalytics() {
                     <div
                       key={course.id}
                       onClick={() => setSelectedCourseId(isSelected ? "all" : course.id)}
-                      className={`bg-white rounded-2xl border shadow-sm p-5 cursor-pointer transition-all ${isSelected ? "border-[#3C0078]" : "border-gray-100 hover:border-gray-200"}`}
+                      className={`bg-koru-surface-container-lowest rounded-koru-lg ring-1 ring-inset shadow-koru-card p-5 cursor-pointer transition-all ${isSelected ? "ring-2 ring-koru-primary" : "ring-koru-outline-faint hover:ring-koru-outline-variant"}`}
                     >
                       <div className="flex items-center gap-3 mb-3">
                         <div className="relative shrink-0">
                           <ProgressRing percent={courseAvg} color={course.color} />
-                          <span className="absolute inset-0 flex items-center justify-center text-sm font-black text-gray-900">
+                          <span className="absolute inset-0 flex items-center justify-center text-sm font-medium text-koru-on-surface">
                             {courseAvg}
                           </span>
                         </div>
                         <div className="min-w-0">
-                          <p className="font-bold text-sm text-gray-900 truncate">{course.code}</p>
-                          <p className="text-xs text-gray-400 truncate">{course.name}</p>
+                          <p className="font-medium text-sm text-koru-on-surface truncate">{course.code}</p>
+                          <p className="text-xs text-koru-on-surface-variant truncate">{course.name}</p>
                         </div>
                       </div>
-                      <div className="flex justify-between text-xs text-gray-400">
+                      <div className="flex justify-between text-xs text-koru-on-surface-variant">
                         <span>{course.enrolled} students</span>
                         <span>{course.yearLevel}</span>
                       </div>
@@ -352,22 +354,22 @@ export default function TeacherAnalytics() {
             </motion.div>
 
             {/* Grading Progress Table */}
-            <motion.div variants={fadeUp} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-              <div className="px-6 py-5 border-b border-gray-50 flex justify-between items-center">
-                <h2 className="text-base font-bold text-gray-900">Grading Progress</h2>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
+            <motion.div variants={fadeUp} className="bg-koru-surface-container-lowest rounded-koru-lg ring-1 ring-inset ring-koru-outline-faint shadow-koru-card overflow-hidden">
+              <div className="px-6 py-5 border-b border-koru-outline-faint flex justify-between items-center">
+                <h2 className="font-display text-base font-medium text-koru-on-surface">Grading Progress</h2>
+                <span className="text-koru-caption font-medium uppercase tracking-widest text-koru-on-surface-variant">
                   {filteredAssignments.length} assignments
                 </span>
               </div>
               <table className="w-full text-left">
                 <thead>
-                  <tr className="bg-gray-50/50">
-                    <th className="px-6 py-3.5 text-[10px] font-bold uppercase tracking-widest text-gray-400">Assignment</th>
-                    <th className="px-6 py-3.5 text-[10px] font-bold uppercase tracking-widest text-gray-400">Course</th>
-                    <th className="px-6 py-3.5 text-[10px] font-bold uppercase tracking-widest text-gray-400 text-center">Graded</th>
-                    <th className="px-6 py-3.5 text-[10px] font-bold uppercase tracking-widest text-gray-400 text-center">Avg Score</th>
-                    <th className="px-6 py-3.5 text-[10px] font-bold uppercase tracking-widest text-gray-400">Due Date</th>
-                    <th className="px-6 py-3.5 text-[10px] font-bold uppercase tracking-widest text-gray-400">Status</th>
+                  <tr className="bg-koru-surface-container-low">
+                    <th className="px-6 py-3.5 text-koru-caption font-medium uppercase tracking-widest text-koru-on-surface-variant">Assignment</th>
+                    <th className="px-6 py-3.5 text-koru-caption font-medium uppercase tracking-widest text-koru-on-surface-variant">Course</th>
+                    <th className="px-6 py-3.5 text-koru-caption font-medium uppercase tracking-widest text-koru-on-surface-variant text-center">Graded</th>
+                    <th className="px-6 py-3.5 text-koru-caption font-medium uppercase tracking-widest text-koru-on-surface-variant text-center">Avg Score</th>
+                    <th className="px-6 py-3.5 text-koru-caption font-medium uppercase tracking-widest text-koru-on-surface-variant">Due Date</th>
+                    <th className="px-6 py-3.5 text-koru-caption font-medium uppercase tracking-widest text-koru-on-surface-variant">Status</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -376,19 +378,19 @@ export default function TeacherAnalytics() {
                     const done = a.graded === a.totalSubmissions && a.totalSubmissions > 0;
                     const noGrades = a.avgScore === null;
                     return (
-                      <tr key={a.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors">
+                      <tr key={a.id} className="border-b border-koru-outline-faint last:border-0 hover:bg-koru-surface-container-low transition-colors">
                         <td className="px-6 py-4">
-                          <span className="font-semibold text-sm text-gray-900">{a.title}</span>
+                          <span className="font-medium text-sm text-koru-on-surface">{a.title}</span>
                         </td>
                         <td className="px-6 py-4">
-                          <span className="text-xs font-semibold text-gray-500">{a.courseCode}</span>
+                          <span className="text-xs font-medium text-koru-on-surface-variant">{a.courseCode}</span>
                         </td>
                         <td className="px-6 py-4 text-center">
                           <div className="flex flex-col items-center gap-1">
-                            <span className="text-sm font-bold text-gray-900">{a.graded}/{a.totalSubmissions}</span>
-                            <div className="w-12 h-1 bg-gray-100 rounded-full overflow-hidden">
+                            <span className="text-sm font-medium text-koru-on-surface">{a.graded}/{a.totalSubmissions}</span>
+                            <div className="w-12 h-1 bg-koru-surface-container-high rounded-full overflow-hidden">
                               <div
-                                className={`h-full rounded-full transition-all ${done ? "bg-green-500" : pct > 50 ? "bg-amber-400" : "bg-red-400"}`}
+                                className={`h-full rounded-full transition-all ${done ? "bg-koru-success" : pct > 50 ? "bg-koru-accent" : "bg-koru-error"}`}
                                 style={{ width: `${pct}%` }}
                               />
                             </div>
@@ -396,17 +398,17 @@ export default function TeacherAnalytics() {
                         </td>
                         <td className="px-6 py-4 text-center">
                           {noGrades
-                            ? <span className="text-xs text-gray-300">—</span>
-                            : <span className="text-sm font-black text-gray-900">{a.avgScore}%</span>}
+                            ? <span className="text-xs text-koru-outline">—</span>
+                            : <span className="text-sm font-medium text-koru-on-surface">{a.avgScore}%</span>}
                         </td>
-                        <td className="px-6 py-4 text-xs text-gray-400">
+                        <td className="px-6 py-4 text-xs text-koru-on-surface-variant">
                           {new Date(a.dueDate).toLocaleDateString("en-ZA", { month: "short", day: "numeric" })}
                         </td>
                         <td className="px-6 py-4">
-                          <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${
-                            done ? "bg-green-50 text-green-600" :
-                            noGrades ? "bg-gray-100 text-gray-400" :
-                            "bg-amber-50 text-amber-600"
+                          <span className={`px-2.5 py-1 rounded-full text-koru-caption font-medium uppercase tracking-widest ${
+                            done ? "bg-koru-success-soft text-koru-success" :
+                            noGrades ? "bg-koru-surface-container-high text-koru-on-surface-variant" :
+                            "bg-koru-warning-soft text-koru-warning"
                           }`}>
                             {done ? "Complete" : noGrades ? "Not Started" : "In Progress"}
                           </span>
@@ -419,54 +421,54 @@ export default function TeacherAnalytics() {
             </motion.div>
 
             {/* Student Roster */}
-            <motion.div variants={fadeUp} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-              <div className="px-6 py-5 border-b border-gray-50 flex justify-between items-center">
-                <h2 className="text-base font-bold text-gray-900">Student Performance</h2>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
+            <motion.div variants={fadeUp} className="bg-koru-surface-container-lowest rounded-koru-lg ring-1 ring-inset ring-koru-outline-faint shadow-koru-card overflow-hidden">
+              <div className="px-6 py-5 border-b border-koru-outline-faint flex justify-between items-center">
+                <h2 className="font-display text-base font-medium text-koru-on-surface">Student Performance</h2>
+                <span className="text-koru-caption font-medium uppercase tracking-widest text-koru-on-surface-variant">
                   {studentRoster.length} students
                 </span>
               </div>
               <table className="w-full text-left">
                 <thead>
-                  <tr className="bg-gray-50/50">
-                    <th className="px-6 py-3.5 text-[10px] font-bold uppercase tracking-widest text-gray-400">Student</th>
-                    <th className="px-6 py-3.5 text-[10px] font-bold uppercase tracking-widest text-gray-400 text-center">Avg Grade</th>
-                    <th className="px-6 py-3.5 text-[10px] font-bold uppercase tracking-widest text-gray-400 text-center">Submitted</th>
-                    <th className="px-6 py-3.5 text-[10px] font-bold uppercase tracking-widest text-gray-400">Status</th>
+                  <tr className="bg-koru-surface-container-low">
+                    <th className="px-6 py-3.5 text-koru-caption font-medium uppercase tracking-widest text-koru-on-surface-variant">Student</th>
+                    <th className="px-6 py-3.5 text-koru-caption font-medium uppercase tracking-widest text-koru-on-surface-variant text-center">Avg Grade</th>
+                    <th className="px-6 py-3.5 text-koru-caption font-medium uppercase tracking-widest text-koru-on-surface-variant text-center">Submitted</th>
+                    <th className="px-6 py-3.5 text-koru-caption font-medium uppercase tracking-widest text-koru-on-surface-variant">Status</th>
                   </tr>
                 </thead>
                 <tbody>
                   {studentRoster.map(s => (
-                    <tr key={s.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors">
+                    <tr key={s.id} className="border-b border-koru-outline-faint last:border-0 hover:bg-koru-surface-container-low transition-colors">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <Avatar user={s} name={s.name} size={36} />
                           <div>
-                            <p className="font-semibold text-sm text-gray-900">{s.name}</p>
-                            <p className="text-xs text-gray-400">{s.email}</p>
+                            <p className="font-medium text-sm text-koru-on-surface">{s.name}</p>
+                            <p className="text-xs text-koru-on-surface-variant">{s.email}</p>
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4 text-center">
                         <div className="flex flex-col items-center gap-1">
-                          <span className="text-sm font-black text-gray-900">{s.avgGrade}%</span>
-                          <div className="w-12 h-1 bg-gray-100 rounded-full overflow-hidden">
+                          <span className="text-sm font-medium text-koru-on-surface">{s.avgGrade}%</span>
+                          <div className="w-12 h-1 bg-koru-surface-container-high rounded-full overflow-hidden">
                             <div
-                              className={`h-full rounded-full ${s.avgGrade >= 75 ? "bg-green-500" : s.avgGrade >= 50 ? "bg-orange-400" : "bg-red-500"}`}
+                              className={`h-full rounded-full ${s.avgGrade >= 75 ? "bg-koru-success" : s.avgGrade >= 50 ? "bg-koru-accent" : "bg-koru-error"}`}
                               style={{ width: `${s.avgGrade}%` }}
                             />
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-center text-sm font-bold text-gray-700">
+                      <td className="px-6 py-4 text-center text-sm font-medium text-koru-on-surface-variant">
                         {s.submissions}/{s.totalAssignments}
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${
-                          s.status === "Excellent" ? "bg-green-50 text-green-600" :
-                          s.status === "Good" ? "bg-blue-50 text-blue-600" :
-                          s.status === "At Risk" ? "bg-amber-50 text-amber-600" :
-                          "bg-red-50 text-red-600"
+                        <span className={`px-2.5 py-1 rounded-full text-koru-caption font-medium uppercase tracking-widest ${
+                          s.status === "Excellent" ? "bg-koru-success-soft text-koru-success" :
+                          s.status === "Good" ? "bg-koru-info-soft text-koru-info" :
+                          s.status === "At Risk" ? "bg-koru-warning-soft text-koru-warning" :
+                          "bg-koru-error-container text-koru-error"
                         }`}>{s.status}</span>
                       </td>
                     </tr>
@@ -481,39 +483,39 @@ export default function TeacherAnalytics() {
           <div className="flex flex-col gap-5">
 
             {/* Class Summary */}
-            <motion.div variants={fadeUp} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-3">Class Summary</p>
+            <motion.div variants={fadeUp} className="bg-koru-surface-container-lowest rounded-koru-lg ring-1 ring-inset ring-koru-outline-faint shadow-koru-card p-6">
+              <p className="text-koru-caption font-medium uppercase tracking-widest text-koru-on-surface-variant mb-3">Class Summary</p>
               <div className="flex items-baseline gap-2 mb-1">
-                <span className="text-3xl font-black text-gray-900">{classAvg}%</span>
-                <span className="text-sm text-gray-400">class average</span>
+                <span className="text-3xl font-medium text-koru-on-surface">{classAvg}%</span>
+                <span className="text-sm text-koru-on-surface-variant">class average</span>
               </div>
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-koru-on-surface-variant">
                 {filteredCourses.length} course{filteredCourses.length !== 1 ? "s" : ""} · {totalStudents} students
               </p>
-              <div className="mt-4 pt-4 border-t border-gray-50 flex items-center gap-2 text-xs text-gray-400">
-                <Award size={14} className="text-amber-400 shrink-0" />
+              <div className="mt-4 pt-4 border-t border-koru-outline-faint flex items-center gap-2 text-xs text-koru-on-surface-variant">
+                <Award size={14} className="text-koru-accent shrink-0" />
                 <span>{studentRoster.filter(s => s.status === "Excellent").length} students performing excellently</span>
               </div>
             </motion.div>
 
             {/* Grade Distribution — real SA bands */}
-            <motion.div variants={fadeUp} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-              <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-4">Grade Distribution</h3>
+            <motion.div variants={fadeUp} className="bg-koru-surface-container-lowest rounded-koru-lg ring-1 ring-inset ring-koru-outline-faint shadow-koru-card p-6">
+              <h3 className="font-display text-koru-caption font-medium uppercase tracking-widest text-koru-on-surface-variant mb-4">Grade Distribution</h3>
               <div className="space-y-2.5">
                 {gradeDistribution.map(b => {
                   const maxCount = Math.max(...gradeDistribution.map(d => d.count), 1);
                   return (
                     <div key={b.range} className="flex items-center gap-3">
-                      <span className="text-xs font-semibold text-gray-500 w-14 text-right">{b.range}</span>
-                      <div className="flex-1 h-4 bg-gray-50 rounded-md overflow-hidden border border-gray-100">
+                      <span className="text-xs font-medium text-koru-on-surface-variant w-14 text-right">{b.range}</span>
+                      <div className="flex-1 h-4 bg-koru-surface-container-low rounded-koru-sm overflow-hidden ring-1 ring-inset ring-koru-outline-faint">
                         <motion.div
                           initial={{ width: 0 }}
                           animate={{ width: `${(b.count / maxCount) * 100}%` }}
                           transition={{ duration: 0.7, ease: "easeOut" }}
-                          className="h-full rounded-md bg-[#3C0078]/20"
+                          className="h-full rounded-koru-sm bg-koru-primary/20"
                         />
                       </div>
-                      <span className="text-xs font-bold text-gray-700 w-5 text-right">{b.count}</span>
+                      <span className="text-xs font-medium text-koru-on-surface-variant w-5 text-right">{b.count}</span>
                     </div>
                   );
                 })}
@@ -521,29 +523,29 @@ export default function TeacherAnalytics() {
             </motion.div>
 
             {/* Grading Queue */}
-            <motion.div variants={fadeUp} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-              <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-4">Grading Queue</h3>
+            <motion.div variants={fadeUp} className="bg-koru-surface-container-lowest rounded-koru-lg ring-1 ring-inset ring-koru-outline-faint shadow-koru-card p-6">
+              <h3 className="font-display text-koru-caption font-medium uppercase tracking-widest text-koru-on-surface-variant mb-4">Grading Queue</h3>
               <div className="space-y-2">
                 {filteredAssignments.filter(a => a.graded < a.totalSubmissions).map(a => {
                   const remaining = a.totalSubmissions - a.graded;
                   return (
-                    <div key={a.id} className="rounded-xl border border-gray-100 p-3.5 flex items-center gap-3 hover:border-gray-200 transition-colors">
-                      <span className="shrink-0 inline-flex items-center justify-center w-9 h-9 rounded-xl bg-amber-50">
-                        <FileText size={15} className="text-amber-600" />
+                    <div key={a.id} className="rounded-koru-md ring-1 ring-inset ring-koru-outline-faint p-3.5 flex items-center gap-3 hover:ring-koru-outline-variant transition-colors">
+                      <span className="shrink-0 inline-flex items-center justify-center w-9 h-9 rounded-koru-md bg-koru-warning-soft">
+                        <FileText size={15} className="text-koru-warning" />
                       </span>
                       <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-sm text-gray-900 truncate">{a.title}</p>
-                        <p className="text-xs text-gray-400 mt-0.5">{a.courseCode}</p>
+                        <p className="font-medium text-sm text-koru-on-surface truncate">{a.title}</p>
+                        <p className="text-xs text-koru-on-surface-variant mt-0.5">{a.courseCode}</p>
                       </div>
                       <div className="text-right shrink-0">
-                        <p className="text-xs font-bold text-amber-600">{remaining} left</p>
+                        <p className="text-xs font-medium text-koru-warning">{remaining} left</p>
                       </div>
                     </div>
                   );
                 })}
                 {filteredAssignments.filter(a => a.graded < a.totalSubmissions).length === 0 && (
-                  <div className="text-center py-6 text-gray-400 text-sm">
-                    <CheckCircle size={22} className="mx-auto mb-2 text-green-400" />
+                  <div className="text-center py-6 text-koru-on-surface-variant text-sm">
+                    <CheckCircle size={22} className="mx-auto mb-2 text-koru-success" />
                     All caught up!
                   </div>
                 )}
@@ -551,30 +553,30 @@ export default function TeacherAnalytics() {
             </motion.div>
 
             {/* At-Risk Students */}
-            <motion.div variants={fadeUp} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-              <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-4">At-Risk Students</h3>
+            <motion.div variants={fadeUp} className="bg-koru-surface-container-lowest rounded-koru-lg ring-1 ring-inset ring-koru-outline-faint shadow-koru-card p-6">
+              <h3 className="font-display text-koru-caption font-medium uppercase tracking-widest text-koru-on-surface-variant mb-4">At-Risk Students</h3>
               <div className="space-y-2">
                 {studentRoster
                   .filter(s => s.status === "At Risk" || s.status === "Critical")
                   .map(s => (
                     <div
                       key={s.id}
-                      className={`rounded-xl border p-3.5 flex items-center gap-3 ${
-                        s.status === "Critical" ? "border-red-100 bg-red-50/30" : "border-amber-100 bg-amber-50/30"
+                      className={`rounded-koru-md border p-3.5 flex items-center gap-3 ${
+                        s.status === "Critical" ? "border-koru-error/20 bg-koru-error-container/40" : "border-koru-warning/25 bg-koru-warning-soft/40"
                       }`}
                     >
                       <Avatar user={s} name={s.name} size={36} />
                       <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-sm text-gray-900 truncate">{s.name}</p>
-                        <p className="text-xs text-gray-400">{s.submissions}/{s.totalAssignments} submitted</p>
+                        <p className="font-medium text-sm text-koru-on-surface truncate">{s.name}</p>
+                        <p className="text-xs text-koru-on-surface-variant">{s.submissions}/{s.totalAssignments} submitted</p>
                       </div>
-                      <span className={`text-sm font-black ${s.avgGrade < 50 ? "text-red-600" : "text-amber-600"}`}>
+                      <span className={`text-sm font-medium ${s.avgGrade < 50 ? "text-koru-error" : "text-koru-warning"}`}>
                         {s.avgGrade}%
                       </span>
                     </div>
                   ))}
                 {studentRoster.filter(s => s.status === "At Risk" || s.status === "Critical").length === 0 && (
-                  <p className="text-center py-4 text-sm text-gray-400">No at-risk students</p>
+                  <p className="text-center py-4 text-sm text-koru-on-surface-variant">No at-risk students</p>
                 )}
               </div>
             </motion.div>
