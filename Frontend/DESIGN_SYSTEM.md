@@ -174,6 +174,18 @@ Sizes: `sm`, `md`. Use `dot` for status emphasis.
 
 Badges are tonal chips: filled colour, no ring or outline. `danger` remains an alias for `error`.
 
+### Avatar
+
+```jsx
+<Avatar user={student} size="md" />
+<Avatar src={post.lecturerProfileImageUrl} seed={post.lecturerId} name={post.lecturerName} />
+```
+
+Sizes: `xs`, `sm`, `md`, `lg`, `xl`, or a pixel number. Every user is randomly assigned a
+[DiceBear "dylan"](https://www.dicebear.com/styles/dylan/) avatar (stored in `User.ProfileImageUrl`,
+seeded with the user id). When a response doesn't include the URL, the component rebuilds the same
+avatar from the id, so always pass something with an `id`.
+
 ### Modal
 
 ```jsx
@@ -212,7 +224,6 @@ Handles Escape, backdrop dismissal, focus trapping, focus restoration and body s
 - Toast / ConfirmDialog
 - Tabs
 - Table
-- Avatar
 - Ripple effects
 - Navigation rail / top app bar primitives
 - Form validation abstraction
