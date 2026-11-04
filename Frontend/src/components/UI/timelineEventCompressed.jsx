@@ -1,5 +1,7 @@
 import { MdAccessTime } from "react-icons/md";
 import { motion } from "framer-motion";
+import Badge from "./Badge";
+import Button from "./Button";
 
 export default function TimelineEventCompressed({
   title = "Contact Session",
@@ -16,46 +18,48 @@ export default function TimelineEventCompressed({
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: "easeOut" }}
-      className={`flex-1 pb-5 transition-opacity duration-300 ${isPast ? "opacity-45" : "opacity-100"}`}
+      className={`flex-1 pb-5 transition-opacity duration-300 ${isPast ? "opacity-50" : "opacity-100"}`}
     >
-      <p className={`text-sm font-medium mb-2.5 ml-0.5 ${isPast ? "text-gray-300" : "text-gray-500"}`}>{timeRange}</p>
+      <p className="mb-2.5 ml-0.5 text-koru-label font-normal tabular-nums text-koru-on-surface-variant">{timeRange}</p>
 
-      <div className={`border rounded-2xl px-5 py-4 transition-shadow duration-200 ${isPast ? "bg-gray-20 border-gray-50 hover:shadow-md" : "bg-white border-gray-200 hover:shadow-md"}`}>
+      <div className={`rounded-koru-md px-5 py-4 transition-shadow duration-200 ease-koru-out ${isPast ? "bg-koru-surface-container" : "bg-koru-surface-container-lowest shadow-koru-card ring-1 ring-inset ring-koru-outline-faint hover:shadow-koru-card-hover"}`}>
         <div className="flex items-center justify-between">
-          <div className="flex-1 min-w-0 pr-3">
-            <h3 className="text-base font-semibold text-black/30 leading-tight font-['Gabarito']">{title}</h3>
-            <p className="text-xs text-gray-400 mt-0.5">Lecturer – {lecturer}</p>
+          <div className="min-w-0 flex-1 pr-3">
+            <h3 className="font-display text-base font-medium leading-tight text-koru-on-surface">{title}</h3>
+            <p className="mt-0.5 text-koru-caption text-koru-on-surface-variant">Lecturer – {lecturer}</p>
           </div>
 
-          <div className="flex flex-col items-end gap-2 shrink-0">
-            <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${isPast ? "text-gray-400 bg-gray-100" : "text-[#3C0078] bg-[#3C0078]/8"}`}>
-              {location}
-            </span>
-            <div className={`flex items-center gap-1 px-2.5 py-1 rounded-full ${isPast ? "bg-gray-100" : "bg-blue-100"}`}>
-              <MdAccessTime className={`w-3.5 h-3.5 ${isPast ? "text-gray-400" : "text-blue-800"}`} />
-              <span className={`text-xs font-semibold ${isPast ? "text-gray-400" : "text-blue-800"}`}>{duration}</span>
-            </div>
+          <div className="flex shrink-0 flex-col items-end gap-2">
+            <Badge variant={isPast ? "neutral" : "primary"}>{location}</Badge>
+            <Badge variant={isPast ? "neutral" : "info"}>
+              <MdAccessTime className="h-3.5 w-3.5" aria-hidden="true" />
+              {duration}
+            </Badge>
           </div>
         </div>
 
         {/* Attendance actions */}
         {!isPast && (onManageAttendance || onCheckIn) && (
-          <div className="mt-3 pt-3 border-t border-gray-100">
+          <div className="mt-3 border-t border-koru-outline-faint pt-3">
             {onManageAttendance && (
-              <button
+              <Button
+                variant="tonal"
+                size="sm"
+                fullWidth
                 onClick={e => { e.stopPropagation(); onManageAttendance(); }}
-                className="w-full py-2 rounded-xl bg-[#3C0078]/8 text-[#3C0078] text-[10px] font-black uppercase tracking-widest hover:bg-[#3C0078] hover:text-white transition-colors"
               >
-                Manage Attendance
-              </button>
+                Manage attendance
+              </Button>
             )}
             {onCheckIn && (
-              <button
+              <Button
+                variant="tonal"
+                size="sm"
+                fullWidth
                 onClick={e => { e.stopPropagation(); onCheckIn(); }}
-                className="w-full py-2 rounded-xl bg-[#3C0078]/8 text-[#3C0078] text-[10px] font-black uppercase tracking-widest hover:bg-[#3C0078] hover:text-white transition-colors"
               >
-                Check In Now
-              </button>
+                Check in now
+              </Button>
             )}
           </div>
         )}

@@ -6,12 +6,13 @@ import NextClassItem from "./UI/nextClassItem";
 import ToDoItem from "./UI/toDoItem";
 import { getCourseAnnouncements, markAnnouncementAsRead } from "../services/announcementService";
 import { getAllEvents } from "../services/eventService";
+import { Skeleton } from "./UI";
 
 const MIN_LOADING_MS = 1500;
 
 function SectionLabel({ children, className = "" }) {
     return (
-        <p className={`text-[11px] font-semibold text-gray-400 uppercase tracking-wider ${className}`}>
+        <p className={`text-koru-caption font-medium text-koru-on-surface-variant ${className}`}>
             {children}
         </p>
     );
@@ -19,11 +20,11 @@ function SectionLabel({ children, className = "" }) {
 
 function NextClassSkeleton() {
     return (
-        <div className="my-2 rounded-xl border border-gray-100 w-full h-12 flex flex-row items-center space-x-3 px-2">
-            <div className="w-9 h-9 rounded-full bg-gray-100 animate-pulse shrink-0" />
+        <div className="my-2 flex min-h-14 w-full items-center gap-3 rounded-koru-md px-3 py-2.5 ring-1 ring-inset ring-koru-outline-faint">
+            <Skeleton variant="circle" className="h-9 w-9 shrink-0" />
             <div className="flex-1 space-y-1.5">
-                <div className="h-3 bg-gray-100 rounded-full animate-pulse w-2/3" />
-                <div className="h-2.5 bg-gray-100 rounded-full animate-pulse w-1/2" />
+                <Skeleton variant="text" className="w-2/3" />
+                <Skeleton variant="text" className="h-2.5 w-1/2" />
             </div>
         </div>
     );
@@ -31,13 +32,13 @@ function NextClassSkeleton() {
 
 function AnnouncementSkeleton() {
     return (
-        <div className="my-2 rounded-xl border border-gray-100 w-full flex flex-row items-center px-3 py-3">
-            <div className="w-9 h-9 rounded-full bg-gray-100 animate-pulse shrink-0" />
-            <div className="flex-1 ml-3 space-y-1.5">
-                <div className="h-3 bg-gray-100 rounded-full animate-pulse w-3/4" />
-                <div className="h-2.5 bg-gray-100 rounded-full animate-pulse w-1/2" />
+        <div className="my-2 flex min-h-14 w-full items-center gap-3 rounded-koru-md px-3 py-2.5 ring-1 ring-inset ring-koru-outline-faint">
+            <Skeleton variant="circle" className="h-9 w-9 shrink-0" />
+            <div className="flex-1 space-y-1.5">
+                <Skeleton variant="text" className="w-3/4" />
+                <Skeleton variant="text" className="h-2.5 w-1/2" />
             </div>
-            <div className="ml-3 shrink-0 w-8 h-2.5 bg-gray-100 rounded-full animate-pulse" />
+            <Skeleton variant="text" className="h-2.5 w-8 shrink-0" />
         </div>
     );
 }
@@ -110,7 +111,7 @@ export default function CourseGlanceDisplay({ activeCourseId }) {
     }, [activeCourseId, user?.userId]);
 
     return (
-        <div className="w-full h-fit rounded-2xl mt-4">
+        <div className="mt-4 h-fit w-full">
             <SectionLabel>To Do</SectionLabel>
             <ToDoItem activeCourseId={activeCourseId} />
 
@@ -120,14 +121,14 @@ export default function CourseGlanceDisplay({ activeCourseId }) {
             ) : nextClass ? (
                 <NextClassItem subject={nextClass.subject} date={nextClass.date} time={nextClass.time} room={nextClass.room} />
             ) : (
-                <p className="text-xs text-gray-400 py-2">No upcoming classes scheduled</p>
+                <div className="my-2 flex min-h-14 w-full items-center justify-center rounded-koru-md border border-dashed border-koru-outline-variant px-3 text-koru-caption text-koru-on-surface-variant">No upcoming classes scheduled</div>
             )}
 
             <SectionLabel className="mt-5">Announcements</SectionLabel>
             {loading ? (
                 <>{[1, 2].map(i => <AnnouncementSkeleton key={i} />)}</>
             ) : announcements.length === 0 ? (
-                <p className="text-xs text-gray-400 py-2">No recent announcements</p>
+                <div className="my-2 flex min-h-14 w-full items-center justify-center rounded-koru-md border border-dashed border-koru-outline-variant px-3 text-koru-caption text-koru-on-surface-variant">No recent announcements</div>
             ) : (
                 announcements.map(a => (
                     <AnnouncementsItem
@@ -136,7 +137,6 @@ export default function CourseGlanceDisplay({ activeCourseId }) {
                         message={a.preview}
                         time={new Date(a.datePosted).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                         isRead={a.isRead}
-                        color={a.color || "#3C0078"}
                         onClick={async () => {
                             try {
                                 if (user?.userId && !a.isRead) {

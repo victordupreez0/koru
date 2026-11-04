@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, X, Link2 } from "lucide-react";
+import { Button, Card, Input } from "./UI";
 
 // ──────────────────────────────────────────────
 // Teacher shortcut chips – quick links to tools / pages
@@ -47,19 +48,21 @@ export default function TeacherShortcuts() {
   }
 
   return (
-    <div className="w-full h-full flex flex-col bg-white/80 border-1 border-gray-200 rounded-3xl drop-shadow-xl p-4">
+    <Card variant="outlined" tone="low" radius="lg" padding="sm" className="flex h-full w-full flex-col">
       {/* ── Header ── */}
       <div className="flex items-center justify-between mt-5 mb-1">
-        <h2 className="text-2xl font-['Gabarito']">Shortcuts</h2>
-        <button
+        <h2 className="font-display text-koru-heading text-koru-on-surface">Shortcuts</h2>
+        <Button
+          variant="tonal"
+          size="icon"
           onClick={() => setIsAdding(!isAdding)}
-          className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
           aria-label="Add shortcut"
+          aria-expanded={isAdding}
         >
-          <Plus className="w-4 h-4 text-gray-600" />
-        </button>
+          <Plus className="h-4 w-4" />
+        </Button>
       </div>
-      <p className="text-sm text-gray-400 mb-5 font-medium">Quick access links</p>
+      <p className="mb-5 text-koru-label font-normal text-koru-on-surface-variant">Quick access links</p>
 
       {/* ── Add shortcut form ── */}
       <AnimatePresence>
@@ -70,43 +73,35 @@ export default function TeacherShortcuts() {
             exit={{ opacity: 0, height: 0 }}
             className="overflow-hidden mb-4"
           >
-            <div className="bg-white border border-gray-200 rounded-2xl p-4 flex flex-col gap-3">
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  placeholder="Label (e.g. Rubric)"
-                  value={newLabel}
-                  onChange={(e) => setNewLabel(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleAdd()}
-                  className="flex-1 text-sm border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-[#3C0078] transition-colors"
-                />
-              </div>
-              <div className="flex items-center gap-2">
-                <Link2 className="w-4 h-4 text-gray-400 shrink-0" />
-                <input
-                  type="text"
-                  placeholder="URL (optional)"
-                  value={newUrl}
-                  onChange={(e) => setNewUrl(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleAdd()}
-                  className="flex-1 text-sm border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-[#3C0078] transition-colors"
-                />
-              </div>
-              <div className="flex gap-2 justify-end">
-                <button
-                  onClick={() => setIsAdding(false)}
-                  className="px-3 py-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 transition-colors"
-                >
+            <Card tone="muted" padding="sm" className="flex flex-col gap-3">
+              <Input
+                size="sm"
+                type="text"
+                aria-label="Shortcut label"
+                placeholder="Label (e.g. Rubric)"
+                value={newLabel}
+                onChange={(e) => setNewLabel(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleAdd()}
+              />
+              <Input
+                size="sm"
+                type="text"
+                aria-label="Shortcut URL"
+                placeholder="URL (optional)"
+                startIcon={<Link2 className="h-4 w-4" />}
+                value={newUrl}
+                onChange={(e) => setNewUrl(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleAdd()}
+              />
+              <div className="flex justify-end gap-2">
+                <Button variant="text" size="sm" onClick={() => setIsAdding(false)}>
                   Cancel
-                </button>
-                <button
-                  onClick={handleAdd}
-                  className="px-4 py-1.5 text-xs font-bold text-white bg-[#3C0078] rounded-lg hover:bg-[#2a0055] transition-colors"
-                >
+                </Button>
+                <Button size="sm" onClick={handleAdd}>
                   Add
-                </button>
+                </Button>
               </div>
-            </div>
+            </Card>
           </motion.div>
         )}
       </AnimatePresence>
@@ -125,7 +120,7 @@ export default function TeacherShortcuts() {
               animate="visible"
               exit="exit"
               layout
-              className="group relative inline-flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 rounded-full text-sm font-medium text-gray-700 hover:border-[#3C0078]/30 hover:shadow-md hover:bg-[#3C0078]/[0.03] transition-all duration-300 cursor-pointer"
+              className="group relative inline-flex cursor-pointer items-center gap-2 rounded-koru-pill bg-koru-surface-container-lowest px-5 py-2.5 text-koru-label !text-koru-on-surface shadow-koru-card ring-1 ring-inset ring-koru-outline-faint transition duration-300 ease-koru-out hover:bg-koru-primary/[0.04] hover:shadow-koru-card-hover hover:ring-koru-primary/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus"
             >
               {shortcut.label}
               {/* Remove button – appears on hover */}
@@ -135,7 +130,8 @@ export default function TeacherShortcuts() {
                   e.stopPropagation();
                   handleRemove(shortcut.id);
                 }}
-                className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-gray-200 hover:bg-red-400 hover:text-white text-gray-500 items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-all duration-200 hidden group-hover:flex"
+                type="button"
+                className="absolute -right-1.5 -top-1.5 hidden h-5 w-5 items-center justify-center rounded-full bg-koru-surface-container-highest text-xs text-koru-on-surface-variant opacity-0 transition-all duration-200 hover:bg-koru-error hover:text-koru-on-error group-hover:flex group-hover:opacity-100"
                 aria-label={`Remove ${shortcut.label}`}
               >
                 <X className="w-3 h-3" />
@@ -145,6 +141,6 @@ export default function TeacherShortcuts() {
         </AnimatePresence>
         </div>
       </div>
-    </div>
+    </Card>
   );
 }

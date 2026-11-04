@@ -104,7 +104,7 @@ export default function TeacherDashboard() {
           hidden: {},
           show: { transition: { staggerChildren: 0.08, delayChildren: 0.15 } },
         }}
-        className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full max-w-[1400px] mx-auto min-h-[520px]"
+        className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full min-h-[520px]"
         aria-label="Lecturer dashboard overview"
       >
         <motion.div variants={column} className="">

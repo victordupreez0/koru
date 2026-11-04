@@ -13,7 +13,7 @@ export default function CourseGlanceSelect({ activeCourseId, setActiveCourseId, 
     }, [visibleCourses, activeCourseId, setActiveCourseId]);
 
     if (!visibleCourses || visibleCourses.length === 0) {
-        return <div className="text-xs font-medium text-gray-400 pl-1">No active courses.</div>;
+        return <div className="pl-1 text-koru-caption text-koru-on-surface-variant">No active courses.</div>;
     }
 
     // Active course always first so it's never hidden inside the collapsed slice
@@ -43,10 +43,12 @@ export default function CourseGlanceSelect({ activeCourseId, setActiveCourseId, 
                                 width: { type: "spring", stiffness: 220, damping: 32, mass: 0.9, delay: isActive ? 0.14 : 0 },
                                 height: { type: "spring", stiffness: 220, damping: 32, mass: 0.9 },
                             }}
-                            className={`btn !rounded-full !border-transparent flex items-center overflow-hidden transition-colors duration-200 cursor-pointer focus:outline-none focus:ring-0 active:outline-none active:ring-0 hover:shadow-sm hover:!border-transparent
+                            aria-pressed={isActive}
+                            aria-label={course.label || course.code}
+                            className={`btn !rounded-koru-pill !border-transparent !shadow-none flex items-center overflow-hidden transition-colors duration-200 ease-koru-out cursor-pointer !outline-none focus-visible:!ring-2 focus-visible:!ring-koru-focus focus-visible:!ring-offset-2 hover:!border-transparent
                                 ${isActive
-                                    ? "!bg-purple-300 !text-black !pl-1 !pr-3 justify-start"
-                                    : "!bg-purple-100 !text-purple-700 p-0 justify-center items-center hover:!bg-purple-200"
+                                    ? "!bg-koru-secondary-container !text-koru-on-secondary-container !pl-1 !pr-3 justify-start"
+                                    : "!bg-koru-primary-container/50 !text-koru-primary p-0 justify-center items-center hover:!bg-koru-primary-container"
                                 }`}
                             style={{
                                 minWidth: 0, minHeight: 0,
@@ -67,8 +69,8 @@ export default function CourseGlanceSelect({ activeCourseId, setActiveCourseId, 
                                   against both the active (purple-300) and inactive (purple-100) pill.
                                 */}
                                 <span className="flex-shrink-0 flex items-center justify-center" style={{ height: "100%" }}>
-                                    <span className="w-8 h-8 rounded-full bg-white flex items-center font-bold justify-center aspect-square overflow-hidden transition-colors duration-150">
-                                        <span className={`text-xs ${isActive ? "text-gray-800" : "text-purple-700"}`}>
+                                    <span className="flex aspect-square h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-koru-surface-container-lowest font-semibold transition-colors duration-150">
+                                        <span className={`text-xs ${isActive ? "text-koru-on-surface" : "text-koru-primary"}`}>
                                             {course.code}
                                         </span>
                                     </span>
@@ -93,7 +95,8 @@ export default function CourseGlanceSelect({ activeCourseId, setActiveCourseId, 
                 <motion.button
                     layout
                     onClick={() => setExpanded((e) => !e)}
-                    className="h-10 px-3 rounded-full bg-gray-100 text-gray-500 text-xs font-semibold hover:bg-gray-200 active:scale-95 transition-all duration-150 cursor-pointer focus:outline-none mt-2"
+                    aria-expanded={expanded}
+                    className="mt-2 h-10 cursor-pointer rounded-koru-pill bg-koru-surface-container-high px-3 text-xs font-medium text-koru-on-surface-variant transition-colors duration-150 ease-koru-out hover:bg-koru-surface-container-highest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus"
                 >
                     {expanded ? "Less" : `+${orderedCourses.length - COLLAPSED_LIMIT} more`}
                 </motion.button>

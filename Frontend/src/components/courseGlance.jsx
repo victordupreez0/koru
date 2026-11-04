@@ -2,11 +2,10 @@ import CourseGlanceDisplay from "./courseGlanceDisplay";
 import TeacherCourseGlanceDisplay from "./teacherCourseGlanceDisplay";
 import CourseGlanceSelect from "./UI/courseGlanceSelect";
 
-import { motion } from "framer-motion";
-
 import { useState } from "react";
 import { useCourses } from "../contexts/CoursesContext";
 import { useAuth } from "../contexts/AuthContext";
+import { Card } from "./UI";
 
 export default function CourseGlance() {
     const { visibleCourses } = useCourses();
@@ -15,9 +14,9 @@ export default function CourseGlance() {
     const isTeacher = user?.role === "teacher";
 
     return (
-        <div className="w-full h-full flex flex-col bg-white/70 border border-gray-100 rounded-3xl p-4">
+        <Card variant="outlined" tone="low" radius="lg" padding="sm" className="flex h-full w-full flex-col">
             <div className="flex items-center justify-between mt-5 mb-1">
-                <h2 className="text-2xl font-['Gabarito']">Course Glance</h2>
+                <h2 className="font-display text-koru-heading text-koru-on-surface">Course Glance</h2>
             </div>
             {/* Spacer between header and footer */}
             <div className="h-5" />
@@ -29,6 +28,6 @@ export default function CourseGlance() {
                     <CourseGlanceDisplay activeCourseId={activeCourseId} />
                 )}
             </div>
-        </div>
+        </Card>
     );
 }

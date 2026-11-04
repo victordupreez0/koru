@@ -1,6 +1,8 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { MdEditNote } from "react-icons/md";
+import Badge from "./Badge";
+import Button from "./Button";
 
 export default function AssignmentItem({
   title = "Assignment",
@@ -14,44 +16,44 @@ export default function AssignmentItem({
 }) {
     const navigate = useNavigate();
     // Determine color based on uiState
-    const getUiStateColor = (state) => {
-        if (state === "Late") return "bg-red-50 text-red-600";
-        if (state === "Due Soon") return "bg-orange-50 text-orange-600";
-        if (state === "Closed") return "bg-gray-100 text-gray-500";
-        if (state === "Submitted" || completed) return "bg-green-50 text-green-600";
-        return "bg-blue-50 text-blue-600";
+    const getUiStateVariant = (state) => {
+        if (state === "Late") return "error";
+        if (state === "Due Soon") return "warning";
+        if (state === "Closed") return "neutral";
+        if (state === "Submitted" || completed) return "success";
+        return "info";
     }
   return (
     <motion.div
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: "easeOut" }}
-      className={`w-full border rounded-2xl px-4 py-3.5 flex items-center gap-3 transition-all duration-300 cursor-pointer
-        ${completed ? "bg-gray-50 border-gray-100 opacity-50" : "bg-white border-gray-200 hover:shadow-md"}`}
+      className={`my-2 flex min-h-14 w-full cursor-pointer items-center gap-3 rounded-koru-md px-3 py-2.5 transition-all duration-300 ease-koru-out
+        ${completed ? "bg-koru-surface-container opacity-50" : "bg-koru-surface-container-lowest shadow-koru-card ring-1 ring-inset ring-koru-outline-faint hover:shadow-koru-card-hover"}`}
     >
       {/* Icon */}
       <div
-        className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0
-          ${completed ? "bg-gray-100" : "bg-[#3C0078]/8"}`}
+        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full
+          ${completed ? "bg-koru-surface-container-high" : "bg-koru-primary-container/60"}`}
       >
         <MdEditNote
-          className={`w-5 h-5 ${completed ? "text-gray-400" : "text-[#3C0078]"}`}
+          className={`h-5 w-5 ${completed ? "text-koru-outline" : "text-koru-primary"}`}
         />
       </div>
 
       {/* Text */}
       <div className="flex-1 min-w-0">
         <h4
-          className={`text-base font-semibold leading-tight font-['Gabarito'] ${completed ? "text-gray-400 line-through" : "text-black"
+          className={`text-koru-label ${completed ? "text-koru-outline line-through" : "text-koru-on-surface"
             }`}
         >
           {title}
         </h4>
-        <p className="text-xs text-gray-400 mt-0.5 flex flex-wrap items-center gap-2">
-          <span><span className="font-bold text-gray-500">DUE</span> {dueDate}</span>
-          <span className="font-bold text-black">{courseCode}</span>
+        <p className="mt-0.5 flex flex-wrap items-center gap-2 text-koru-caption text-koru-on-surface-variant">
+          <span>Due {dueDate}</span>
+          <span className="font-semibold text-koru-on-surface">{courseCode}</span>
           {uiState && !completed && (
-              <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest ${getUiStateColor(uiState)}`}>{uiState}</span>
+              <Badge variant={getUiStateVariant(uiState)}>{uiState}</Badge>
           )}
         </p>
       </div>
@@ -59,14 +61,14 @@ export default function AssignmentItem({
       {/* Actions */}
       {completed ? (
         <div
-          className="w-7 h-7 rounded-lg border-2 border-[#3C0078] bg-[#3C0078] flex items-center justify-center shrink-0"
+          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-koru-sm border-2 border-koru-primary bg-koru-primary"
           aria-label="Completed"
         >
           <motion.svg
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: "spring", stiffness: 300, damping: 20 }}
-            className="w-4 h-4 text-white"
+            className="h-4 w-4 text-koru-on-primary"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -76,17 +78,19 @@ export default function AssignmentItem({
           </motion.svg>
         </div>
       ) : (
-        <button
+        <Button
+            size="sm"
+            variant={uiState === 'Closed' ? "tonal" : "filled"}
+            className="shrink-0"
             onClick={(e) => {
                 e.stopPropagation();
                 if (courseId && assignmentId) {
                     navigate(`/courses/${courseId}/assignments/${assignmentId}`);
                 }
             }}
-            className="px-4 py-2 bg-[#3C0078] rounded-xl text-[10px] font-bold uppercase tracking-widest text-white hover:bg-gray-800 transition-all shadow-sm shrink-0"
         >
             {uiState === 'Closed' ? 'View' : 'Submit'}
-        </button>
+        </Button>
       )}
     </motion.div>
   );

@@ -5,18 +5,17 @@ import { ChevronRight } from "lucide-react";
 import { getCourseAssignments } from "../../services/assignmentService";
 import { getStudentSubmissions } from "../../services/submissionService";
 import { useAuth } from "../../contexts/AuthContext";
+import Skeleton from "./Skeleton";
 
-const BRAND = "#3C0078";
-const BRAND_TINT = "#3C007812";
 const MIN_LOADING_MS = 1500;
 
 function SkeletonRow() {
     return (
-        <div className="my-2 rounded-xl border border-gray-100 w-full h-12 flex flex-row items-center space-x-3 px-2">
-            <div className="w-9 h-9 rounded-full bg-gray-100 animate-pulse shrink-0" />
+        <div className="my-2 flex min-h-14 w-full items-center gap-3 rounded-koru-md px-3 py-2.5 ring-1 ring-inset ring-koru-outline-faint">
+            <Skeleton variant="circle" className="h-9 w-9 shrink-0" />
             <div className="flex-1 space-y-1.5">
-                <div className="h-3 bg-gray-100 rounded-full animate-pulse w-3/4" />
-                <div className="h-2.5 bg-gray-100 rounded-full animate-pulse w-1/2" />
+                <Skeleton variant="text" className="w-3/4" />
+                <Skeleton variant="text" className="h-2.5 w-1/2" />
             </div>
         </div>
     );
@@ -78,33 +77,31 @@ export default function ToDoItem({ activeCourseId }) {
     }
 
     if (todos.length === 0) {
-        return <p className="text-xs text-gray-400 py-2">No upcoming tasks</p>;
+        return <div className="my-2 flex min-h-14 w-full items-center justify-center rounded-koru-md border border-dashed border-koru-outline-variant px-3 text-koru-caption text-koru-on-surface-variant">No upcoming tasks</div>;
     }
 
     return (
         <>
             {todos.map((todo, idx) => (
-                <div
+                <button
+                    type="button"
                     key={idx}
-                    className="my-2 bg-white rounded-xl border border-gray-100 w-full h-12 flex flex-row items-center space-x-2 transition-colors duration-150 hover:bg-gray-50/60 hover:border-gray-200 cursor-pointer"
+                    className="my-2 flex min-h-14 w-full items-center gap-3 rounded-koru-md bg-koru-surface-container-lowest px-3 py-2.5 text-left shadow-koru-card ring-1 ring-inset ring-koru-outline-faint cursor-pointer transition duration-150 ease-koru-out hover:bg-koru-surface-container-low hover:shadow-koru-card-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus"
                     onClick={() => navigate(`/courses/${todo.courseId}/assignments/${todo.id}`)}
                 >
-                    <div
-                        className="w-9 h-9 rounded-full ml-2 flex items-center justify-center shrink-0"
-                        style={{ backgroundColor: BRAND_TINT }}
-                    >
-                        <MdEditNote className="w-5 h-5" style={{ color: BRAND }} />
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-koru-primary-container/60">
+                        <MdEditNote className="h-5 w-5 text-koru-primary" aria-hidden="true" />
                     </div>
 
-                    <div className="ml-2 flex flex-col justify-center space-y-0.5 flex-1 min-w-0">
-                        <h3 className="text-sm font-semibold text-gray-800 truncate">{todo.title}</h3>
-                        <p className="text-xs text-gray-400">{todo.due}</p>
+                    <div className="flex min-w-0 flex-1 flex-col justify-center gap-0.5">
+                        <h3 className="truncate text-koru-label text-koru-on-surface">{todo.title}</h3>
+                        <p className="text-koru-caption text-koru-on-surface-variant">{todo.due}</p>
                     </div>
 
-                    <div className="w-9 h-9 flex items-center justify-center mr-2 shrink-0">
-                        <ChevronRight className="w-4 h-4 text-gray-300" />
+                    <div className="flex h-9 w-6 shrink-0 items-center justify-center">
+                        <ChevronRight className="h-4 w-4 text-koru-outline" aria-hidden="true" />
                     </div>
-                </div>
+                </button>
             ))}
         </>
     );

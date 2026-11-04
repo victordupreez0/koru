@@ -10,6 +10,7 @@ import { getAllEvents, getTeacherEvents } from "../services/eventService";
 import { getStudentAssignments, getTeacherAssignments } from "../services/assignmentService";
 import { getAvailableSessionsForStudent } from "../services/checkInService";
 import { useAuth } from "../contexts/AuthContext";
+import { Card, Skeleton } from "./UI";
 
 const MIN_LOADING_MS = 1500;
 
@@ -97,15 +98,15 @@ function inferSessionType(title = "") {
 
 function SkeletonEvent() {
   return (
-    <div className="flex gap-4 mb-3">
-      <div className="flex flex-col items-center w-4 shrink-0">
-        <div className="w-3 h-3 rounded-full bg-gray-100 animate-pulse mt-1" />
-        <div className="w-0.5 h-14 bg-gray-100 animate-pulse mt-1" />
+    <div className="mb-3 flex gap-4">
+      <div className="flex w-6 shrink-0 flex-col items-center">
+        <Skeleton variant="circle" className="mt-1 h-3 w-3" />
+        <Skeleton className="mt-1 h-14 w-0.5 rounded-none" />
       </div>
-      <div className="flex-1 rounded-2xl border border-gray-100 p-3 mb-1 space-y-2">
-        <div className="h-3 bg-gray-100 rounded-full animate-pulse w-2/3" />
-        <div className="h-2.5 bg-gray-100 rounded-full animate-pulse w-1/3" />
-        <div className="h-2.5 bg-gray-100 rounded-full animate-pulse w-1/2" />
+      <div className="mb-1 flex-1 space-y-2 rounded-koru-md p-3 ring-1 ring-inset ring-koru-outline-faint">
+        <Skeleton variant="text" className="w-2/3" />
+        <Skeleton variant="text" className="h-2.5 w-1/3" />
+        <Skeleton variant="text" className="h-2.5 w-1/2" />
       </div>
     </div>
   );
@@ -178,18 +179,18 @@ export default function TodayTimeline() {
   const nextIdx = getNextEventIndex(events, now);
 
   return (
-    <div className="w-full h-full flex flex-col bg-white/70 border border-gray-100 rounded-3xl p-4">
+    <Card variant="outlined" tone="low" radius="lg" padding="sm" className="flex h-full w-full flex-col">
       <div className="flex items-center justify-between mt-5 mb-1">
-        <h2 className="text-2xl font-['Gabarito']">Today</h2>
+        <h2 className="font-display text-koru-heading text-koru-on-surface">Today</h2>
       </div>
-      <p className="text-sm text-gray-400 mb-5 font-medium">{formatDate(now)}</p>
+      <p className="mb-5 text-koru-label font-normal text-koru-on-surface-variant">{formatDate(now)}</p>
       <div className="h-5" />
 
       <div className="relative flex flex-col pr-1">
         {loading ? (
           <>{[0, 1, 2].map(i => <SkeletonEvent key={i} />)}</>
         ) : events.length === 0 ? (
-          <p className="text-sm text-gray-400 text-center py-10 font-medium">No events scheduled for today.</p>
+          <div className="my-2 flex min-h-14 w-full items-center justify-center rounded-koru-md border border-dashed border-koru-outline-variant px-3 text-koru-caption text-koru-on-surface-variant">No events scheduled for today.</div>
         ) : (
           events.map((evt, idx) => {
             const isNext  = idx === nextIdx;
@@ -267,6 +268,6 @@ export default function TodayTimeline() {
           />
         )}
       </AnimatePresence>
-    </div>
+    </Card>
   );
 }

@@ -29,19 +29,19 @@ export default function DashboardHeader({
       initial={{ opacity: 0, y: -6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: "easeOut" }}
-      className="w-full max-w-[1400px] mx-auto pt-4"
+      className="w-full pt-4"
     >
       <div className="flex flex-col gap-4">
         {/* Greeting row */}
         <div className="flex items-end justify-between gap-4 flex-wrap">
           <div className="min-w-0">
-            <h1 className="text-3xl font-bold font-['Gabarito'] text-slate-900 leading-tight">
+            <h1 className="font-display text-koru-title text-koru-on-surface">
               {greeting}{firstName ? `, ${firstName}` : ""}
-              <span className="text-[#3C0078]">.</span>
+              <span className="text-koru-primary">.</span>
             </h1>
 
             {contextLine && (
-              <p className="mt-1 text-sm text-slate-400">{contextLine}</p>
+              <p className="mt-1 text-koru-body text-koru-on-surface-variant">{contextLine}</p>
             )}
           </div>
 
