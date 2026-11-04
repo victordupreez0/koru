@@ -61,6 +61,15 @@
 
   /* ── Surfaces and content ───────────────────────────────────────────── */
   --color-koru-surface: #fafbfd;
+  /* Page canvas behind the sidebar and floating shells: dark brand purple. */
+  --color-koru-canvas: #3a2a55;
+
+  /* Vivid fills for dashboard stat tiles (white text sits on these). */
+  --color-koru-stat-violet: #6d3df5;
+  --color-koru-stat-sky: #0f8fe8;
+  --color-koru-stat-orange: #f27a1a;
+  --color-koru-stat-green: #1e9e57;
+  --color-koru-stat-slate: #5a5d6b;
   --color-koru-on-surface: #1b1b1f;
   --color-koru-surface-variant: #e4e7f0;
   --color-koru-on-surface-variant: #45464f;
@@ -248,7 +257,7 @@
 
   color-scheme: light only;
   color: #1b1b1f;
-  background-color: #fafbfd;
+  background-color: var(--color-koru-canvas);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -284,8 +293,8 @@ body {
   scrollbar-width: none;
   /* Firefox */
 
-  /* Cool off-white canvas so component colour reads clearly. */
-  background-color: #fafbfd;
+  /* Dark canvas so the white shells and cards read clearly. */
+  background-color: var(--color-koru-canvas);
 
   position: relative;
   overflow-x: hidden;
@@ -424,7 +433,7 @@ button:focus:not(:focus-visible) {
 
 :root {
   color: #1b1b1f;
-  background-color: #fafbfd;
+  background-color: var(--color-koru-canvas);
 }
 
 a:hover {

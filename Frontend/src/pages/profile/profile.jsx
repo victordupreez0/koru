@@ -348,8 +348,8 @@ export default function Profile({ publicRoute = false }) {
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           className="flex flex-col shrink-0 transition-all duration-300
-            md:h-full md:w-64 md:bg-white/70 md:backdrop-blur-xl md:border md:border-white/20 md:rounded-[28px] md:shadow-lg md:overflow-hidden
-            max-md:h-full max-md:w-64 max-md:bg-white/80 max-md:backdrop-blur-md max-md:border-r max-md:border-gray-200/50"
+            md:h-full md:w-64 md:bg-koru-surface-container-lowest md:backdrop-blur-xl md:border md:border-white/20 md:rounded-koru-lg md:shadow-lg md:overflow-hidden
+            max-md:h-full max-md:w-64 max-md:bg-koru-surface-container-lowest max-md:backdrop-blur-md max-md:border-r max-md:border-gray-200/50"
         >
           {/* Profile Sidebar Header Info */}
           <div className="px-6 pt-6 pb-5 border-b border-gray-100 flex flex-col gap-2 shrink-0 select-none">
@@ -434,7 +434,7 @@ export default function Profile({ publicRoute = false }) {
         </motion.div>
 
         {/* Right Section: Main Content Area: Floating Island Card */}
-        <div className="flex-1 flex flex-col overflow-hidden transition-all duration-300 md:bg-white/75 md:backdrop-blur-xl md:border md:border-white/20 md:rounded-[28px] md:shadow-lg max-md:bg-white">
+        <div className="flex-1 flex flex-col overflow-hidden transition-all duration-300 md:bg-koru-surface-container-lowest md:backdrop-blur-xl md:border md:border-white/20 md:rounded-koru-lg md:shadow-lg max-md:bg-white">
           {/* Header Top Bar */}
           <div className="h-14 border-b border-gray-100 bg-white/60 backdrop-blur-md flex items-center justify-between px-8 z-10 shrink-0 select-none">
             <div className="flex items-center gap-3">

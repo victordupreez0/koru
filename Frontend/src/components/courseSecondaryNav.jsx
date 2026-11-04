@@ -123,8 +123,8 @@ export default function CourseSecondaryNav({ activeCourseId, hideNav, onDeleteCo
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             className="flex flex-col shrink-0 transition-all duration-300
-              md:h-full md:w-64 md:bg-white/70 md:backdrop-blur-xl md:border md:border-white/20 md:rounded-[28px] md:shadow-lg md:overflow-hidden
-              max-md:h-full max-md:w-64 max-md:bg-white/80 max-md:backdrop-blur-md max-md:border-r max-md:border-gray-200/50"
+              md:h-full md:w-64 md:bg-koru-surface-container-lowest md:backdrop-blur-xl md:border md:border-white/20 md:rounded-koru-lg md:shadow-lg md:overflow-hidden
+              max-md:h-full max-md:w-64 max-md:bg-koru-surface-container-lowest max-md:backdrop-blur-md max-md:border-r max-md:border-gray-200/50"
         >
             {/* Course Header Info */}
             {course && (
