@@ -8,6 +8,7 @@ import { getCourseStudentCount } from "../../../services/enrollmentService";
 import { getCourseCohorts, getCourseStudents } from "../../../services/classGroupService";
 import { useAuth } from "../../../contexts/AuthContext";
 import CohortFilterBar from "../../../components/CohortFilterBar";
+import { Badge, Button, Card, EmptyState, Skeleton } from "../../../components/UI";
 import { staggerContainer, slideUp, ASSIGNMENT_TYPES, GRADE_DISPLAY_OPTIONS, EXTERNAL_TOOLS } from "./constants";
 
 function AssignmentTypeIcon({ type, size = 18 }) {
@@ -15,7 +16,7 @@ function AssignmentTypeIcon({ type, size = 18 }) {
     if (!found) return null;
     const Icon = found.icon;
     return (
-        <span className={`inline-flex items-center justify-center w-8 h-8 rounded-xl ${found.bg}`} title={found.label}>
+        <span className={`inline-flex items-center justify-center w-8 h-8 rounded-koru-md ${found.bg}`} title={found.label}>
             <Icon size={size} style={{ color: found.color }} />
         </span>
     );
@@ -73,29 +74,31 @@ function CreateAssignmentDrawer({ onClose, onSave, initialData, cohorts = [], de
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: "100%", opacity: 0 }}
             transition={{ type: "spring", damping: 28, stiffness: 220 }}
-            className="w-full max-w-xl bg-white border border-gray-100 rounded-[32px] shadow-sm flex flex-col overflow-hidden h-full shrink-0"
+            className="w-full max-w-xl bg-koru-surface-container-lowest border border-koru-outline-faint rounded-koru-3xl shadow-koru-xs flex flex-col overflow-hidden h-full shrink-0"
         >
-            <div className="flex justify-between items-center px-8 py-6 border-b border-gray-100 shrink-0">
+            <div className="flex justify-between items-center px-8 py-6 border-b border-koru-outline-faint shrink-0">
                 <div>
-                    <h2 className="text-2xl font-bold text-gray-900">{isEditing ? "Edit Assignment" : "Create Assignment"}</h2>
-                    <p className="text-sm text-gray-400 mt-1">Fill in the details below</p>
+                    <h2 className="font-display text-koru-title text-koru-on-surface">{isEditing ? "Edit Assignment" : "Create Assignment"}</h2>
+                    <p className="text-sm text-koru-on-surface-variant mt-1">Fill in the details below</p>
                 </div>
-                <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-500">
+                <Button variant="text" size="icon" onClick={onClose} aria-label="Close" className="!text-koru-on-surface-variant">
                     <X size={22} />
-                </button>
+                </Button>
             </div>
 
             <div className="flex-1 overflow-y-auto px-8 py-6 space-y-6">
                     {cohorts.length > 0 && (
                         <div>
-                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3 block">Assign To</label>
+                            <label className="text-koru-caption font-medium text-koru-on-surface-variant mb-3 block">Assign To</label>
                             <div className="flex flex-wrap gap-2">
                                 <button
                                     onClick={() => handleChange("classGroupId", null)}
-                                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${
+                                    type="button"
+                                    aria-pressed={form.classGroupId === null}
+                                    className={`rounded-koru-sm border px-4 py-2 text-xs font-medium transition-colors duration-150 ease-koru-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus ${
                                         form.classGroupId === null
-                                            ? "bg-[#3C0078] text-white border-[#3C0078]"
-                                            : "bg-gray-50 text-gray-600 border-gray-200 hover:border-gray-300"
+                                            ? "bg-koru-primary text-koru-on-primary border-koru-primary"
+                                            : "border-koru-outline-variant bg-koru-surface-container-lowest text-koru-on-surface-variant hover:bg-koru-surface-container-low"
                                     }`}
                                 >
                                     All Groups
@@ -104,10 +107,12 @@ function CreateAssignmentDrawer({ onClose, onSave, initialData, cohorts = [], de
                                     <button
                                         key={c.id}
                                         onClick={() => handleChange("classGroupId", c.id)}
-                                        className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${
+                                        type="button"
+                                        aria-pressed={form.classGroupId === c.id}
+                                        className={`rounded-koru-sm border px-4 py-2 text-xs font-medium transition-colors duration-150 ease-koru-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus ${
                                             form.classGroupId === c.id
-                                                ? "bg-[#3C0078] text-white border-[#3C0078]"
-                                                : "bg-gray-50 text-gray-600 border-gray-200 hover:border-gray-300"
+                                                ? "bg-koru-primary text-koru-on-primary border-koru-primary"
+                                                : "border-koru-outline-variant bg-koru-surface-container-lowest text-koru-on-surface-variant hover:bg-koru-surface-container-low"
                                         }`}
                                     >
                                         {c.name}
@@ -117,22 +122,24 @@ function CreateAssignmentDrawer({ onClose, onSave, initialData, cohorts = [], de
                         </div>
                     )}
                     <div>
-                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3 block">Assignment Type</label>
+                        <label className="text-koru-caption font-medium text-koru-on-surface-variant mb-3 block">Assignment Type</label>
                         <div className="grid grid-cols-3 gap-2">
                             {ASSIGNMENT_TYPES.map(t => {
                                 const Icon = t.icon;
                                 return (
                                     <button
                                         key={t.id}
+                                        type="button"
+                                        aria-pressed={form.type === t.id}
                                         onClick={() => handleChange("type", t.id)}
-                                        className={`flex flex-col items-center gap-2 p-3 rounded-2xl border-2 text-center transition-all ${
-                                            form.type === t.id ? "border-[#3C0078] bg-[#3C0078]/5" : "border-gray-100 hover:border-gray-200 bg-gray-50"
+                                        className={`flex flex-col items-center gap-2 rounded-koru-md p-3 text-center transition duration-150 ease-koru-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus ${
+                                            form.type === t.id ? "bg-koru-primary/5 ring-2 ring-inset ring-koru-primary" : "bg-koru-surface-container-low ring-1 ring-inset ring-koru-outline-faint hover:ring-koru-outline-variant"
                                         }`}
                                     >
-                                        <span className={`inline-flex items-center justify-center w-9 h-9 rounded-xl ${t.bg}`}>
+                                        <span className={`inline-flex items-center justify-center w-9 h-9 rounded-koru-md ${t.bg}`}>
                                             <Icon size={18} style={{ color: t.color }} />
                                         </span>
-                                        <span className={`text-[10px] font-bold leading-tight ${form.type === t.id ? "text-[#3C0078]" : "text-gray-500"}`}>
+                                        <span className={`text-[10px] font-bold leading-tight ${form.type === t.id ? "text-koru-primary" : "text-koru-on-surface-variant"}`}>
                                             {t.label}
                                         </span>
                                     </button>
@@ -142,84 +149,88 @@ function CreateAssignmentDrawer({ onClose, onSave, initialData, cohorts = [], de
                     </div>
 
                     <div>
-                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2 block">Title</label>
+                        <label className="text-koru-caption font-medium text-koru-on-surface-variant mb-2 block">Title</label>
                         <input
                             type="text"
                             placeholder="Assignment title..."
                             value={form.title}
                             onChange={e => handleChange("title", e.target.value)}
-                            className="w-full bg-gray-50 rounded-2xl px-5 py-4 text-gray-900 font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-[#3C0078]/20 border border-transparent transition-all"
+                            className="w-full bg-koru-surface-container-low rounded-koru-xs px-5 py-4 text-koru-on-surface font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-koru-primary/20 border border-transparent transition-all"
                         />
                     </div>
 
                     <div>
-                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2 block">Instructions / Description</label>
+                        <label className="text-koru-caption font-medium text-koru-on-surface-variant mb-2 block">Instructions / Description</label>
                         <textarea
                             rows={4}
                             placeholder="Write the assignment instructions here..."
                             value={form.description}
                             onChange={e => handleChange("description", e.target.value)}
-                            className="w-full bg-gray-50 rounded-2xl px-5 py-4 text-gray-900 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#3C0078]/20 border border-transparent transition-all resize-none leading-relaxed"
+                            className="w-full bg-koru-surface-container-low rounded-koru-xs px-5 py-4 text-koru-on-surface text-sm font-medium focus:outline-none focus:ring-2 focus:ring-koru-primary/20 border border-transparent transition-all resize-none leading-relaxed"
                         />
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2 block">Points</label>
+                            <label className="text-koru-caption font-medium text-koru-on-surface-variant mb-2 block">Points</label>
                             <input
                                 type="number"
                                 min={0}
                                 value={form.points}
                                 onChange={e => handleChange("points", parseInt(e.target.value) || 0)}
-                                className="w-full bg-gray-50 rounded-2xl px-5 py-4 text-gray-900 font-bold text-sm focus:outline-none focus:ring-2 focus:ring-[#3C0078]/20 border border-transparent transition-all"
+                                className="w-full bg-koru-surface-container-low rounded-koru-xs px-5 py-4 text-koru-on-surface font-bold text-sm focus:outline-none focus:ring-2 focus:ring-koru-primary/20 border border-transparent transition-all"
                             />
                         </div>
                         <div>
-                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2 block">Grade Display</label>
+                            <label className="text-koru-caption font-medium text-koru-on-surface-variant mb-2 block">Grade Display</label>
                             <select
                                 value={form.gradeDisplay}
                                 onChange={e => handleChange("gradeDisplay", e.target.value)}
-                                className="w-full bg-gray-50 rounded-2xl px-5 py-4 text-gray-900 font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-[#3C0078]/20 border border-transparent transition-all appearance-none"
+                                className="w-full bg-koru-surface-container-low rounded-koru-xs px-5 py-4 text-koru-on-surface font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-koru-primary/20 border border-transparent transition-all appearance-none"
                             >
                                 {GRADE_DISPLAY_OPTIONS.map(o => <option key={o}>{o}</option>)}
                             </select>
                         </div>
                     </div>
 
-                    <div className="flex items-center justify-between bg-gray-50 rounded-2xl px-5 py-4">
+                    <div className="flex items-center justify-between bg-koru-surface-container-low rounded-koru-lg px-5 py-4">
                         <div>
-                            <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Allow Multiple Attempts</p>
-                            <p className="text-xs text-gray-500 mt-0.5">Students can resubmit until closed</p>
+                            <p className="text-koru-caption font-medium text-koru-on-surface-variant">Allow Multiple Attempts</p>
+                            <p className="text-xs text-koru-on-surface-variant mt-0.5">Students can resubmit until closed</p>
                         </div>
                         <button
+                            type="button"
+                            role="switch"
+                            aria-checked={form.allowMultipleAttempts}
+                            aria-label="Allow multiple attempts"
                             onClick={() => handleChange("allowMultipleAttempts", !form.allowMultipleAttempts)}
-                            className={`w-12 h-6 rounded-full transition-colors flex items-center px-0.5 ${form.allowMultipleAttempts ? "bg-[#3C0078]" : "bg-gray-300"}`}
+                            className={`flex h-6 w-12 items-center rounded-full px-0.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus focus-visible:ring-offset-2 ${form.allowMultipleAttempts ? "bg-koru-primary" : "bg-koru-outline-variant"}`}
                         >
-                            <span className={`w-5 h-5 bg-white rounded-full shadow transition-transform ${form.allowMultipleAttempts ? "translate-x-6" : "translate-x-0"}`} />
+                            <span className={`w-5 h-5 bg-koru-surface-container-lowest rounded-full shadow-koru-xs transition-transform ${form.allowMultipleAttempts ? "translate-x-6" : "translate-x-0"}`} />
                         </button>
                     </div>
 
                     <div>
-                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3 block">Dates</label>
-                        <div className="bg-gray-50 rounded-[28px] p-6 space-y-4">
+                        <label className="text-koru-caption font-medium text-koru-on-surface-variant mb-3 block">Dates</label>
+                        <div className="bg-koru-surface-container-low rounded-koru-3xl p-6 space-y-4">
                             <div>
-                                <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2 block">Opens</label>
-                                <input type="datetime-local" value={form.openDate} onChange={e => handleChange("openDate", e.target.value)} className="w-full bg-white rounded-2xl px-5 py-3 text-gray-900 font-medium text-sm focus:outline-none focus:ring-2 focus:ring-[#3C0078]/20 border border-gray-100 transition-all" />
+                                <label className="text-koru-caption font-medium text-koru-on-surface-variant mb-2 block">Opens</label>
+                                <input type="datetime-local" value={form.openDate} onChange={e => handleChange("openDate", e.target.value)} className="w-full bg-koru-surface-container-lowest rounded-koru-xs px-5 py-3 text-koru-on-surface font-medium text-sm focus:outline-none focus:ring-2 focus:ring-koru-primary/20 border border-koru-outline-faint transition-all" />
                             </div>
                             <div>
-                                <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2 block">Due Date</label>
-                                <input type="datetime-local" value={form.dueDate} onChange={e => handleChange("dueDate", e.target.value)} className="w-full bg-white rounded-2xl px-5 py-3 text-gray-900 font-medium text-sm focus:outline-none focus:ring-2 focus:ring-[#3C0078]/20 border border-gray-100 transition-all" />
+                                <label className="text-koru-caption font-medium text-koru-on-surface-variant mb-2 block">Due Date</label>
+                                <input type="datetime-local" value={form.dueDate} onChange={e => handleChange("dueDate", e.target.value)} className="w-full bg-koru-surface-container-lowest rounded-koru-xs px-5 py-3 text-koru-on-surface font-medium text-sm focus:outline-none focus:ring-2 focus:ring-koru-primary/20 border border-koru-outline-faint transition-all" />
                             </div>
                             <div>
-                                <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2 block">Closes</label>
-                                <input type="datetime-local" value={form.closeDate} onChange={e => handleChange("closeDate", e.target.value)} className="w-full bg-white rounded-2xl px-5 py-3 text-gray-900 font-medium text-sm focus:outline-none focus:ring-2 focus:ring-[#3C0078]/20 border border-gray-100 transition-all" />
+                                <label className="text-koru-caption font-medium text-koru-on-surface-variant mb-2 block">Closes</label>
+                                <input type="datetime-local" value={form.closeDate} onChange={e => handleChange("closeDate", e.target.value)} className="w-full bg-koru-surface-container-lowest rounded-koru-xs px-5 py-3 text-koru-on-surface font-medium text-sm focus:outline-none focus:ring-2 focus:ring-koru-primary/20 border border-koru-outline-faint transition-all" />
                             </div>
                         </div>
                     </div>
 
                     {form.type === "external" && (
                         <div>
-                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3 block">External Tool</label>
+                            <label className="text-koru-caption font-medium text-koru-on-surface-variant mb-3 block">External Tool</label>
                             <div className="grid grid-cols-2 gap-3 mb-4">
                                 {EXTERNAL_TOOLS.map(tool => (
                                     <button
@@ -229,34 +240,35 @@ function CreateAssignmentDrawer({ onClose, onSave, initialData, cohorts = [], de
                                             handleChange("externalToolName", tool.name);
                                             if (!form.externalToolUrl) handleChange("externalToolUrl", tool.baseUrl);
                                         }}
-                                        className={`flex items-center gap-3 p-4 rounded-2xl border-2 text-left transition-all ${
+                                        aria-pressed={form.externalToolName === tool.name}
+                                        className={`flex items-center gap-3 rounded-koru-md p-4 text-left transition duration-150 ease-koru-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus ${
                                             form.externalToolName === tool.name
-                                                ? "border-[#6366F1] bg-[#6366F1]/5"
-                                                : "border-gray-100 hover:border-gray-200 bg-gray-50"
+                                                ? "bg-koru-info/5 ring-2 ring-inset ring-koru-info"
+                                                : "bg-koru-surface-container-low ring-1 ring-inset ring-koru-outline-faint hover:ring-koru-outline-variant"
                                         }`}
                                     >
                                         <span
-                                            className={`w-10 h-10 rounded-xl ${tool.bg} flex items-center justify-center text-base font-black shrink-0`}
+                                            className={`w-10 h-10 rounded-koru-md ${tool.bg} flex items-center justify-center text-base font-semibold shrink-0`}
                                             style={{ color: tool.color }}
                                         >
                                             {tool.icon}
                                         </span>
                                         <div className="min-w-0">
                                             <p className={`text-xs font-bold leading-tight truncate ${
-                                                form.externalToolName === tool.name ? "text-[#6366F1]" : "text-gray-700"
+                                                form.externalToolName === tool.name ? "text-koru-info" : "text-koru-on-surface-variant"
                                             }`}>{tool.name}</p>
-                                            <p className="text-[10px] text-gray-400 leading-tight mt-0.5">{tool.description}</p>
+                                            <p className="text-[10px] text-koru-on-surface-variant leading-tight mt-0.5">{tool.description}</p>
                                         </div>
                                     </button>
                                 ))}
                             </div>
-                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2 block">Tool URL / Launch Link</label>
+                            <label className="text-koru-caption font-medium text-koru-on-surface-variant mb-2 block">Tool URL / Launch Link</label>
                             <input
                                 type="url"
                                 placeholder="https://..."
                                 value={form.externalToolUrl}
                                 onChange={e => handleChange("externalToolUrl", e.target.value)}
-                                className="w-full bg-gray-50 rounded-2xl px-5 py-4 text-gray-900 font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-[#6366F1]/20 border border-transparent transition-all"
+                                className="w-full bg-koru-surface-container-low rounded-koru-xs px-5 py-4 text-koru-on-surface font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-koru-info/20 border border-transparent transition-all"
                             />
                         </div>
                     )}
@@ -264,45 +276,45 @@ function CreateAssignmentDrawer({ onClose, onSave, initialData, cohorts = [], de
                     {form.type === "quiz" && (
                         <div>
                             <div className="flex items-center justify-between mb-3">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Quiz Questions</label>
-                                <button onClick={addQuestion} className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#FF8731]/10 text-[#FF8731] font-bold text-[10px] uppercase tracking-widest hover:bg-[#FF8731]/20 transition-all">
-                                    <Plus size={14} /> Add Question
-                                </button>
+                                <label className="text-koru-caption font-medium text-koru-on-surface-variant">Quiz Questions</label>
+                                <Button variant="tonal" size="sm" onClick={addQuestion} startIcon={<Plus size={14} />}>
+                                    Add Question
+                                </Button>
                             </div>
                             {quizQuestions.length === 0 && (
-                                <p className="text-xs text-gray-400 bg-gray-50 rounded-2xl px-5 py-4">No questions yet. Click "Add Question" to begin.</p>
+                                <p className="text-xs text-koru-on-surface-variant bg-koru-surface-container-low rounded-koru-lg px-5 py-4">No questions yet. Click "Add Question" to begin.</p>
                             )}
                             <div className="space-y-4">
                                 {quizQuestions.map((q, qi) => (
-                                    <div key={qi} className="bg-gray-50 rounded-[24px] p-5 space-y-3">
+                                    <div key={qi} className="bg-koru-surface-container-low rounded-koru-2xl p-5 space-y-3">
                                         <div className="flex items-start gap-3">
-                                            <span className="w-6 h-6 rounded-full bg-[#FF8731]/20 text-[#FF8731] text-[10px] font-black flex items-center justify-center shrink-0 mt-1">{qi + 1}</span>
+                                            <span className="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-koru-accent-soft text-[10px] font-semibold text-koru-accent-ink">{qi + 1}</span>
                                             <input
                                                 type="text"
                                                 placeholder="Question text..."
                                                 value={q.question}
                                                 onChange={e => updateQuestion(qi, "question", e.target.value)}
-                                                className="flex-1 bg-white rounded-xl px-4 py-2 text-sm text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-[#FF8731]/20 border border-gray-100"
+                                                className="flex-1 bg-koru-surface-container-lowest rounded-koru-xs px-4 py-2 text-sm text-koru-on-surface font-medium focus:outline-none focus:ring-2 focus:ring-koru-accent/20 border border-koru-outline-faint"
                                             />
-                                            <button onClick={() => removeQuestion(qi)} className="p-1.5 rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 transition-all">
+                                            <Button variant="text" size="icon" onClick={() => removeQuestion(qi)} aria-label={`Remove question ${qi + 1}`} className="!h-8 !w-8 !text-koru-outline hover:!bg-koru-error-container hover:!text-koru-error">
                                                 <Trash2 size={14} />
-                                            </button>
+                                            </Button>
                                         </div>
                                         <div className="space-y-2 pl-9">
                                             {q.options.map((opt, oi) => (
                                                 <div key={oi} className="flex items-center gap-2">
-                                                    <input type="radio" name={`correct-${qi}`} checked={q.correctAnswer === oi} onChange={() => updateQuestion(qi, "correctAnswer", oi)} className="accent-[#3C0078]" />
+                                                    <input type="radio" name={`correct-${qi}`} checked={q.correctAnswer === oi} onChange={() => updateQuestion(qi, "correctAnswer", oi)} className="accent-koru-primary" />
                                                     <input
                                                         type="text"
                                                         placeholder={`Option ${oi + 1}...`}
                                                         value={opt}
                                                         onChange={e => updateOption(qi, oi, e.target.value)}
-                                                        className="flex-1 bg-white rounded-xl px-4 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#3C0078]/10 border border-gray-100"
+                                                        className="flex-1 bg-koru-surface-container-lowest rounded-koru-xs px-4 py-2 text-sm text-koru-on-surface-variant focus:outline-none focus:ring-2 focus:ring-koru-primary/10 border border-koru-outline-faint"
                                                     />
                                                 </div>
                                             ))}
                                         </div>
-                                        <p className="text-[10px] text-gray-400 pl-9">Select the radio button next to the correct answer</p>
+                                        <p className="text-[10px] text-koru-on-surface-variant pl-9">Select the radio button next to the correct answer</p>
                                     </div>
                                 ))}
                             </div>
@@ -310,16 +322,13 @@ function CreateAssignmentDrawer({ onClose, onSave, initialData, cohorts = [], de
                     )}
                 </div>
 
-                <div className="px-8 py-5 border-t border-gray-100 flex gap-3 shrink-0">
-                    <button onClick={onClose} className="flex-1 py-4 rounded-2xl border-2 border-gray-200 text-gray-700 font-bold text-xs uppercase tracking-widest hover:bg-gray-50 transition-all">
+                <div className="px-8 py-5 border-t border-koru-outline-faint flex gap-3 shrink-0">
+                    <Button variant="outlined" size="lg" onClick={onClose} className="flex-1">
                         Cancel
-                    </button>
-                    <button
-                        onClick={handleSubmit}
-                        className="flex-1 py-4 rounded-2xl bg-[#3C0078] text-white font-bold text-xs uppercase tracking-widest hover:bg-[#2A0054] transition-all shadow-lg shadow-[#3C0078]/20 flex items-center justify-center gap-2"
-                    >
-                        <Eye size={16} /> {isEditing ? "Save Changes" : "Publish"}
-                    </button>
+                    </Button>
+                    <Button size="lg" onClick={handleSubmit} startIcon={<Eye size={16} />} className="flex-1">
+                        {isEditing ? "Save Changes" : "Publish"}
+                    </Button>
                 </div>
         </motion.div>
     );
@@ -381,45 +390,43 @@ function SubmissionFileViewer({ submission }) {
     }, [submission.id, fileUrl, isImage, isPdf]);
 
     if (!fileUrl) return (
-        <div className="flex items-center justify-center h-64 bg-gray-50 rounded-3xl border border-gray-100 text-gray-400 text-sm font-medium">
-            No file submitted
-        </div>
+        <EmptyState size="sm" icon={<FileText size={24} />} title="No file submitted" className="h-64" />
     );
 
     if (fileLoading) return (
-        <div className="h-64 rounded-3xl bg-gray-100 animate-pulse border border-gray-100" />
+        <Skeleton className="h-64 rounded-koru-lg" />
     );
 
     if (fileError) return (
-        <div className="flex flex-col items-center justify-center h-64 bg-gray-50 rounded-3xl border border-gray-100 gap-3">
-            <FileText size={28} className="text-gray-300" />
-            <p className="text-sm text-gray-400 font-medium">Unable to load file preview</p>
-            <a href={fileUrl} target="_blank" rel="noreferrer" className="text-xs text-[#3C0078] font-bold hover:underline">Try opening directly</a>
+        <div className="flex flex-col items-center justify-center h-64 bg-koru-surface-container-low rounded-koru-2xl border border-koru-outline-faint gap-3">
+            <FileText size={28} className="text-koru-outline" />
+            <p className="text-sm text-koru-on-surface-variant font-medium">Unable to load file preview</p>
+            <a href={fileUrl} target="_blank" rel="noreferrer" className="text-xs font-medium !text-koru-primary hover:underline">Try opening directly</a>
         </div>
     );
 
     if (isPdf) return (
-        <iframe src={blobUrl} className="w-full h-[600px] rounded-3xl border border-gray-100" title="Submission PDF" />
+        <iframe src={blobUrl} className="w-full h-[600px] rounded-koru-2xl border border-koru-outline-faint" title="Submission PDF" />
     );
     if (isImage) return (
-        <div className="flex items-center justify-center bg-gray-50 rounded-3xl border border-gray-100 p-4 min-h-[300px]">
-            <img src={blobUrl} alt="Submission" className="max-w-full max-h-[550px] rounded-2xl object-contain" />
+        <div className="flex items-center justify-center bg-koru-surface-container-low rounded-koru-2xl border border-koru-outline-faint p-4 min-h-[300px]">
+            <img src={blobUrl} alt="Submission" className="max-w-full max-h-[550px] rounded-koru-lg object-contain" />
         </div>
     );
     if (isVideo) return (
-        <video src={blobUrl} controls className="w-full rounded-3xl border border-gray-100 max-h-[500px]" />
+        <video src={blobUrl} controls className="w-full rounded-koru-2xl border border-koru-outline-faint max-h-[500px]" />
     );
     if (isAudio) return (
-        <div className="flex items-center justify-center bg-gray-50 rounded-3xl border border-gray-100 p-8">
+        <div className="flex items-center justify-center bg-koru-surface-container-low rounded-koru-2xl border border-koru-outline-faint p-8">
             <audio src={blobUrl} controls className="w-full" />
         </div>
     );
 
     return (
-        <div className="flex flex-col items-center justify-center h-64 bg-gray-50 rounded-3xl border border-gray-100 gap-3">
-            <FileText size={28} className="text-gray-300" />
-            <p className="text-sm text-gray-500 font-medium">{fileExt.toUpperCase()} file</p>
-            <a href={blobUrl} target="_blank" rel="noreferrer" className="px-4 py-2 rounded-xl bg-[#3C0078]/5 text-[#3C0078] text-xs font-bold hover:bg-[#3C0078]/10 transition-colors">
+        <div className="flex flex-col items-center justify-center h-64 bg-koru-surface-container-low rounded-koru-2xl border border-koru-outline-faint gap-3">
+            <FileText size={28} className="text-koru-outline" />
+            <p className="text-sm text-koru-on-surface-variant font-medium">{fileExt.toUpperCase()} file</p>
+            <a href={blobUrl} target="_blank" rel="noreferrer" className="inline-flex h-8 items-center rounded-koru-pill bg-koru-secondary-container px-3 text-xs font-medium !text-koru-on-secondary-container transition-colors hover:bg-koru-secondary-container/80">
                 Download File
             </a>
         </div>
@@ -547,20 +554,20 @@ function TeacherSubmissionReview({
         <div className="flex-1 flex flex-col overflow-hidden">
             <div className="shrink-0 px-8 pt-8 pb-4">
                 <div className="flex items-center gap-3 mb-6">
-                    <button onClick={onBack} className="flex items-center gap-2 text-gray-400 hover:text-[#3C0078] transition-colors font-semibold text-sm group">
+                    <button type="button" onClick={onBack} className="group flex items-center gap-2 rounded-koru-pill text-sm font-medium text-koru-on-surface-variant transition-colors hover:text-koru-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus">
                         <ChevronRight size={18} className="rotate-180 group-hover:-translate-x-1 transition-transform" />
                         Back to Assignments
                     </button>
-                    <span className="text-gray-200">/</span>
-                    <span className="text-sm text-gray-700 font-semibold truncate max-w-[320px]">{assignment.title}</span>
+                    <span className="text-koru-outline-variant">/</span>
+                    <span className="text-sm text-koru-on-surface-variant font-semibold truncate max-w-[320px]">{assignment.title}</span>
                 </div>
                 <div className="flex items-end justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold text-gray-900 tracking-tight">{assignment.title}</h1>
+                        <h1 className="font-display text-koru-title text-koru-on-surface">{assignment.title}</h1>
                         {!loading && (
-                            <p className="text-gray-400 text-sm mt-1">
+                            <p className="text-koru-on-surface-variant text-sm mt-1">
                                 {visibleSubmissions.length} submission{visibleSubmissions.length !== 1 ? "s" : ""}
-                                {maxPts != null && <><span className="ml-3 text-gray-300">|</span><span className="ml-3">Max: <strong>{maxPts} pts</strong></span></>}
+                                {maxPts != null && <><span className="ml-3 text-koru-outline">|</span><span className="ml-3">Max: <strong>{maxPts} pts</strong></span></>}
                             </p>
                         )}
                         <div className="mt-3">
@@ -569,26 +576,21 @@ function TeacherSubmissionReview({
                     </div>
                     {!loading && visibleSubmissions.length > 0 && (
                         <div className="flex items-center gap-3">
-                            <div className="px-4 py-2 bg-green-50 rounded-2xl text-center">
-                                <p className="text-[9px] font-black uppercase tracking-widest text-green-600">Graded</p>
-                                <p className="text-lg font-black italic text-green-700">
+                            <div className="px-4 py-2 bg-koru-success-soft rounded-koru-lg text-center">
+                                <p className="text-koru-caption font-medium text-koru-success">Graded</p>
+                                <p className="text-lg font-display font-medium tabular-nums text-koru-success">
                                     {visibleSubmissions.filter(s => grades[s.id]).length}/{visibleSubmissions.length}
                                 </p>
                             </div>
                             {Object.keys(grades).length > 0 && (
                                 Object.values(grades).every(g => g.isReleased) ? (
-                                    <div className="px-4 py-2 bg-purple-50 rounded-2xl flex items-center gap-2">
-                                        <Check size={14} className="text-purple-600" />
-                                        <span className="text-xs font-bold uppercase tracking-widest text-purple-600">Released</span>
-                                    </div>
+                                    <Badge variant="primary" size="md">
+                                        <Check size={14} /> Released
+                                    </Badge>
                                 ) : (
-                                    <button
-                                        onClick={handleRelease}
-                                        disabled={releasing}
-                                        className="px-5 py-2.5 bg-[#3C0078] text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-[#2d0059] transition-colors disabled:opacity-60"
-                                    >
+                                    <Button onClick={handleRelease} loading={releasing}>
                                         {releasing ? "Releasing..." : "Release Grades"}
-                                    </button>
+                                    </Button>
                                 )
                             )}
                         </div>
@@ -597,17 +599,15 @@ function TeacherSubmissionReview({
             </div>
 
             {loading ? (
-                <div className="flex items-center justify-center flex-1 text-gray-400 font-medium">Loading submissions...</div>
+                <div role="status" className="flex flex-1 items-center justify-center text-koru-body text-koru-on-surface-variant">Loading submissions...</div>
             ) : visibleSubmissions.length === 0 ? (
                 <div className="flex-1 flex items-center justify-center px-8 pb-8">
-                    <div className="text-center py-20 w-full bg-gray-50 rounded-[40px] border border-gray-100 text-gray-400 font-medium">
-                        No submissions found for this group.
-                    </div>
+                    <EmptyState icon={<Users size={24} />} title="No submissions found for this group." className="w-full" />
                 </div>
             ) : (
-                <div className="flex-1 flex overflow-hidden border-t border-gray-100 mt-2">
+                <div className="flex-1 flex overflow-hidden border-t border-koru-outline-faint mt-2">
                     {/* Left — Student list */}
-                    <div className="w-[340px] shrink-0 overflow-y-auto border-r border-gray-100 bg-gray-50/30">
+                    <div className="w-[340px] shrink-0 overflow-y-auto border-r border-koru-outline-faint bg-koru-surface-container-low/30">
                         <div className="p-4 space-y-1">
                             {visibleSubmissions.map(sub => {
                                 const studentName = sub.student ? `${sub.student.firstName} ${sub.student.lastName}` : sub.studentId;
@@ -618,32 +618,30 @@ function TeacherSubmissionReview({
                                 return (
                                     <button
                                         key={sub.id}
+                                        type="button"
+                                        aria-pressed={isSelected}
                                         onClick={() => setSelectedSub(sub)}
-                                        className={`w-full text-left flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${
+                                        className={`flex w-full items-center gap-3 rounded-koru-md px-4 py-3 text-left transition duration-150 ease-koru-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus ${
                                             isSelected
-                                                ? "bg-white border border-gray-200 shadow-sm"
-                                                : "hover:bg-white/60 border border-transparent"
+                                                ? "bg-koru-surface-container-lowest shadow-koru-card ring-1 ring-inset ring-koru-outline-faint"
+                                                : "hover:bg-koru-surface-container-lowest/60"
                                         }`}
                                     >
-                                        <div className={`shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-xs font-black ${
-                                            isSelected ? "bg-[#3C0078] text-white" : "bg-[#3C0078]/5 border-2 border-[#3C0078]/10 text-[#3C0078]"
+                                        <div className={`shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-xs font-semibold ${
+                                            isSelected ? "bg-koru-primary text-koru-on-primary" : "bg-koru-primary/5 border-2 border-koru-primary/10 text-koru-primary"
                                         }`}>
                                             {(sub.student?.firstName?.[0] || "?").toUpperCase()}{(sub.student?.lastName?.[0] || "").toUpperCase()}
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <p className={`text-sm font-bold truncate ${isSelected ? "text-[#3C0078]" : "text-gray-900"}`}>{studentName}</p>
-                                            <p className="text-[10px] text-gray-400 mt-0.5">
+                                            <p className={`text-sm font-bold truncate ${isSelected ? "text-koru-primary" : "text-koru-on-surface"}`}>{studentName}</p>
+                                            <p className="text-[10px] text-koru-on-surface-variant mt-0.5">
                                                 {sub.submittedAt ? new Date(sub.submittedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "—"}
                                             </p>
                                         </div>
                                         <div className="shrink-0 flex flex-col items-end gap-1">
-                                            <span className={`px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest ${
-                                                sub.status === "Graded" ? "bg-green-100 text-green-700"
-                                                : sub.status === "Late" ? "bg-orange-100 text-orange-600"
-                                                : "bg-blue-50 text-blue-600"
-                                            }`}>{sub.status || "Submitted"}</span>
+                                            <Badge variant={sub.status === "Graded" ? "success" : sub.status === "Late" ? "warning" : "info"}>{sub.status || "Submitted"}</Badge>
                                             {existingGrade && maxPts != null && (
-                                                <span className="text-[10px] font-bold text-gray-500">{existingGrade.pointsEarned}/{maxPts}</span>
+                                                <span className="text-[10px] font-bold text-koru-on-surface-variant">{existingGrade.pointsEarned}/{maxPts}</span>
                                             )}
                                         </div>
                                     </button>
@@ -665,32 +663,35 @@ function TeacherSubmissionReview({
                                 >
                                     {/* Student header */}
                                     <div className="flex items-center gap-4">
-                                        <div className="w-11 h-11 rounded-full bg-[#3C0078] flex items-center justify-center">
-                                            <span className="text-white font-bold text-sm">
+                                        <div className="w-11 h-11 rounded-full bg-koru-primary flex items-center justify-center">
+                                            <span className="text-koru-on-primary font-bold text-sm">
                                                 {(selectedSub.student?.firstName?.[0] || "?").toUpperCase()}{(selectedSub.student?.lastName?.[0] || "").toUpperCase()}
                                             </span>
                                         </div>
                                         <div className="flex-1">
-                                            <p className="font-bold text-gray-900">{selectedSub.student ? `${selectedSub.student.firstName} ${selectedSub.student.lastName}` : selectedSub.studentId}</p>
-                                            <p className="text-xs text-gray-400">{selectedSub.student?.email || ""}</p>
+                                            <p className="font-bold text-koru-on-surface">{selectedSub.student ? `${selectedSub.student.firstName} ${selectedSub.student.lastName}` : selectedSub.studentId}</p>
+                                            <p className="text-xs text-koru-on-surface-variant">{selectedSub.student?.email || ""}</p>
                                         </div>
                                         <div className="text-right">
-                                            <p className="text-xs font-semibold text-gray-500">{selectedSub.submittedAt ? new Date(selectedSub.submittedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—"}</p>
-                                            <p className="text-[10px] text-gray-400">{selectedSub.submittedAt ? new Date(selectedSub.submittedAt).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }) : ""}</p>
+                                            <p className="text-xs font-semibold text-koru-on-surface-variant">{selectedSub.submittedAt ? new Date(selectedSub.submittedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—"}</p>
+                                            <p className="text-[10px] text-koru-on-surface-variant">{selectedSub.submittedAt ? new Date(selectedSub.submittedAt).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }) : ""}</p>
                                         </div>
-                                        <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${
-                                            selectedSub.status === "Graded" ? "bg-green-100 text-green-700"
-                                            : selectedSub.status === "Late" ? "bg-orange-100 text-orange-600"
-                                            : selectedSub.status === "Submitted" || selectedSub.status === "Resubmitted" ? "bg-blue-50 text-blue-600"
-                                            : "bg-gray-100 text-gray-500"
-                                        }`}>{selectedSub.status || "Submitted"}</span>
+                                        <Badge
+                                            size="md"
+                                            variant={
+                                                selectedSub.status === "Graded" ? "success"
+                                                : selectedSub.status === "Late" ? "warning"
+                                                : selectedSub.status === "Submitted" || selectedSub.status === "Resubmitted" ? "info"
+                                                : "neutral"
+                                            }
+                                        >{selectedSub.status || "Submitted"}</Badge>
                                     </div>
 
                                     {/* File viewer */}
                                     {isQuizAnswer(selectedSub) ? (
-                                        <div className="bg-orange-50 rounded-3xl border border-orange-100 p-6">
-                                            <p className="text-sm font-bold text-orange-700 mb-3">Quiz Response</p>
-                                            <pre className="text-xs text-gray-600 whitespace-pre-wrap overflow-auto max-h-96">{(() => {
+                                        <div className="bg-koru-warning-soft rounded-koru-2xl border border-koru-warning/30 p-6">
+                                            <p className="text-sm font-bold text-koru-warning mb-3">Quiz Response</p>
+                                            <pre className="text-xs text-koru-on-surface-variant whitespace-pre-wrap overflow-auto max-h-96">{(() => {
                                                 try { return JSON.stringify(JSON.parse(selectedSub.fileUrl), null, 2); } catch { return selectedSub.fileUrl; }
                                             })()}</pre>
                                         </div>
@@ -706,62 +707,63 @@ function TeacherSubmissionReview({
                                         const pct = maxPts && !isNaN(ptsVal) ? Math.round((ptsVal / maxPts) * 100) : null;
 
                                         return (
-                                            <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6">
-                                                <h3 className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-4">Grade</h3>
+                                            <Card variant="outlined" tone="low" padding="lg">
+                                                <h3 className="mb-4 text-koru-caption font-medium text-koru-on-surface-variant">Grade</h3>
                                                 {existingGrade && !gs.editing ? (
                                                     <div className="flex items-center justify-between">
                                                         <div className="flex items-center gap-4">
-                                                            <span className="text-3xl font-black italic text-gray-900">
-                                                                {existingGrade.pointsEarned}{maxPts != null && <span className="text-base font-normal text-gray-400">/{maxPts} pts</span>}
+                                                            <span className="text-3xl font-display font-medium tabular-nums text-koru-on-surface">
+                                                                {existingGrade.pointsEarned}{maxPts != null && <span className="text-base font-normal text-koru-on-surface-variant">/{maxPts} pts</span>}
                                                             </span>
                                                             {maxPts != null && (
-                                                                <div className="px-4 py-2 rounded-2xl bg-[#3C0078] text-white">
-                                                                    <span className="text-lg font-black italic">{Math.round((existingGrade.pointsEarned / maxPts) * 100)}%</span>
+                                                                <div className="px-4 py-2 rounded-koru-lg bg-koru-primary text-koru-on-primary">
+                                                                    <span className="text-lg font-display font-medium tabular-nums">{Math.round((existingGrade.pointsEarned / maxPts) * 100)}%</span>
                                                                 </div>
                                                             )}
                                                         </div>
-                                                        <button onClick={() => setField(selectedSub.id, "editing", true)} className="flex items-center gap-2 px-5 py-2.5 rounded-2xl border border-gray-200 text-xs font-bold text-gray-500 hover:border-[#3C0078] hover:text-[#3C0078] transition-all">
-                                                            <Edit2 size={13} /> Update
-                                                        </button>
+                                                        <Button variant="outlined" onClick={() => setField(selectedSub.id, "editing", true)} startIcon={<Edit2 size={13} />}>
+                                                            Update
+                                                        </Button>
                                                     </div>
                                                 ) : (
                                                     <div className="flex items-end gap-4">
                                                         <div className="flex-1 space-y-2">
-                                                            <label className="text-xs text-gray-500 font-medium">Points{maxPts != null && ` (out of ${maxPts})`}</label>
+                                                            <label htmlFor={`grade-points-${selectedSub.id}`} className="text-koru-label text-koru-on-surface-variant">Points{maxPts != null && ` (out of ${maxPts})`}</label>
                                                             <div className="flex items-center gap-3">
                                                                 <input
+                                                                    id={`grade-points-${selectedSub.id}`}
                                                                     type="number" min="0" max={maxPts ?? undefined} step="0.5"
                                                                     value={gs.points}
                                                                     onChange={e => setField(selectedSub.id, "points", e.target.value)}
                                                                     placeholder={maxPts != null ? `0 – ${maxPts}` : "Points"}
                                                                     disabled={gs.saving}
-                                                                    className="w-32 px-4 py-3 rounded-2xl border border-gray-200 text-sm font-bold text-gray-900 focus:outline-none focus:border-[#3C0078] transition-colors disabled:opacity-50"
+                                                                    className="h-12 w-32 rounded-koru-xs bg-koru-surface-container-lowest px-4 text-sm font-medium text-koru-on-surface shadow-koru-xs outline-none ring-1 ring-inset ring-koru-outline-variant transition focus:ring-koru-primary disabled:opacity-50"
                                                                 />
                                                                 {pct !== null && (
-                                                                    <div className={`px-4 py-3 rounded-2xl font-black italic text-lg min-w-[65px] text-center ${pct >= 75 ? "bg-green-50 text-green-700" : pct >= 50 ? "bg-orange-50 text-orange-600" : "bg-red-50 text-red-600"}`}>
+                                                                    <div className={`px-4 py-3 rounded-koru-lg font-display font-medium tabular-nums text-lg min-w-[65px] text-center ${pct >= 75 ? "bg-koru-success-soft text-koru-success" : pct >= 50 ? "bg-koru-warning-soft text-koru-warning" : "bg-koru-error-container text-koru-error"}`}>
                                                                         {pct}%
                                                                     </div>
                                                                 )}
                                                             </div>
-                                                            {gs.error && <p className="text-xs text-red-500 font-medium">{gs.error}</p>}
+                                                            {gs.error && <p role="alert" className="text-xs font-medium text-koru-error">{gs.error}</p>}
                                                         </div>
                                                         <div className="flex gap-2 pb-0.5">
                                                             {existingGrade && (
-                                                                <button onClick={() => { setField(selectedSub.id, "editing", false); setField(selectedSub.id, "points", String(existingGrade.pointsEarned)); }} disabled={gs.saving} className="px-4 py-3 rounded-2xl border border-gray-200 text-xs font-bold text-gray-400 hover:bg-gray-50 transition-all">
+                                                                <Button variant="text" size="lg" onClick={() => { setField(selectedSub.id, "editing", false); setField(selectedSub.id, "points", String(existingGrade.pointsEarned)); }} disabled={gs.saving}>
                                                                     Cancel
-                                                                </button>
+                                                                </Button>
                                                             )}
-                                                            <button
+                                                            <Button
+                                                                size="lg"
                                                                 onClick={() => handleGrade(selectedSub)}
                                                                 disabled={gs.saving || gs.points === ""}
-                                                                className={`flex items-center gap-2 px-6 py-3 rounded-2xl text-xs font-bold uppercase tracking-widest text-white transition-all ${gs.saving || gs.points === "" ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-[#3C0078] hover:bg-[#2A0054] shadow-lg shadow-[#3C0078]/20"}`}
                                                             >
                                                                 {gs.saving ? <><Loader size={13} className="animate-spin" /> Saving...</> : <><Check size={14} /> {existingGrade ? "Update" : "Submit Grade"}</>}
-                                                            </button>
+                                                            </Button>
                                                         </div>
                                                     </div>
                                                 )}
-                                            </div>
+                                            </Card>
                                         );
                                     })()}
                                 </motion.div>
@@ -770,10 +772,9 @@ function TeacherSubmissionReview({
                                     key="empty"
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
-                                    className="flex flex-col items-center justify-center h-full text-gray-400 gap-3"
+                                    className="flex h-full items-center justify-center p-6"
                                 >
-                                    <Users size={32} className="text-gray-200" />
-                                    <p className="text-sm font-medium">Select a student to review their submission</p>
+                                    <EmptyState size="sm" tone="secondary" icon={<Users size={24} />} title="Select a student to review their submission" className="w-full" />
                                 </motion.div>
                             )}
                         </AnimatePresence>
@@ -803,7 +804,7 @@ function AssignmentPreviewDrawer({ assignment, onClose }) {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100]"
+                className="fixed inset-0 bg-koru-scrim backdrop-blur-sm z-[100]"
                 onClick={onClose}
             />
             <motion.div
@@ -811,60 +812,62 @@ function AssignmentPreviewDrawer({ assignment, onClose }) {
                 animate={{ x: 0 }}
                 exit={{ x: "100%" }}
                 transition={{ type: "spring", damping: 28, stiffness: 220 }}
-                className="fixed right-0 top-0 bottom-0 z-[101] w-full max-w-xl bg-white shadow-2xl flex flex-col overflow-hidden"
-                style={{ borderRadius: "40px 0 0 40px" }}
+                role="dialog"
+                aria-modal="true"
+                aria-label="Assignment preview"
+                className="fixed bottom-0 right-0 top-0 z-[101] flex w-full max-w-xl flex-col overflow-hidden rounded-l-koru-3xl bg-koru-surface-container-lowest shadow-koru-lg"
             >
-                <div className="flex justify-between items-center px-10 py-8 border-b border-gray-100 shrink-0">
+                <div className="flex justify-between items-center px-10 py-8 border-b border-koru-outline-faint shrink-0">
                     <div>
                         <div className="flex items-center gap-3 mb-1">
-                            <h2 className="text-2xl font-bold text-gray-900">Assignment Preview</h2>
-                            <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-[#3C0078]/10 text-[#3C0078]">Student View</span>
+                            <h2 className="font-display text-koru-title text-koru-on-surface">Assignment Preview</h2>
+                            <Badge variant="primary">Student View</Badge>
                         </div>
-                        <p className="text-sm text-gray-400">This is what students see</p>
+                        <p className="text-sm text-koru-on-surface-variant">This is what students see</p>
                     </div>
-                    <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-500">
+                    <Button variant="text" size="icon" onClick={onClose} aria-label="Close preview" className="!text-koru-on-surface-variant">
                         <X size={22} />
-                    </button>
+                    </Button>
                 </div>
 
                 <div className="flex-1 overflow-y-auto px-10 py-8 space-y-7">
-                    <div className="bg-[#3C0078]/5 rounded-[28px] p-6">
+                    <Card tone="brand" radius="lg" padding="lg">
                         <div className="flex items-start gap-4">
-                            <span className={`inline-flex items-center justify-center w-12 h-12 rounded-2xl ${typeInfo?.bg || "bg-gray-100"} shrink-0`}>
-                                <Icon size={22} style={{ color: typeInfo?.color || "#64748B" }} />
+                            <span className={`inline-flex items-center justify-center w-12 h-12 rounded-koru-lg ${typeInfo?.bg || "bg-koru-surface-container-high"} shrink-0`}>
+                                <Icon size={22} style={{ color: typeInfo?.color || "var(--color-koru-on-surface-variant)" }} />
                             </span>
                             <div className="flex-1 min-w-0">
-                                <h1 className="text-xl font-bold text-gray-900 leading-tight">{assignment.title}</h1>
+                                <h1 className="font-display text-xl font-medium leading-tight text-koru-on-surface">{assignment.title}</h1>
                                 <div className="flex items-center gap-3 mt-2 flex-wrap">
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">{typeInfo?.label}</span>
+                                    <span className="text-koru-caption font-medium text-koru-on-surface-variant">{typeInfo?.label}</span>
                                     {assignment.points != null && (
-                                        <span className="text-[10px] font-black uppercase tracking-widest text-[#3C0078]">{assignment.points} pts</span>
+                                        <span className="text-koru-caption font-medium text-koru-primary">{assignment.points} pts</span>
                                     )}
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </Card>
 
                     {(assignment.openDate || assignment.dueDate || assignment.closeDate) && (
                         <div>
-                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3 block">Timeline</label>
-                            <div className="bg-gray-50 rounded-[24px] p-5 space-y-3">
+                            <label className="text-koru-caption font-medium text-koru-on-surface-variant mb-3 block">Timeline</label>
+                            <div className="bg-koru-surface-container-low rounded-koru-2xl p-5 space-y-3">
                                 {assignment.openDate && (
                                     <div className="flex items-center justify-between">
-                                        <span className="text-xs font-bold text-gray-500">Opens</span>
-                                        <span className="text-xs text-green-600 font-semibold">{new Date(assignment.openDate).toLocaleString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
+                                        <span className="text-xs font-bold text-koru-on-surface-variant">Opens</span>
+                                        <span className="text-xs text-koru-success font-semibold">{new Date(assignment.openDate).toLocaleString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
                                     </div>
                                 )}
                                 {assignment.dueDate && (
                                     <div className="flex items-center justify-between">
-                                        <span className="text-xs font-bold text-gray-500">Due Date</span>
-                                        <span className="text-xs text-orange-500 font-semibold">{new Date(assignment.dueDate).toLocaleString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
+                                        <span className="text-xs font-bold text-koru-on-surface-variant">Due Date</span>
+                                        <span className="text-xs text-koru-warning font-semibold">{new Date(assignment.dueDate).toLocaleString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
                                     </div>
                                 )}
                                 {assignment.closeDate && (
                                     <div className="flex items-center justify-between">
-                                        <span className="text-xs font-bold text-gray-500">Closes</span>
-                                        <span className="text-xs text-red-500 font-semibold">{new Date(assignment.closeDate).toLocaleString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
+                                        <span className="text-xs font-bold text-koru-on-surface-variant">Closes</span>
+                                        <span className="text-xs text-koru-error font-semibold">{new Date(assignment.closeDate).toLocaleString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
                                     </div>
                                 )}
                             </div>
@@ -873,8 +876,8 @@ function AssignmentPreviewDrawer({ assignment, onClose }) {
 
                     {assignment.description && (
                         <div>
-                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3 block">Instructions</label>
-                            <div className="bg-gray-50 rounded-[24px] p-5 text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
+                            <label className="text-koru-caption font-medium text-koru-on-surface-variant mb-3 block">Instructions</label>
+                            <div className="bg-koru-surface-container-low rounded-koru-2xl p-5 text-sm text-koru-on-surface-variant leading-relaxed whitespace-pre-wrap">
                                 {assignment.description}
                             </div>
                         </div>
@@ -882,25 +885,25 @@ function AssignmentPreviewDrawer({ assignment, onClose }) {
 
                     {assignment.type === "external" && (
                         <div>
-                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3 block">External Tool</label>
+                            <label className="text-koru-caption font-medium text-koru-on-surface-variant mb-3 block">External Tool</label>
                             {assignment.externalToolName || assignment.externalToolUrl ? (
-                                <div className="bg-gray-50 rounded-[24px] p-5 flex items-center gap-4">
+                                <div className="bg-koru-surface-container-low rounded-koru-2xl p-5 flex items-center gap-4">
                                     {externalTool ? (
                                         <span
-                                            className={`w-12 h-12 rounded-2xl ${externalTool.bg} flex items-center justify-center text-lg font-black shrink-0`}
+                                            className={`w-12 h-12 rounded-koru-lg ${externalTool.bg} flex items-center justify-center text-lg font-semibold shrink-0`}
                                             style={{ color: externalTool.color }}
                                         >
                                             {externalTool.icon}
                                         </span>
                                     ) : (
-                                        <span className="w-12 h-12 rounded-2xl bg-[#6366F1]/10 flex items-center justify-center shrink-0">
-                                            <ExternalLink size={20} style={{ color: "#6366F1" }} />
+                                        <span className="w-12 h-12 rounded-koru-lg bg-koru-info/10 flex items-center justify-center shrink-0">
+                                            <ExternalLink size={20} className="text-koru-info" />
                                         </span>
                                     )}
                                     <div className="flex-1 min-w-0">
-                                        <p className="font-bold text-gray-900">{assignment.externalToolName || "External Tool"}</p>
+                                        <p className="font-bold text-koru-on-surface">{assignment.externalToolName || "External Tool"}</p>
                                         {assignment.externalToolUrl && (
-                                            <p className="text-xs text-gray-400 truncate mt-0.5">{assignment.externalToolUrl}</p>
+                                            <p className="text-xs text-koru-on-surface-variant truncate mt-0.5">{assignment.externalToolUrl}</p>
                                         )}
                                     </div>
                                     {assignment.externalToolUrl && (
@@ -908,40 +911,40 @@ function AssignmentPreviewDrawer({ assignment, onClose }) {
                                             href={assignment.externalToolUrl}
                                             target="_blank"
                                             rel="noreferrer"
-                                            className="shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl bg-[#6366F1]/10 text-[#6366F1] text-xs font-bold hover:bg-[#6366F1]/20 transition-colors"
+                                            className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-koru-pill bg-koru-info-soft px-3 text-xs font-medium !text-koru-info transition-colors hover:bg-koru-info-soft/70"
                                         >
                                             <ExternalLink size={13} /> Launch
                                         </a>
                                     )}
                                 </div>
                             ) : (
-                                <p className="text-xs text-gray-400 bg-gray-50 rounded-2xl px-5 py-4">No external tool configured.</p>
+                                <p className="text-xs text-koru-on-surface-variant bg-koru-surface-container-low rounded-koru-lg px-5 py-4">No external tool configured.</p>
                             )}
                         </div>
                     )}
 
                     {assignment.type === "quiz" && quizQuestions.length > 0 && (
                         <div>
-                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3 block">Quiz Questions ({quizQuestions.length})</label>
+                            <label className="text-koru-caption font-medium text-koru-on-surface-variant mb-3 block">Quiz Questions ({quizQuestions.length})</label>
                             <div className="space-y-4">
                                 {quizQuestions.map((q, qi) => (
-                                    <div key={qi} className="bg-gray-50 rounded-[24px] p-5 space-y-3">
+                                    <div key={qi} className="bg-koru-surface-container-low rounded-koru-2xl p-5 space-y-3">
                                         <div className="flex items-start gap-3">
-                                            <span className="w-6 h-6 rounded-full bg-[#FF8731]/20 text-[#FF8731] text-[10px] font-black flex items-center justify-center shrink-0 mt-0.5">{qi + 1}</span>
-                                            <p className="text-sm text-gray-900 font-semibold flex-1">{q.question || <span className="text-gray-400 italic">No question text</span>}</p>
+                                            <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-koru-accent-soft text-[10px] font-semibold text-koru-accent-ink">{qi + 1}</span>
+                                            <p className="text-sm text-koru-on-surface font-semibold flex-1">{q.question || <span className="text-koru-on-surface-variant italic">No question text</span>}</p>
                                         </div>
                                         <div className="space-y-2 pl-9">
                                             {q.options?.map((opt, oi) => (
-                                                <div key={oi} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm ${
-                                                    q.correctAnswer === oi ? "bg-green-50 text-green-700 font-semibold" : "bg-white text-gray-600"
+                                                <div key={oi} className={`flex items-center gap-2 px-4 py-2 rounded-koru-md text-sm ${
+                                                    q.correctAnswer === oi ? "bg-koru-success-soft text-koru-success font-semibold" : "bg-koru-surface-container-lowest text-koru-on-surface-variant"
                                                 }`}>
                                                     <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
-                                                        q.correctAnswer === oi ? "border-green-500 bg-green-500" : "border-gray-300"
+                                                        q.correctAnswer === oi ? "border-koru-success bg-koru-success" : "border-koru-outline-variant"
                                                     }`}>
-                                                        {q.correctAnswer === oi && <span className="w-2 h-2 rounded-full bg-white" />}
+                                                        {q.correctAnswer === oi && <span className="w-2 h-2 rounded-full bg-koru-surface-container-lowest" />}
                                                     </span>
-                                                    {opt || <span className="text-gray-400 italic">Empty option</span>}
-                                                    {q.correctAnswer === oi && <span className="ml-auto text-[10px] font-black uppercase tracking-widest text-green-600">Correct</span>}
+                                                    {opt || <span className="text-koru-on-surface-variant italic">Empty option</span>}
+                                                    {q.correctAnswer === oi && <span className="ml-auto text-koru-caption font-medium text-koru-success">Correct</span>}
                                                 </div>
                                             ))}
                                         </div>
@@ -952,10 +955,10 @@ function AssignmentPreviewDrawer({ assignment, onClose }) {
                     )}
                 </div>
 
-                <div className="px-10 py-6 border-t border-gray-100 shrink-0">
-                    <button onClick={onClose} className="w-full py-4 rounded-2xl border-2 border-gray-200 text-gray-700 font-bold text-xs uppercase tracking-widest hover:bg-gray-50 transition-all">
+                <div className="px-10 py-6 border-t border-koru-outline-faint shrink-0">
+                    <Button variant="outlined" size="lg" fullWidth onClick={onClose}>
                         Close Preview
-                    </button>
+                    </Button>
                 </div>
             </motion.div>
         </AnimatePresence>
@@ -968,18 +971,16 @@ function AssignmentGroupRow({ group, onTogglePublish, onDelete, onEdit, onClose,
     return (
         <motion.div variants={slideUp} className="mb-6">
             <div
-                className="flex items-center justify-between px-6 py-4 bg-gray-50 rounded-[24px] cursor-pointer hover:bg-gray-100 transition-colors mb-3"
+                className="flex items-center justify-between px-6 py-4 bg-koru-surface-container-low rounded-koru-2xl cursor-pointer hover:bg-koru-surface-container-high transition-colors mb-3"
                 onClick={() => setExpanded(e => !e)}
             >
                 <div className="flex items-center gap-4">
-                    <span className="text-gray-400 transition-transform" style={{ transform: expanded ? "rotate(0deg)" : "rotate(-90deg)", display: "inline-block" }}>
+                    <span className="text-koru-on-surface-variant transition-transform" style={{ transform: expanded ? "rotate(0deg)" : "rotate(-90deg)", display: "inline-block" }}>
                         <ChevronDown size={18} />
                     </span>
-                    <span className="font-bold text-gray-900 text-base">{group.name}</span>
-                    <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 bg-white px-3 py-1 rounded-full border border-gray-200">
-                        {group.weight}% of grade
-                    </span>
-                    <span className="text-[10px] text-gray-400 font-medium">
+                    <span className="font-display text-koru-heading text-koru-on-surface">{group.name}</span>
+                    <Badge>{group.weight}% of grade</Badge>
+                    <span className="text-[10px] text-koru-on-surface-variant font-medium">
                         {group.assignments.length} assignment{group.assignments.length !== 1 ? "s" : ""}
                     </span>
                 </div>
@@ -993,15 +994,15 @@ function AssignmentGroupRow({ group, onTogglePublish, onDelete, onEdit, onClose,
                         exit={{ opacity: 0, height: 0 }}
                         className="overflow-hidden"
                     >
-                        <div className="mt-3 bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+                        <Card variant="outlined" tone="low" padding="none" className="mt-3 overflow-hidden">
                             <table className="w-full text-left border-collapse">
                                 <thead>
-                                    <tr className="border-b border-gray-50 bg-gray-50/30">
-                                        <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-gray-400">Assignment</th>
-                                        <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-gray-400">Due</th>
-                                        <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-gray-400 text-center">Submissions</th>
-                                        <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-gray-400">Status</th>
-                                        <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-gray-400 text-right">Actions</th>
+                                    <tr className="border-b border-koru-outline-faint bg-koru-surface-container-low/30">
+                                        <th className="px-6 py-4 text-xs font-medium text-koru-on-surface-variant">Assignment</th>
+                                        <th className="px-6 py-4 text-xs font-medium text-koru-on-surface-variant">Due</th>
+                                        <th className="px-6 py-4 text-xs font-medium text-koru-on-surface-variant text-center">Submissions</th>
+                                        <th className="px-6 py-4 text-xs font-medium text-koru-on-surface-variant">Status</th>
+                                        <th className="px-6 py-4 text-xs font-medium text-koru-on-surface-variant text-right">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -1011,62 +1012,60 @@ function AssignmentGroupRow({ group, onTogglePublish, onDelete, onEdit, onClose,
                                         const submissionPct = item.totalStudents > 0 ? Math.round((item.submissions / item.totalStudents) * 100) : 0;
 
                                         return (
-                                            <motion.tr key={item.id} layout className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-all group">
+                                            <motion.tr key={item.id} layout className="border-b border-koru-outline-faint last:border-0 hover:bg-koru-surface-container-low/50 transition-all group">
                                                 <td className="px-6 py-3.5">
                                                     <div className="flex items-center gap-3">
-                                                        <span className={`shrink-0 inline-flex items-center justify-center w-9 h-9 rounded-xl ${typeInfo?.bg || "bg-gray-100"}`}>
-                                                            <Icon size={16} style={{ color: typeInfo?.color || "#64748B" }} />
+                                                        <span className={`shrink-0 inline-flex items-center justify-center w-9 h-9 rounded-koru-md ${typeInfo?.bg || "bg-koru-surface-container-high"}`}>
+                                                            <Icon size={16} style={{ color: typeInfo?.color || "var(--color-koru-on-surface-variant)" }} />
                                                         </span>
                                                         <div>
-                                                            <div className="font-bold text-gray-900 group-hover:text-[#3C0078] transition-colors text-sm">{item.title}</div>
-                                                            <div className="text-xs text-gray-400 mt-0.5">{typeInfo?.label} · {item.points} pts</div>
+                                                            <div className="text-sm font-medium text-koru-on-surface transition-colors group-hover:text-koru-primary">{item.title}</div>
+                                                            <div className="text-xs text-koru-on-surface-variant mt-0.5">{typeInfo?.label} · {item.points} pts</div>
                                                         </div>
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-3.5">
-                                                    <div className="text-xs text-gray-500 font-semibold">
+                                                    <div className="text-xs text-koru-on-surface-variant font-semibold">
                                                         {item.dueDate ? new Date(item.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—"}
                                                     </div>
-                                                    {item.closeDate && <div className="text-[10px] text-red-400 mt-0.5">Closes {new Date(item.closeDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</div>}
+                                                    {item.closeDate && <div className="text-[10px] text-koru-error mt-0.5">Closes {new Date(item.closeDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</div>}
                                                 </td>
                                                 <td className="px-6 py-3.5 text-center">
                                                     <div className="flex flex-col items-center gap-1">
-                                                        <span className="text-sm font-black italic text-gray-900">{item.submissions}/{item.totalStudents}</span>
-                                                        <div className="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                                                            <div className="h-full bg-[#3C0078] rounded-full transition-all" style={{ width: `${submissionPct}%` }} />
+                                                        <span className="text-sm font-display font-medium tabular-nums text-koru-on-surface">{item.submissions}/{item.totalStudents}</span>
+                                                        <div className="w-16 h-1.5 bg-koru-surface-container-high rounded-full overflow-hidden">
+                                                            <div className="h-full bg-koru-primary rounded-full transition-all" style={{ width: `${submissionPct}%` }} />
                                                         </div>
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-3.5">
-                                                    <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm ${
-                                                        item.isClosed ? "bg-red-50 text-red-600" : "bg-green-50 text-green-700"
-                                                    }`}>
+                                                    <Badge variant={item.isClosed ? "error" : "success"} dot>
                                                         {item.isClosed ? "Closed" : "Open"}
-                                                    </span>
+                                                    </Badge>
                                                 </td>
                                                 <td className="px-6 py-3.5">
                                                     <div className="flex items-center justify-end gap-2">
-                                                        <button onClick={() => onPreview(item)} className="px-3 py-1.5 rounded-lg border border-gray-100 text-[9px] font-black uppercase tracking-[0.15em] text-gray-400 hover:bg-gray-100 transition-all whitespace-nowrap shadow-sm">
+                                                        <Button variant="text" size="sm" onClick={() => onPreview(item)}>
                                                             Preview
-                                                        </button>
-                                                        <button onClick={() => onView(item)} className="px-3 py-1.5 rounded-lg border border-gray-100 text-[9px] font-black uppercase tracking-[0.15em] text-gray-400 group-hover:bg-[#3C0078] group-hover:text-white group-hover:border-[#3C0078] transition-all whitespace-nowrap shadow-sm">
+                                                        </Button>
+                                                        <Button variant="tonal" size="sm" onClick={() => onView(item)}>
                                                             Review
-                                                        </button>
-                                                        <button
+                                                        </Button>
+                                                        <Button
+                                                            variant="text"
+                                                            size="sm"
                                                             onClick={() => onClose(group.id, item.id)}
-                                                            className={`px-3 py-1.5 rounded-lg border text-[9px] font-black uppercase tracking-[0.15em] transition-all whitespace-nowrap shadow-sm ${
-                                                                item.isClosed ? "border-red-100 text-red-500 hover:bg-red-50" : "border-gray-100 text-gray-400 hover:bg-red-50 hover:text-red-500 hover:border-red-100"
-                                                            }`}
+                                                            className={item.isClosed ? "!text-koru-error hover:!bg-koru-error-container" : "!text-koru-on-surface-variant hover:!bg-koru-error-container hover:!text-koru-error"}
                                                             title={item.isClosed ? "Click to reopen" : "Click to close"}
                                                         >
                                                             {item.isClosed ? "Reopen" : "Close"}
-                                                        </button>
-                                                        <button onClick={() => onEdit(group.id, item.id)} className="p-1.5 rounded-lg text-gray-300 hover:text-[#3C0078] hover:bg-[#3C0078]/10 transition-all opacity-0 group-hover:opacity-100">
+                                                        </Button>
+                                                        <Button variant="text" size="icon" onClick={() => onEdit(group.id, item.id)} aria-label={`Edit ${item.title}`} className="!h-8 !w-8 !text-koru-outline opacity-0 hover:!text-koru-primary focus-visible:opacity-100 group-hover:opacity-100">
                                                             <Edit2 size={14} />
-                                                        </button>
-                                                        <button onClick={() => onDelete(group.id, item.id)} className="p-1.5 rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 transition-all opacity-0 group-hover:opacity-100">
+                                                        </Button>
+                                                        <Button variant="text" size="icon" onClick={() => onDelete(group.id, item.id)} aria-label={`Delete ${item.title}`} className="!h-8 !w-8 !text-koru-outline opacity-0 hover:!bg-koru-error-container hover:!text-koru-error focus-visible:opacity-100 group-hover:opacity-100">
                                                             <Trash2 size={14} />
-                                                        </button>
+                                                        </Button>
                                                     </div>
                                                 </td>
                                             </motion.tr>
@@ -1074,7 +1073,7 @@ function AssignmentGroupRow({ group, onTogglePublish, onDelete, onEdit, onClose,
                                     })}
                                 </tbody>
                             </table>
-                        </div>
+                        </Card>
                     </motion.div>
                 )}
             </AnimatePresence>
@@ -1233,20 +1232,15 @@ export function CourseAssignmentsView({ subject, activeCourseId }) {
             <motion.div className="flex-1 flex flex-col overflow-y-auto pr-2 min-w-0" initial="hidden" animate="visible" variants={staggerContainer}>
                 <motion.header variants={slideUp} className="mb-10 flex justify-between items-end">
                     <div>
-                        <h1 className="text-3xl font-semibold tracking-tight">Assignments</h1>
+                        <h1 className="font-display text-koru-title text-koru-on-surface">Assignments</h1>
                         <div className="mt-3">
                             <CohortFilterBar cohorts={cohorts} selected={selectedCohortId} onChange={setSelectedCohortId} />
                         </div>
                     </div>
                     <div className="flex items-center gap-3">
-                        <motion.button
-                            whileHover={{ scale: 1.03 }}
-                            whileTap={{ scale: 0.97 }}
-                            onClick={() => setShowDrawer(true)}
-                            className="bg-[#3C0078] text-white px-8 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest flex items-center gap-2 shadow-lg shadow-[#3C0078]/20"
-                        >
-                            <Plus size={18} /> Create Assignment
-                        </motion.button>
+                        <Button onClick={() => setShowDrawer(true)} startIcon={<Plus size={18} />}>
+                            Create Assignment
+                        </Button>
                     </div>
                 </motion.header>
 
@@ -1256,15 +1250,15 @@ export function CourseAssignmentsView({ subject, activeCourseId }) {
                         { label: "Open", value: loading ? "..." : openCount, accent: true },
                         { label: "Closed", value: loading ? "..." : totalAssignments - openCount, accent: false },
                     ].map((stat) => (
-                        <div key={stat.label} className={`rounded-[28px] px-7 py-6 flex flex-col gap-1 ${stat.accent ? "bg-[#3C0078] text-white" : "bg-white border border-gray-100 shadow-sm"}`}>
-                            <span className={`text-[10px] font-black uppercase tracking-widest ${stat.accent ? "text-white/60" : "text-gray-400"}`}>{stat.label}</span>
-                            <span className={`text-4xl font-black italic ${stat.accent ? "text-white" : "text-gray-900"}`}>{stat.value}</span>
+                        <div key={stat.label} className={`flex flex-col gap-1 rounded-koru-lg px-7 py-6 ${stat.accent ? "bg-koru-primary text-koru-on-primary shadow-koru-sm" : "bg-koru-surface-container-lowest shadow-koru-card ring-1 ring-inset ring-koru-outline-faint"}`}>
+                            <span className={`text-koru-caption font-medium ${stat.accent ? "text-koru-on-primary/60" : "text-koru-on-surface-variant"}`}>{stat.label}</span>
+                            <span className={`text-4xl font-display font-medium tabular-nums ${stat.accent ? "text-koru-on-primary" : "text-koru-on-surface"}`}>{stat.value}</span>
                         </div>
                     ))}
                 </motion.div>
 
                 <motion.div variants={slideUp} className="mb-10">
-                    <h2 className="text-sm font-black uppercase tracking-widest text-gray-400 mb-4">Assignment Types</h2>
+                    <h2 className="text-sm font-medium text-koru-on-surface-variant mb-4">Assignment Types</h2>
                     <div className="flex flex-wrap gap-3">
                         {ASSIGNMENT_TYPES.map(t => {
                             const Icon = t.icon;
@@ -1275,15 +1269,17 @@ export function CourseAssignmentsView({ subject, activeCourseId }) {
                                     key={t.id}
                                     whileHover={{ y: -3 }}
                                     whileTap={{ scale: 0.97 }}
+                                    type="button"
+                                    aria-pressed={isActive}
                                     onClick={() => setActiveTypeFilter(isActive ? "all" : t.id)}
-                                    className={`flex-1 min-w-[130px] flex flex-col items-start gap-3 p-5 rounded-[24px] border-2 text-left transition-all ${isActive ? "border-[#3C0078] bg-[#3C0078]/5 shadow-md" : "border-gray-100 bg-white hover:border-gray-200 hover:shadow-sm"}`}
+                                    className={`flex min-w-[130px] flex-1 flex-col items-start gap-3 rounded-koru-lg p-5 text-left transition duration-200 ease-koru-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus ${isActive ? "bg-koru-primary/5 shadow-koru-card ring-2 ring-inset ring-koru-primary" : "bg-koru-surface-container-lowest shadow-koru-card ring-1 ring-inset ring-koru-outline-faint hover:shadow-koru-card-hover"}`}
                                 >
-                                    <span className={`inline-flex items-center justify-center w-10 h-10 rounded-2xl ${t.bg}`}>
+                                    <span className={`inline-flex items-center justify-center w-10 h-10 rounded-koru-lg ${t.bg}`}>
                                         <Icon size={20} style={{ color: t.color }} />
                                     </span>
                                     <div>
-                                        <p className={`text-[10px] font-black uppercase tracking-widest leading-tight ${isActive ? "text-[#3C0078]" : "text-gray-500"}`}>{t.label}</p>
-                                        <p className="text-2xl font-black italic text-gray-900 mt-1">{count}</p>
+                                        <p className={`text-koru-caption font-medium leading-tight ${isActive ? "text-koru-primary" : "text-koru-on-surface-variant"}`}>{t.label}</p>
+                                        <p className="text-2xl font-display font-medium tabular-nums text-koru-on-surface mt-1">{count}</p>
                                     </div>
                                 </motion.button>
                             );
@@ -1293,22 +1289,19 @@ export function CourseAssignmentsView({ subject, activeCourseId }) {
 
                 {activeTypeFilter !== "all" && (
                     <motion.div variants={slideUp} className="mb-6 flex items-center gap-3">
-                        <span className="text-sm text-gray-500">Filtering by:</span>
-                        <button onClick={() => setActiveTypeFilter("all")} className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#3C0078]/10 text-[#3C0078] font-bold text-xs uppercase tracking-widest hover:bg-[#3C0078]/20 transition-all">
+                        <span className="text-sm text-koru-on-surface-variant">Filtering by:</span>
+                        <Button variant="tonal" size="sm" onClick={() => setActiveTypeFilter("all")} endIcon={<X size={14} />} aria-label={`Clear ${ASSIGNMENT_TYPES.find(t => t.id === activeTypeFilter)?.label} filter`}>
                             {ASSIGNMENT_TYPES.find(t => t.id === activeTypeFilter)?.label}
-                            <X size={14} />
-                        </button>
+                        </Button>
                     </motion.div>
                 )}
 
                 <motion.div variants={slideUp}>
                     <div className="mb-5">
-                        <h2 className="text-sm font-black uppercase tracking-widest text-gray-400">Assignment Groups</h2>
+                        <h2 className="text-sm font-medium text-koru-on-surface-variant">Assignment Groups</h2>
                     </div>
                     {filteredGroups.length === 0 ? (
-                        <div className="text-center py-20 bg-gray-50 rounded-[40px] border border-gray-100 text-gray-400 font-medium">
-                            No assignments match this filter.
-                        </div>
+                        <EmptyState icon={<ClipboardList size={24} />} title="No assignments match this filter." />
                     ) : (
                         filteredGroups.map(group => (
                             <AssignmentGroupRow

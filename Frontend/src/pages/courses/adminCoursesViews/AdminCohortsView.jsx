@@ -19,6 +19,7 @@ import { getCourseEvents } from "../../../services/eventService";
 import { getCourseLecturers } from "../../../services/courseService";
 import { staggerContainer, slideUp } from "../teacherCoursesComponents/constants";
 import { useNavigate } from "react-router-dom";
+import { Alert, Badge, Button, Card, EmptyState, Input, Select, Skeleton, SkeletonText } from "../../../components/UI";
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
 const QUICK_NAMES = ["Lecture", "Workshop", "Practical", "Tutorial"];
@@ -49,18 +50,20 @@ function NameField({ value, onChange }) {
         {QUICK_NAMES.map(n => (
           <button
             key={n} type="button" onClick={() => onChange(n)}
-            className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${
+            aria-pressed={value === n}
+            className={`h-7 rounded-koru-sm px-2.5 text-[11px] font-medium transition-colors duration-150 ease-koru-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus ${
               value === n
-                ? "bg-[#3C0078] text-white"
-                : "bg-gray-100 text-gray-500 hover:bg-[#3C0078]/10 hover:text-[#3C0078]"
+                ? "bg-koru-secondary-container text-koru-on-secondary-container"
+                : "bg-koru-surface-container-high text-koru-on-surface-variant hover:bg-koru-primary/8 hover:text-koru-primary"
             }`}
           >{n}</button>
         ))}
       </div>
-      <input
+      <Input
+        size="sm"
         type="text" placeholder="Custom name…" value={value}
+        aria-label="Class name"
         onChange={e => onChange(e.target.value)}
-        className="w-full px-3 py-2 rounded-xl bg-gray-50 text-xs text-gray-800 outline-none focus:ring-2 focus:ring-[#3C0078]/20 placeholder:text-gray-400"
       />
     </div>
   );
@@ -71,39 +74,36 @@ function ClassSlotCard({ slot, onEdit, onDelete, deleting }) {
   const isScheduled = !!slot.startTime;
 
   return (
-    <div className={`rounded-2xl border px-3 py-2.5 group transition-colors ${
+    <div className={`group rounded-koru-md border px-3 py-2.5 transition-colors ${
       isScheduled
-        ? "bg-green-50/70 border-green-200/70"
-        : "bg-gray-50/80 border-gray-200/80"
+        ? "bg-koru-success-soft/70 border-koru-success/20"
+        : "bg-koru-surface-container-low/80 border-koru-outline-variant/80"
     }`}>
       <div className="flex items-start gap-2">
         <div className="flex-1 min-w-0 space-y-1">
           {/* Top row: name + status badge */}
           <div className="flex flex-wrap items-center gap-1.5">
             {slot.name && (
-              <span className={`text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-md ${
-                isScheduled ? "text-green-700 bg-green-100" : "text-gray-600 bg-gray-200"
-              }`}>
+              <Badge variant={isScheduled ? "success" : "neutral"}>
                 {slot.name}
-              </span>
+              </Badge>
             )}
             {/* Scheduled / Unscheduled status badge */}
             {isScheduled ? (
-              <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-md text-green-600 bg-green-50 border border-green-200 flex items-center gap-1">
-                <span className="w-1 h-1 rounded-full bg-green-500 inline-block animate-pulse" />
+              <Badge variant="success" dot>
                 Active
-              </span>
+              </Badge>
             ) : (
-              <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-md text-amber-600 bg-amber-50 border border-amber-200">
+              <Badge variant="warning">
                 Unscheduled
-              </span>
+              </Badge>
             )}
           </div>
 
           {/* Detail row */}
           <div className="flex flex-wrap gap-x-2 gap-y-0.5">
             {isScheduled ? (
-              <span className="flex items-center gap-0.5 text-[10px] font-semibold text-green-700">
+              <span className="flex items-center gap-0.5 text-[10px] font-semibold text-koru-success">
                 <Calendar size={9} />
                 {slot.dayOfWeek} · {formatTime(slot.startTime)}
                 {slot.endTime && ` – ${formatTime(slot.endTime)}`}
@@ -111,24 +111,24 @@ function ClassSlotCard({ slot, onEdit, onDelete, deleting }) {
             ) : (
               <>
                 {slot.durationHours && (
-                  <span className="flex items-center gap-0.5 text-[10px] text-gray-400">
+                  <span className="flex items-center gap-0.5 text-[10px] text-koru-on-surface-variant">
                     <Clock size={9} />{slot.durationHours}h
                   </span>
                 )}
                 {slot.dayOfWeek && (
-                  <span className="flex items-center gap-0.5 text-[10px] text-gray-400">
+                  <span className="flex items-center gap-0.5 text-[10px] text-koru-on-surface-variant">
                     <Calendar size={9} />Preferred: {slot.dayOfWeek}
                   </span>
                 )}
               </>
             )}
             {slot.teacherName && (
-              <span className="flex items-center gap-0.5 text-[10px] text-gray-400">
+              <span className="flex items-center gap-0.5 text-[10px] text-koru-on-surface-variant">
                 <User size={9} />{slot.teacherName}
               </span>
             )}
             {slot.room && (
-              <span className="flex items-center gap-0.5 text-[10px] text-gray-400">
+              <span className="flex items-center gap-0.5 text-[10px] text-koru-on-surface-variant">
                 <MapPin size={9} />{slot.room}
               </span>
             )}
@@ -137,16 +137,16 @@ function ClassSlotCard({ slot, onEdit, onDelete, deleting }) {
 
         {/* Actions — only render when handlers are provided */}
         {(onEdit || onDelete) && (
-          <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 pt-0.5">
+          <div className="flex shrink-0 items-center gap-0.5 pt-0.5 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
             {onEdit && (
-              <button onClick={onEdit} className="p-1 rounded-lg text-gray-400 hover:text-[#3C0078] hover:bg-[#3C0078]/5 transition-colors">
-                <Pencil size={11} />
-              </button>
+              <Button variant="text" size="icon" onClick={onEdit} aria-label={`Edit ${slot.name || "class slot"}`} className="!h-7 !w-7 !text-koru-on-surface-variant hover:!text-koru-primary">
+                <Pencil size={12} />
+              </Button>
             )}
             {onDelete && (
-              <button onClick={onDelete} disabled={deleting} className="p-1 rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors disabled:opacity-40">
-                {deleting ? <span className="text-[9px]">…</span> : <Trash2 size={11} />}
-              </button>
+              <Button variant="text" size="icon" onClick={onDelete} disabled={deleting} aria-label={`Delete ${slot.name || "class slot"}`} className="!h-7 !w-7 !text-koru-outline hover:!bg-koru-error-container hover:!text-koru-error">
+                {deleting ? <span className="text-[9px]">…</span> : <Trash2 size={12} />}
+              </Button>
             )}
           </div>
         )}
@@ -190,77 +190,58 @@ function SlotForm({ form, setForm, teachers, onSave, onCancel, saving, otherSlot
   const conflict = isScheduled ? detectSlotConflict(form, otherSlots, editingId) : null;
 
   return (
-    <div className="bg-white border border-[#3C0078]/15 rounded-2xl p-3 space-y-2.5">
+    <div className="space-y-2.5 rounded-koru-md bg-koru-surface-container-lowest p-3 shadow-koru-card ring-1 ring-inset ring-koru-primary/15">
       <NameField value={form.name} onChange={v => setForm(f => ({ ...f, name: v }))} />
       <div className="grid grid-cols-2 gap-2">
         {!isScheduled && (
           <div>
-            <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 block mb-1">Hours</label>
-            <input type="number" min={0.5} max={8} step={0.5} value={form.durationHours}
+            <Input size="sm" label="Hours" type="number" min={0.5} max={8} step={0.5} value={form.durationHours}
               onChange={e => setForm(f => ({ ...f, durationHours: e.target.value }))}
-              className="w-full px-2.5 py-1.5 rounded-xl bg-gray-50 text-xs font-semibold text-gray-800 outline-none focus:ring-2 focus:ring-[#3C0078]/20"
-            />
+             />
           </div>
         )}
         <div>
-          <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 block mb-1">Room</label>
-          <input type="text" placeholder="e.g. Room 201" value={form.room}
+          <Input size="sm" label="Room" type="text" placeholder="e.g. Room 201" value={form.room}
             onChange={e => setForm(f => ({ ...f, room: e.target.value }))}
-            className="w-full px-2.5 py-1.5 rounded-xl bg-gray-50 text-xs text-gray-800 outline-none focus:ring-2 focus:ring-[#3C0078]/20 placeholder:text-gray-400"
-          />
+           />
         </div>
         <div>
-          <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 block mb-1">Lecturer</label>
-          <select value={form.teacherId} onChange={e => setForm(f => ({ ...f, teacherId: e.target.value }))}
-            className="w-full px-2.5 py-1.5 rounded-xl bg-gray-50 text-xs text-gray-800 outline-none focus:ring-2 focus:ring-[#3C0078]/20"
-          >
+          <Select size="sm" label="Lecturer" value={form.teacherId} onChange={e => setForm(f => ({ ...f, teacherId: e.target.value }))}>
             <option value="">No preference</option>
             {teachers.map(t => <option key={t.id} value={t.id}>{t.firstName} {t.lastName}</option>)}
-          </select>
+          </Select>
         </div>
         <div className={isScheduled ? "col-span-2" : ""}>
-          <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 block mb-1">Day</label>
-          <select value={form.dayOfWeek} onChange={e => setForm(f => ({ ...f, dayOfWeek: e.target.value }))}
-            className="w-full px-2.5 py-1.5 rounded-xl bg-gray-50 text-xs text-gray-800 outline-none focus:ring-2 focus:ring-[#3C0078]/20"
-          >
+          <Select size="sm" label="Day" value={form.dayOfWeek} onChange={e => setForm(f => ({ ...f, dayOfWeek: e.target.value }))}>
             <option value="">Any day</option>
             {DAYS.map(d => <option key={d} value={d}>{d}</option>)}
-          </select>
+          </Select>
         </div>
         {isScheduled && (
           <>
             <div>
-              <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 block mb-1">Start Time</label>
-              <input type="time" value={form.startTime}
+              <Input size="sm" label="Start Time" type="time" value={form.startTime}
                 onChange={e => setForm(f => ({ ...f, startTime: e.target.value }))}
-                className="w-full px-2.5 py-1.5 rounded-xl bg-gray-50 text-xs text-gray-800 outline-none focus:ring-2 focus:ring-[#3C0078]/20"
-              />
+               />
             </div>
             <div>
-              <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 block mb-1">End Time</label>
-              <input type="time" value={form.endTime}
+              <Input size="sm" label="End Time" type="time" value={form.endTime}
                 onChange={e => setForm(f => ({ ...f, endTime: e.target.value }))}
-                className="w-full px-2.5 py-1.5 rounded-xl bg-gray-50 text-xs text-gray-800 outline-none focus:ring-2 focus:ring-[#3C0078]/20"
-              />
+               />
             </div>
           </>
         )}
       </div>
       {conflict && (
-        <div className="flex items-start gap-2 px-2.5 py-2 bg-red-50 border border-red-200 rounded-xl">
-          <AlertCircle size={11} className="text-red-500 shrink-0 mt-0.5" />
-          <span className="text-[10px] font-semibold text-red-700">{conflict}</span>
-        </div>
+        <Alert variant="error">{conflict}</Alert>
       )}
       <div className="flex gap-2 pt-0.5">
-        <button onClick={onSave} disabled={saving || !!conflict}
-          className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-[#3C0078] text-white text-[11px] font-bold hover:bg-[#2a0055] transition-colors disabled:opacity-50"
-        >
-          <Check size={11} />{saving ? "Saving…" : "Save"}
-        </button>
-        <button onClick={onCancel} className="px-3 py-1.5 rounded-xl text-[11px] font-semibold text-gray-500 hover:bg-gray-100 transition-colors">
+        <Button size="sm" onClick={onSave} disabled={saving || !!conflict} startIcon={<Check size={12} />}>
+          {saving ? "Saving…" : "Save"}
+        </Button>
+        <Button variant="text" size="sm" onClick={onCancel}>
           Cancel
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -358,15 +339,13 @@ function ClassesSection({ groupId, courseId, teachers, refreshKey, onChanged }) 
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+        <span className="text-koru-caption font-medium text-koru-on-surface-variant">
           Classes · {slots.length} per week
         </span>
         {!addOpen && !editingId && (
-          <button onClick={openAdd}
-            className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold text-[#3C0078] bg-[#3C0078]/5 hover:bg-[#3C0078]/10 transition-colors"
-          >
-            <Plus size={10} /> Add slot
-          </button>
+          <Button variant="tonal" size="sm" onClick={openAdd} startIcon={<Plus size={12} />}>
+            Add slot
+          </Button>
         )}
       </div>
 
@@ -379,11 +358,11 @@ function ClassesSection({ groupId, courseId, teachers, refreshKey, onChanged }) 
       )}
 
       {loading ? (
-        <div className="text-[11px] text-gray-400 animate-pulse">Loading…</div>
+        <SkeletonText lines={2} />
       ) : slots.length === 0 && !addOpen ? (
-        <div className="flex items-center gap-2 px-3 py-2.5 rounded-2xl bg-gray-50 border border-dashed border-gray-200">
-          <BookOpen size={13} className="text-gray-300 shrink-0" />
-          <span className="text-xs text-gray-400">No class slots yet.</span>
+        <div className="flex items-center gap-2 rounded-koru-md border border-dashed border-koru-outline-variant bg-koru-surface-container-low px-3 py-2.5">
+          <BookOpen size={13} className="shrink-0 text-koru-outline" />
+          <span className="text-xs text-koru-on-surface-variant">No class slots yet.</span>
         </div>
       ) : (
         <div className="space-y-1.5">
@@ -445,17 +424,19 @@ function AddClassManuallySection({ groupId, courseId, teachers, onAdded }) {
   };
 
   return (
-    <div className="border-t border-gray-100">
+    <div className="border-t border-koru-outline-faint">
       <button
+        type="button"
+        aria-expanded={open}
         onClick={() => setOpen(v => !v)}
-        className="w-full flex items-center gap-2 px-5 py-3 text-left hover:bg-gray-50/60 transition-colors"
+        className="flex w-full items-center gap-2 px-5 py-3 text-left transition-colors hover:bg-koru-surface-container-low/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-koru-focus"
       >
-        <Plus size={13} className="text-gray-400 shrink-0" />
-        <span className="text-xs font-bold text-gray-500">Add Class Manually</span>
+        <Plus size={13} className="text-koru-on-surface-variant shrink-0" />
+        <span className="text-xs font-medium text-koru-on-surface-variant">Add Class Manually</span>
         <span className="ml-auto">
           {open
-            ? <ChevronDown size={13} className="text-gray-400" />
-            : <ChevronRight size={13} className="text-gray-400" />}
+            ? <ChevronDown size={13} className="text-koru-on-surface-variant" />
+            : <ChevronRight size={13} className="text-koru-on-surface-variant" />}
         </span>
       </button>
 
@@ -470,73 +451,58 @@ function AddClassManuallySection({ groupId, courseId, teachers, onAdded }) {
           >
             <div className="px-5 pb-4 space-y-3">
               {/* Conflict warning */}
-              <div className="flex items-start gap-2 px-3 py-2.5 bg-amber-50 border border-amber-200 rounded-2xl">
-                <AlertCircle size={13} className="text-amber-500 shrink-0 mt-0.5" />
-                <p className="text-[10px] font-semibold text-amber-700 leading-snug flex-1">
-                  Manually scheduled classes may cause teacher conflicts.{" "}
-                  <button
-                    onClick={() => navigate("/calendar")}
-                    className="underline hover:text-amber-800 inline-flex items-center gap-0.5"
-                  >
-                    Review on the calendar page <ExternalLink size={9} />
-                  </button>
-                </p>
-              </div>
+              <Alert variant="warning">
+                Manually scheduled classes may cause teacher conflicts.{" "}
+                <button
+                  type="button"
+                  onClick={() => navigate("/calendar")}
+                  className="inline-flex items-center gap-0.5 font-medium underline"
+                >
+                  Review on the calendar page <ExternalLink size={10} />
+                </button>
+              </Alert>
 
               <NameField value={form.name} onChange={v => setForm(f => ({ ...f, name: v }))} />
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 block mb-1">Lecturer</label>
-                  <select value={form.teacherId} onChange={e => setForm(f => ({ ...f, teacherId: e.target.value }))}
-                    className="w-full px-2.5 py-1.5 rounded-xl bg-gray-50 text-xs text-gray-800 outline-none focus:ring-2 focus:ring-[#3C0078]/20"
-                  >
+                  <Select size="sm" label="Lecturer" value={form.teacherId} onChange={e => setForm(f => ({ ...f, teacherId: e.target.value }))}>
                     <option value="">Select lecturer</option>
                     {teachers.map(t => <option key={t.id} value={t.id}>{t.firstName} {t.lastName}</option>)}
-                  </select>
+                  </Select>
                 </div>
                 <div>
-                  <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 block mb-1">Room</label>
-                  <input type="text" placeholder="e.g. Room 201" value={form.room}
+                  <Input size="sm" label="Room" type="text" placeholder="e.g. Room 201" value={form.room}
                     onChange={e => setForm(f => ({ ...f, room: e.target.value }))}
-                    className="w-full px-2.5 py-1.5 rounded-xl bg-gray-50 text-xs text-gray-800 outline-none focus:ring-2 focus:ring-[#3C0078]/20 placeholder:text-gray-400"
-                  />
+                   />
                 </div>
                 <div>
-                  <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 block mb-1">Day <span className="text-red-400">*</span></label>
-                  <select value={form.dayOfWeek} onChange={e => setForm(f => ({ ...f, dayOfWeek: e.target.value }))}
-                    className="w-full px-2.5 py-1.5 rounded-xl bg-gray-50 text-xs text-gray-800 outline-none focus:ring-2 focus:ring-[#3C0078]/20"
-                  >
+                  <Select size="sm" label="Day" required value={form.dayOfWeek} onChange={e => setForm(f => ({ ...f, dayOfWeek: e.target.value }))}>
                     <option value="">Select day</option>
                     {DAYS.map(d => <option key={d} value={d}>{d}</option>)}
-                  </select>
+                  </Select>
                 </div>
                 <div>
-                  <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 block mb-1">Start <span className="text-red-400">*</span></label>
-                  <input type="time" value={form.startTime} onChange={e => setForm(f => ({ ...f, startTime: e.target.value }))}
-                    className="w-full px-2.5 py-1.5 rounded-xl bg-gray-50 text-xs text-gray-800 outline-none focus:ring-2 focus:ring-[#3C0078]/20"
-                  />
+                  <Input size="sm" label="Start" required type="time" value={form.startTime} onChange={e => setForm(f => ({ ...f, startTime: e.target.value }))}
+                   />
                 </div>
                 <div>
-                  <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 block mb-1">End <span className="text-red-400">*</span></label>
-                  <input type="time" value={form.endTime} onChange={e => setForm(f => ({ ...f, endTime: e.target.value }))}
-                    className="w-full px-2.5 py-1.5 rounded-xl bg-gray-50 text-xs text-gray-800 outline-none focus:ring-2 focus:ring-[#3C0078]/20"
-                  />
+                  <Input size="sm" label="End" required type="time" value={form.endTime} onChange={e => setForm(f => ({ ...f, endTime: e.target.value }))}
+                   />
                 </div>
               </div>
 
               <div className="flex gap-2">
-                <button onClick={handleSave} disabled={saving || !canSave}
-                  className="flex items-center gap-1 px-4 py-2 rounded-xl bg-[#3C0078] text-white text-xs font-bold hover:bg-[#2a0055] transition-colors disabled:opacity-50"
-                >
-                  <Check size={12} />{saving ? "Adding…" : "Add Class"}
-                </button>
-                <button
+                <Button size="sm" onClick={handleSave} disabled={saving || !canSave} startIcon={<Check size={12} />}>
+                  {saving ? "Adding…" : "Add Class"}
+                </Button>
+                <Button
+                  variant="text"
+                  size="sm"
                   onClick={() => { setOpen(false); setForm(DEFAULT_MANUAL_FORM); }}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold text-gray-500 hover:bg-gray-100 transition-colors"
                 >
                   Cancel
-                </button>
+                </Button>
               </div>
             </div>
           </motion.div>
@@ -695,111 +661,109 @@ export function AdminCohortsView({ courseId, course }) {
   return (
     <motion.div className="flex-1 overflow-y-auto" initial="hidden" animate="visible" variants={staggerContainer}>
       <motion.header variants={slideUp} className="mb-6">
-        <h1 className="text-3xl font-semibold tracking-tight text-gray-900">Groups & Classes</h1>
-        <p className="text-gray-500 mt-1 text-sm">
+        <h1 className="font-display text-koru-title text-koru-on-surface">Groups & Classes</h1>
+        <p className="mt-1 text-koru-body text-koru-on-surface-variant">
           {cohorts.length} {cohorts.length === 1 ? "group" : "groups"} · {enrolledCount} enrolled students
         </p>
       </motion.header>
 
       {/* Auto-assign config */}
-      <motion.div variants={slideUp} className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 mb-6">
-        <h3 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-4">Auto-Assign Configuration</h3>
+      <Card as={motion.div} variants={slideUp} variant="outlined" tone="low" padding="lg" className="mb-6">
+        <h3 className="mb-4 font-display text-koru-heading text-koru-on-surface">Auto-Assign Configuration</h3>
         <div className="flex flex-col sm:flex-row sm:items-end gap-4">
           <div className="flex-1">
-            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 block mb-2">Max students per group</label>
-            <input
+            <Input
+              label="Max students per group"
               type="number" min={1} max={200} value={maxPerGroup}
               onChange={e => setMaxPerGroup(Math.max(1, parseInt(e.target.value) || 1))}
-              className="w-full px-4 py-3 bg-gray-50 rounded-2xl text-sm font-semibold text-gray-900 outline-none focus:ring-2 focus:ring-[#3C0078]/10"
             />
           </div>
           <div className="flex flex-col gap-2 sm:items-end">
             {enrolledCount > 0 && groupCount > 0 ? (
-              <p className="text-sm font-semibold text-gray-600">
-                <span className="text-[#3C0078] font-black">{enrolledCount}</span> →{" "}
-                <span className="text-[#3C0078] font-black">{groupCount}</span> group{groupCount !== 1 ? "s" : ""} of ~<span className="text-[#3C0078] font-black">{maxPerGroup}</span>
+              <p className="text-sm font-semibold text-koru-on-surface-variant">
+                <span className="text-koru-primary font-semibold">{enrolledCount}</span> →{" "}
+                <span className="text-koru-primary font-semibold">{groupCount}</span> group{groupCount !== 1 ? "s" : ""} of ~<span className="text-koru-primary font-semibold">{maxPerGroup}</span>
               </p>
             ) : enrolledCount === 0 ? (
-              <p className="text-sm text-gray-400">No enrolled students yet</p>
+              <p className="text-sm text-koru-on-surface-variant">No enrolled students yet</p>
             ) : null}
-            <button
+            <Button
+              size="lg"
               onClick={handleAutoAssign} disabled={assigning || enrolledCount === 0}
-              className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-[#3C0078] text-white text-sm font-bold shadow-lg shadow-[#3C0078]/20 hover:bg-[#2a0055] transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+              startIcon={<Shuffle size={15} />}
             >
-              <Shuffle size={15} />
               {assigning ? assignStep || "Working…" : cohorts.length > 0 ? "Reassign Groups" : "Auto-Assign Groups"}
-            </button>
+            </Button>
           </div>
         </div>
         {cohorts.length > 0 && !assigning && (
-          <div className="mt-4 flex items-start gap-2.5 px-4 py-3 bg-amber-50 rounded-2xl border border-amber-100">
-            <AlertTriangle size={14} className="text-amber-500 shrink-0 mt-0.5" />
-            <p className="text-xs font-semibold text-amber-700">Reassigning will delete all current groups and redistribute students from scratch.</p>
-          </div>
+          <Alert variant="warning" className="mt-4">
+            Reassigning will delete all current groups and redistribute students from scratch.
+          </Alert>
         )}
-      </motion.div>
+      </Card>
 
       {/* Convert calendar events → class slots banner */}
       {unassignedEvents.length > 0 && (
-        <motion.div variants={slideUp} className="flex items-center justify-between gap-4 px-5 py-4 bg-blue-50 border border-blue-100 rounded-3xl mb-6">
+        <motion.div variants={slideUp} className="mb-6 flex items-center justify-between gap-4 rounded-koru-md bg-koru-info-soft px-5 py-4">
           <div className="flex items-start gap-3">
-            <Calendar size={16} className="text-blue-500 shrink-0 mt-0.5" />
+            <Calendar size={16} className="text-koru-info shrink-0 mt-0.5" />
             <div>
-              <p className="text-xs font-black text-blue-800 uppercase tracking-widest mb-0.5">
+              <p className="mb-0.5 text-koru-label text-koru-info">
                 {unassignedEvents.length} Calendar Event{unassignedEvents.length !== 1 ? "s" : ""} Found
               </p>
-              <p className="text-[11px] text-blue-600">
+              <p className="text-xs text-koru-on-surface-variant">
                 These class-type events can be converted to editable class slots. The calendar events will be removed.
               </p>
             </div>
           </div>
-          <button
+          <Button
             onClick={handleImportFromEvents}
             disabled={importing}
-            className="shrink-0 px-4 py-2.5 rounded-2xl bg-blue-600 text-white text-[11px] font-black uppercase tracking-wider hover:bg-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+            className="shrink-0"
           >
             {importing ? "Converting…" : "Convert to Slots"}
-          </button>
+          </Button>
         </motion.div>
       )}
 
       {/* Groups list */}
       <motion.div variants={slideUp} className="space-y-3">
         {loading ? (
-          <div className="space-y-3 animate-pulse">
-            {[1, 2, 3].map(i => <div key={i} className="bg-white rounded-3xl border border-gray-100 shadow-sm h-20" />)}
+          <div className="space-y-3" aria-busy="true">
+            {[1, 2, 3].map(i => <Skeleton key={i} className="h-20 rounded-koru-lg" />)}
           </div>
         ) : cohorts.length === 0 && unassignedClasses.length === 0 && unassignedEvents.length === 0 && unassignedStudents.length === 0 ? (
-          <div className="bg-white rounded-3xl border border-gray-100 shadow-sm px-8 py-14 text-center">
-            <div className="w-14 h-14 rounded-3xl bg-[#3C0078]/5 flex items-center justify-center mx-auto mb-4">
-              <Users size={24} className="text-[#3C0078]/40" />
-            </div>
-            <p className="text-gray-500 font-semibold mb-1">No groups yet</p>
-            <p className="text-xs text-gray-400">Set a max per group above and click Auto-Assign to get started.</p>
-          </div>
+          <EmptyState
+            icon={<Users size={24} />}
+            title="No groups yet"
+            description="Set a max per group above and click Auto-Assign to get started."
+          />
         ) : (
           <>
           {/* ── Unassigned pseudo-group ── */}
           {(unassignedClasses.length > 0 || unassignedEvents.length > 0 || unassignedStudents.length > 0) && (
-            <div className="bg-white/70 rounded-3xl border border-dashed border-gray-300 shadow-sm overflow-hidden">
+            <div className="overflow-hidden rounded-koru-lg border border-dashed border-koru-outline-variant bg-koru-surface-container-lowest/70">
               <div className="flex items-center px-6 py-4 gap-4">
-                <button
+                <Button
+                  variant="text"
+                  size="icon"
                   onClick={() => setUnassignedExpanded(v => !v)}
-                  className="w-9 h-9 rounded-2xl bg-gray-50 hover:bg-gray-100 flex items-center justify-center text-gray-400 transition-all shrink-0"
+                  aria-expanded={unassignedExpanded}
+                  aria-label={unassignedExpanded ? "Collapse unassigned" : "Expand unassigned"}
+                  className="shrink-0 !text-koru-on-surface-variant"
                 >
                   {unassignedExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                </button>
-                <div className="w-10 h-10 rounded-2xl bg-gray-100 border border-gray-200 flex items-center justify-center shrink-0">
-                  <Users size={18} className="text-gray-400" />
+                </Button>
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-koru-md bg-koru-surface-container-high">
+                  <Users size={18} className="text-koru-on-surface-variant" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <p className="text-sm font-bold text-gray-500">Unassigned</p>
-                    <span className="text-[9px] font-black uppercase tracking-wider text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-md">
-                      Pre-cohort
-                    </span>
+                    <p className="text-koru-label text-koru-on-surface-variant">Unassigned</p>
+                    <Badge>Pre-cohort</Badge>
                   </div>
-                  <p className="text-xs text-gray-400 mt-0.5">
+                  <p className="text-xs text-koru-on-surface-variant mt-0.5">
                     {unassignedClasses.length + unassignedEvents.length} schedule slot{(unassignedClasses.length + unassignedEvents.length) !== 1 ? "s" : ""} · {unassignedStudents.length} student{unassignedStudents.length !== 1 ? "s" : ""} not in a group
                   </p>
                 </div>
@@ -812,29 +776,29 @@ export function AdminCohortsView({ courseId, course }) {
                     animate={{ height: "auto", opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
                     transition={{ duration: 0.2 }}
-                    className="overflow-hidden border-t border-gray-100"
+                    className="overflow-hidden border-t border-koru-outline-faint"
                   >
-                    <div className="flex min-h-0 divide-x divide-gray-100">
+                    <div className="flex min-h-0 divide-x divide-koru-outline-faint">
                       {/* Left: unassigned students */}
                       <div className="flex-1 min-w-0 px-5 py-4">
                         <div className="flex items-center gap-2 mb-3">
-                          <div className="w-1.5 h-1.5 rounded-full bg-gray-300 shrink-0" />
-                          <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                          <div className="w-1.5 h-1.5 rounded-full bg-koru-outline-variant shrink-0" />
+                          <span className="text-koru-caption font-medium text-koru-on-surface-variant">
                             Students · {unassignedStudents.length}
                           </span>
                         </div>
                         {unassignedStudents.length === 0 ? (
-                          <p className="text-xs text-gray-400 italic">All students are in groups.</p>
+                          <p className="text-xs text-koru-on-surface-variant italic">All students are in groups.</p>
                         ) : (
                           <div className="space-y-1.5 max-h-64 overflow-y-auto pr-1">
                             {unassignedStudents.map(s => (
-                              <div key={s.studentId} className="flex items-center gap-2 p-2 rounded-xl bg-gray-50/80">
-                                <div className="w-7 h-7 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-500 font-black text-[10px] shrink-0">
+                              <div key={s.studentId} className="flex items-center gap-2 p-2 rounded-koru-md bg-koru-surface-container-low/80">
+                                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-koru-surface-container-high text-[10px] font-semibold text-koru-on-surface-variant">
                                   {s.studentName?.split(" ")[0]?.[0]}{s.studentName?.split(" ")[1]?.[0]}
                                 </div>
                                 <div className="min-w-0">
-                                  <p className="text-xs font-bold text-gray-700 truncate">{s.studentName}</p>
-                                  <p className="text-[10px] text-gray-400 truncate">{s.email}</p>
+                                  <p className="text-xs font-medium text-koru-on-surface-variant truncate">{s.studentName}</p>
+                                  <p className="text-[10px] text-koru-on-surface-variant truncate">{s.email}</p>
                                 </div>
                               </div>
                             ))}
@@ -856,8 +820,8 @@ export function AdminCohortsView({ courseId, course }) {
                         {unassignedEvents.length > 0 && (
                           <div className="px-5 pb-4">
                             <div className="flex items-center gap-2 mb-3">
-                              <div className="w-1.5 h-1.5 rounded-full bg-blue-300 shrink-0" />
-                              <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                              <div className="w-1.5 h-1.5 rounded-full bg-koru-info shrink-0" />
+                              <span className="text-koru-caption font-medium text-koru-on-surface-variant">
                                 Calendar Events · {unassignedEvents.length}
                               </span>
                             </div>
@@ -868,15 +832,15 @@ export function AdminCohortsView({ courseId, course }) {
                                 const dayName = start ? start.toLocaleDateString("en-US", { weekday: "long" }) : null;
                                 const fmt = (d) => d ? `${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}` : null;
                                 return (
-                                  <div key={evt.id} className="flex items-start gap-2 px-3 py-2 rounded-2xl bg-blue-50/60 border border-blue-100">
-                                    <Calendar size={12} className="text-blue-400 shrink-0 mt-0.5" />
+                                  <div key={evt.id} className="flex items-start gap-2 rounded-koru-md bg-koru-info-soft/60 px-3 py-2">
+                                    <Calendar size={12} className="text-koru-info shrink-0 mt-0.5" />
                                     <div className="min-w-0 flex-1">
                                       <div className="flex items-center gap-1.5 flex-wrap">
-                                        <span className="text-[10px] font-black text-blue-700 uppercase tracking-wider truncate">{evt.title}</span>
-                                        <span className="text-[8px] font-bold text-blue-400 bg-blue-100 px-1 py-0.5 rounded shrink-0">Calendar Event</span>
+                                        <span className="text-koru-caption font-medium text-koru-info truncate">{evt.title}</span>
+                                        <Badge variant="info" className="shrink-0">Calendar Event</Badge>
                                       </div>
                                       {(dayName || fmt(start)) && (
-                                        <p className="text-[10px] text-blue-500 mt-0.5">
+                                        <p className="text-[10px] text-koru-info mt-0.5">
                                           {dayName}{fmt(start) ? ` · ${fmt(start)}${fmt(end) ? `–${fmt(end)}` : ""}` : ""}
                                         </p>
                                       )}
@@ -909,31 +873,38 @@ export function AdminCohortsView({ courseId, course }) {
             const studentCount = details?.students?.length ?? cohort.studentCount ?? "—";
 
             return (
-              <div key={cohort.id} className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+              <Card key={cohort.id} variant="outlined" tone="low" padding="none" radius="lg" className="overflow-hidden">
                 {/* Group header */}
                 <div className="flex items-center px-6 py-4 gap-4 group">
-                  <button
+                  <Button
+                    variant="text"
+                    size="icon"
                     onClick={() => handleExpand(cohort.id)}
-                    className="w-9 h-9 rounded-2xl bg-gray-50 hover:bg-[#3C0078]/5 flex items-center justify-center text-gray-400 hover:text-[#3C0078] transition-all shrink-0"
+                    aria-expanded={isExpanded}
+                    aria-label={isExpanded ? `Collapse ${cohort.name}` : `Expand ${cohort.name}`}
+                    className="shrink-0 !text-koru-on-surface-variant hover:!text-koru-primary"
                   >
                     {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                  </button>
-                  <div className="w-10 h-10 rounded-2xl bg-[#3C0078]/5 border border-[#3C0078]/10 flex items-center justify-center shrink-0">
-                    <Users size={18} className="text-[#3C0078]" />
+                  </Button>
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-koru-md bg-koru-primary-container/60">
+                    <Users size={18} className="text-koru-primary" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-gray-900">{cohort.name}</p>
-                    <p className="text-xs text-gray-400 mt-0.5">
+                    <p className="text-koru-label text-koru-on-surface">{cohort.name}</p>
+                    <p className="text-xs text-koru-on-surface-variant mt-0.5">
                       {typeof studentCount === "number" ? `${studentCount} student${studentCount !== 1 ? "s" : ""}` : ""}
                     </p>
                   </div>
-                  <button
+                  <Button
+                    variant="text"
+                    size="icon"
                     onClick={() => handleDelete(cohort.id, cohort.name)}
                     disabled={deletingId === cohort.id}
-                    className="p-2 rounded-xl text-gray-300 hover:text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all disabled:opacity-50"
+                    aria-label={`Delete ${cohort.name}`}
+                    className="!text-koru-outline opacity-0 hover:!bg-koru-error-container hover:!text-koru-error focus-visible:opacity-100 group-hover:opacity-100"
                   >
                     {deletingId === cohort.id ? <span className="text-xs">…</span> : <Trash2 size={15} />}
-                  </button>
+                  </Button>
                 </div>
 
                 {/* Expanded panel */}
@@ -944,37 +915,37 @@ export function AdminCohortsView({ courseId, course }) {
                       animate={{ height: "auto", opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
                       transition={{ duration: 0.2 }}
-                      className="overflow-hidden border-t border-gray-50"
+                      className="overflow-hidden border-t border-koru-outline-faint"
                     >
                       {isLoadingDetails ? (
-                        <div className="px-8 py-6 text-center text-gray-400 text-sm animate-pulse">Loading…</div>
+                        <div className="px-8 py-6"><SkeletonText lines={3} /></div>
                       ) : (
                         <>
                           {/* ── Students LEFT · Classes + Add Manually RIGHT ── */}
-                          <div className="flex min-h-0 divide-x divide-gray-100">
+                          <div className="flex min-h-0 divide-x divide-koru-outline-faint">
                             {/* Left: Students */}
                             <div className="flex-1 min-w-0 px-5 py-4">
                               <div className="flex items-center gap-2 mb-3">
-                                <div className="w-1.5 h-1.5 rounded-full bg-gray-300 shrink-0" />
-                                <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                                <div className="w-1.5 h-1.5 rounded-full bg-koru-outline-variant shrink-0" />
+                                <span className="text-koru-caption font-medium text-koru-on-surface-variant">
                                   Students · {details?.students?.length ?? 0}
                                 </span>
                               </div>
                               {!details?.students?.length ? (
-                                <p className="text-xs text-gray-400 italic">No students in this group.</p>
+                                <p className="text-xs text-koru-on-surface-variant italic">No students in this group.</p>
                               ) : (
                                 <div className="space-y-1.5 max-h-64 overflow-y-auto pr-1">
                                   {details.students.map(s => (
-                                    <div key={s.id || s.studentId} className="flex items-center gap-2 p-2 rounded-xl bg-gray-50/80">
-                                      <div className="w-7 h-7 rounded-full bg-[#3C0078]/5 border border-[#3C0078]/10 flex items-center justify-center text-[#3C0078] font-black text-[10px] shrink-0">
+                                    <div key={s.id || s.studentId} className="flex items-center gap-2 p-2 rounded-koru-md bg-koru-surface-container-low/80">
+                                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-koru-primary-container/60 text-[10px] font-semibold text-koru-on-primary-container">
                                         {(s.firstName || s.student?.firstName)?.[0]}
                                         {(s.lastName || s.student?.lastName)?.[0]}
                                       </div>
                                       <div className="min-w-0">
-                                        <p className="text-xs font-bold text-gray-800 truncate">
+                                        <p className="text-xs font-medium text-koru-on-surface truncate">
                                           {s.firstName || s.student?.firstName} {s.lastName || s.student?.lastName}
                                         </p>
-                                        <p className="text-[10px] text-gray-400 truncate">{s.email || s.student?.email}</p>
+                                        <p className="text-[10px] text-koru-on-surface-variant truncate">{s.email || s.student?.email}</p>
                                       </div>
                                     </div>
                                   ))}
@@ -1005,7 +976,7 @@ export function AdminCohortsView({ courseId, course }) {
                     </motion.div>
                   )}
                 </AnimatePresence>
-              </div>
+              </Card>
             );
           })}
           </>

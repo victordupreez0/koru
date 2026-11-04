@@ -18,6 +18,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 import AuthInput from "../components/UI/authInput";
 import TwoFactorSetupModal from "../components/UI/TwoFactorSetupModal";
+import { Alert, Badge, Button, Card, Select } from "../components/UI";
 import { useTextToSpeech } from "../hooks/useTextToSpeech";
 import {
   changeUserPassword,
@@ -44,15 +45,15 @@ const defaultSettings = {
 function ToggleRow({ icon, title, description, checked, onChange }) {
   return (
     <label
-      className="flex min-h-[56px] items-center justify-between gap-4 rounded-2xl border p-5 border-gray-100 bg-gray-50/40 hover:bg-gray-50 transition-colors duration-200 cursor-pointer shadow-3xs"
+      className="flex min-h-[56px] cursor-pointer items-center justify-between gap-4 rounded-koru-md bg-koru-surface-container-low p-5 transition-colors duration-200 ease-koru-out hover:bg-koru-surface-container focus-within:ring-2 focus-within:ring-koru-focus"
     >
       <div className="flex items-center gap-4">
-        <span className="rounded-xl bg-[#3C0078]/5 p-2.5 text-[#3C0078] shrink-0">{icon}</span>
+        <span className="shrink-0 rounded-koru-md bg-koru-primary-container/60 p-2.5 text-koru-primary">{icon}</span>
         <div>
-          <p className="text-sm font-extrabold text-gray-900 tracking-tight">
+          <p className="text-koru-label text-koru-on-surface">
             {title}
           </p>
-          <p className="text-xs text-gray-505 font-medium mt-0.5 leading-relaxed">
+          <p className="mt-0.5 text-xs leading-relaxed text-koru-on-surface-variant">
             {description}
           </p>
         </div>
@@ -62,12 +63,13 @@ function ToggleRow({ icon, title, description, checked, onChange }) {
         <input
           type="checkbox"
           checked={checked}
+          role="switch"
           onChange={(e) => onChange(e.target.checked)}
           className="peer sr-only"
         />
-        <span className={`absolute inset-0 rounded-full transition-colors duration-300 ${checked ? "bg-[#3C0078]" : "bg-gray-200"}`} />
+        <span className={`absolute inset-0 rounded-full transition-colors duration-300 ${checked ? "bg-koru-primary" : "bg-koru-outline-variant"}`} />
         <span
-          className="absolute left-1 h-5 w-5 rounded-full bg-white transition-transform duration-300 shadow-sm"
+          className="absolute left-1 h-5 w-5 rounded-full bg-koru-surface-container-lowest transition-transform duration-300 shadow-koru-xs"
           style={{ transform: checked ? "translateX(20px)" : "translateX(0)" }}
         />
       </span>
@@ -122,13 +124,10 @@ export default function SettingsPage() {
 
   const pageClasses = useMemo(
     () => ({
-      wrapper: "text-gray-900 font-sans",
-      card: "border border-gray-200/50 bg-white p-6 shadow-2xs rounded-[30px] hover:shadow-xs transition-all duration-300",
-      muted: "text-gray-500 font-medium text-xs leading-relaxed",
-      secondaryButton: "border-2 border-[#3C0078] bg-white text-[#3C0078] hover:bg-[#3C0078] hover:text-white transition-all rounded-xl",
-      select: "border border-gray-200 bg-white text-gray-900 focus:border-[#3C0078]/40 focus:ring-4 focus:ring-[#3C0078]/10 transition-all outline-none rounded-xl px-4 py-2.5 w-full text-sm",
-      input: "border border-gray-200 bg-white text-gray-900 focus:border-[#3C0078]/40 focus:ring-4 focus:ring-[#3C0078]/10 transition-all outline-none rounded-xl px-4 py-2.5",
-      label: "text-gray-700 font-bold text-xs uppercase tracking-wider mb-1.5 block",
+      wrapper: "text-koru-on-surface font-sans",
+      muted: "text-koru-body text-koru-on-surface-variant",
+      input: "!rounded-koru-xs !border-0 !bg-koru-surface-container-lowest !text-koru-on-surface !shadow-koru-xs ring-1 ring-inset ring-koru-outline-variant focus:!translate-y-0 focus:!ring-1 focus:!ring-koru-primary disabled:!bg-koru-surface-container disabled:!text-koru-on-surface-variant disabled:cursor-not-allowed",
+      label: "!text-koru-label !text-koru-on-surface-variant",
     }),
     [],
   );
@@ -270,20 +269,20 @@ export default function SettingsPage() {
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           className="flex flex-col shrink-0 transition-all duration-300
-            md:h-full md:w-64 md:bg-white/70 md:backdrop-blur-xl md:border md:border-white/20 md:rounded-[28px] md:shadow-lg md:overflow-hidden
-            max-md:h-full max-md:w-64 max-md:bg-white/80 max-md:backdrop-blur-md max-md:border-r max-md:border-gray-200/50"
+            md:h-full md:w-64 md:overflow-hidden md:rounded-koru-lg md:bg-koru-surface-container-lowest md:shadow-koru-card md:ring-1 md:ring-koru-outline-faint md:backdrop-blur-xl
+            max-md:h-full max-md:w-64 max-md:border-r max-md:border-koru-outline-faint max-md:bg-koru-surface-container-lowest max-md:backdrop-blur-md"
         >
           {/* Settings Sidebar Header Info */}
-          <div className="px-6 pt-6 pb-5 border-b border-gray-100 flex flex-col gap-2 shrink-0 select-none">
+          <div className="px-6 pt-6 pb-5 border-b border-koru-outline-faint flex flex-col gap-2 shrink-0 select-none">
             <div className="flex items-center gap-2">
-              <span className="px-2 py-0.5 rounded-lg bg-[#3C0078]/10 text-[#3C0078] font-black text-[9px] uppercase tracking-wider shadow-sm">
+              <Badge variant="primary">
                 System
-              </span>
-              <span className="text-[10px] font-extrabold text-gray-400 tracking-wider">
+              </Badge>
+              <span className="text-koru-caption text-koru-on-surface-variant">
                 Preferences
               </span>
             </div>
-            <h3 className="text-sm font-extrabold text-gray-900 leading-snug mt-1 truncate">
+            <h3 className="mt-1 truncate font-display text-koru-heading text-koru-on-surface">
               Settings
             </h3>
           </div>
@@ -303,6 +302,7 @@ export default function SettingsPage() {
                   >
                     <button
                       type="button"
+                      aria-current={isActive ? "page" : undefined}
                       onClick={() => {
                         setActiveTab(cat.id);
                         setProfileMessage("");
@@ -310,16 +310,16 @@ export default function SettingsPage() {
                         setProfileError("");
                         setPasswordError("");
                       }}
-                      className={`relative w-[calc(100%-24px)] flex items-center gap-3 px-4 py-2.5 text-xs font-semibold transition-all duration-200 mx-3 my-0.5 rounded-xl group select-none cursor-pointer text-left
+                      className={`group relative mx-3 my-0.5 flex w-[calc(100%-24px)] cursor-pointer select-none items-center gap-3 rounded-koru-pill px-4 py-2.5 text-left text-koru-label transition-colors duration-200 ease-koru-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus
                         ${isActive
-                          ? "bg-[#3C0078]/5 text-[#3C0078]"
-                          : "text-gray-600 hover:bg-gray-50/80 hover:text-gray-900"
+                          ? "bg-koru-secondary-container text-koru-on-secondary-container"
+                          : "text-koru-on-surface-variant hover:bg-koru-surface-container hover:text-koru-on-surface"
                         }`}
                     >
                       {isActive && (
                         <motion.div
                           layoutId="activeSettingsLeftAccent"
-                          className="absolute left-0 top-1/4 bottom-1/4 w-0.75 bg-[#3C0078] rounded-r-md shrink-0"
+                          className="absolute bottom-1/4 left-0 top-1/4 w-0.75 shrink-0 rounded-r-koru-xs bg-koru-primary"
                           transition={{
                             type: "spring",
                             stiffness: 300,
@@ -328,7 +328,7 @@ export default function SettingsPage() {
                         />
                       )}
 
-                      <span className={`transition-colors shrink-0 ${isActive ? "text-[#3C0078]" : "text-gray-400 group-hover:text-gray-600"}`}>
+                      <span className={`transition-colors shrink-0 ${isActive ? "text-koru-primary" : "text-koru-on-surface-variant group-hover:text-koru-on-surface"}`}>
                         {cat.icon}
                       </span>
                       
@@ -337,7 +337,7 @@ export default function SettingsPage() {
                       {isActive && (
                         <motion.div
                           layoutId="activeSettingsDot"
-                          className="w-1.5 h-1.5 rounded-full bg-[#3C0078] shrink-0"
+                          className="w-1.5 h-1.5 rounded-full bg-koru-primary shrink-0"
                           transition={{
                             type: "spring",
                             stiffness: 300,
@@ -354,15 +354,15 @@ export default function SettingsPage() {
         </motion.div>
 
         {/* Right Section: Main Content Area: Floating Island Card */}
-        <div className="flex-1 flex flex-col overflow-hidden transition-all duration-300 md:bg-white/75 md:backdrop-blur-xl md:border md:border-white/20 md:rounded-[28px] md:shadow-lg max-md:bg-white">
+        <div className="flex-1 flex flex-col overflow-hidden transition-all duration-300 md:rounded-koru-lg md:bg-koru-surface-container-lowest md:shadow-koru-card md:ring-1 md:ring-koru-outline-faint md:backdrop-blur-xl max-md:bg-koru-surface-container-lowest">
           {/* Header Top Bar */}
-          <div className="h-14 border-b border-gray-100 bg-white/60 backdrop-blur-md flex items-center justify-between px-8 z-10 shrink-0 select-none">
+          <div className="z-10 flex h-14 shrink-0 select-none items-center justify-between border-b border-koru-outline-faint bg-koru-surface-container-lowest/70 px-8 backdrop-blur-md">
             <div className="flex items-center gap-3">
-              <span className="px-2.5 py-0.5 rounded-lg text-[10px] font-black text-white bg-[#3C0078] shadow-sm">
+              <span className="rounded-koru-sm bg-koru-primary px-2.5 py-0.5 text-koru-caption font-medium text-koru-on-primary shadow-koru-xs">
                 System Settings
               </span>
-              <span className="text-gray-300 text-xs">/</span>
-              <span className="text-xs font-bold text-gray-500 capitalize">{activeTabLabel}</span>
+              <span aria-hidden="true" className="text-xs text-koru-outline-variant">/</span>
+              <span className="text-koru-caption font-medium capitalize text-koru-on-surface-variant">{activeTabLabel}</span>
             </div>
           </div>
 
@@ -380,10 +380,10 @@ export default function SettingsPage() {
                 >
                   {activeTab === "profile" && (
                     <>
-                      <form onSubmit={handleProfileSave} className={pageClasses.card}>
-                        <div className="mb-6 flex items-center gap-3 border-b border-gray-100 pb-3">
-                          <span className="rounded-xl bg-[#3C0078]/5 p-2 text-[#3C0078]"><UserRound size={20} /></span>
-                          <h2 className="text-xl font-extrabold tracking-tight text-gray-900">User Information</h2>
+                      <Card as="form" variant="outlined" tone="low" padding="lg" onSubmit={handleProfileSave}>
+                        <div className="mb-6 flex items-center gap-3 border-b border-koru-outline-faint pb-3">
+                          <span className="rounded-koru-md bg-koru-primary-container/60 p-2 text-koru-primary"><UserRound size={20} /></span>
+                          <h2 className="font-display text-koru-heading text-koru-on-surface">User Information</h2>
                         </div>
 
                         <div className="grid gap-4 sm:grid-cols-2">
@@ -397,42 +397,40 @@ export default function SettingsPage() {
                               value={profileForm.email}
                               onChange={handleProfileChange}
                               labelClassName={pageClasses.label}
-                              className={`${pageClasses.input} disabled:bg-gray-100 disabled:text-gray-400 disabled:border-gray-200 disabled:cursor-not-allowed`}
+                              className={pageClasses.input}
                               disabled
                               required
                             />
                           </div>
                           {session?.role?.toLowerCase() === "admin" && (
-                            <label className="sm:col-span-2 flex flex-col gap-2">
-                              <span className={pageClasses.label}>Role</span>
-                              <select
+                            <div className="sm:col-span-2">
+                              <Select
+                                label="Role"
                                 name="role"
                                 value={profileForm.role}
                                 onChange={handleProfileChange}
-                                className={pageClasses.select}
                               >
                                 <option value="student">Student</option>
                                 <option value="teacher">Teacher</option>
                                 <option value="admin">Admin</option>
-                              </select>
-                            </label>
+                              </Select>
+                            </div>
                           )}
                         </div>
 
-                        {profileError ? <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs font-semibold text-red-700 shadow-3xs">{profileError}</div> : null}
-                        {profileMessage ? <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs font-semibold text-emerald-700 shadow-3xs">{profileMessage}</div> : null}
+                        {profileError ? <Alert variant="error" className="mt-4">{profileError}</Alert> : null}
+                        {profileMessage ? <Alert variant="success" className="mt-4">{profileMessage}</Alert> : null}
 
-                        <button type="submit" disabled={savingProfile} className="mt-6 inline-flex min-h-[42px] items-center justify-center gap-2 rounded-xl bg-[#3C0078] hover:bg-[#2A0054] px-5 py-2.5 text-xs font-black uppercase tracking-wider text-white shadow-md shadow-[#3C0078]/15 transition-all hover:scale-[1.02] cursor-pointer disabled:cursor-not-allowed disabled:opacity-70">
-                          <Save size={14} />
-                          <span>{savingProfile ? "Saving..." : "Save profile"}</span>
-                        </button>
-                      </form>
+                        <Button type="submit" disabled={savingProfile} startIcon={<Save size={14} />} className="mt-6">
+                          {savingProfile ? "Saving..." : "Save profile"}
+                        </Button>
+                      </Card>
 
                       {/* Notification Preferences */}
-                      <div className={pageClasses.card}>
-                        <div className="mb-6 flex items-center gap-3 border-b border-gray-100 pb-3">
-                          <span className="rounded-xl bg-[#3C0078]/5 p-2 text-[#3C0078]"><Bell size={20} /></span>
-                          <h2 className="text-xl font-extrabold tracking-tight text-gray-900">Notification Preferences</h2>
+                      <Card variant="outlined" tone="low" padding="lg">
+                        <div className="mb-6 flex items-center gap-3 border-b border-koru-outline-faint pb-3">
+                          <span className="rounded-koru-md bg-koru-primary-container/60 p-2 text-koru-primary"><Bell size={20} /></span>
+                          <h2 className="font-display text-koru-heading text-koru-on-surface">Notification Preferences</h2>
                         </div>
                         <p className={`${pageClasses.muted} mb-5`}>
                           Choose how you receive course updates, faculty announcements, and completion audio triggers.
@@ -463,34 +461,29 @@ export default function SettingsPage() {
                             onChange={(checked) => updateSetting("audioCues", checked)}
                           />
                         </div>
-                      </div>
+                      </Card>
 
-                      <div className={pageClasses.card}>
-                        <div className="mb-6 flex items-center gap-3 border-b border-gray-100 pb-3">
-                          <span className="rounded-xl bg-red-50 p-2 text-red-600"><LogOut size={20} /></span>
-                          <h2 className="text-xl font-extrabold tracking-tight text-gray-900">Session Management</h2>
+                      <Card variant="outlined" tone="low" padding="lg">
+                        <div className="mb-6 flex items-center gap-3 border-b border-koru-outline-faint pb-3">
+                          <span className="rounded-koru-md bg-koru-error-container p-2 text-koru-error"><LogOut size={20} /></span>
+                          <h2 className="font-display text-koru-heading text-koru-on-surface">Session Management</h2>
                         </div>
                         <p className={pageClasses.muted}>
                           End your current session safely and return to the university onboarding page.
                         </p>
-                        <button
-                          type="button"
-                          onClick={handleLogout}
-                          className="mt-6 inline-flex min-h-[42px] items-center justify-center gap-2 rounded-xl bg-red-600 hover:bg-red-700 px-5 py-2.5 text-xs font-black uppercase tracking-wider text-white shadow-md shadow-red-600/15 transition-all hover:scale-[1.02] cursor-pointer"
-                        >
-                          <LogOut size={14} />
-                          <span>Log out</span>
-                        </button>
-                      </div>
+                        <Button variant="error" onClick={handleLogout} startIcon={<LogOut size={14} />} className="mt-6">
+                          Log out
+                        </Button>
+                      </Card>
                     </>
                   )}
 
                   {activeTab === "security" && (
                     <>
-                      <form onSubmit={handlePasswordSave} className={pageClasses.card}>
-                        <div className="mb-6 flex items-center gap-3 border-b border-gray-100 pb-3">
-                          <span className="rounded-xl bg-[#3C0078]/5 p-2 text-[#3C0078]"><KeyRound size={20} /></span>
-                          <h2 className="text-xl font-extrabold tracking-tight text-gray-900">Change Password</h2>
+                      <Card as="form" variant="outlined" tone="low" padding="lg" onSubmit={handlePasswordSave}>
+                        <div className="mb-6 flex items-center gap-3 border-b border-koru-outline-faint pb-3">
+                          <span className="rounded-koru-md bg-koru-primary-container/60 p-2 text-koru-primary"><KeyRound size={20} /></span>
+                          <h2 className="font-display text-koru-heading text-koru-on-surface">Change Password</h2>
                         </div>
 
                         <div className="grid gap-4">
@@ -499,20 +492,19 @@ export default function SettingsPage() {
                           <AuthInput label="Confirm new password" name="confirmPassword" type="password" value={passwordForm.confirmPassword} onChange={handlePasswordChange} labelClassName={pageClasses.label} className={pageClasses.input} required />
                         </div>
 
-                        {passwordError ? <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs font-semibold text-red-700 shadow-3xs">{passwordError}</div> : null}
-                        {passwordMessage ? <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs font-semibold text-emerald-700 shadow-3xs">{passwordMessage}</div> : null}
+                        {passwordError ? <Alert variant="error" className="mt-4">{passwordError}</Alert> : null}
+                        {passwordMessage ? <Alert variant="success" className="mt-4">{passwordMessage}</Alert> : null}
 
-                        <button type="submit" disabled={savingPassword} className="mt-6 inline-flex min-h-[42px] items-center justify-center gap-2 rounded-xl bg-[#3C0078] hover:bg-[#2A0054] px-5 py-2.5 text-xs font-black uppercase tracking-wider text-white shadow-md shadow-[#3C0078]/15 transition-all hover:scale-[1.02] cursor-pointer disabled:cursor-not-allowed disabled:opacity-70">
-                          <KeyRound size={14} />
-                          <span>{savingPassword ? "Updating..." : "Update password"}</span>
-                        </button>
-                      </form>
+                        <Button type="submit" disabled={savingPassword} startIcon={<KeyRound size={14} />} className="mt-6">
+                          {savingPassword ? "Updating..." : "Update password"}
+                        </Button>
+                      </Card>
 
                       {/* Multi-Factor Authentication */}
-                      <div className={pageClasses.card}>
-                        <div className="mb-6 flex items-center gap-3 border-b border-gray-100 pb-3">
-                          <span className="rounded-xl bg-[#3C0078]/5 p-2 text-[#3C0078]"><ShieldCheck size={20} /></span>
-                          <h2 className="text-xl font-extrabold tracking-tight text-gray-900">Multi-Factor Authentication</h2>
+                      <Card variant="outlined" tone="low" padding="lg">
+                        <div className="mb-6 flex items-center gap-3 border-b border-koru-outline-faint pb-3">
+                          <span className="rounded-koru-md bg-koru-primary-container/60 p-2 text-koru-primary"><ShieldCheck size={20} /></span>
+                          <h2 className="font-display text-koru-heading text-koru-on-surface">Multi-Factor Authentication</h2>
                         </div>
                         <p className={`${pageClasses.muted} mb-5`}>
                           Secure your university account by adding an additional layer of verification code security.
@@ -540,9 +532,9 @@ export default function SettingsPage() {
                           <motion.div
                             initial={{ opacity: 0, y: -8 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="mt-4 rounded-2xl border border-gray-200 bg-gray-50 p-4 flex flex-col gap-3"
+                            className="mt-4 flex flex-col gap-3 rounded-koru-md bg-koru-surface-container p-4"
                           >
-                            <p className="text-xs font-semibold text-gray-700">
+                            <p className="text-koru-label text-koru-on-surface-variant">
                               Enter your current authenticator code to disable 2FA.
                             </p>
                             <input
@@ -553,11 +545,12 @@ export default function SettingsPage() {
                               value={disableCode}
                               onChange={(e) => { setDisableCode(e.target.value.replace(/\D/g, "").slice(0, 6)); setMfaError(""); }}
                               placeholder="000000"
-                              className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-center font-mono tracking-widest text-gray-900 focus:border-[#3C0078]/40 focus:ring-4 focus:ring-[#3C0078]/10 outline-none transition-all text-lg"
+                              aria-label="Authenticator code"
+                              className="h-12 w-full rounded-koru-xs bg-koru-surface-container-lowest px-4 text-center font-mono text-lg tracking-widest text-koru-on-surface shadow-koru-xs outline-none ring-1 ring-inset ring-koru-outline-variant transition focus:ring-koru-primary"
                             />
                             <div className="flex gap-2">
-                              <button
-                                type="button"
+                              <Button
+                                variant="error"
                                 disabled={disableCode.length < 6 || disabling2FA}
                                 onClick={async () => {
                                   setDisabling2FA(true);
@@ -576,24 +569,23 @@ export default function SettingsPage() {
                                     setDisabling2FA(false);
                                   }
                                 }}
-                                className="flex-1 rounded-xl bg-red-600 hover:bg-red-700 px-3 py-2 text-xs font-black text-white transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="flex-1"
                               >
                                 {disabling2FA ? "Disabling…" : "Confirm Disable"}
-                              </button>
-                              <button
-                                type="button"
+                              </Button>
+                              <Button
+                                variant="text"
                                 onClick={() => { setShowDisable2FA(false); setDisableCode(""); setMfaError(""); }}
-                                className="rounded-xl border border-gray-200 bg-white hover:bg-gray-100 px-3 py-2 text-xs font-bold text-gray-600 transition"
                               >
                                 Cancel
-                              </button>
+                              </Button>
                             </div>
                           </motion.div>
                         )}
 
-                        {mfaError && <div className="mt-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs font-semibold text-red-700 shadow-3xs">{mfaError}</div>}
-                        {mfaMessage && <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs font-semibold text-emerald-700 shadow-3xs">{mfaMessage}</div>}
-                      </div>
+                        {mfaError && <Alert variant="error" className="mt-3">{mfaError}</Alert>}
+                        {mfaMessage && <Alert variant="success" className="mt-3">{mfaMessage}</Alert>}
+                      </Card>
 
                       {/* 2FA Setup Modal */}
                       <AnimatePresence>
@@ -615,26 +607,26 @@ export default function SettingsPage() {
 
                   {activeTab === "accessibility" && (
                     <>
-                      <div className={pageClasses.card}>
-                        <div className="mb-6 flex items-center gap-3 border-b border-gray-100 pb-3">
-                          <span className="rounded-xl bg-[#3C0078]/5 p-2 text-[#3C0078]"><Type size={20} /></span>
-                          <h2 className="text-xl font-extrabold tracking-tight text-gray-900">Reading Settings</h2>
+                      <Card variant="outlined" tone="low" padding="lg">
+                        <div className="mb-6 flex items-center gap-3 border-b border-koru-outline-faint pb-3">
+                          <span className="rounded-koru-md bg-koru-primary-container/60 p-2 text-koru-primary"><Type size={20} /></span>
+                          <h2 className="font-display text-koru-heading text-koru-on-surface">Reading Settings</h2>
                         </div>
 
                         <div className="mb-6">
                           <div className="mb-2 flex items-center justify-between">
-                            <label className="text-xs font-bold uppercase tracking-wider text-gray-700">Text Size</label>
-                            <span className="text-xs font-bold text-[#3C0078]">{settings.textSize}%</span>
+                            <label htmlFor="settings-text-size" className="text-koru-label text-koru-on-surface-variant">Text Size</label>
+                            <span className="text-koru-label tabular-nums text-koru-primary">{settings.textSize}%</span>
                           </div>
-                          <input type="range" min="100" max="200" value={settings.textSize} onChange={(e) => updateSetting("textSize", Number(e.target.value))} className="h-2 w-full cursor-pointer accent-[#3C0078]" />
+                          <input id="settings-text-size" type="range" min="100" max="200" value={settings.textSize} onChange={(e) => updateSetting("textSize", Number(e.target.value))} className="h-2 w-full cursor-pointer accent-koru-primary" />
                         </div>
 
                         <div className="mb-6">
                           <div className="mb-2 flex items-center justify-between">
-                            <label className="text-xs font-bold uppercase tracking-wider text-gray-700">Line Spacing</label>
-                            <span className="text-xs font-bold text-[#3C0078]">{settings.lineSpacing}%</span>
+                            <label htmlFor="settings-line-spacing" className="text-koru-label text-koru-on-surface-variant">Line Spacing</label>
+                            <span className="text-koru-label tabular-nums text-koru-primary">{settings.lineSpacing}%</span>
                           </div>
-                          <input type="range" min="120" max="200" value={settings.lineSpacing} onChange={(e) => updateSetting("lineSpacing", Number(e.target.value))} className="h-2 w-full cursor-pointer accent-[#3C0078]" />
+                          <input id="settings-line-spacing" type="range" min="120" max="200" value={settings.lineSpacing} onChange={(e) => updateSetting("lineSpacing", Number(e.target.value))} className="h-2 w-full cursor-pointer accent-koru-primary" />
                         </div>
 
                         <ToggleRow
@@ -644,12 +636,12 @@ export default function SettingsPage() {
                           checked={settings.font === "OpenDyslexic"}
                           onChange={(checked) => updateSetting("font", checked ? "OpenDyslexic" : "Poppins")}
                         />
-                      </div>
+                      </Card>
 
-                      <div className={pageClasses.card}>
-                        <div className="mb-6 flex items-center gap-3 border-b border-gray-100 pb-3">
-                          <span className="rounded-xl bg-[#3C0078]/5 p-2 text-[#3C0078]"><Volume2 size={20} /></span>
-                          <h2 className="text-xl font-extrabold tracking-tight text-gray-900">Text to Speech</h2>
+                      <Card variant="outlined" tone="low" padding="lg">
+                        <div className="mb-6 flex items-center gap-3 border-b border-koru-outline-faint pb-3">
+                          <span className="rounded-koru-md bg-koru-primary-container/60 p-2 text-koru-primary"><Volume2 size={20} /></span>
+                          <h2 className="font-display text-koru-heading text-koru-on-surface">Text to Speech</h2>
                         </div>
 
                         <div className="flex flex-col gap-3">
@@ -662,74 +654,70 @@ export default function SettingsPage() {
                           />
                         </div>
 
-                        <button type="button" onClick={() => speak("This is a preview of the text to speech accessibility setting.", { force: true })} className="mt-4 inline-flex min-h-[42px] items-center justify-center gap-2 rounded-xl border-2 border-gray-200 bg-white hover:bg-gray-50 text-gray-700 px-5 py-2 text-xs font-black uppercase tracking-wider transition-all hover:scale-[1.02] cursor-pointer">
-                          <Volume2 size={14} />
-                          <span>Preview voice</span>
-                        </button>
-                      </div>
+                        <Button variant="outlined" onClick={() => speak("This is a preview of the text to speech accessibility setting.", { force: true })} startIcon={<Volume2 size={14} />} className="mt-4">
+                          Preview voice
+                        </Button>
+                      </Card>
 
                       {/* Visual Style Preferences */}
-                      <div className={pageClasses.card}>
-                        <div className="mb-6 flex items-center gap-3 border-b border-gray-100 pb-3">
-                          <span className="rounded-xl bg-[#3C0078]/5 p-2 text-[#3C0078]"><Palette size={20} /></span>
-                          <h2 className="text-xl font-extrabold tracking-tight text-gray-900">Visual Theme & Style</h2>
+                      <Card variant="outlined" tone="low" padding="lg">
+                        <div className="mb-6 flex items-center gap-3 border-b border-koru-outline-faint pb-3">
+                          <span className="rounded-koru-md bg-koru-primary-container/60 p-2 text-koru-primary"><Palette size={20} /></span>
+                          <h2 className="font-display text-koru-heading text-koru-on-surface">Visual Theme & Style</h2>
                         </div>
                         <p className={`${pageClasses.muted} mb-5`}>
                           Configure themes, optimize motion settings, and enable focus features to minimize reading distractions.
                         </p>
 
-                        <div className="mb-6 flex flex-col gap-2">
-                          <span className={pageClasses.label}>Interface Theme Mode</span>
-                          <select
+                        <div className="mb-6">
+                          <Select
+                            label="Interface Theme Mode"
                             value={settings.theme}
                             onChange={(e) => updateSetting("theme", e.target.value)}
-                            className={pageClasses.select}
                           >
                             <option value="light">☀️ Light Theme</option>
                             <option value="dark">🌙 Dark Theme</option>
                             <option value="system">🖥️ Sync with System</option>
-                          </select>
+                          </Select>
                         </div>
 
-                      </div>
+                      </Card>
 
-                      <div className={pageClasses.card}>
-                        <div className="mb-6 flex items-center gap-3 border-b border-gray-100 pb-3">
-                          <span className="rounded-xl bg-[#3C0078]/5 p-2 text-[#3C0078]"><Sparkles size={20} /></span>
-                          <h2 className="text-xl font-extrabold tracking-tight text-gray-900">Accessibility Compliance</h2>
+                      <Card variant="outlined" tone="low" padding="lg">
+                        <div className="mb-6 flex items-center gap-3 border-b border-koru-outline-faint pb-3">
+                          <span className="rounded-koru-md bg-koru-primary-container/60 p-2 text-koru-primary"><Sparkles size={20} /></span>
+                          <h2 className="font-display text-koru-heading text-koru-on-surface">Accessibility Compliance</h2>
                         </div>
-                        <ul className="list-none space-y-3.5 text-xs text-gray-500 font-medium">
+                        <ul className="list-none space-y-3.5 text-koru-body text-koru-on-surface-variant">
                           <li className="flex items-start gap-2.5">
-                            <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#3C0078] mt-1.5 shrink-0" />
+                            <span className="mt-2 inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-koru-primary" />
                             <span>Buttons and controls use strong color contrast and visible focus states.</span>
                           </li>
                           <li className="flex items-start gap-2.5">
-                            <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#3C0078] mt-1.5 shrink-0" />
+                            <span className="mt-2 inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-koru-primary" />
                             <span>Touch targets are sized for easier clicking and keyboard access.</span>
                           </li>
                           <li className="flex items-start gap-2.5">
-                            <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#3C0078] mt-1.5 shrink-0" />
+                            <span className="mt-2 inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-koru-primary" />
                             <span>Dyslexic-friendly font and spacing controls improve reading comfort.</span>
                           </li>
                           <li className="flex items-start gap-2.5">
-                            <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#3C0078] mt-1.5 shrink-0" />
+                            <span className="mt-2 inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-koru-primary" />
                             <span>Text-to-speech support is available for audio assistance.</span>
                           </li>
                         </ul>
 
                         <div className="mt-6 flex flex-wrap gap-3">
-                          <button type="button" onClick={() => setProfileMessage("All settings have been successfully persisted.")} className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded-xl bg-[#3C0078] hover:bg-[#2A0054] px-5 py-2 text-xs font-black uppercase tracking-wider text-white shadow-md shadow-[#3C0078]/20 transition-all hover:scale-[1.02] cursor-pointer">
-                            <Save size={14} />
-                            <span>Save All Settings</span>
-                          </button>
-                          <button type="button" onClick={handleReset} className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded-xl border-2 border-gray-200 bg-white hover:bg-gray-50 text-gray-700 px-5 py-2 text-xs font-black uppercase tracking-wider transition-all hover:scale-[1.02] cursor-pointer">
-                            <RotateCcw size={14} />
-                            <span>Reset to Defaults</span>
-                          </button>
+                          <Button onClick={() => setProfileMessage("All settings have been successfully persisted.")} startIcon={<Save size={14} />}>
+                            Save All Settings
+                          </Button>
+                          <Button variant="outlined" onClick={handleReset} startIcon={<RotateCcw size={14} />}>
+                            Reset to Defaults
+                          </Button>
                         </div>
 
-                        {profileMessage && <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs font-semibold text-emerald-700 shadow-3xs">{profileMessage}</div>}
-                      </div>
+                        {profileMessage && <Alert variant="success" className="mt-4">{profileMessage}</Alert>}
+                      </Card>
                     </>
                   )}
                 </motion.div>
