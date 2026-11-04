@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { Volume2, Square } from "lucide-react";
 import { useTextToSpeech } from "../../hooks/useTextToSpeech";
+import Button from "./Button";
 
 function cleanText(value = "") {
   return value.replace(/\s+/g, " ").trim();
@@ -94,24 +95,24 @@ export default function RouteSpeechAnnouncer() {
 
   return (
     <div className="fixed bottom-5 right-5 z-[60] flex gap-2">
-      <button
-        type="button"
+      <Button
+        variant="filled"
+        size="lg"
         onClick={readCurrentPage}
-        className="inline-flex min-h-[44px] items-center gap-2 rounded-full bg-[#3C0078] px-4 py-2 font-semibold text-white shadow-lg transition hover:bg-[#2f005f]"
+        startIcon={<Volume2 size={18} />}
         aria-label="Read this page aloud"
       >
-        <Volume2 size={18} />
-        <span>{readingActive ? "Reading on" : "Read page"}</span>
-      </button>
-      <button
-        type="button"
+        {readingActive ? "Reading on" : "Read page"}
+      </Button>
+      <Button
+        variant="elevated"
+        size="lg"
         onClick={() => stop(true)}
-        className="inline-flex min-h-[44px] items-center gap-2 rounded-full border border-slate-300 bg-white px-4 py-2 font-semibold text-slate-800 shadow-lg transition hover:bg-slate-100"
+        startIcon={<Square size={16} />}
         aria-label="Stop reading"
       >
-        <Square size={16} />
-        <span>Stop</span>
-      </button>
+        Stop
+      </Button>
     </div>
   );
 }
