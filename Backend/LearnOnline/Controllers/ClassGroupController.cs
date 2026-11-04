@@ -59,6 +59,7 @@ namespace LearnOnline.Controllers
                     StudentId = e.StudentId,
                     StudentName = e.Student != null ? $"{e.Student.FirstName} {e.Student.LastName}" : "Unknown Student",
                     Email = e.Student != null ? e.Student.Email : "",
+                    ProfileImageUrl = e.Student != null ? e.Student.ProfileImageUrl : null,
                     ClassGroupId = e.ClassGroupId,
                     GroupName = e.ClassGroup != null ? e.ClassGroup.Name : "Unassigned"
                 })
@@ -87,7 +88,8 @@ namespace LearnOnline.Controllers
                     e.Student!.Id,
                     e.Student.FirstName,
                     e.Student.LastName,
-                    e.Student.Email
+                    e.Student.Email,
+                    e.Student.ProfileImageUrl
                 })
                 .ToListAsync();
 

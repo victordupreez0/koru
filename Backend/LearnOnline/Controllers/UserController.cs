@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OtpNet;
 using LearnOnline.Data;
+using LearnOnline.Helpers;
 using LearnOnline.Models;
 using LearnOnline.Models.DTOs;
 
@@ -63,15 +64,19 @@ namespace LearnOnline.Controllers
             if (await _context.Users.AnyAsync(u => u.Email == email))
                 return Conflict(new { message = "Email already registered" });
 
+            var userId = Guid.NewGuid().ToString();
             var user = new User
             {
-                Id = Guid.NewGuid().ToString(),
+                Id = userId,
                 Email = email,
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
                 FirstName = dto.FirstName.Trim(),
                 LastName = dto.LastName.Trim(),
                 Role = dto.Role,
-                ProfileImageUrl = dto.ProfileImageUrl,
+                // Randomly assigned DiceBear avatar unless a picture was supplied
+                ProfileImageUrl = string.IsNullOrWhiteSpace(dto.ProfileImageUrl)
+                    ? AvatarHelper.ForSeed(userId)
+                    : dto.ProfileImageUrl,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
@@ -153,8 +158,11 @@ namespace LearnOnline.Controllers
             if (!user.IsActive)
                 return Unauthorized(new { message = "This account is inactive" });
 
-            if (!string.IsNullOrWhiteSpace(tokenInfo.Picture))
-                user.ProfileImageUrl = tokenInfo.Picture;
+            // Keep the platform's assigned avatar; only fall back to the Google picture if none is set
+            if (string.IsNullOrWhiteSpace(user.ProfileImageUrl))
+                user.ProfileImageUrl = !string.IsNullOrWhiteSpace(tokenInfo.Picture)
+                    ? tokenInfo.Picture
+                    : AvatarHelper.ForSeed(user.Id);
 
             user.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
