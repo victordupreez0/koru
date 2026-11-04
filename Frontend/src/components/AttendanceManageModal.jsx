@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { Alert, Avatar, Card, Modal, Select } from "./UI";
 import { getActiveSession, openSession, getSessionStatus, closeSession, markStudentPresent } from "../services/checkInService";
 
 const LATE_KEY      = "checkin_lateAfterMinutes";
@@ -81,236 +81,209 @@ export default function AttendanceManageModal({ courseId, teacherId, sessionType
         ? Math.round((status.checkedIn.length / Math.max(status.totalEnrolled, 1)) * 100)
         : 0;
 
-    return createPortal(
-        <div
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
-            onClick={onClose}
+    return (
+        <Modal
+            open
+            onClose={onClose}
+            title="Live Attendance"
+            description={`${sessionType} · ${courseName}`}
+            size="md"
         >
-            <motion.div
-                initial={{ opacity: 0, y: 16, scale: 0.97 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 8, scale: 0.97 }}
-                transition={{ duration: 0.2, ease: "easeOut" }}
-                className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden"
-                onClick={e => e.stopPropagation()}
-            >
-                {/* Header */}
-                <div className="px-7 pt-7 pb-5 border-b border-gray-100">
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#3C0078] mb-1">
-                        {sessionType} · {courseName}
+            <div className="space-y-6">
+
+                {/* Session settings */}
+                <div className="flex gap-3">
+                    <Select
+                        label="Late After"
+                        size="sm"
+                        containerClassName="flex-1"
+                        value={lateAfterMin}
+                        onChange={e => saveLate(e.target.value)}
+                    >
+                        <option value="">No threshold</option>
+                        <option value="5">5 minutes</option>
+                        <option value="10">10 minutes</option>
+                        <option value="15">15 minutes</option>
+                        <option value="20">20 minutes</option>
+                        <option value="30">30 minutes</option>
+                    </Select>
+                    <Select
+                        label="Auto-Close"
+                        size="sm"
+                        containerClassName="flex-1"
+                        value={autoCloseMin}
+                        onChange={e => saveAutoClose(e.target.value)}
+                    >
+                        <option value="">None</option>
+                        <option value="15">After 15 min</option>
+                        <option value="30">After 30 min</option>
+                        <option value="45">After 45 min</option>
+                        <option value="60">After 60 min</option>
+                        <option value="90">After 90 min</option>
+                    </Select>
+                </div>
+
+                {/* Toggle row */}
+                <Card tone="muted" radius="lg" className="flex items-center justify-between">
+                    <div>
+                        <p className="text-sm font-medium text-koru-on-surface">
+                            {isOpen ? "Attendance is open" : "Attendance is closed"}
+                        </p>
+                        <p className="text-xs text-koru-on-surface-variant mt-0.5">
+                            {isOpen ? "Students can check in now" : "Toggle to let students check in"}
+                        </p>
+                    </div>
+
+                    {/* Toggle switch — always clickable, just dims while API call is in-flight */}
+                    <button
+                        type="button"
+                        role="switch"
+                        aria-checked={isOpen}
+                        aria-label="Attendance open"
+                        onClick={handleToggle}
+                        className={`relative w-14 h-7 rounded-full transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus focus-visible:ring-offset-2 ${
+                            toggling ? "opacity-60 cursor-wait" : "cursor-pointer"
+                        } ${isOpen ? "bg-koru-primary" : "bg-koru-outline-variant"}`}
+                    >
+                        <motion.span
+                            layout
+                            animate={{ x: isOpen ? 29 : 3 }}
+                            transition={{ type: "spring", stiffness: 600, damping: 35 }}
+                            className="absolute top-[3px] block w-[22px] h-[22px] bg-koru-surface-container-lowest rounded-full shadow-koru-xs"
+                        />
+                    </button>
+                </Card>
+
+                {error && (
+                    <Alert variant="error" className="-mt-3">{error}</Alert>
+                )}
+
+                {/* Code block */}
+                <div className={`rounded-koru-lg py-7 text-center transition-colors duration-300 ${isOpen ? "bg-koru-primary" : "bg-koru-surface-container-highest"}`}>
+                    <p className={`text-koru-caption font-medium uppercase tracking-[0.25em] mb-4 ${isOpen ? "text-koru-on-primary/60" : "text-koru-on-surface-variant"}`}>
+                        Student Check-In Code
                     </p>
-                    <div className="flex items-center justify-between">
-                        <h2 className="text-xl font-black text-gray-900">Live Attendance</h2>
-                        <button
-                            onClick={onClose}
-                            className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors text-gray-500 text-sm font-bold"
-                        >✕</button>
-                    </div>
-                </div>
-
-                <div className="px-7 py-6 space-y-6">
-
-                    {/* Session settings */}
-                    <div className="flex gap-3">
-                        <div className="flex-1">
-                            <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 block mb-1.5">
-                                Late After
-                            </label>
-                            <select
-                                value={lateAfterMin}
-                                onChange={e => saveLate(e.target.value)}
-                                className="w-full text-xs font-semibold bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 focus:outline-none focus:border-[#3C0078] transition-colors"
+                    <AnimatePresence mode="wait">
+                        {isOpen && session ? (
+                            <motion.p
+                                key="code"
+                                initial={{ opacity: 0, scale: 0.85 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.85 }}
+                                transition={{ duration: 0.18 }}
+                                className="text-5xl font-medium font-mono text-koru-on-primary tracking-[0.5em] pl-[0.5em]"
                             >
-                                <option value="">No threshold</option>
-                                <option value="5">5 minutes</option>
-                                <option value="10">10 minutes</option>
-                                <option value="15">15 minutes</option>
-                                <option value="20">20 minutes</option>
-                                <option value="30">30 minutes</option>
-                            </select>
-                        </div>
-                        <div className="flex-1">
-                            <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 block mb-1.5">
-                                Auto-Close
-                            </label>
-                            <select
-                                value={autoCloseMin}
-                                onChange={e => saveAutoClose(e.target.value)}
-                                className="w-full text-xs font-semibold bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 focus:outline-none focus:border-[#3C0078] transition-colors"
+                                {session.code}
+                            </motion.p>
+                        ) : (
+                            <motion.p
+                                key="closed"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                className="text-4xl font-mono text-koru-outline tracking-widest"
                             >
-                                <option value="">None</option>
-                                <option value="15">After 15 min</option>
-                                <option value="30">After 30 min</option>
-                                <option value="45">After 45 min</option>
-                                <option value="60">After 60 min</option>
-                                <option value="90">After 90 min</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    {/* Toggle row */}
-                    <div className="flex items-center justify-between bg-gray-50 rounded-2xl px-5 py-4">
-                        <div>
-                            <p className="text-sm font-black text-gray-900">
-                                {isOpen ? "Attendance is open" : "Attendance is closed"}
-                            </p>
-                            <p className="text-xs text-gray-400 mt-0.5">
-                                {isOpen ? "Students can check in now" : "Toggle to let students check in"}
-                            </p>
-                        </div>
-
-                        {/* Toggle switch — always clickable, just dims while API call is in-flight */}
-                        <button
-                            type="button"
-                            onClick={handleToggle}
-                            className={`relative w-14 h-7 rounded-full transition-colors duration-200 focus:outline-none ${
-                                toggling ? "opacity-60 cursor-wait" : "cursor-pointer"
-                            } ${isOpen ? "bg-[#3C0078]" : "bg-gray-300"}`}
-                        >
-                            <motion.span
-                                layout
-                                animate={{ x: isOpen ? 29 : 3 }}
-                                transition={{ type: "spring", stiffness: 600, damping: 35 }}
-                                className="absolute top-[3px] block w-[22px] h-[22px] bg-white rounded-full shadow"
-                            />
-                        </button>
-                    </div>
-
-                    {error && (
-                        <p className="text-xs text-red-500 text-center -mt-3">{error}</p>
-                    )}
-
-                    {/* Code block */}
-                    <div className={`rounded-2xl py-7 text-center transition-colors duration-300 ${isOpen ? "bg-[#3C0078]" : "bg-gray-100"}`}>
-                        <p className={`text-[9px] font-black uppercase tracking-[0.25em] mb-4 ${isOpen ? "text-white/50" : "text-gray-400"}`}>
-                            Student Check-In Code
-                        </p>
-                        <AnimatePresence mode="wait">
-                            {isOpen && session ? (
-                                <motion.p
-                                    key="code"
-                                    initial={{ opacity: 0, scale: 0.85 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    exit={{ opacity: 0, scale: 0.85 }}
-                                    transition={{ duration: 0.18 }}
-                                    className="text-5xl font-black font-mono text-white tracking-[0.5em] pl-[0.5em]"
-                                >
-                                    {session.code}
-                                </motion.p>
-                            ) : (
-                                <motion.p
-                                    key="closed"
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    exit={{ opacity: 0 }}
-                                    className="text-4xl font-mono text-gray-300 tracking-widest"
-                                >
-                                    — — — —
-                                </motion.p>
-                            )}
-                        </AnimatePresence>
-                        {isOpen && (
-                            <p className="text-xs text-white/40 mt-4">Share this with your students</p>
+                                — — — —
+                            </motion.p>
                         )}
-                    </div>
-
-                    {/* Progress bar */}
-                    {status && isOpen && (
-                        <div>
-                            <div className="flex justify-between text-xs font-semibold text-gray-400 mb-1.5">
-                                <span>{status.checkedIn.length} checked in</span>
-                                <span>{pct}% · {status.totalEnrolled} enrolled</span>
-                            </div>
-                            <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                                <motion.div
-                                    className="h-full bg-[#3C0078] rounded-full"
-                                    animate={{ width: `${pct}%` }}
-                                    transition={{ duration: 0.4 }}
-                                />
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Roster */}
-                    {status && (
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <div className="flex items-center gap-2 mb-2">
-                                    <div className="w-2 h-2 rounded-full bg-green-500" />
-                                    <span className="text-[9px] font-black uppercase tracking-widest text-gray-500">
-                                        Present ({status.checkedIn.length})
-                                    </span>
-                                </div>
-                                <div className="space-y-1.5 max-h-40 overflow-y-auto">
-                                    {status.checkedIn.length === 0 ? (
-                                        <p className="text-xs text-gray-400 italic">Waiting…</p>
-                                    ) : status.checkedIn.map(s => (
-                                        <motion.div
-                                            key={s.studentId}
-                                            initial={{ opacity: 0, x: -6 }}
-                                            animate={{ opacity: 1, x: 0 }}
-                                            className="flex items-center gap-2 bg-green-50 rounded-xl px-3 py-2"
-                                        >
-                                            <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center text-[9px] font-black text-green-700 shrink-0">
-                                                {s.name.split(" ").map(n => n[0]).join("").slice(0, 2)}
-                                            </div>
-                                            <span className="text-xs font-semibold text-gray-800 truncate">{s.name}</span>
-                                        </motion.div>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <div>
-                                <div className="flex items-center gap-2 mb-2">
-                                    <div className="w-2 h-2 rounded-full bg-orange-400" />
-                                    <span className="text-[9px] font-black uppercase tracking-widest text-gray-500">
-                                        Not Yet ({status.notCheckedIn.length})
-                                    </span>
-                                </div>
-                                <div className="space-y-1.5 max-h-40 overflow-y-auto">
-                                    {status.notCheckedIn.length === 0 ? (
-                                        <p className="text-xs text-gray-400 italic">All in! 🎉</p>
-                                    ) : status.notCheckedIn.map(s => (
-                                        <div key={s.studentId} className="flex items-center gap-2 bg-gray-50 rounded-xl px-3 py-2 group/row">
-                                            <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-[9px] font-black text-gray-400 shrink-0">
-                                                {s.name.split(" ").map(n => n[0]).join("").slice(0, 2)}
-                                            </div>
-                                            <span className="text-xs font-semibold text-gray-400 truncate flex-1">{s.name}</span>
-                                            <div className="relative shrink-0">
-                                                <button
-                                                    onClick={() => handleMarkPresent(s.studentId)}
-                                                    className="w-6 h-6 rounded-full bg-gray-200 hover:bg-green-500 flex items-center justify-center transition-all opacity-0 group-hover/row:opacity-100"
-                                                >
-                                                    <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                                                    </svg>
-                                                </button>
-                                                <span className="pointer-events-none absolute right-full mr-2 top-1/2 -translate-y-1/2 bg-gray-800 text-white text-[9px] font-bold px-2 py-1 rounded-lg whitespace-nowrap opacity-0 group-hover/row:opacity-100 transition-opacity">
-                                                    Mark Present
-                                                </span>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {isOpen && !status && (
-                        <p className="text-xs text-gray-400 text-center">Loading roster…</p>
-                    )}
-
-                    {isOpen && session?.autoCloseAt && (
-                        <p className="text-[10px] text-center font-semibold text-orange-400">
-                            Auto-closes at {new Date(session.autoCloseAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                        </p>
-                    )}
+                    </AnimatePresence>
                     {isOpen && (
-                        <p className="text-[10px] text-gray-400 text-center">Roster updates every 5 seconds</p>
+                        <p className="text-xs text-koru-on-primary/60 mt-4">Share this with your students</p>
                     )}
                 </div>
-            </motion.div>
-        </div>,
-        document.body
+
+                {/* Progress bar */}
+                {status && isOpen && (
+                    <div>
+                        <div className="flex justify-between text-xs font-medium text-koru-on-surface-variant mb-1.5">
+                            <span>{status.checkedIn.length} checked in</span>
+                            <span>{pct}% · {status.totalEnrolled} enrolled</span>
+                        </div>
+                        <div className="h-1.5 bg-koru-surface-container-high rounded-full overflow-hidden">
+                            <motion.div
+                                className="h-full bg-koru-primary rounded-full"
+                                animate={{ width: `${pct}%` }}
+                                transition={{ duration: 0.4 }}
+                            />
+                        </div>
+                    </div>
+                )}
+
+                {/* Roster */}
+                {status && (
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <div className="flex items-center gap-2 mb-2">
+                                <div className="w-2 h-2 rounded-full bg-koru-success" />
+                                <span className="text-koru-caption font-medium uppercase tracking-widest text-koru-on-surface-variant">
+                                    Present ({status.checkedIn.length})
+                                </span>
+                            </div>
+                            <div className="space-y-1.5 max-h-40 overflow-y-auto">
+                                {status.checkedIn.length === 0 ? (
+                                    <p className="text-xs text-koru-on-surface-variant italic">Waiting…</p>
+                                ) : status.checkedIn.map(s => (
+                                    <motion.div
+                                        key={s.studentId}
+                                        initial={{ opacity: 0, x: -6 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        className="flex items-center gap-2 bg-koru-success-soft rounded-koru-md px-3 py-2"
+                                    >
+                                        <Avatar name={s.name} seed={s.studentId} size="xs" />
+                                        <span className="text-xs font-medium text-koru-success truncate">{s.name}</span>
+                                    </motion.div>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div>
+                            <div className="flex items-center gap-2 mb-2">
+                                <div className="w-2 h-2 rounded-full bg-koru-warning" />
+                                <span className="text-koru-caption font-medium uppercase tracking-widest text-koru-on-surface-variant">
+                                    Not Yet ({status.notCheckedIn.length})
+                                </span>
+                            </div>
+                            <div className="space-y-1.5 max-h-40 overflow-y-auto">
+                                {status.notCheckedIn.length === 0 ? (
+                                    <p className="text-xs text-koru-on-surface-variant italic">All in! 🎉</p>
+                                ) : status.notCheckedIn.map(s => (
+                                    <div key={s.studentId} className="flex items-center gap-2 bg-koru-surface-container rounded-koru-md px-3 py-2 group/row">
+                                        <Avatar name={s.name} seed={s.studentId} size="xs" />
+                                        <span className="text-xs font-medium text-koru-on-surface-variant truncate flex-1">{s.name}</span>
+                                        <div className="relative shrink-0">
+                                            <button
+                                                onClick={() => handleMarkPresent(s.studentId)}
+                                                aria-label={`Mark ${s.name} present`}
+                                                className="w-6 h-6 rounded-full bg-koru-outline-variant hover:bg-koru-success flex items-center justify-center transition-all opacity-0 group-hover/row:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus"
+                                            >
+                                                <svg className="w-3 h-3 text-koru-on-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3} aria-hidden="true">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                                </svg>
+                                            </button>
+                                            <span className="pointer-events-none absolute right-full mr-2 top-1/2 -translate-y-1/2 bg-koru-inverse-surface text-koru-inverse-on-surface text-koru-caption font-medium px-2 py-1 rounded-koru-sm whitespace-nowrap opacity-0 group-hover/row:opacity-100 transition-opacity">
+                                                Mark Present
+                                            </span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {isOpen && !status && (
+                    <p className="text-xs text-koru-on-surface-variant text-center">Loading roster…</p>
+                )}
+
+                {isOpen && session?.autoCloseAt && (
+                    <p className="text-koru-caption text-center font-medium text-koru-warning">
+                        Auto-closes at {new Date(session.autoCloseAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                    </p>
+                )}
+                {isOpen && (
+                    <p className="text-koru-caption text-koru-on-surface-variant text-center">Roster updates every 5 seconds</p>
+                )}
+            </div>
+        </Modal>
     );
 }
