@@ -5,7 +5,6 @@
   flex-shrink: 0;
   position: relative;
 }
-.koru-pending-loader { display: inline-block; margin-left: 0.5rem; vertical-align: middle; }
 
 .koru-ai-loader {
   --color-one: #ffbf48;
@@ -85,55 +84,6 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* ── Ambient glow ─────────────────────────────────────────────────────────── */
-.koru-glow { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
-.koru-glow-stage {
-  position: absolute;
-  inset: 0;
-  transform: translateY(0);
-  transition: transform 1s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.koru-glow-stage.is-settled { transform: translateY(58%); }
-.koru-glow-orb {
-  position: absolute;
-  width: 70%;
-  aspect-ratio: 1;
-  border-radius: 50%;
-  will-change: transform;
-  --c: var(--color-koru-primary);
-  background: radial-gradient(circle closest-side,
-    color-mix(in srgb, var(--c) 34%, transparent) 0%,
-    color-mix(in srgb, var(--c) 30%, transparent) 12%,
-    color-mix(in srgb, var(--c) 24%, transparent) 24%,
-    color-mix(in srgb, var(--c) 18%, transparent) 36%,
-    color-mix(in srgb, var(--c) 12%, transparent) 50%,
-    color-mix(in srgb, var(--c) 7%, transparent) 63%,
-    color-mix(in srgb, var(--c) 3%, transparent) 78%,
-    transparent 100%);
-}
-.koru-glow-orb--a { --c: var(--color-koru-primary); top: -10%; left: -8%; animation: koru-glow-a 19s ease-in-out infinite; }
-.koru-glow-orb--b { --c: var(--color-koru-accent); top: 20%; right: -12%; animation: koru-glow-b 23s ease-in-out infinite; }
-.koru-glow-orb--c { --c: var(--color-koru-sky); bottom: -20%; left: 18%; animation: koru-glow-c 27s ease-in-out infinite; }
-.koru-glow.is-paused .koru-glow-orb { animation-play-state: paused; }
-
-@keyframes koru-glow-a {
-  0%, 100% { transform: translate3d(0, 0, 0); }
-  25% { transform: translate3d(22%, 12%, 0); }
-  50% { transform: translate3d(10%, 28%, 0); }
-  75% { transform: translate3d(-8%, 10%, 0); }
-}
-@keyframes koru-glow-b {
-  0%, 100% { transform: translate3d(0, 0, 0); }
-  30% { transform: translate3d(-24%, -10%, 0); }
-  60% { transform: translate3d(-12%, 18%, 0); }
-  80% { transform: translate3d(6%, 8%, 0); }
-}
-@keyframes koru-glow-c {
-  0%, 100% { transform: translate3d(0, 0, 0); }
-  33% { transform: translate3d(26%, -16%, 0); }
-  66% { transform: translate3d(-18%, -8%, 0); }
-}
-
 /* ── Reduced motion: fade instead of move; loaders hold still but stay visible ── */
 @media (prefers-reduced-motion: reduce) {
   .koru-ai-loader,
@@ -141,7 +91,5 @@
   .koru-ai-loader .koru-ai-mask polygon { animation: none !important; }
   .koru-reveal-live [data-reveal] { animation-name: koru-fade; }
   .koru-rise { animation: koru-fade 300ms ease-out both; }
-  .koru-glow-orb { animation: none; }
-  .koru-glow-stage { transition: none; }
 }
 @keyframes koru-fade { from { opacity: 0; } to { opacity: 1; } }

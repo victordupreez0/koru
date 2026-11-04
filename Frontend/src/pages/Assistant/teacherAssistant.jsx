@@ -1,16 +1,16 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Bot, Trash2, Copy, Check, Plus, MessageSquare,
+  Trash2, Copy, Check, Plus, MessageSquare,
   GraduationCap, BookOpen, ShieldCheck, PanelLeft,
 } from "lucide-react";
 
 import AssistantInput from "../../components/assistantInput";
 import HeaderTopBar from "../../components/HeaderTopBar";
 import { streamAssistant } from "../../services/assistantService";
-import ChatGlow from "../../components/assistant/ChatGlow";
 import Emerge from "../../components/assistant/Emerge";
 import PendingLine from "../../components/assistant/PendingLine";
+import AiLoader from "../../components/assistant/AiLoader";
 import AssistantReply from "../../components/assistant/AssistantReply";
 import "../../components/assistant/assistant.css";
 import { useAuth } from "../../contexts/AuthContext";
@@ -111,7 +111,6 @@ export default function TeacherAssistant() {
   const [activeChatId, setActiveChatId] = useState(() => loadChats(userId)[0]?.id ?? null);
 
   const [pending, setPending]       = useState(null); // { chatId, text }
-  const [mode, setMode]             = useState("standard");
   const [fresh, setFresh]           = useState(null); // { chatId, idx } of the newest arrival (animated)
   const abortRef = useRef(null);
   const isTyping = pending !== null;
@@ -230,7 +229,6 @@ export default function TeacherAssistant() {
           messages: withUser.map(toWire),
           userId: user?.userId,
           role: user?.role,
-          mode,
           signal: controller.signal,
           onStage: ({ text: stageText }) => setPending({ chatId, text: stageText }),
         });
@@ -251,7 +249,7 @@ export default function TeacherAssistant() {
         setPending(null);
       }
     },
-    [activeChatId, chats, user, mode]
+    [activeChatId, chats, user]
   );
 
   const handleStop = useCallback(() => abortRef.current?.abort(), []);
@@ -391,10 +389,8 @@ export default function TeacherAssistant() {
         {/* ── Main chat area ────────────────────────────────────────────────── */}
         <Emerge className="flex-1 flex flex-col relative min-w-0 overflow-hidden">
 
-          {/* Gradient + ambient glow background */}
-          <div className="absolute inset-0 bg-gradient-to-br from-koru-primary-subtle via-koru-accent-soft to-koru-info-soft overflow-hidden">
-            <ChatGlow settled={activeMessages.length > 0} />
-          </div>
+          {/* Plain background */}
+          <div className="absolute inset-0 bg-koru-surface" />
 
           {/* Chat content layer */}
           <div className="relative z-10 flex-1 flex flex-col overflow-hidden">
@@ -468,10 +464,8 @@ export default function TeacherAssistant() {
                         {isUser ? (
                           <Avatar user={user} size={28} className="mb-1" />
                         ) : (
-                        <div
-                          className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 mb-1 text-xs bg-koru-primary-container text-koru-on-primary-container"
-                        >
-                          <Bot className="w-3.5 h-3.5" />
+                        <div className="w-7 h-7 shrink-0 mb-1">
+                          <AiLoader size={28} active={false} settle={isFresh} />
                         </div>
                         )}
 
@@ -518,8 +512,8 @@ export default function TeacherAssistant() {
                   {/* Pending line: where the reply will appear */}
                   {showPending && (
                     <div className="flex items-end gap-2.5">
-                      <div className="w-7 h-7 rounded-full bg-koru-primary-container flex items-center justify-center shrink-0 mb-1">
-                        <Bot className="w-3.5 h-3.5 text-koru-on-primary-container" />
+                      <div className="w-7 h-7 shrink-0 mb-1">
+                        <AiLoader size={28} active />
                       </div>
                       <div className="px-4 py-3 rounded-koru-xl rounded-bl-sm bg-koru-surface-container-lowest shadow-koru-card">
                         <PendingLine text={pending.text} onStop={handleStop} />
@@ -536,8 +530,6 @@ export default function TeacherAssistant() {
                 onSend={handleSend}
                 disabled={isTyping}
                 role={role}
-                mode={mode}
-                onModeChange={setMode}
               />
             </div>
           </div>

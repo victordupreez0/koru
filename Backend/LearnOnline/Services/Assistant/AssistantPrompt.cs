@@ -68,6 +68,13 @@ public static class AssistantPrompt
     public static string WrapUserText(string text) =>
         "<user_message>" + StripAngleBrackets(text) + "</user_message>";
 
+    /// <summary>
+    /// Earlier assistant turns are re-sent in the same json shape the model must produce.
+    /// Plain-text history under json mode makes DeepSeek return a blank (whitespace-only) reply.
+    /// </summary>
+    public static string AsReplyJson(string text) =>
+        System.Text.Json.JsonSerializer.Serialize(new { message = text, question = (string?)null });
+
     public static string BuildRetryMessage(IEnumerable<string> errors) =>
         "Your previous reply was rejected for these reasons: " + string.Join("; ", errors) +
         ". Reply again with valid json only, in the shape {\"message\": \"...\", \"question\": null}.";

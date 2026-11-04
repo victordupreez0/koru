@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Button } from "../UI";
-import AiLoader from "./AiLoader";
 import "./assistant.css";
 
 /**
@@ -20,7 +19,6 @@ export default function PendingLine({ text, onStop }) {
     <div className="koru-pending flex flex-wrap items-center gap-x-1 gap-y-1 text-koru-label text-koru-on-surface-variant">
       <span>
         <span aria-live="polite" aria-atomic="true">{text || "Looking at what is saved"}</span>
-        <span className="koru-pending-loader"><AiLoader size={20} /></span>
         {elapsed >= 5 && <span aria-hidden="true">{` · ${elapsed}s`}</span>}
       </span>
       <Button variant="text" size="sm" onClick={onStop}>Stop</Button>

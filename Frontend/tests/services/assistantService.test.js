@@ -50,7 +50,7 @@ describe('streamAssistant', () => {
     expect(res).toMatchObject({ ok: true, message: 'Hello **there**', question: 'Which course?', fallback: false });
     const [url, opts] = global.fetch.mock.calls[0];
     expect(url).toContain('/Assistant/chat/stream');
-    expect(JSON.parse(opts.body).mode).toBe('standard');
+    expect(JSON.parse(opts.body)).not.toHaveProperty('mode');
   });
 
   it('returns ok:false when the stream ends without a result', async () => {

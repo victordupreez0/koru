@@ -92,8 +92,7 @@ const TOOLS = {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export default function AssistantInput({ onSend, disabled = false, role = "teacher", mode = "standard", onModeChange }) {
-  const advanced = mode === "advanced";
+export default function AssistantInput({ onSend, disabled = false, role = "teacher" }) {
   const [isToolsOpen, setIsToolsOpen]  = useState(false);
   const [prompt, setPrompt]            = useState("");
   const dropdownRef                    = useRef(null);
@@ -185,17 +184,6 @@ export default function AssistantInput({ onSend, disabled = false, role = "teach
               aria-label="Attach file"
             >
               <Plus className="w-4.5 h-4.5" />
-            </Button>
-
-            <Button
-              variant={advanced ? "tonal" : "text"}
-              size="sm"
-              disabled={disabled}
-              aria-pressed={advanced}
-              title="Slower, more careful reasoning"
-              onClick={() => onModeChange?.(advanced ? "standard" : "advanced")}
-            >
-              Advanced
             </Button>
 
             {/* Tools dropdown */}
