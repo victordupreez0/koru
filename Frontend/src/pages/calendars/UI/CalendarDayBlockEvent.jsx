@@ -131,7 +131,7 @@ export default function CalendarDayBlockEvent({
               ? "absolute top-full left-1/2 -translate-x-1/2 mt-2 z-50"
               : "absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50",
             // Sizing & appearance
-            "w-52 bg-purple-800 rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.12)] p-3",
+            "w-52 bg-koru-inverse-surface rounded-koru-lg shadow-koru-md p-3",
             // Pointer events: don't interfere with mouse
             "pointer-events-none",
             // Fade + lift animation driven by group-hover
@@ -144,20 +144,20 @@ export default function CalendarDayBlockEvent({
         >
           {/* ── Title row with icon ── */}
           <div className="flex items-center gap-2 mb-2.5">
-            <div className="w-8 h-8 rounded-xl border border-gray-200 bg-gray-50 flex items-center justify-center shrink-0 text-gray-500">
+            <div className="w-8 h-8 rounded-koru-md bg-koru-surface-container flex items-center justify-center shrink-0 text-koru-on-surface-variant">
               {ICONS_LG[type] ?? ICONS_LG.class}
             </div>
-            <span className="font-semibold text-[13px] text-white leading-snug">{title}</span>
+            <span className="font-medium text-koru-label text-koru-inverse-on-surface leading-snug">{title}</span>
           </div>
 
           {/* ── Divider ── */}
-          <div className="h-px bg-white mb-2" />
+          <div className="h-px bg-koru-inverse-on-surface/20 mb-2" />
 
           {/* ── Meta rows ── */}
           <div className="flex flex-col gap-1.5">
             {startTime && (
-              <div className="flex items-center gap-1.5 text-[11px] text-white">
-                <span className="text-white shrink-0"><ClockIcon /></span>
+              <div className="flex items-center gap-1.5 text-koru-caption text-koru-inverse-on-surface">
+                <span className="text-koru-inverse-on-surface shrink-0"><ClockIcon /></span>
                 <span>
                   {startTime}
                   {endTime ? ` – ${endTime}` : ""}
@@ -165,13 +165,13 @@ export default function CalendarDayBlockEvent({
               </div>
             )}
             {lecturer && (
-              <div className="flex items-center gap-1.5 text-[11px] text-white">
-                <span className="text-white shrink-0"><PersonIcon /></span>
+              <div className="flex items-center gap-1.5 text-koru-caption text-koru-inverse-on-surface">
+                <span className="text-koru-inverse-on-surface shrink-0"><PersonIcon /></span>
                 <span className="truncate">{lecturer}</span>
               </div>
             )}
             {location && (
-              <div className="flex items-center gap-1.5 text-[11px] text-white">
+              <div className="flex items-center gap-1.5 text-koru-caption text-koru-inverse-on-surface">
                 <span className="shrink-0"><PinIcon /></span>
                 <span className="truncate">{location}</span>
               </div>
@@ -180,7 +180,7 @@ export default function CalendarDayBlockEvent({
 
           {/* ── Caret (pointing down or up) ── */}
           <div className={[
-            "absolute left-1/2 -translate-x-1/2 w-2.5 h-2.5 bg-purple-800 rotate-45 shadow-[1px_1px_0px_rgba(0,0,0,0.04)]",
+            "absolute left-1/2 -translate-x-1/2 w-2.5 h-2.5 bg-koru-inverse-surface rotate-45",
             tooltipPosition === "down" ? "-top-[5px]" : "-bottom-[5px]"
           ].join(" ")} />
         </div>
@@ -189,12 +189,12 @@ export default function CalendarDayBlockEvent({
       {/* ── Event pill ─────────────────────────────────────── */}
       <div
         className={[
-          "flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-medium transition-all duration-150 shadow-xs hover:-translate-y-px hover:shadow-md",
+          "flex items-center gap-1.5 rounded-full px-3 py-1 text-koru-caption font-medium transition-all duration-150 shadow-koru-xs hover:-translate-y-px hover:shadow-koru-sm motion-reduce:transition-none motion-reduce:hover:translate-y-0",
           isUserTask
-            ? "bg-amber-50 text-gray-800 hover:bg-amber-100"
+            ? "bg-koru-accent-soft text-koru-accent-ink hover:bg-koru-accent-soft/70"
             : type === "scheduled"
-            ? "bg-green-50 text-green-900 hover:bg-green-100"
-            : "bg-white text-black hover:bg-purple-100",
+            ? "bg-koru-success-soft text-koru-success hover:bg-koru-success-soft/70"
+            : "bg-koru-surface-container-lowest text-koru-on-surface hover:bg-koru-primary-container",
           isDraggable ? "cursor-grab active:cursor-grabbing active:opacity-60 active:scale-95" : "cursor-pointer",
         ].join(" ")}
         draggable={isDraggable}
@@ -204,7 +204,7 @@ export default function CalendarDayBlockEvent({
         } : undefined}
       >
         {/* Type icon */}
-        <span className={["shrink-0 mt-px", isUserTask ? "text-amber-600" : type === "scheduled" ? "text-green-600" : "text-purple-700"].join(" ")}>
+        <span className={["shrink-0 mt-px", isUserTask ? "text-koru-accent-ink" : type === "scheduled" ? "text-koru-success" : "text-koru-primary"].join(" ")}>
           {ICONS[type] ?? ICONS.class}
         </span>
 
@@ -216,7 +216,7 @@ export default function CalendarDayBlockEvent({
           <>
             {/* Time: hidden on hover */}
             {(startTime || endTime) && (
-              <span className="group-hover:hidden shrink-0 text-[10px] text-amber-400 text-right leading-tight whitespace-nowrap">
+              <span className="group-hover:hidden shrink-0 text-koru-caption text-koru-accent-ink/70 text-right leading-tight whitespace-nowrap">
                 {startTime && <span className="block">{startTime}</span>}
                 {endTime && <span className="block">{endTime}</span>}
               </span>
@@ -227,7 +227,7 @@ export default function CalendarDayBlockEvent({
                 type="button"
                 title="Edit task"
                 onClick={(e) => { e.stopPropagation(); onEdit?.(); }}
-                className="w-[18px] h-[18px] flex items-center justify-center rounded text-amber-600 hover:text-amber-800 hover:bg-amber-200 transition-colors"
+                className="w-[18px] h-[18px] flex items-center justify-center rounded-koru-xs text-koru-accent-ink hover:bg-koru-accent-soft transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus"
               >
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
@@ -238,7 +238,7 @@ export default function CalendarDayBlockEvent({
                 type="button"
                 title="Delete task"
                 onClick={(e) => { e.stopPropagation(); onDelete?.(); }}
-                className="w-[18px] h-[18px] flex items-center justify-center rounded text-rose-400 hover:text-rose-600 hover:bg-rose-100 transition-colors"
+                className="w-[18px] h-[18px] flex items-center justify-center rounded-koru-xs text-koru-error hover:bg-koru-error-container transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus"
               >
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="3 6 5 6 21 6" />
@@ -253,7 +253,7 @@ export default function CalendarDayBlockEvent({
         ) : onDelete ? (
           <>
             {(startTime || endTime) && (
-              <span className={`group-hover:hidden shrink-0 text-[10px] text-right leading-tight whitespace-nowrap ${type === "scheduled" ? "text-green-500" : "text-gray-400"}`}>
+              <span className={`group-hover:hidden shrink-0 text-koru-caption text-right leading-tight whitespace-nowrap ${type === "scheduled" ? "text-koru-success" : "text-koru-on-surface-variant"}`}>
                 {startTime && <span className="block">{startTime}</span>}
                 {endTime && <span className="block">{endTime}</span>}
               </span>
@@ -262,7 +262,7 @@ export default function CalendarDayBlockEvent({
               type="button"
               title="Delete"
               onClick={(e) => { e.stopPropagation(); onDelete?.(); }}
-              className="hidden group-hover:flex w-[18px] h-[18px] items-center justify-center rounded shrink-0 text-rose-400 hover:text-rose-600 hover:bg-rose-100 transition-colors"
+              className="hidden group-hover:flex w-[18px] h-[18px] items-center justify-center rounded-koru-xs shrink-0 text-koru-error hover:bg-koru-error-container transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus"
             >
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="3 6 5 6 21 6" />
@@ -274,7 +274,7 @@ export default function CalendarDayBlockEvent({
           </>
         ) : (
           (startTime || endTime) && (
-            <span className={`shrink-0 text-[10px] text-right leading-tight whitespace-nowrap ${type === "scheduled" ? "text-green-500" : "text-gray-400"}`}>
+            <span className={`shrink-0 text-koru-caption text-right leading-tight whitespace-nowrap ${type === "scheduled" ? "text-koru-success" : "text-koru-on-surface-variant"}`}>
               {startTime && <span className="block">{startTime}</span>}
               {endTime && <span className="block">{endTime}</span>}
             </span>

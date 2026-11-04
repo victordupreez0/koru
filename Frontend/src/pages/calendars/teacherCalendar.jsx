@@ -7,6 +7,7 @@ import CalendarViewSelector from "./UI/CalendarViewSelector";
 import CalendarTimelineView from "./UI/CalendarTimelineView";
 import CalendarDayView from "./UI/CalendarDayView";
 import AddTaskModal from "./UI/AddTaskModal";
+import { Button } from "../../components/UI";
 
 import { getAllEvents, createEvent, updateEvent, deleteEvent } from "../../services/eventService";
 import { classService } from "../../services/classService";
@@ -298,23 +299,25 @@ export default function TeacherCalendar() {
 
           {/* Month title + arrows — left */}
           <div className="flex items-center gap-3">
-            <button
+            <Button
+              variant="text"
+              size="icon"
               onClick={goToPrevMonth}
-              className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors text-gray-500 hover:text-gray-900"
               aria-label="Previous month"
             >
               <ChevronLeft size={20} />
-            </button>
-            <h1 className="font-['Gabarito'] !text-3xl text-gray-900 select-none text-center">
+            </Button>
+            <h1 className="font-display text-koru-title text-koru-on-surface select-none text-center">
               {monthLabel}
             </h1>
-            <button
+            <Button
+              variant="text"
+              size="icon"
               onClick={goToNextMonth}
-              className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors text-gray-500 hover:text-gray-900"
               aria-label="Next month"
             >
               <ChevronRight size={20} />
-            </button>
+            </Button>
           </div>
 
           {/* View selector — truly centred */}
@@ -323,19 +326,21 @@ export default function TeacherCalendar() {
           </div>
 
           {/* Add Task — right */}
-          <button
+          <Button
             id="cal-add-task-btn"
             aria-label="Add Task"
+            variant="elevated"
             onClick={() => setTaskModal({ open: true, editEvent: null, defaultDate: "" })}
-            className="flex items-center gap-2 bg-white rounded-full px-5 py-2.5 text-sm font-semibold text-gray-700 shadow-sm border-none cursor-pointer transition-all duration-150 hover:shadow-lg hover:-translate-y-px font-[inherit]"
+            startIcon={
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="16" />
+                <line x1="8" y1="12" x2="16" y2="12" />
+              </svg>
+            }
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10" />
-              <line x1="12" y1="8" x2="12" y2="16" />
-              <line x1="8" y1="12" x2="16" y2="12" />
-            </svg>
             Add Task
-          </button>
+          </Button>
         </div>
 
         {/* ── View area ───────────────────────────────────── */}
@@ -345,16 +350,16 @@ export default function TeacherCalendar() {
           {activeView === "month" && (
             <motion.div
               key={`month-${currentMonth.year}-${currentMonth.month}`}
-              className="w-full border border-gray-200 rounded-2xl overflow-hidden"
+              className="w-full rounded-koru-lg bg-koru-surface-container-lowest ring-1 ring-inset ring-koru-outline-faint shadow-koru-card overflow-hidden"
               variants={viewVariants}
               initial="hidden"
               animate="visible"
               exit="exit"
             >
               {/* Day-of-week header */}
-              <div className="grid grid-cols-7 border-b border-gray-200">
+              <div className="grid grid-cols-7 border-b border-koru-outline-faint">
                 {WEEK_DAYS.map((label, i) => (
-                  <div key={i} className="text-center text-[11px] font-semibold uppercase tracking-widest text-gray-400 py-2.5">
+                  <div key={i} className="text-center text-koru-caption font-medium uppercase tracking-widest text-koru-on-surface-variant py-2.5">
                     {label}
                   </div>
                 ))}
@@ -363,7 +368,7 @@ export default function TeacherCalendar() {
               {/* Week rows */}
               <div className="flex flex-col">
                 {gridWeeks.map((week, wIdx) => (
-                  <div key={wIdx} className={`grid grid-cols-7 ${wIdx > 0 ? "border-t border-gray-200" : ""}`}>
+                  <div key={wIdx} className={`grid grid-cols-7 ${wIdx > 0 ? "border-t border-koru-outline-faint" : ""}`}>
                     {week.map(({ date, day, isOutside }) => (
                       <CalendarDayBlock
                         key={date}
