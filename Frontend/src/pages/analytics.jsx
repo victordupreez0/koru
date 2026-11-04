@@ -19,7 +19,7 @@ export default function AnalyticsPage() {
   }
 
   return (
-    <div className="flex flex-col overflow-hidden transition-all duration-300 md:h-[calc(100vh-32px)] md:w-full md:bg-koru-surface-container-lowest md:backdrop-blur-xl md:border md:border-white/20 md:rounded-koru-lg md:shadow-lg max-md:h-screen max-md:w-screen max-md:-ml-4 max-md:-mr-4 max-md:-mt-4 max-md:bg-white text-slate-900">
+    <div className="flex flex-col overflow-hidden transition-all duration-300 md:h-[calc(100vh-32px)] md:w-full md:bg-koru-surface-container-lowest md:rounded-koru-lg md:shadow-koru-md max-md:h-screen max-md:w-screen max-md:-ml-4 max-md:-mr-4 max-md:-mt-4 max-md:bg-koru-surface-container-lowest text-koru-on-surface">
       {/* Reusable breadcrumb header top bar */}
       <HeaderTopBar />
 
