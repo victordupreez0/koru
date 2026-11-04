@@ -19,7 +19,7 @@ import { getCourseEvents } from "../../../services/eventService";
 import { getCourseLecturers } from "../../../services/courseService";
 import { staggerContainer, slideUp } from "../teacherCoursesComponents/constants";
 import { useNavigate } from "react-router-dom";
-import { Alert, Badge, Button, Card, EmptyState, Input, Select, Skeleton, SkeletonText } from "../../../components/UI";
+import { Alert, Avatar, Badge, Button, Card, EmptyState, Input, Select, Skeleton, SkeletonText } from "../../../components/UI";
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
 const QUICK_NAMES = ["Lecture", "Workshop", "Practical", "Tutorial"];
@@ -51,7 +51,7 @@ function NameField({ value, onChange }) {
           <button
             key={n} type="button" onClick={() => onChange(n)}
             aria-pressed={value === n}
-            className={`h-7 rounded-koru-sm px-2.5 text-[11px] font-medium transition-colors duration-150 ease-koru-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus ${
+            className={`h-7 rounded-koru-sm px-2.5 text-koru-caption font-medium transition-colors duration-150 ease-koru-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus ${
               value === n
                 ? "bg-koru-secondary-container text-koru-on-secondary-container"
                 : "bg-koru-surface-container-high text-koru-on-surface-variant hover:bg-koru-primary/8 hover:text-koru-primary"
@@ -103,7 +103,7 @@ function ClassSlotCard({ slot, onEdit, onDelete, deleting }) {
           {/* Detail row */}
           <div className="flex flex-wrap gap-x-2 gap-y-0.5">
             {isScheduled ? (
-              <span className="flex items-center gap-0.5 text-[10px] font-semibold text-koru-success">
+              <span className="flex items-center gap-0.5 text-koru-caption font-semibold text-koru-success">
                 <Calendar size={9} />
                 {slot.dayOfWeek} · {formatTime(slot.startTime)}
                 {slot.endTime && ` – ${formatTime(slot.endTime)}`}
@@ -111,24 +111,24 @@ function ClassSlotCard({ slot, onEdit, onDelete, deleting }) {
             ) : (
               <>
                 {slot.durationHours && (
-                  <span className="flex items-center gap-0.5 text-[10px] text-koru-on-surface-variant">
+                  <span className="flex items-center gap-0.5 text-koru-caption text-koru-on-surface-variant">
                     <Clock size={9} />{slot.durationHours}h
                   </span>
                 )}
                 {slot.dayOfWeek && (
-                  <span className="flex items-center gap-0.5 text-[10px] text-koru-on-surface-variant">
+                  <span className="flex items-center gap-0.5 text-koru-caption text-koru-on-surface-variant">
                     <Calendar size={9} />Preferred: {slot.dayOfWeek}
                   </span>
                 )}
               </>
             )}
             {slot.teacherName && (
-              <span className="flex items-center gap-0.5 text-[10px] text-koru-on-surface-variant">
+              <span className="flex items-center gap-0.5 text-koru-caption text-koru-on-surface-variant">
                 <User size={9} />{slot.teacherName}
               </span>
             )}
             {slot.room && (
-              <span className="flex items-center gap-0.5 text-[10px] text-koru-on-surface-variant">
+              <span className="flex items-center gap-0.5 text-koru-caption text-koru-on-surface-variant">
                 <MapPin size={9} />{slot.room}
               </span>
             )}
@@ -145,7 +145,7 @@ function ClassSlotCard({ slot, onEdit, onDelete, deleting }) {
             )}
             {onDelete && (
               <Button variant="text" size="icon" onClick={onDelete} disabled={deleting} aria-label={`Delete ${slot.name || "class slot"}`} className="!h-7 !w-7 !text-koru-outline hover:!bg-koru-error-container hover:!text-koru-error">
-                {deleting ? <span className="text-[9px]">…</span> : <Trash2 size={12} />}
+                {deleting ? <span className="text-koru-caption">…</span> : <Trash2 size={12} />}
               </Button>
             )}
           </div>
@@ -793,12 +793,10 @@ export function AdminCohortsView({ courseId, course }) {
                           <div className="space-y-1.5 max-h-64 overflow-y-auto pr-1">
                             {unassignedStudents.map(s => (
                               <div key={s.studentId} className="flex items-center gap-2 p-2 rounded-koru-md bg-koru-surface-container-low/80">
-                                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-koru-surface-container-high text-[10px] font-semibold text-koru-on-surface-variant">
-                                  {s.studentName?.split(" ")[0]?.[0]}{s.studentName?.split(" ")[1]?.[0]}
-                                </div>
+                                <Avatar seed={s.studentId ?? s.id} name={s.studentName} size="sm" />
                                 <div className="min-w-0">
                                   <p className="text-xs font-medium text-koru-on-surface-variant truncate">{s.studentName}</p>
-                                  <p className="text-[10px] text-koru-on-surface-variant truncate">{s.email}</p>
+                                  <p className="text-koru-caption text-koru-on-surface-variant truncate">{s.email}</p>
                                 </div>
                               </div>
                             ))}
@@ -840,7 +838,7 @@ export function AdminCohortsView({ courseId, course }) {
                                         <Badge variant="info" className="shrink-0">Calendar Event</Badge>
                                       </div>
                                       {(dayName || fmt(start)) && (
-                                        <p className="text-[10px] text-koru-info mt-0.5">
+                                        <p className="text-koru-caption text-koru-info mt-0.5">
                                           {dayName}{fmt(start) ? ` · ${fmt(start)}${fmt(end) ? `–${fmt(end)}` : ""}` : ""}
                                         </p>
                                       )}
@@ -937,15 +935,17 @@ export function AdminCohortsView({ courseId, course }) {
                                 <div className="space-y-1.5 max-h-64 overflow-y-auto pr-1">
                                   {details.students.map(s => (
                                     <div key={s.id || s.studentId} className="flex items-center gap-2 p-2 rounded-koru-md bg-koru-surface-container-low/80">
-                                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-koru-primary-container/60 text-[10px] font-semibold text-koru-on-primary-container">
-                                        {(s.firstName || s.student?.firstName)?.[0]}
-                                        {(s.lastName || s.student?.lastName)?.[0]}
-                                      </div>
+                                      <Avatar
+                                        user={s.student || s}
+                                        seed={s.studentId ?? s.id ?? s.student?.id}
+                                        name={`${s.firstName || s.student?.firstName || ""} ${s.lastName || s.student?.lastName || ""}`.trim()}
+                                        size="sm"
+                                      />
                                       <div className="min-w-0">
                                         <p className="text-xs font-medium text-koru-on-surface truncate">
                                           {s.firstName || s.student?.firstName} {s.lastName || s.student?.lastName}
                                         </p>
-                                        <p className="text-[10px] text-koru-on-surface-variant truncate">{s.email || s.student?.email}</p>
+                                        <p className="text-koru-caption text-koru-on-surface-variant truncate">{s.email || s.student?.email}</p>
                                       </div>
                                     </div>
                                   ))}
