@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import Card from "./Card";
 
 const FALLBACK = [
     { status: "Present", date: "2026-01-01" }, { status: "Present", date: "2026-01-08" },
@@ -30,17 +31,23 @@ export default function AttendanceVisualizer({ sessions }) {
     const isPresent = (item) => item.status === "Present";
 
     return (
-        <div className="bg-white p-8 rounded-[40px] border border-gray-100 shadow-sm flex flex-col h-full items-center justify-between">
+        <Card
+            variant="outlined"
+            tone="surface"
+            padding="xl"
+            radius="3xl"
+            className="flex h-full flex-col items-center justify-between"
+        >
             <div className="w-full mb-6">
-                <h3 className="text-sm font-black uppercase tracking-widest text-gray-400">Streak Analysis</h3>
-                <p className="text-xs text-gray-500 mt-1 italic">Last {last10.length} sessions</p>
+                <h3 className="font-display text-koru-label font-medium uppercase tracking-widest text-koru-on-surface-variant">Streak Analysis</h3>
+                <p className="mt-1 text-koru-caption text-koru-on-surface-variant">Last {last10.length} sessions</p>
             </div>
 
             {/* Bars */}
             <div className="flex gap-2.5 items-end justify-center h-32 w-full relative">
                 {last10.map((item, index) => {
                     const present = isPresent(item);
-                    const color = present ? "#3C0078" : "#FF8731";
+                    const color = present ? "var(--color-koru-primary)" : "var(--color-koru-accent)";
                     const isHovered = hoveredIndex === index;
 
                     return (
@@ -62,11 +69,11 @@ export default function AttendanceVisualizer({ sessions }) {
                                         className="absolute -top-14 left-1/2 -translate-x-1/2 z-20 pointer-events-none"
                                     >
                                         <div
-                                            className="px-3 py-2 rounded-xl shadow-lg text-center whitespace-nowrap"
+                                            className="px-3 py-2 rounded-koru-md shadow-koru-md text-center whitespace-nowrap"
                                             style={{ backgroundColor: color }}
                                         >
-                                            <p className="text-[10px] font-black text-white uppercase tracking-wider">{item.status}</p>
-                                            <p className="text-[9px] text-white/80 font-semibold mt-0.5">{formatDate(item.date)}</p>
+                                            <p className="text-koru-caption font-medium text-white uppercase tracking-wider">{item.status}</p>
+                                            <p className="text-koru-caption text-white/80 mt-0.5">{formatDate(item.date)}</p>
                                             {/* Arrow */}
                                             <div
                                                 className="absolute left-1/2 -translate-x-1/2 -bottom-1.5 w-3 h-1.5"
@@ -102,16 +109,16 @@ export default function AttendanceVisualizer({ sessions }) {
                 })}
             </div>
 
-            <div className="mt-8 flex justify-between w-full border-t border-gray-50 pt-6">
+            <div className="mt-8 flex justify-between w-full border-t border-koru-outline-faint pt-6">
                 <div className="flex items-center gap-2">
-                    <div className="w-2.5 h-2.5 rounded-full bg-[#3C0078]" />
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-gray-600">Present</span>
+                    <div className="w-2.5 h-2.5 rounded-full bg-koru-primary" />
+                    <span className="text-koru-caption font-medium uppercase tracking-widest text-koru-on-surface-variant">Present</span>
                 </div>
                 <div className="flex items-center gap-2">
-                    <div className="w-2.5 h-2.5 rounded-full bg-[#FF8731]" />
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-gray-600">Absent</span>
+                    <div className="w-2.5 h-2.5 rounded-full bg-koru-accent" />
+                    <span className="text-koru-caption font-medium uppercase tracking-widest text-koru-on-surface-variant">Absent</span>
                 </div>
             </div>
-        </div>
+        </Card>
     );
 }
