@@ -1,26 +1,23 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  TrendingUp, TrendingDown, Award, ChevronDown, FileText, AlertTriangle
+  Award, BookOpen, CalendarClock, CheckCircle2, ChevronDown, ClipboardCheck,
+  FileText, Hourglass, MessageSquareQuote, Sparkles, TrendingUp, X,
 } from "lucide-react";
 
 import { useAuth } from "../../contexts/AuthContext";
-import { KoruBarList, KoruGauge, KoruTrendChart } from "../../components/UI/charts/KoruCharts";
-import { koruChartColors } from "../../components/UI/charts/koruChartTheme";
 import { useCourses } from "../../contexts/CoursesContext";
 import { getStudentGrades } from "../../services/gradeService";
 import { getStudentSubmissions } from "../../services/submissionService";
 import { getCourseAssignments } from "../../services/assignmentService";
-
-/* ──────────────────────────── animation variants ──────────────────────────── */
-const stagger = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.07, delayChildren: 0.1 } },
-};
-const fadeUp = {
-  hidden: { opacity: 0, y: 16 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.45, ease: "easeOut" } },
-};
+import { Badge, Card } from "../../components/UI";
+import { KoruBarList, KoruGauge, KoruTrendChart } from "../../components/UI/charts/KoruCharts";
+import { koruChartColors } from "../../components/UI/charts/koruChartTheme";
+import {
+  AnalyticsHeader, CountUp, DataTable, DeltaBadge, Panel, PanelEmpty, ScoreMeter,
+  SectionLabel, StatTiles,
+} from "./components/AnalyticsUI";
+import { rise, stagger, td, tdWrap, tr } from "./components/analyticsStyles";
 
 /* ──────────────────────────── helper components ──────────────────────────── */
 
@@ -34,6 +31,13 @@ export default function StudentAnalytics() {
   const [allAssignments, setAllAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedFeedback, setExpandedFeedback] = useState(null);
+  const [focusCourseId, setFocusCourseId] = useState(null);
+
+  // Grades scoped to the focused course (or all courses) for the trend and table.
+  const scopedGrades = useMemo(
+    () => (focusCourseId ? gradesData.filter(g => g.submission?.assignment?.courseId === focusCourseId) : gradesData),
+    [gradesData, focusCourseId],
+  );
 
   useEffect(() => {
     let mounted = true;
@@ -78,7 +82,7 @@ export default function StudentAnalytics() {
         totalMax: 0,
       };
     });
-    gradesData.forEach(g => {
+    scopedGrades.forEach(g => {
       if (!g.gradedAt || g.pointsEarned == null || !g.submission?.assignment?.maxPoints) return;
       const date = new Date(g.gradedAt);
       const m = last12Months.find(lm => lm.year === date.getFullYear() && lm.month === date.getMonth());
@@ -103,7 +107,7 @@ export default function StudentAnalytics() {
       data: allZeros ? [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] : data,
       overallTrend: allZeros ? 0 : data[11] - data[10],
     };
-  }, [gradesData]);
+  }, [scopedGrades]);
 
   const stats = useMemo(() => {
     let totalPoints = 0;
@@ -158,7 +162,7 @@ export default function StudentAnalytics() {
   }, [allAssignments, submissionsData, visibleCourses]);
 
   const recentGrades = useMemo(() => {
-    return [...gradesData]
+    return [...scopedGrades]
       .sort((a, b) => new Date(b.gradedAt) - new Date(a.gradedAt))
       .slice(0, 6)
       .map(g => ({
@@ -173,7 +177,7 @@ export default function StudentAnalytics() {
         gradedAt: g.gradedAt,
         status: "Graded",
       }));
-  }, [gradesData, visibleCourses]);
+  }, [scopedGrades, visibleCourses]);
 
   const highestCourse =
     coursePerformance.length > 0
@@ -202,267 +206,296 @@ export default function StudentAnalytics() {
       }));
   }, [gradesData, visibleCourses]);
 
+  const focusCourse = coursePerformance.find(c => c.id === focusCourseId);
+
   return (
-    <div className="w-full pb-16">
-      <motion.div
-        className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-2"
-        initial="hidden" animate="visible" variants={stagger}
-      >
+    <motion.div
+      className="flex w-full flex-col gap-6 pb-16"
+      initial="hidden"
+      animate="visible"
+      variants={stagger}
+    >
+      <AnalyticsHeader
+        title="Your progress"
+        subtitle="Grades, trends and what's due next, across all your courses."
+      />
 
-        {/* ─── KPI Row ─── */}
-        <motion.div variants={fadeUp} className="flex flex-row divide-x divide-gray-100 bg-white rounded-2xl border border-gray-100 shadow-sm px-6 py-5">
-          {[
-            {
-              label: "Overall Average",
-              value: `${stats.overallAverage}%`,
-              sub:
-                monthlyTrendData.overallTrend >= 0
-                  ? `↑ ${Math.abs(monthlyTrendData.overallTrend)}% this month`
-                  : `↓ ${Math.abs(monthlyTrendData.overallTrend)}% this month`,
-            },
-            { label: "Courses Enrolled", value: visibleCourses.length, sub: "active courses" },
-            { label: "Assignments Graded", value: stats.totalGraded, sub: "all time" },
-            { label: "Pending Review", value: submissionsSummary.pending, sub: "awaiting grades" },
-          ].map((kpi, i) => (
-            <div key={i} className={`flex flex-col gap-1 flex-1 ${i === 0 ? "pr-6" : "px-6"}`}>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">{kpi.label}</p>
-              <p className="text-2xl font-black leading-none text-gray-900">{kpi.value}</p>
-              <p className="text-xs text-gray-400 truncate mt-0.5">{kpi.sub}</p>
-            </div>
-          ))}
-        </motion.div>
+      <StatTiles
+        loading={loading}
+        stats={[
+          {
+            icon: TrendingUp,
+            label: "Overall average",
+            value: stats.overallAverage,
+            suffix: "%",
+            variant: "purple",
+            hint:
+              monthlyTrendData.overallTrend !== 0
+                ? `${monthlyTrendData.overallTrend > 0 ? "+" : ""}${monthlyTrendData.overallTrend}% this month`
+                : undefined,
+          },
+          { icon: BookOpen, label: "Courses enrolled", value: visibleCourses.length, variant: "sky" },
+          { icon: ClipboardCheck, label: "Assignments graded", value: stats.totalGraded, variant: "emerald" },
+          {
+            icon: Hourglass,
+            label: "Pending review",
+            value: submissionsSummary.pending,
+            variant: "orange",
+            hint: submissionsSummary.pending > 0 ? "Awaiting grades" : undefined,
+          },
+        ]}
+      />
 
-        {/* ─── Main Grid ─── */}
-        <div className="grid grid-cols-1 xl:grid-cols-[1fr_380px] gap-6">
-
-          {/* Left column */}
-          <div className="flex flex-col gap-6">
-
-            {/* ─── Grade Trend Chart ─── */}
-            <motion.div variants={fadeUp} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-              <div className="flex justify-between items-center mb-4">
-                <div>
-                  <h2 className="text-base font-bold text-gray-900">Grade Trend</h2>
-                  <p className="text-sm text-gray-400">Monthly average over the past year</p>
-                </div>
-                <span className={`inline-flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-full ${monthlyTrendData.overallTrend >= 0 ? "bg-green-50 text-green-600" : "bg-red-50 text-red-600"}`}>
-                  {monthlyTrendData.overallTrend >= 0 ? <TrendingUp size={13} /> : <TrendingDown size={13} />}
-                  {monthlyTrendData.overallTrend >= 0 ? "+" : ""}{monthlyTrendData.overallTrend}%
-                </span>
-              </div>
-              <div className="-mx-2 mt-2">
-                <KoruTrendChart
-                  data={monthlyTrendData.data}
-                  labels={monthlyTrendData.labels}
-                  label="Average grade"
-                  height={200}
-                />
-              </div>
-            </motion.div>
-
-            {/* ─── Course Performance ─── */}
-            <motion.div variants={fadeUp}>
-              <h2 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-3">Course Performance</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {coursePerformance.map(course => {
-                  const pct = course.average;
-                  const isPositive = course.trend >= 0;
-                  return (
-                    <div
-                      key={course.id}
-                      className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex items-center gap-4 hover:border-gray-200 transition-colors"
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+        {/* Left column */}
+        <div className="flex min-w-0 flex-col gap-6">
+          <Panel
+            title="Grade trend"
+            description={focusCourse ? `Monthly average in ${focusCourse.subjectName || focusCourse.label}` : "Monthly average over the past year"}
+            action={
+              <div className="flex items-center gap-2">
+                <AnimatePresence>
+                  {focusCourse && (
+                    <motion.button
+                      type="button"
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
+                      onClick={() => setFocusCourseId(null)}
+                      className="inline-flex h-6 items-center gap-1 rounded-koru-pill bg-koru-primary-container px-2.5 text-[11px] font-medium text-koru-on-primary-container transition hover:bg-koru-inverse-primary"
                     >
-                      <div className="shrink-0">
-                        <KoruGauge value={pct} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-bold text-sm text-gray-900 truncate">{course.subjectName || course.label}</p>
-                        <p className="text-xs text-gray-400 mt-0.5">{course.label} · {course.lecturerName || "Lecturer"}</p>
-                      </div>
-                      <span className={`inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full ${isPositive ? "bg-green-50 text-green-600" : "bg-red-50 text-red-600"}`}>
-                        {isPositive ? <TrendingUp size={11} /> : <TrendingDown size={11} />}
-                        {Math.abs(course.trend)}%
-                      </span>
+                      {focusCourse.label}
+                      <X size={12} aria-label="Show all courses" />
+                    </motion.button>
+                  )}
+                </AnimatePresence>
+                <DeltaBadge value={monthlyTrendData.overallTrend} />
+              </div>
+            }
+          >
+            <div className="-mx-2">
+              <KoruTrendChart
+                data={monthlyTrendData.data}
+                labels={monthlyTrendData.labels}
+                label="Average grade"
+                height={220}
+              />
+            </div>
+          </Panel>
+
+          {/* Course performance */}
+          <motion.section variants={rise}>
+            <SectionLabel
+              action={<span className="text-sm text-koru-on-surface-variant">Select a course to focus the trend</span>}
+            >
+              Course performance
+            </SectionLabel>
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+              {coursePerformance.map(course => {
+                const selected = focusCourseId === course.id;
+                return (
+                  <Card
+                    key={course.id}
+                    as={motion.button}
+                    type="button"
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setFocusCourseId(selected ? null : course.id)}
+                    aria-pressed={selected}
+                    variant="interactive"
+                    tone="surface"
+                    radius="lg"
+                    padding="sm"
+                    className={`flex w-full items-center gap-4 bg-koru-surface-container-lowest text-left outline-none focus-visible:ring-2 focus-visible:ring-koru-primary ${
+                      selected ? "!ring-2 !ring-koru-primary bg-koru-primary-subtle" : ""
+                    }`}
+                  >
+                    <KoruGauge value={course.average} size={60} />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-medium text-koru-on-surface">{course.subjectName || course.label}</p>
+                      <p className="mt-0.5 truncate text-sm text-koru-on-surface-variant">
+                        {course.label} · {course.lecturerName || "Lecturer"}
+                      </p>
                     </div>
+                    <DeltaBadge value={course.trend} />
+                  </Card>
+                );
+              })}
+            </div>
+          </motion.section>
+
+          <Panel
+            title="Recent grades"
+            description={focusCourse ? `Latest results in ${focusCourse.label}` : `Your last ${recentGrades.length} results`}
+          >
+            {recentGrades.length === 0 ? (
+              <PanelEmpty icon={FileText}>No graded work yet.</PanelEmpty>
+            ) : (
+              <DataTable
+                columns={[
+                  { label: "Assignment" },
+                  { label: "Course" },
+                  { label: "Score", className: "w-48" },
+                  { label: "Graded" },
+                ]}
+              >
+                {recentGrades.map(g => {
+                  const pct = g.pointsEarned != null ? Math.round((g.pointsEarned / g.maxPoints) * 100) : 0;
+                  return (
+                    <tr key={g.id} className={tr}>
+                      <td className={tdWrap}>
+                        <span className="font-medium text-koru-on-surface">{g.assignment}</span>
+                      </td>
+                      <td className={td}>
+                        <Badge variant="primary">{g.course}</Badge>
+                      </td>
+                      <td className={td}>
+                        <ScoreMeter value={pct} />
+                      </td>
+                      <td className={`${td} text-sm text-koru-on-surface-variant`}>
+                        {g.gradedAt
+                          ? new Date(g.gradedAt).toLocaleDateString("en-ZA", { month: "short", day: "numeric" })
+                          : "—"}
+                      </td>
+                    </tr>
                   );
                 })}
+              </DataTable>
+            )}
+          </Panel>
+        </div>
+
+        {/* Right column */}
+        <div className="flex flex-col gap-6">
+          {/* Top course */}
+          <Card
+            as={motion.section}
+            variants={rise}
+            tone="brand"
+            radius="lg"
+            padding="lg"
+            className="relative isolate overflow-hidden"
+          >
+            <Sparkles
+              size={120}
+              strokeWidth={1.5}
+              aria-hidden="true"
+              className="pointer-events-none absolute -right-6 -top-6 -z-10 rotate-12 text-koru-primary opacity-10"
+            />
+            <p className="flex items-center gap-1.5 text-koru-label text-koru-on-primary-container">
+              <Award size={16} aria-hidden="true" /> Top course
+            </p>
+            <div className="mt-3 flex items-center gap-4">
+              <KoruGauge value={highestCourse.average} size={76} />
+              <div className="min-w-0">
+                <p className="font-display text-koru-heading text-koru-on-primary-container">
+                  {highestCourse.subjectName}
+                </p>
+                <p className="text-sm text-koru-on-primary-container/75">{highestCourse.label}</p>
               </div>
-            </motion.div>
+            </div>
+          </Card>
 
-            {/* ─── Recent Grades Table ─── */}
-            <motion.div variants={fadeUp} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-              <div className="px-6 py-5 border-b border-gray-50 flex justify-between items-center">
-                <h2 className="text-base font-bold text-gray-900">Recent Grades</h2>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
-                  Last {recentGrades.length} assignments
-                </span>
-              </div>
-              <table className="w-full text-left">
-                <thead>
-                  <tr className="bg-gray-50/50">
-                    <th className="px-6 py-3.5 text-[10px] font-bold uppercase tracking-widest text-gray-400">Assignment</th>
-                    <th className="px-6 py-3.5 text-[10px] font-bold uppercase tracking-widest text-gray-400">Course</th>
-                    <th className="px-6 py-3.5 text-[10px] font-bold uppercase tracking-widest text-gray-400 text-center">Score</th>
-                    <th className="px-6 py-3.5 text-[10px] font-bold uppercase tracking-widest text-gray-400 text-center">Date</th>
-                    <th className="px-6 py-3.5 text-[10px] font-bold uppercase tracking-widest text-gray-400">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recentGrades.map(g => {
-                    const pct = g.pointsEarned != null ? Math.round((g.pointsEarned / g.maxPoints) * 100) : 0;
-                    return (
-                      <tr key={g.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors">
-                        <td className="px-6 py-4">
-                          <span className="font-semibold text-sm text-gray-900">{g.assignment}</span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className="text-xs font-semibold text-gray-500">{g.course}</span>
-                        </td>
-                        <td className="px-6 py-4 text-center">
-                          <div className="flex flex-col items-center gap-1">
-                            <span className="text-sm font-black text-gray-900">{pct}%</span>
-                            <div className="w-12 h-1 bg-gray-100 rounded-full overflow-hidden">
-                              <div
-                                className={`h-full rounded-full ${pct >= 75 ? "bg-green-500" : pct >= 50 ? "bg-orange-400" : "bg-red-500"}`}
-                                style={{ width: `${pct}%` }}
-                              />
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 text-center text-xs text-gray-400">
-                          {g.gradedAt
-                            ? new Date(g.gradedAt).toLocaleDateString("en-ZA", { month: "short", day: "numeric" })
-                            : "—"}
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest bg-green-50 text-green-600">
-                            {g.status}
-                          </span>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </motion.div>
+          <Panel title="Submissions" description={`${submissionsSummary.total} submitted in total`}>
+            <KoruBarList
+              label="Submissions"
+              labelWidth={64}
+              xMax={Math.max(submissionsSummary.total, 1)}
+              valueFormatter={v => `${v ?? 0} of ${submissionsSummary.total}`}
+              items={[
+                { label: "Graded", value: submissionsSummary.graded, color: koruChartColors.success },
+                { label: "Pending", value: submissionsSummary.pending, color: koruChartColors.accent },
+                { label: "Late", value: submissionsSummary.late, color: koruChartColors.error },
+              ]}
+            />
+          </Panel>
 
-          </div>
-
-          {/* ─── Right Sidebar ─── */}
-          <div className="flex flex-col gap-5">
-
-            {/* Top Course */}
-            <motion.div variants={fadeUp} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-3">Top Course</p>
-              <div className="flex items-baseline gap-2 mb-1">
-                <span className="text-3xl font-black text-gray-900">{highestCourse.average}%</span>
-                <span className="text-sm text-gray-400 font-medium">{highestCourse.label}</span>
-              </div>
-              <p className="text-sm font-medium text-gray-600">{highestCourse.subjectName}</p>
-              <div className="mt-4 pt-4 border-t border-gray-50 flex items-center gap-2 text-xs text-gray-400">
-                <Award size={14} className="text-amber-400 shrink-0" />
-                <span>Your highest performing course</span>
-              </div>
-            </motion.div>
-
-            {/* Submission Breakdown */}
-            <motion.div variants={fadeUp} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-              <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-4">Submission Breakdown</h3>
-              <KoruBarList
-                label="Submissions"
-                labelWidth={64}
-                xMax={Math.max(submissionsSummary.total, 1)}
-                valueFormatter={v => `${v ?? 0} of ${submissionsSummary.total}`}
-                items={[
-                  { label: "Graded", value: submissionsSummary.graded, color: koruChartColors.success },
-                  { label: "Pending", value: submissionsSummary.pending, color: koruChartColors.accent },
-                  { label: "Late", value: submissionsSummary.late, color: koruChartColors.error },
-                ]}
-              />
-            </motion.div>
-
-            {/* Upcoming Deadlines */}
-            <motion.div variants={fadeUp} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-              <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-4">Upcoming Deadlines</h3>
-              <div className="space-y-2">
-                {upcomingAssignments.length === 0 ? (
-                  <p className="text-sm text-gray-400 text-center py-4">No upcoming deadlines</p>
-                ) : (
-                  upcomingAssignments.map(a => {
-                    const dueDate = new Date(a.dueDate);
-                    const daysLeft = Math.ceil((dueDate - new Date()) / (1000 * 60 * 60 * 24));
-                    const urgent = daysLeft <= 7;
-                    return (
-                      <div
-                        key={a.id}
-                        className={`rounded-xl border p-4 flex items-center gap-3 ${urgent ? "border-amber-200 bg-amber-50/40" : "border-gray-100"}`}
-                      >
-                        <span className={`shrink-0 inline-flex items-center justify-center w-9 h-9 rounded-xl ${urgent ? "bg-amber-100" : "bg-gray-50"}`}>
-                          {urgent
-                            ? <AlertTriangle size={16} className="text-amber-600" />
-                            : <FileText size={16} className="text-gray-400" />}
-                        </span>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-sm text-gray-900 truncate">{a.title}</p>
-                          <p className="text-xs text-gray-400 mt-0.5">{a.course} · {a.maxPoints} pts</p>
-                        </div>
-                        <div className="text-right shrink-0">
-                          <p className={`text-xs font-bold ${urgent ? "text-amber-600" : "text-gray-500"}`}>{daysLeft}d</p>
-                          <p className="text-[10px] text-gray-400">
-                            {dueDate.toLocaleDateString("en-ZA", { month: "short", day: "numeric" })}
-                          </p>
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-            </motion.div>
-
-            {/* Recent Feedback */}
-            <motion.div variants={fadeUp} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-              <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-4">Recent Feedback</h3>
-              <div className="space-y-2">
-                {feedback.length === 0 ? (
-                  <p className="text-sm text-gray-400 text-center py-4">No feedback yet</p>
-                ) : (
-                  feedback.map(fb => (
-                    <motion.div
-                      key={fb.id}
-                      layout
-                      className="rounded-xl border border-gray-100 p-4 hover:border-gray-200 transition-colors cursor-pointer"
-                      onClick={() => setExpandedFeedback(expandedFeedback === fb.id ? null : fb.id)}
+          <Panel title="Upcoming deadlines">
+            {upcomingAssignments.length === 0 ? (
+              <PanelEmpty icon={CheckCircle2}>Nothing due. Enjoy the breather.</PanelEmpty>
+            ) : (
+              <ul className="flex flex-col gap-2">
+                {upcomingAssignments.map(a => {
+                  const dueDate = new Date(a.dueDate);
+                  const daysLeft = Math.ceil((dueDate - new Date()) / (1000 * 60 * 60 * 24));
+                  const urgent = daysLeft <= 7;
+                  return (
+                    <li
+                      key={a.id}
+                      className={`flex items-center gap-3 rounded-koru-md p-3 transition-colors ${
+                        urgent ? "bg-koru-accent-soft" : "bg-koru-surface-container-low hover:bg-koru-surface-container"
+                      }`}
                     >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <p className="font-semibold text-sm text-gray-900 truncate">{fb.assignment}</p>
-                          <p className="text-xs text-gray-400 mt-0.5">{fb.teacher} · {fb.course}</p>
-                        </div>
-                        <motion.div animate={{ rotate: expandedFeedback === fb.id ? 180 : 0 }} className="shrink-0 text-gray-300">
-                          <ChevronDown size={16} />
-                        </motion.div>
+                      <span
+                        className={`grid h-10 w-10 shrink-0 place-items-center rounded-koru-md ${
+                          urgent ? "bg-koru-accent text-white" : "bg-koru-surface-container-highest text-koru-on-surface-variant"
+                        }`}
+                      >
+                        <CalendarClock size={18} aria-hidden="true" />
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium text-koru-on-surface">{a.title}</p>
+                        <p className="mt-0.5 text-koru-caption text-koru-on-surface-variant">
+                          {a.course} · {a.maxPoints} pts
+                        </p>
                       </div>
-                      <AnimatePresence>
-                        {expandedFeedback === fb.id && (
+                      <div className="shrink-0 text-right">
+                        <p className={`text-sm font-semibold ${urgent ? "text-koru-accent-ink" : "text-koru-on-surface"}`}>
+                          {daysLeft === 0 ? "Today" : `${daysLeft}d`}
+                        </p>
+                        <p className="text-koru-caption text-koru-on-surface-variant">
+                          {dueDate.toLocaleDateString("en-ZA", { month: "short", day: "numeric" })}
+                        </p>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </Panel>
+
+          <Panel title="Recent feedback">
+            {feedback.length === 0 ? (
+              <PanelEmpty icon={MessageSquareQuote}>No feedback yet.</PanelEmpty>
+            ) : (
+              <ul className="flex flex-col gap-2">
+                {feedback.map(fb => {
+                  const open = expandedFeedback === fb.id;
+                  return (
+                    <motion.li key={fb.id} layout className="overflow-hidden rounded-koru-md bg-koru-surface-container-low">
+                      <button
+                        type="button"
+                        aria-expanded={open}
+                        onClick={() => setExpandedFeedback(open ? null : fb.id)}
+                        className="flex w-full items-start justify-between gap-3 p-3 text-left transition-colors hover:bg-koru-surface-container"
+                      >
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-medium text-koru-on-surface">{fb.assignment}</p>
+                          <p className="mt-0.5 text-koru-caption text-koru-on-surface-variant">{fb.course}</p>
+                        </div>
+                        <motion.span animate={{ rotate: open ? 180 : 0 }} className="shrink-0 text-koru-on-surface-variant">
+                          <ChevronDown size={16} aria-hidden="true" />
+                        </motion.span>
+                      </button>
+                      <AnimatePresence initial={false}>
+                        {open && (
                           <motion.p
                             initial={{ height: 0, opacity: 0 }}
                             animate={{ height: "auto", opacity: 1 }}
                             exit={{ height: 0, opacity: 0 }}
-                            className="text-sm text-gray-600 mt-3 leading-relaxed overflow-hidden"
+                            className="border-l-2 border-koru-primary mx-3 mb-3 pl-3 text-sm leading-relaxed text-koru-on-surface-variant"
                           >
-                            "{fb.content}"
+                            {fb.content}
                           </motion.p>
                         )}
                       </AnimatePresence>
-                    </motion.div>
-                  ))
-                )}
-              </div>
-            </motion.div>
-
-          </div>
+                    </motion.li>
+                  );
+                })}
+              </ul>
+            )}
+          </Panel>
         </div>
-      </motion.div>
-    </div>
+      </div>
+    </motion.div>
   );
 }

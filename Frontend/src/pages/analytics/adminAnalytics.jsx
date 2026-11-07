@@ -1,8 +1,16 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { BarChart3, ChevronDown } from "lucide-react";
-import Avatar from "../../components/UI/Avatar";
-import { KoruGauge } from "../../components/UI/charts/KoruCharts";
+import {
+  BarChart3, BookOpen, CheckCircle2, ChevronRight, ClipboardList, GraduationCap, Hourglass, Layers,
+  TrendingUp, UserRound, Users,
+} from "lucide-react";
+import { Avatar, Badge, Card, Select, Skeleton } from "../../components/UI";
+import { KoruDonut, KoruGauge } from "../../components/UI/charts/KoruCharts";
+import { koruSeriesPalette } from "../../components/UI/charts/koruChartTheme";
+import {
+  CountUp, AnalyticsHeader, DataTable, Panel, PanelEmpty, ScoreMeter, SectionLabel, StatTiles,
+} from "./components/AnalyticsUI";
+import { rise, stagger, td, tdWrap, tr } from "./components/analyticsStyles";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5299/api";
 
@@ -11,15 +19,8 @@ const COURSE_COLORS = [
   "#10B981", "#8B5CF6", "#EF4444", "#3B82F6", "#84CC16",
 ];
 
-/* ─── animation variants ─── */
-const stagger = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.07, delayChildren: 0.1 } },
-};
-const fadeUp = {
-  hidden: { opacity: 0, y: 16 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.45, ease: "easeOut" } },
-};
+const CHIP_VARIANTS = ["primary", "info", "accent", "success", "secondary", "tertiary"];
+const STATUS_BADGE = { Excellent: "success", Good: "info", "At Risk": "warning", Critical: "error" };
 
 /* ══════════════════════ MAIN COMPONENT ══════════════════════ */
 export default function AdminAnalytics() {
@@ -36,6 +37,7 @@ export default function AdminAnalytics() {
   const [teacherSubmissions, setTeacherSubmissions] = useState([]);
   const [teacherGrades, setTeacherGrades] = useState([]);
   const [teacherLoading, setTeacherLoading] = useState(false);
+  const lecturerSectionRef = useRef(null);
 
   /* ── fetch platform stats ── */
   useEffect(() => {
@@ -244,436 +246,372 @@ export default function AdminAnalytics() {
   }, [teacherSubmissions, teacherGrades]);
 
   /* ─────────────────────── RENDER ─────────────────────── */
+  const adminCount = users.filter(u => u.role?.toLowerCase() === "admin").length;
+  const avgStudentsPerCourse = courses.length ? (enrollments.length / courses.length).toFixed(1) : "0";
+  const userSlices = [
+    { label: "Students", value: students.length, color: koruSeriesPalette[0] },
+    { label: "Lecturers", value: lecturers.length, color: koruSeriesPalette[1] },
+    { label: "Admins", value: adminCount, color: koruSeriesPalette[2] },
+  ];
+
+  const openLecturer = id => {
+    setSelectedTeacherId(id);
+    requestAnimationFrame(() =>
+      lecturerSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }),
+    );
+  };
+
   return (
-    <div className="w-full pb-16">
-      <motion.div
-        className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-2"
-        initial="hidden" animate="visible" variants={stagger}
-      >
+    <motion.div
+      className="flex w-full flex-col gap-6 pb-16"
+      initial="hidden"
+      animate="visible"
+      variants={stagger}
+    >
+      <AnalyticsHeader
+        title="Platform insights"
+        subtitle="People, courses and teaching activity across Koru."
+      />
 
-        {/* ── KPI Row ── */}
-        <motion.div variants={fadeUp} className="flex flex-row divide-x divide-gray-100 bg-white rounded-2xl border border-gray-100 shadow-sm px-6 py-5">
-          {[
-            { label: "Total Lecturers", value: loading ? "—" : lecturers.length, sub: "teaching staff" },
-            { label: "Total Students", value: loading ? "—" : students.length, sub: "enrolled platform-wide" },
-            { label: "Total Courses", value: loading ? "—" : courses.length, sub: "active courses" },
-            { label: "Total Enrolments", value: loading ? "—" : enrollments.length, sub: "across all courses" },
-          ].map((kpi, i) => (
-            <div key={i} className={`flex flex-col gap-1 flex-1 ${i === 0 ? "pr-6" : "px-6"}`}>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">{kpi.label}</p>
-              <p className="text-2xl font-black leading-none text-gray-900">{kpi.value}</p>
-              <p className="text-xs text-gray-400 truncate mt-0.5">{kpi.sub}</p>
-            </div>
-          ))}
-        </motion.div>
+      <StatTiles
+        loading={loading}
+        stats={[
+          { icon: UserRound, label: "Lecturers", value: lecturers.length, variant: "purple" },
+          { icon: Users, label: "Students", value: students.length, variant: "sky" },
+          { icon: BookOpen, label: "Courses", value: courses.length, variant: "orange" },
+          { icon: Layers, label: "Enrolments", value: enrollments.length, variant: "emerald" },
+        ]}
+      />
 
-        {/* ── Main Grid: Courses per Lecturer + Sidebar ── */}
-        <div className="grid grid-cols-1 xl:grid-cols-[1fr_360px] gap-6">
-
-          {/* Courses per Lecturer table */}
-          <motion.div variants={fadeUp} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-            <div className="px-6 py-5 border-b border-gray-50 flex justify-between items-center">
-              <h2 className="text-base font-bold text-gray-900">Courses per Lecturer</h2>
-              <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
-                {lecturers.length} lecturers
-              </span>
-            </div>
-            {loading ? (
-              <div className="divide-y divide-gray-50 animate-pulse">
-                {[140, 180, 110, 160, 130].map((w, i) => (
-                  <div key={i} className="flex items-center gap-4 px-6 py-4">
-                    <div className="w-9 h-9 rounded-full bg-gray-100 shrink-0" />
-                    <div className="flex-1">
-                      <div className="h-3 rounded-full bg-gray-200" style={{ width: w }} />
-                    </div>
-                    <div className="h-6 rounded-full bg-gray-100 w-8" />
-                    <div className="h-5 rounded-full bg-gray-100" style={{ width: `${70 + i * 18}px` }} />
-                  </div>
-                ))}
-              </div>
-            ) : coursesPerLecturer.length === 0 ? (
-              <div className="px-6 py-12 text-center text-gray-300 text-sm font-semibold">No lecturers found.</div>
-            ) : (
-              <table className="w-full text-left">
-                <thead>
-                  <tr className="bg-gray-50/50">
-                    <th className="px-6 py-3.5 text-[10px] font-bold uppercase tracking-widest text-gray-400">Lecturer</th>
-                    <th className="px-6 py-3.5 text-[10px] font-bold uppercase tracking-widest text-gray-400 text-center">Courses</th>
-                    <th className="px-6 py-3.5 text-[10px] font-bold uppercase tracking-widest text-gray-400">Course Codes</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {coursesPerLecturer.map(l => (
-                    <tr key={l.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors">
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <Avatar user={l} name={l.name} size={36} />
-                          <div>
-                            <p className="font-semibold text-sm text-gray-900">{l.fullName}</p>
-                            <p className="text-xs text-gray-400">{l.email}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <span className="text-sm font-black text-gray-900">{l.courseList.length}</span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex flex-wrap gap-1">
-                          {l.courseList.length === 0 ? (
-                            <span className="text-xs text-gray-300">None</span>
-                          ) : (
-                            l.courseList.slice(0, 4).map((c, i) => (
-                              <span
-                                key={c.id}
-                                className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider"
-                                style={{
-                                  backgroundColor: `${COURSE_COLORS[i % COURSE_COLORS.length]}18`,
-                                  color: COURSE_COLORS[i % COURSE_COLORS.length],
-                                }}
-                              >
-                                {c.subject?.code || c.subjectId}
-                              </span>
-                            ))
-                          )}
-                          {l.courseList.length > 4 && (
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold text-gray-400 bg-gray-100">
-                              +{l.courseList.length - 4}
-                            </span>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </motion.div>
-
-          {/* Right sidebar */}
-          <motion.div variants={fadeUp} className="flex flex-col gap-4">
-
-            {/* Platform at a Glance */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-4">Platform at a Glance</p>
-              <div className="space-y-0">
-                {[
-                  { label: "Avg Courses / Lecturer", value: loading ? "—" : avgCoursesPerLecturer },
-                  { label: "Unique Subjects", value: loading ? "—" : uniqueSubjects },
-                  {
-                    label: "Avg Students / Course",
-                    value: loading || courses.length === 0 ? "—" : (enrollments.length / courses.length).toFixed(1),
-                  },
-                ].map(stat => (
-                  <div key={stat.label} className="flex items-center justify-between py-3 border-b border-gray-50 last:border-0">
-                    <span className="text-sm text-gray-500">{stat.label}</span>
-                    <span className="text-base font-black text-gray-900">{stat.value}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* User Breakdown */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-              <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">User Breakdown</h3>
-              <div className="space-y-0">
-                {[
-                  { label: "Students", value: loading ? "—" : students.length },
-                  { label: "Lecturers", value: loading ? "—" : lecturers.length },
-                  { label: "Admins", value: loading ? "—" : users.filter(u => u.role?.toLowerCase() === "admin").length },
-                  { label: "Total Users", value: loading ? "—" : users.length, highlight: true },
-                ].map(item => (
-                  <div key={item.label} className="flex items-center justify-between py-3 border-b border-gray-50 last:border-0">
-                    <span className="text-sm text-gray-500">{item.label}</span>
-                    <span className={`text-base font-black ${item.highlight ? "text-[#3C0078]" : "text-gray-900"}`}>
-                      {item.value}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-          </motion.div>
-        </div>
-
-        {/* ════════════════ LECTURER ANALYTICS SECTION ════════════════ */}
-        <motion.div variants={fadeUp} className="flex flex-col gap-6">
-
-          {/* Section header + lecturer picker */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-6 py-5">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div className="flex items-center gap-4">
-                <AnimatePresence mode="wait">
-                  {selectedTeacher && (
-                    <motion.div
-                      key={selectedTeacher.id}
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.8 }}
-                      transition={{ duration: 0.2 }}
-                      className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center font-bold text-sm text-gray-600 shrink-0"
-                    >
-                      {`${selectedTeacher.firstName?.[0] || ""}${selectedTeacher.lastName?.[0] || ""}`.toUpperCase()}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-                <div>
-                  <h2 className="text-base font-bold text-gray-900">
-                    {selectedTeacher
-                      ? `${selectedTeacher.firstName} ${selectedTeacher.lastName}`
-                      : "Lecturer Analytics"}
-                  </h2>
-                  <p className="text-sm text-gray-400 mt-0.5">
-                    {selectedTeacher
-                      ? `${selectedTeacher.email} · ${teacherCourses.length} course${teacherCourses.length !== 1 ? "s" : ""}`
-                      : "Select a lecturer to view their teaching analytics."}
-                  </p>
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+        <Panel
+          title="Courses per lecturer"
+          description="Select a lecturer to see their teaching analytics"
+          action={<Badge>{lecturers.length} lecturers</Badge>}
+        >
+          {loading ? (
+            <div className="flex flex-col gap-4">
+              {[0, 1, 2, 3, 4].map(i => (
+                <div key={i} className="flex items-center gap-3">
+                  <Skeleton variant="circle" className="h-9 w-9" />
+                  <Skeleton variant="text" className="w-40" />
+                  <Skeleton variant="text" className="ml-auto w-24" />
                 </div>
-              </div>
-              <div className="relative">
-                <select
-                  value={selectedTeacherId}
-                  onChange={e => setSelectedTeacherId(e.target.value)}
-                  className="appearance-none rounded-full border border-gray-200 bg-white px-5 py-2.5 pr-10 text-sm font-semibold text-gray-700 outline-none focus:border-[#3C0078] focus:ring-2 focus:ring-[#3C0078]/20 transition-all cursor-pointer min-w-[220px]"
-                >
-                  <option value="">— Select a Lecturer —</option>
-                  {lecturers.map(l => (
-                    <option key={l.id} value={l.id}>{l.firstName} {l.lastName}</option>
-                  ))}
-                </select>
-                <ChevronDown size={15} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-              </div>
+              ))}
+            </div>
+          ) : coursesPerLecturer.length === 0 ? (
+            <PanelEmpty icon={UserRound}>No lecturers found.</PanelEmpty>
+          ) : (
+            <DataTable
+              columns={[
+                { label: "Lecturer" },
+                { label: "Courses", className: "text-right" },
+                { label: "Course codes" },
+                { label: "", className: "w-10" },
+              ]}
+            >
+              {coursesPerLecturer.map(l => {
+                const selected = selectedTeacherId === l.id;
+                return (
+                  <tr
+                    key={l.id}
+                    tabIndex={0}
+                    onClick={() => openLecturer(l.id)}
+                    onKeyDown={e => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        openLecturer(l.id);
+                      }
+                    }}
+                    aria-selected={selected}
+                    className={`${tr} group cursor-pointer outline-none focus-visible:bg-koru-primary-subtle ${selected ? "bg-koru-primary-subtle" : ""}`}
+                  >
+                    <td className={tdWrap}>
+                      <div className="flex items-center gap-3">
+                        <Avatar user={l} name={l.fullName} size={36} />
+                        <div className="min-w-0">
+                          <p className="truncate font-medium text-koru-on-surface">{l.fullName}</p>
+                          <p className="truncate text-koru-caption text-koru-on-surface-variant">{l.email}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className={`${td} text-right font-display text-lg tabular-nums text-koru-on-surface`}>
+                      {l.courseList.length}
+                    </td>
+                    <td className={td}>
+                      <div className="flex flex-wrap gap-1.5">
+                        {l.courseList.length === 0 ? (
+                          <span className="text-sm text-koru-on-surface-variant">None</span>
+                        ) : (
+                          l.courseList.slice(0, 4).map((c, i) => (
+                            <Badge key={c.id} variant={CHIP_VARIANTS[i % CHIP_VARIANTS.length]}>
+                              {c.subject?.code || c.subjectId}
+                            </Badge>
+                          ))
+                        )}
+                        {l.courseList.length > 4 && <Badge>+{l.courseList.length - 4}</Badge>}
+                      </div>
+                    </td>
+                    <td className={td}>
+                      <ChevronRight
+                        size={18}
+                        aria-hidden="true"
+                        className="text-koru-outline transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-koru-primary"
+                      />
+                    </td>
+                  </tr>
+                );
+              })}
+            </DataTable>
+          )}
+        </Panel>
+
+        <div className="flex flex-col gap-6">
+          <Panel title="User breakdown" description={`${users.length} accounts in total`}>
+            <div className="flex items-center gap-5">
+              <KoruDonut items={userSlices} size={148} centerValue={loading ? "—" : <CountUp value={users.length} />} centerLabel="users" />
+              <ul className="flex min-w-0 flex-1 flex-col gap-2.5">
+                {userSlices.map(sl => (
+                  <li key={sl.label} className="flex items-center gap-2 text-sm">
+                    <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: sl.color }} aria-hidden="true" />
+                    <span className="flex-1 text-koru-on-surface-variant">{sl.label}</span>
+                    <span className="font-semibold tabular-nums text-koru-on-surface">{loading ? "—" : sl.value}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </Panel>
+
+          <Panel title="At a glance">
+            <dl className="grid grid-cols-1 gap-2">
+              {[
+                { label: "Avg courses per lecturer", value: avgCoursesPerLecturer, decimals: 1 },
+                { label: "Unique subjects", value: uniqueSubjects, decimals: 0 },
+                { label: "Avg students per course", value: avgStudentsPerCourse, decimals: 1 },
+              ].map(stat => (
+                <div key={stat.label} className="flex items-center justify-between rounded-koru-md bg-koru-surface-container-low px-3 py-2.5">
+                  <dt className="text-sm text-koru-on-surface-variant">{stat.label}</dt>
+                  <dd className="font-display text-lg text-koru-on-surface">
+                    {loading ? "—" : <CountUp value={Number(stat.value)} decimals={stat.decimals} />}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </Panel>
+        </div>
+      </div>
+
+      {/* ════════════════ LECTURER ANALYTICS ════════════════ */}
+      <motion.section variants={rise} ref={lecturerSectionRef} className="flex scroll-mt-6 flex-col gap-6">
+        <Card variant="outlined" tone="low" radius="lg" padding="md" className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div className="flex min-w-0 items-center gap-4">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={selectedTeacher?.id || "none"}
+                initial={{ opacity: 0, scale: 0.85 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.85 }}
+                transition={{ duration: 0.2 }}
+              >
+                {selectedTeacher ? (
+                  <Avatar user={selectedTeacher} name={`${selectedTeacher.firstName} ${selectedTeacher.lastName}`} size="lg" />
+                ) : (
+                  <span className="grid h-12 w-12 place-items-center rounded-full bg-koru-primary-container text-koru-on-primary-container">
+                    <BarChart3 size={20} aria-hidden="true" />
+                  </span>
+                )}
+              </motion.div>
+            </AnimatePresence>
+            <div className="min-w-0">
+              <h2 className="font-display text-koru-heading text-koru-on-surface">
+                {selectedTeacher ? `${selectedTeacher.firstName} ${selectedTeacher.lastName}` : "Lecturer analytics"}
+              </h2>
+              <p className="mt-0.5 truncate text-sm text-koru-on-surface-variant">
+                {selectedTeacher
+                  ? `${selectedTeacher.email} · ${teacherCourses.length} course${teacherCourses.length !== 1 ? "s" : ""}`
+                  : "Pick a lecturer to see their courses, grading and students."}
+              </p>
             </div>
           </div>
+          <div className="w-full sm:w-64">
+            <Select
+              size="sm"
+              label="Lecturer"
+              labelClassName="text-koru-caption uppercase tracking-wider"
+              value={selectedTeacherId}
+              onChange={e => setSelectedTeacherId(e.target.value)}
+              className="cursor-pointer font-medium"
+            >
+              <option value="">Select a lecturer</option>
+              {lecturers.map(l => (
+                <option key={l.id} value={l.id}>{l.firstName} {l.lastName}</option>
+              ))}
+            </Select>
+          </div>
+        </Card>
 
-          {/* Teacher analytics panel */}
-          <AnimatePresence>
-            {!selectedTeacherId ? (
-              <motion.div
-                key="empty"
-                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                className="rounded-2xl border border-dashed border-gray-200 bg-gray-50/50 flex flex-col items-center justify-center text-center py-16 gap-3"
-              >
-                <BarChart3 size={32} className="text-gray-200" />
-                <p className="text-sm font-semibold text-gray-400">Select a lecturer above to view their analytics.</p>
-              </motion.div>
-            ) : teacherLoading ? (
-              <motion.div
-                key="loading"
-                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                className="flex flex-col gap-6 animate-pulse"
-              >
-                <div className="h-20 rounded-2xl bg-gray-100" />
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  {[1, 2, 3].map(i => <div key={i} className="rounded-2xl h-28 bg-gray-100" />)}
-                </div>
-                <div className="rounded-2xl h-48 bg-gray-100" />
-                <div className="rounded-2xl h-48 bg-gray-100" />
-              </motion.div>
-            ) : (
-              <motion.div
-                key={selectedTeacherId}
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                transition={{ duration: 0.35, ease: "easeOut" }}
-                className="flex flex-col gap-6"
-              >
-                {/* KPI row */}
-                <div className="flex flex-row divide-x divide-gray-100 bg-white rounded-2xl border border-gray-100 shadow-sm px-6 py-5">
-                  {[
-                    { label: "Class Average", value: `${classAvg}%`, sub: `across ${teacherCourses.length} course${teacherCourses.length !== 1 ? "s" : ""}` },
-                    { label: "Total Students", value: studentRoster.length, sub: "enrolled" },
-                    { label: "Grading Progress", value: `${gradingPct}%`, sub: `${totalGraded} of ${totalSubs} graded` },
-                    { label: "Pending to Grade", value: pendingGrading, sub: "submissions" },
-                  ].map((kpi, i) => (
-                    <div key={i} className={`flex flex-col gap-1 flex-1 ${i === 0 ? "pr-6" : "px-6"}`}>
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">{kpi.label}</p>
-                      <p className="text-2xl font-black leading-none text-gray-900">{kpi.value}</p>
-                      <p className="text-xs text-gray-400 truncate mt-0.5">{kpi.sub}</p>
-                    </div>
-                  ))}
-                </div>
+        <AnimatePresence mode="wait">
+          {!selectedTeacherId ? (
+            <motion.div
+              key="empty"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="rounded-koru-lg border border-dashed border-koru-outline-variant bg-koru-surface-container-low"
+            >
+              <PanelEmpty icon={BarChart3}>Select a lecturer above, or click a row in the table.</PanelEmpty>
+            </motion.div>
+          ) : teacherLoading ? (
+            <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col gap-6">
+              <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+                {[0, 1, 2, 3].map(i => <Skeleton key={i} className="h-[92px] rounded-koru-lg" />)}
+              </div>
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+                {[0, 1, 2].map(i => <Skeleton key={i} className="h-24 rounded-koru-lg" />)}
+              </div>
+              <Skeleton className="h-56 rounded-koru-lg" />
+            </motion.div>
+          ) : (
+            <motion.div
+              key={selectedTeacherId}
+              initial="hidden"
+              animate="visible"
+              exit={{ opacity: 0, y: -8 }}
+              variants={stagger}
+              className="flex flex-col gap-6"
+            >
+              <StatTiles
+                stats={[
+                  { icon: TrendingUp, label: "Class average", value: classAvg, suffix: "%", variant: "purple" },
+                  { icon: Users, label: "Students", value: studentRoster.length, variant: "sky" },
+                  { icon: CheckCircle2, label: "Graded", value: gradingPct, suffix: "%", variant: "emerald", hint: `${totalGraded} of ${totalSubs}` },
+                  { icon: Hourglass, label: "Left to grade", value: pendingGrading, variant: "orange" },
+                ]}
+              />
 
-                {/* Course averages */}
-                {teacherCourses.length > 0 && (
-                  <div>
-                    <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-3">Course Averages</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                      {teacherCourses.map(course => {
-                        const avg = gradedAssignments.filter(a => a.courseId === course.id);
-                        const courseAvg = avg.length
-                          ? Math.round(avg.reduce((s, a) => s + a.avgScore, 0) / avg.length)
-                          : 0;
-                        const enrolled = studentRoster.filter(s =>
-                          teacherSubmissions.some(
-                            sub => sub.assignment?.courseId === course.id && sub.studentId === s.id
-                          )
-                        ).length;
-                        const yearLevel =
-                          parseInt(course.number, 10) >= 300
-                            ? "3rd Year"
-                            : parseInt(course.number, 10) >= 200
-                            ? "2nd Year"
-                            : "1st Year";
-                        return (
-                          <div key={course.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 hover:border-gray-200 transition-colors">
-                            <div className="flex items-center gap-3 mb-3">
-                              <div className="shrink-0">
-                                <KoruGauge value={courseAvg} />
-                              </div>
-                              <div className="min-w-0">
-                                <p className="font-bold text-sm text-gray-900 truncate">{course.label}</p>
-                                <p className="text-xs text-gray-400 truncate">{course.subjectName}</p>
-                              </div>
-                            </div>
-                            <div className="flex justify-between text-xs text-gray-400">
-                              <span>{enrolled} students</span>
-                              <span>{yearLevel}</span>
+              {teacherCourses.length > 0 && (
+                <motion.div variants={rise}>
+                  <SectionLabel>Course averages</SectionLabel>
+                  <div className="grid grid-cols-1 gap-3 md:grid-cols-2 2xl:grid-cols-3">
+                    {teacherCourses.map(course => {
+                      const avg = gradedAssignments.filter(a => a.courseId === course.id);
+                      const courseAvg = avg.length ? Math.round(avg.reduce((sum, a) => sum + a.avgScore, 0) / avg.length) : 0;
+                      const enrolled = studentRoster.filter(st =>
+                        teacherSubmissions.some(sub => sub.assignment?.courseId === course.id && sub.studentId === st.id),
+                      ).length;
+                      const n = parseInt(course.number, 10);
+                      const yearLevel = n >= 300 ? "3rd Year" : n >= 200 ? "2nd Year" : "1st Year";
+                      return (
+                        <Card
+                          key={course.id}
+                          variant="interactive"
+                          tone="surface"
+                          radius="lg"
+                          padding="sm"
+                          className="flex items-center gap-4 bg-koru-surface-container-lowest"
+                        >
+                          <KoruGauge value={courseAvg} size={60} />
+                          <div className="min-w-0 flex-1">
+                            <p className="font-medium text-koru-on-surface">{course.label}</p>
+                            <p className="truncate text-sm text-koru-on-surface-variant">{course.subjectName}</p>
+                            <div className="mt-2 flex flex-wrap gap-1.5">
+                              <Badge>{enrolled} students</Badge>
+                              <Badge variant="secondary">{yearLevel}</Badge>
                             </div>
                           </div>
-                        );
-                      })}
-                    </div>
+                        </Card>
+                      );
+                    })}
                   </div>
+                </motion.div>
+              )}
+
+              <Panel title="Grading progress" description={`${assignmentsWithStats.length} assignments`}>
+                {assignmentsWithStats.length === 0 ? (
+                  <PanelEmpty icon={ClipboardList}>No assignments yet.</PanelEmpty>
+                ) : (
+                  <DataTable
+                    columns={[
+                      { label: "Assignment" },
+                      { label: "Course" },
+                      { label: "Graded", className: "w-44" },
+                      { label: "Avg score", className: "text-right" },
+                      { label: "Due" },
+                      { label: "Status" },
+                    ]}
+                  >
+                    {assignmentsWithStats.map(a => {
+                      const pct = a.totalSubmissions > 0 ? Math.round((a.graded / a.totalSubmissions) * 100) : 0;
+                      const done = a.graded === a.totalSubmissions && a.totalSubmissions > 0;
+                      const noGrades = a.avgScore === null;
+                      return (
+                        <tr key={a.id} className={tr}>
+                          <td className={tdWrap}><span className="font-medium text-koru-on-surface">{a.title}</span></td>
+                          <td className={td}><Badge variant="primary">{a.courseCode}</Badge></td>
+                          <td className={td}>
+                            <ScoreMeter
+                              value={pct}
+                              label={`${a.graded}/${a.totalSubmissions}`}
+                              tone={a.totalSubmissions === 0 ? "neutral" : done ? "success" : pct > 50 ? "warning" : "error"}
+                            />
+                          </td>
+                          <td className={`${td} text-right`}>
+                            {noGrades ? (
+                              <span className="text-koru-on-surface-variant">—</span>
+                            ) : (
+                              <span className="font-semibold tabular-nums text-koru-on-surface">{a.avgScore}%</span>
+                            )}
+                          </td>
+                          <td className={`${td} text-sm text-koru-on-surface-variant`}>
+                            {a.dueDate ? new Date(a.dueDate).toLocaleDateString("en-ZA", { month: "short", day: "numeric" }) : "—"}
+                          </td>
+                          <td className={td}>
+                            <Badge variant={done ? "success" : noGrades ? "neutral" : "warning"} dot>
+                              {done ? "Complete" : noGrades ? "Not started" : "In progress"}
+                            </Badge>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </DataTable>
                 )}
+              </Panel>
 
-                {/* Grading Progress Table */}
-                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                  <div className="px-6 py-5 border-b border-gray-50 flex justify-between items-center">
-                    <h3 className="text-base font-bold text-gray-900">Grading Progress</h3>
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
-                      {assignmentsWithStats.length} assignments
-                    </span>
-                  </div>
-                  {assignmentsWithStats.length === 0 ? (
-                    <div className="px-6 py-10 text-center text-gray-300 text-sm font-semibold">No assignments found.</div>
-                  ) : (
-                    <table className="w-full text-left">
-                      <thead>
-                        <tr className="bg-gray-50/50">
-                          <th className="px-6 py-3.5 text-[10px] font-bold uppercase tracking-widest text-gray-400">Assignment</th>
-                          <th className="px-6 py-3.5 text-[10px] font-bold uppercase tracking-widest text-gray-400">Course</th>
-                          <th className="px-6 py-3.5 text-[10px] font-bold uppercase tracking-widest text-gray-400 text-center">Graded</th>
-                          <th className="px-6 py-3.5 text-[10px] font-bold uppercase tracking-widest text-gray-400 text-center">Avg Score</th>
-                          <th className="px-6 py-3.5 text-[10px] font-bold uppercase tracking-widest text-gray-400">Due Date</th>
-                          <th className="px-6 py-3.5 text-[10px] font-bold uppercase tracking-widest text-gray-400">Status</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {assignmentsWithStats.map(a => {
-                          const pct = a.totalSubmissions > 0 ? Math.round((a.graded / a.totalSubmissions) * 100) : 0;
-                          const done = a.graded === a.totalSubmissions && a.totalSubmissions > 0;
-                          const noGrades = a.avgScore === null;
-                          return (
-                            <tr key={a.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors">
-                              <td className="px-6 py-4">
-                                <span className="font-semibold text-sm text-gray-900">{a.title}</span>
-                              </td>
-                              <td className="px-6 py-4">
-                                <span className="text-xs font-semibold text-gray-500">{a.courseCode}</span>
-                              </td>
-                              <td className="px-6 py-4 text-center">
-                                <div className="flex flex-col items-center gap-1">
-                                  <span className="text-sm font-bold text-gray-900">{a.graded}/{a.totalSubmissions}</span>
-                                  <div className="w-12 h-1 bg-gray-100 rounded-full overflow-hidden">
-                                    <div
-                                      className={`h-full rounded-full transition-all ${done ? "bg-green-500" : pct > 50 ? "bg-amber-400" : "bg-red-400"}`}
-                                      style={{ width: `${pct}%` }}
-                                    />
-                                  </div>
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 text-center">
-                                {noGrades
-                                  ? <span className="text-xs text-gray-300">—</span>
-                                  : <span className="text-sm font-black text-gray-900">{a.avgScore}%</span>}
-                              </td>
-                              <td className="px-6 py-4 text-xs text-gray-400">
-                                {a.dueDate
-                                  ? new Date(a.dueDate).toLocaleDateString("en-ZA", { month: "short", day: "numeric" })
-                                  : "—"}
-                              </td>
-                              <td className="px-6 py-4">
-                                <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${
-                                  done ? "bg-green-50 text-green-600" :
-                                  noGrades ? "bg-gray-100 text-gray-400" :
-                                  "bg-amber-50 text-amber-600"
-                                }`}>
-                                  {done ? "Complete" : noGrades ? "Not Started" : "In Progress"}
-                                </span>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  )}
-                </div>
-
-                {/* Student Roster */}
-                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                  <div className="px-6 py-5 border-b border-gray-50 flex justify-between items-center">
-                    <h3 className="text-base font-bold text-gray-900">Student Performance</h3>
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
-                      {studentRoster.length} students
-                    </span>
-                  </div>
-                  {studentRoster.length === 0 ? (
-                    <div className="px-6 py-10 text-center text-gray-300 text-sm font-semibold">No student data yet.</div>
-                  ) : (
-                    <table className="w-full text-left">
-                      <thead>
-                        <tr className="bg-gray-50/50">
-                          <th className="px-6 py-3.5 text-[10px] font-bold uppercase tracking-widest text-gray-400">Student</th>
-                          <th className="px-6 py-3.5 text-[10px] font-bold uppercase tracking-widest text-gray-400 text-center">Avg Grade</th>
-                          <th className="px-6 py-3.5 text-[10px] font-bold uppercase tracking-widest text-gray-400 text-center">Submitted</th>
-                          <th className="px-6 py-3.5 text-[10px] font-bold uppercase tracking-widest text-gray-400">Status</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {studentRoster.map(s => (
-                          <tr key={s.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors">
-                            <td className="px-6 py-4">
-                              <div className="flex items-center gap-3">
-                                <Avatar user={s} name={s.name} size={36} />
-                                <div>
-                                  <p className="font-semibold text-sm text-gray-900">{s.name}</p>
-                                  <p className="text-xs text-gray-400">{s.email}</p>
-                                </div>
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 text-center">
-                              <div className="flex flex-col items-center gap-1">
-                                <span className="text-sm font-black text-gray-900">{s.avgGrade}%</span>
-                                <div className="w-12 h-1 bg-gray-100 rounded-full overflow-hidden">
-                                  <div
-                                    className={`h-full rounded-full ${s.avgGrade >= 75 ? "bg-green-500" : s.avgGrade >= 50 ? "bg-orange-400" : "bg-red-500"}`}
-                                    style={{ width: `${s.avgGrade}%` }}
-                                  />
-                                </div>
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 text-center text-sm font-bold text-gray-700">{s.submissions}</td>
-                            <td className="px-6 py-4">
-                              <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${
-                                s.status === "Excellent" ? "bg-green-50 text-green-600" :
-                                s.status === "Good" ? "bg-blue-50 text-blue-600" :
-                                "bg-amber-50 text-amber-600"
-                              }`}>{s.status}</span>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  )}
-                </div>
-
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </motion.div>
-
-      </motion.div>
-    </div>
+              <Panel title="Student performance" description={`${studentRoster.length} students, sorted by average grade`}>
+                {studentRoster.length === 0 ? (
+                  <PanelEmpty icon={GraduationCap}>No student submissions yet.</PanelEmpty>
+                ) : (
+                  <DataTable
+                    columns={[
+                      { label: "Student" },
+                      { label: "Avg grade", className: "w-48" },
+                      { label: "Submitted", className: "text-right" },
+                      { label: "Status" },
+                    ]}
+                  >
+                    {[...studentRoster].sort((a, b) => b.avgGrade - a.avgGrade).map(st => (
+                      <tr key={st.id} className={tr}>
+                        <td className={tdWrap}>
+                          <div className="flex items-center gap-3">
+                            <Avatar user={st} name={st.name} size={36} />
+                            <div className="min-w-0">
+                              <p className="truncate font-medium text-koru-on-surface">{st.name}</p>
+                              <p className="truncate text-koru-caption text-koru-on-surface-variant">{st.email}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className={td}><ScoreMeter value={st.avgGrade} /></td>
+                        <td className={`${td} text-right text-sm tabular-nums text-koru-on-surface`}>{st.submissions}</td>
+                        <td className={td}><Badge variant={STATUS_BADGE[st.status]} dot>{st.status}</Badge></td>
+                      </tr>
+                    ))}
+                  </DataTable>
+                )}
+              </Panel>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.section>
+    </motion.div>
   );
 }

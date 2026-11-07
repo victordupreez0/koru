@@ -2,6 +2,7 @@ import { ThemeProvider } from "@mui/material/styles";
 import { LineChart } from "@mui/x-charts/LineChart";
 import { BarChart } from "@mui/x-charts/BarChart";
 import { Gauge, gaugeClasses } from "@mui/x-charts/Gauge";
+import { PieChart } from "@mui/x-charts/PieChart";
 import { koruChartColors as c, koruChartTheme, koruSeriesPalette } from "./koruChartTheme";
 
 const tickLabelStyle = { fontSize: 11, fontWeight: 600, fill: c.outline };
@@ -134,6 +135,50 @@ export function KoruGauge({ value, size = 56, color = c.primary, thickness = "82
           },
         }}
       />
+    </KoruChartsProvider>
+  );
+}
+
+/**
+ * Donut chart for parts of a whole. `items` = [{ label, value, color? }].
+ * Render the legend yourself next to it; `centerLabel` sits in the hole.
+ */
+export function KoruDonut({ items, size = 168, centerValue, centerLabel }) {
+  const data = items.map((it, i) => ({
+    id: it.label,
+    label: it.label,
+    value: it.value,
+    color: it.color || koruSeriesPalette[i % koruSeriesPalette.length],
+  }));
+  return (
+    <KoruChartsProvider>
+      <div className="relative shrink-0" style={{ width: size, height: size }}>
+        <PieChart
+          width={size}
+          height={size}
+          hideLegend
+          margin={0}
+          series={[
+            {
+              data,
+              innerRadius: size * 0.34,
+              outerRadius: size / 2 - 4,
+              paddingAngle: 2.5,
+              cornerRadius: 6,
+              highlightScope: { fade: "global", highlight: "item" },
+              faded: { additionalRadius: -4, color: c.outlineFaint },
+            },
+          ]}
+        />
+        {(centerValue != null || centerLabel) && (
+          <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+            {centerValue != null && (
+              <span className="font-display text-2xl font-medium leading-none text-koru-on-surface">{centerValue}</span>
+            )}
+            {centerLabel && <span className="mt-1 text-koru-caption text-koru-on-surface-variant">{centerLabel}</span>}
+          </div>
+        )}
+      </div>
     </KoruChartsProvider>
   );
 }

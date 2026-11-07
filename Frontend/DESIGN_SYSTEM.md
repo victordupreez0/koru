@@ -2,7 +2,7 @@
 
 The foundation now follows Material 3 patterns while staying on Tailwind CSS. The primitives emulate Material 3 colour roles, shape, elevation and state treatment without MUI components. The one exception is charts, which use [MUI X Charts](https://mui.com/x/react-charts/) through the Koru wrappers described under Charts.
 
-Migrated so far: the auth flow (login, signup, onboarding role cards and 2FA setup), the app shell (canvas, sidebar and top bar), the dashboards, and the assignments, groups and settings pages. Other feature pages (course views, analytics, calendar, profile) still use legacy styling. Every page that shows a person uses the shared `Avatar`.
+Migrated so far: the auth flow (login, signup, onboarding role cards and 2FA setup), the app shell (canvas, sidebar and top bar), the dashboards, analytics, and the assignments, groups and settings pages. Other feature pages (course views, calendar, profile) still use legacy styling. Every page that shows a person uses the shared `Avatar`.
 
 ## Preview
 
