@@ -1,6 +1,8 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { motion } from "framer-motion";
-import { CheckCircle, Award, FileText } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  AlertTriangle, CheckCircle2, ClipboardList, FileText, GraduationCap, Hourglass, RotateCcw, TrendingUp, Users,
+} from "lucide-react";
 
 import { useAuth } from "../../contexts/AuthContext";
 import { getTeacherCourses } from "../../services/courseService";
@@ -8,35 +10,23 @@ import { getCourseAssignments } from "../../services/assignmentService";
 import { getCourseSubmissions } from "../../services/submissionService";
 import { getCourseGrades } from "../../services/gradeService";
 import { YEARS, SEMESTERS, YEAR_LEVELS } from "./teacherMockData";
-import Avatar from "../../components/UI/Avatar";
+import { Avatar, Badge, Button, Card } from "../../components/UI";
 import { KoruBarList, KoruGauge } from "../../components/UI/charts/KoruCharts";
 import { koruChartColors } from "../../components/UI/charts/koruChartTheme";
+import {
+  AnalyticsHeader, DataTable, FilterSelect, Panel, PanelEmpty, ScoreMeter, SectionLabel, StatTiles,
+} from "./components/AnalyticsUI";
+import { rise, stagger, td, tdWrap, tr } from "./components/analyticsStyles";
 
-/* ─── animation variants ─── */
-const stagger = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.07, delayChildren: 0.1 } },
-};
-const fadeUp = {
-  hidden: { opacity: 0, y: 16 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.45, ease: "easeOut" } },
-};
-
-/* ─── filter select ─── */
-function FilterSelect({ label, value, options, onChange }) {
-  return (
-    <label className="flex items-center gap-2">
-      <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">{label}</span>
-      <select
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        className="rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 outline-none focus:border-[#3C0078] focus:ring-2 focus:ring-[#3C0078]/20 transition-all cursor-pointer"
-      >
-        {options.map(o => <option key={o} value={o}>{o}</option>)}
-      </select>
-    </label>
-  );
-}
+const STATUS_BADGE = { Excellent: "success", Good: "info", "At Risk": "warning", Critical: "error" };
+const ROSTER_FILTERS = ["All", "Excellent", "Good", "At Risk", "Critical"];
+const BAND_COLORS = [
+  koruChartColors.success,
+  "#1e9e57", // koru-stat-green
+  koruChartColors.info,
+  koruChartColors.accent,
+  koruChartColors.error,
+];
 
 /* ═══════════════════════ MAIN COMPONENT ═══════════════════════ */
 export default function TeacherAnalytics() {
@@ -52,6 +42,7 @@ export default function TeacherAnalytics() {
   const [submissions, setSubmissions] = useState([]);
   const [grades, setGrades] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [rosterFilter, setRosterFilter] = useState("All");
 
   useEffect(() => {
     let mounted = true;
@@ -230,328 +221,345 @@ export default function TeacherAnalytics() {
     return bands;
   }, [grades]);
 
+  const filtersChanged =
+    selectedYear !== "2026" || selectedSemester !== "Semester 1" || selectedYearLevel !== "All" || selectedCourseId !== "all";
+  const resetFilters = () => {
+    setSelectedYear("2026");
+    setSelectedSemester("Semester 1");
+    setSelectedYearLevel("All");
+    setSelectedCourseId("all");
+  };
+  const rosterCounts = ROSTER_FILTERS.reduce(
+    (acc, f) => ({ ...acc, [f]: f === "All" ? studentRoster.length : studentRoster.filter(s => s.status === f).length }),
+    {},
+  );
+  const visibleRoster = [...studentRoster]
+    .filter(s => rosterFilter === "All" || s.status === rosterFilter)
+    .sort((a, b) => b.avgGrade - a.avgGrade);
+  const queue = filteredAssignments.filter(a => a.graded < a.totalSubmissions);
+  const atRisk = studentRoster.filter(s => s.status === "At Risk" || s.status === "Critical");
+
   return (
-    <div className="w-full pb-16">
-      <motion.div
-        className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-2"
-        initial="hidden" animate="visible" variants={stagger}
+    <motion.div
+      className="flex w-full flex-col gap-6 pb-16"
+      initial="hidden"
+      animate="visible"
+      variants={stagger}
+    >
+      <AnalyticsHeader
+        title="Teaching insights"
+        subtitle="How your classes are doing, and what still needs grading."
+      />
+
+      {/* Filters */}
+      <Card
+        as={motion.div}
+        variants={rise}
+        variant="outlined"
+        tone="low"
+        radius="lg"
+        padding="sm"
+        className="flex flex-wrap items-end gap-3"
       >
+        <FilterSelect
+          label="Year"
+          value={selectedYear}
+          options={YEARS.map(String)}
+          onChange={v => { setSelectedYear(v); setSelectedCourseId("all"); }}
+          className="w-28"
+        />
+        <FilterSelect
+          label="Semester"
+          value={selectedSemester}
+          options={SEMESTERS}
+          onChange={v => { setSelectedSemester(v); setSelectedCourseId("all"); }}
+          className="w-40"
+        />
+        <FilterSelect
+          label="Level"
+          value={selectedYearLevel}
+          options={["All", ...YEAR_LEVELS]}
+          onChange={v => { setSelectedYearLevel(v); setSelectedCourseId("all"); }}
+          className="w-36"
+        />
+        <FilterSelect
+          label="Course"
+          value={selectedCourseId}
+          options={[{ value: "all", label: "All courses" }, ...filteredCourses.map(c => ({ value: c.id, label: `${c.code} · ${c.name}` }))]}
+          onChange={setSelectedCourseId}
+          className="min-w-56 flex-1 shrink sm:max-w-sm"
+        />
+        <AnimatePresence>
+          {filtersChanged && (
+            <motion.div initial={{ opacity: 0, x: -6 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -6 }} className="ml-auto">
+              <Button variant="text" size="sm" startIcon={<RotateCcw size={14} />} onClick={resetFilters}>
+                Reset
+              </Button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </Card>
 
-        {/* ─── Filter Bar ─── */}
-        <motion.div variants={fadeUp} className="bg-white rounded-2xl border border-gray-100 shadow-sm px-6 py-4">
-          <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
-            <FilterSelect
-              label="Year"
-              value={selectedYear}
-              options={YEARS.map(String)}
-              onChange={v => { setSelectedYear(v); setSelectedCourseId("all"); }}
-            />
-            <FilterSelect
-              label="Semester"
-              value={selectedSemester}
-              options={SEMESTERS}
-              onChange={v => { setSelectedSemester(v); setSelectedCourseId("all"); }}
-            />
-            <FilterSelect
-              label="Level"
-              value={selectedYearLevel}
-              options={["All", ...YEAR_LEVELS]}
-              onChange={v => { setSelectedYearLevel(v); setSelectedCourseId("all"); }}
-            />
-            <div className="ml-auto flex items-center gap-3 pl-6 border-l border-gray-100">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Course</span>
-              <select
-                value={selectedCourseId}
-                onChange={e => setSelectedCourseId(e.target.value)}
-                className="rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 outline-none focus:border-[#3C0078] focus:ring-2 focus:ring-[#3C0078]/20 transition cursor-pointer"
-              >
-                <option value="all">All Courses</option>
-                {filteredCourses.map(c => (
-                  <option key={c.id} value={c.id}>{c.code} – {c.name}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-        </motion.div>
+      <StatTiles
+        loading={loading}
+        stats={[
+          { icon: TrendingUp, label: "Class average", value: classAvg, suffix: "%", variant: "purple" },
+          { icon: Users, label: "Students", value: totalStudents, variant: "sky" },
+          { icon: CheckCircle2, label: "Graded", value: gradingPct, suffix: "%", variant: "emerald", hint: `${totalGraded} of ${totalSubs}` },
+          {
+            icon: Hourglass,
+            label: "Left to grade",
+            value: pendingGrading,
+            variant: "orange",
+            hint: pendingGrading > 0 ? "In your queue" : undefined,
+          },
+        ]}
+      />
 
-        {/* ─── KPI Row ─── */}
-        <motion.div variants={fadeUp} className="flex flex-row divide-x divide-gray-100 bg-white rounded-2xl border border-gray-100 shadow-sm px-6 py-5">
-          {[
-            {
-              label: "Class Average",
-              value: `${classAvg}%`,
-              sub: `across ${filteredCourses.length} course${filteredCourses.length !== 1 ? "s" : ""}`,
-            },
-            { label: "Total Students", value: totalStudents, sub: "enrolled" },
-            { label: "Grading Progress", value: `${gradingPct}%`, sub: `${totalGraded} of ${totalSubs} graded` },
-            { label: "Pending to Grade", value: pendingGrading, sub: "submissions" },
-          ].map((kpi, i) => (
-            <div key={i} className={`flex flex-col gap-1 flex-1 ${i === 0 ? "pr-6" : "px-6"}`}>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">{kpi.label}</p>
-              <p className="text-2xl font-black leading-none text-gray-900">{kpi.value}</p>
-              <p className="text-xs text-gray-400 truncate mt-0.5">{kpi.sub}</p>
-            </div>
-          ))}
-        </motion.div>
-
-        {/* ─── Main Grid ─── */}
-        <div className="grid grid-cols-1 xl:grid-cols-[1fr_380px] gap-6">
-
-          {/* Left column */}
-          <div className="flex flex-col gap-6">
-
-            {/* Course Averages */}
-            <motion.div variants={fadeUp}>
-              <h2 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-3">Course Averages</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+        {/* Left column */}
+        <div className="flex min-w-0 flex-col gap-6">
+          <motion.section variants={rise}>
+            <SectionLabel
+              action={<span className="text-sm text-koru-on-surface-variant">Select a course to filter everything</span>}
+            >
+              Course averages
+            </SectionLabel>
+            {filteredCourses.length === 0 ? (
+              <Card variant="outlined" tone="low" radius="lg">
+                <PanelEmpty icon={GraduationCap}>No courses match these filters.</PanelEmpty>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 2xl:grid-cols-3">
                 {filteredCourses.map(course => {
                   const avg = gradedAssignments.filter(a => a.courseId === course.id);
-                  const courseAvg = avg.length ? Math.round(avg.reduce((s, a) => s + a.avgScore, 0) / avg.length) : 0;
-                  const isSelected = selectedCourseId === course.id;
+                  const courseAvg = avg.length ? Math.round(avg.reduce((sum, a) => sum + a.avgScore, 0) / avg.length) : 0;
+                  const selected = selectedCourseId === course.id;
                   return (
-                    <div
+                    <Card
                       key={course.id}
-                      onClick={() => setSelectedCourseId(isSelected ? "all" : course.id)}
-                      className={`bg-white rounded-2xl border shadow-sm p-5 cursor-pointer transition-all ${isSelected ? "border-[#3C0078]" : "border-gray-100 hover:border-gray-200"}`}
-                    >
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="shrink-0">
-                          <KoruGauge value={courseAvg} />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="font-bold text-sm text-gray-900 truncate">{course.code}</p>
-                          <p className="text-xs text-gray-400 truncate">{course.name}</p>
-                        </div>
-                      </div>
-                      <div className="flex justify-between text-xs text-gray-400">
-                        <span>{course.enrolled} students</span>
-                        <span>{course.yearLevel}</span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </motion.div>
-
-            {/* Grading Progress Table */}
-            <motion.div variants={fadeUp} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-              <div className="px-6 py-5 border-b border-gray-50 flex justify-between items-center">
-                <h2 className="text-base font-bold text-gray-900">Grading Progress</h2>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
-                  {filteredAssignments.length} assignments
-                </span>
-              </div>
-              <table className="w-full text-left">
-                <thead>
-                  <tr className="bg-gray-50/50">
-                    <th className="px-6 py-3.5 text-[10px] font-bold uppercase tracking-widest text-gray-400">Assignment</th>
-                    <th className="px-6 py-3.5 text-[10px] font-bold uppercase tracking-widest text-gray-400">Course</th>
-                    <th className="px-6 py-3.5 text-[10px] font-bold uppercase tracking-widest text-gray-400 text-center">Graded</th>
-                    <th className="px-6 py-3.5 text-[10px] font-bold uppercase tracking-widest text-gray-400 text-center">Avg Score</th>
-                    <th className="px-6 py-3.5 text-[10px] font-bold uppercase tracking-widest text-gray-400">Due Date</th>
-                    <th className="px-6 py-3.5 text-[10px] font-bold uppercase tracking-widest text-gray-400">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredAssignments.map(a => {
-                    const pct = a.totalSubmissions > 0 ? Math.round((a.graded / a.totalSubmissions) * 100) : 0;
-                    const done = a.graded === a.totalSubmissions && a.totalSubmissions > 0;
-                    const noGrades = a.avgScore === null;
-                    return (
-                      <tr key={a.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors">
-                        <td className="px-6 py-4">
-                          <span className="font-semibold text-sm text-gray-900">{a.title}</span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className="text-xs font-semibold text-gray-500">{a.courseCode}</span>
-                        </td>
-                        <td className="px-6 py-4 text-center">
-                          <div className="flex flex-col items-center gap-1">
-                            <span className="text-sm font-bold text-gray-900">{a.graded}/{a.totalSubmissions}</span>
-                            <div className="w-12 h-1 bg-gray-100 rounded-full overflow-hidden">
-                              <div
-                                className={`h-full rounded-full transition-all ${done ? "bg-green-500" : pct > 50 ? "bg-amber-400" : "bg-red-400"}`}
-                                style={{ width: `${pct}%` }}
-                              />
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 text-center">
-                          {noGrades
-                            ? <span className="text-xs text-gray-300">—</span>
-                            : <span className="text-sm font-black text-gray-900">{a.avgScore}%</span>}
-                        </td>
-                        <td className="px-6 py-4 text-xs text-gray-400">
-                          {new Date(a.dueDate).toLocaleDateString("en-ZA", { month: "short", day: "numeric" })}
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${
-                            done ? "bg-green-50 text-green-600" :
-                            noGrades ? "bg-gray-100 text-gray-400" :
-                            "bg-amber-50 text-amber-600"
-                          }`}>
-                            {done ? "Complete" : noGrades ? "Not Started" : "In Progress"}
-                          </span>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </motion.div>
-
-            {/* Student Roster */}
-            <motion.div variants={fadeUp} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-              <div className="px-6 py-5 border-b border-gray-50 flex justify-between items-center">
-                <h2 className="text-base font-bold text-gray-900">Student Performance</h2>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
-                  {studentRoster.length} students
-                </span>
-              </div>
-              <table className="w-full text-left">
-                <thead>
-                  <tr className="bg-gray-50/50">
-                    <th className="px-6 py-3.5 text-[10px] font-bold uppercase tracking-widest text-gray-400">Student</th>
-                    <th className="px-6 py-3.5 text-[10px] font-bold uppercase tracking-widest text-gray-400 text-center">Avg Grade</th>
-                    <th className="px-6 py-3.5 text-[10px] font-bold uppercase tracking-widest text-gray-400 text-center">Submitted</th>
-                    <th className="px-6 py-3.5 text-[10px] font-bold uppercase tracking-widest text-gray-400">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {studentRoster.map(s => (
-                    <tr key={s.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors">
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <Avatar user={s} name={s.name} size={36} />
-                          <div>
-                            <p className="font-semibold text-sm text-gray-900">{s.name}</p>
-                            <p className="text-xs text-gray-400">{s.email}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <div className="flex flex-col items-center gap-1">
-                          <span className="text-sm font-black text-gray-900">{s.avgGrade}%</span>
-                          <div className="w-12 h-1 bg-gray-100 rounded-full overflow-hidden">
-                            <div
-                              className={`h-full rounded-full ${s.avgGrade >= 75 ? "bg-green-500" : s.avgGrade >= 50 ? "bg-orange-400" : "bg-red-500"}`}
-                              style={{ width: `${s.avgGrade}%` }}
-                            />
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-center text-sm font-bold text-gray-700">
-                        {s.submissions}/{s.totalAssignments}
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${
-                          s.status === "Excellent" ? "bg-green-50 text-green-600" :
-                          s.status === "Good" ? "bg-blue-50 text-blue-600" :
-                          s.status === "At Risk" ? "bg-amber-50 text-amber-600" :
-                          "bg-red-50 text-red-600"
-                        }`}>{s.status}</span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </motion.div>
-
-          </div>
-
-          {/* Right sidebar */}
-          <div className="flex flex-col gap-5">
-
-            {/* Class Summary */}
-            <motion.div variants={fadeUp} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-3">Class Summary</p>
-              <div className="flex items-baseline gap-2 mb-1">
-                <span className="text-3xl font-black text-gray-900">{classAvg}%</span>
-                <span className="text-sm text-gray-400">class average</span>
-              </div>
-              <p className="text-xs text-gray-400">
-                {filteredCourses.length} course{filteredCourses.length !== 1 ? "s" : ""} · {totalStudents} students
-              </p>
-              <div className="mt-4 pt-4 border-t border-gray-50 flex items-center gap-2 text-xs text-gray-400">
-                <Award size={14} className="text-amber-400 shrink-0" />
-                <span>{studentRoster.filter(s => s.status === "Excellent").length} students performing excellently</span>
-              </div>
-            </motion.div>
-
-            {/* Grade Distribution — real SA bands */}
-            <motion.div variants={fadeUp} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-              <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-4">Grade Distribution</h3>
-              <KoruBarList
-                label="Grades"
-                labelWidth={60}
-                items={gradeDistribution.map(b => ({ label: b.range, value: b.count }))}
-                color={koruChartColors.primary}
-                xMax={Math.max(...gradeDistribution.map(d => d.count), 1)}
-              />
-            </motion.div>
-
-            {/* Grading Queue */}
-            <motion.div variants={fadeUp} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-              <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-4">Grading Queue</h3>
-              <div className="space-y-2">
-                {filteredAssignments.filter(a => a.graded < a.totalSubmissions).map(a => {
-                  const remaining = a.totalSubmissions - a.graded;
-                  return (
-                    <div key={a.id} className="rounded-xl border border-gray-100 p-3.5 flex items-center gap-3 hover:border-gray-200 transition-colors">
-                      <span className="shrink-0 inline-flex items-center justify-center w-9 h-9 rounded-xl bg-amber-50">
-                        <FileText size={15} className="text-amber-600" />
-                      </span>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-sm text-gray-900 truncate">{a.title}</p>
-                        <p className="text-xs text-gray-400 mt-0.5">{a.courseCode}</p>
-                      </div>
-                      <div className="text-right shrink-0">
-                        <p className="text-xs font-bold text-amber-600">{remaining} left</p>
-                      </div>
-                    </div>
-                  );
-                })}
-                {filteredAssignments.filter(a => a.graded < a.totalSubmissions).length === 0 && (
-                  <div className="text-center py-6 text-gray-400 text-sm">
-                    <CheckCircle size={22} className="mx-auto mb-2 text-green-400" />
-                    All caught up!
-                  </div>
-                )}
-              </div>
-            </motion.div>
-
-            {/* At-Risk Students */}
-            <motion.div variants={fadeUp} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-              <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-4">At-Risk Students</h3>
-              <div className="space-y-2">
-                {studentRoster
-                  .filter(s => s.status === "At Risk" || s.status === "Critical")
-                  .map(s => (
-                    <div
-                      key={s.id}
-                      className={`rounded-xl border p-3.5 flex items-center gap-3 ${
-                        s.status === "Critical" ? "border-red-100 bg-red-50/30" : "border-amber-100 bg-amber-50/30"
+                      as={motion.button}
+                      type="button"
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => setSelectedCourseId(selected ? "all" : course.id)}
+                      aria-pressed={selected}
+                      variant="interactive"
+                      tone="surface"
+                      radius="lg"
+                      padding="sm"
+                      className={`flex w-full items-center gap-4 bg-koru-surface-container-lowest text-left outline-none focus-visible:ring-2 focus-visible:ring-koru-primary ${
+                        selected ? "!ring-2 !ring-koru-primary bg-koru-primary-subtle" : ""
                       }`}
                     >
-                      <Avatar user={s} name={s.name} size={36} />
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-sm text-gray-900 truncate">{s.name}</p>
-                        <p className="text-xs text-gray-400">{s.submissions}/{s.totalAssignments} submitted</p>
+                      <KoruGauge value={courseAvg} size={60} />
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-koru-on-surface">{course.code}</p>
+                        <p className="truncate text-sm text-koru-on-surface-variant">{course.name}</p>
+                        <div className="mt-2 flex flex-wrap gap-1.5">
+                          <Badge>{course.enrolled} students</Badge>
+                          <Badge variant="secondary">{course.yearLevel}</Badge>
+                        </div>
                       </div>
-                      <span className={`text-sm font-black ${s.avgGrade < 50 ? "text-red-600" : "text-amber-600"}`}>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+          </motion.section>
+
+          <Panel title="Grading progress" description={`${filteredAssignments.length} assignments`}>
+            {filteredAssignments.length === 0 ? (
+              <PanelEmpty icon={ClipboardList}>No assignments yet.</PanelEmpty>
+            ) : (
+              <DataTable
+                columns={[
+                  { label: "Assignment" },
+                  { label: "Course" },
+                  { label: "Graded", className: "w-44" },
+                  { label: "Avg score", className: "text-right" },
+                  { label: "Due" },
+                  { label: "Status" },
+                ]}
+              >
+                {filteredAssignments.map(a => {
+                  const pct = a.totalSubmissions > 0 ? Math.round((a.graded / a.totalSubmissions) * 100) : 0;
+                  const done = a.graded === a.totalSubmissions && a.totalSubmissions > 0;
+                  const noGrades = a.avgScore === null;
+                  return (
+                    <tr key={a.id} className={tr}>
+                      <td className={tdWrap}><span className="font-medium text-koru-on-surface">{a.title}</span></td>
+                      <td className={td}><Badge variant="primary">{a.courseCode}</Badge></td>
+                      <td className={td}>
+                        <ScoreMeter
+                          value={pct}
+                          label={`${a.graded}/${a.totalSubmissions}`}
+                          tone={a.totalSubmissions === 0 ? "neutral" : done ? "success" : pct > 50 ? "warning" : "error"}
+                        />
+                      </td>
+                      <td className={`${td} text-right`}>
+                        {noGrades ? (
+                          <span className="text-koru-on-surface-variant">—</span>
+                        ) : (
+                          <span className="font-semibold tabular-nums text-koru-on-surface">{a.avgScore}%</span>
+                        )}
+                      </td>
+                      <td className={`${td} text-sm text-koru-on-surface-variant`}>
+                        {new Date(a.dueDate).toLocaleDateString("en-ZA", { month: "short", day: "numeric" })}
+                      </td>
+                      <td className={td}>
+                        <Badge variant={done ? "success" : noGrades ? "neutral" : "warning"} dot>
+                          {done ? "Complete" : noGrades ? "Not started" : "In progress"}
+                        </Badge>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </DataTable>
+            )}
+          </Panel>
+
+          <Panel
+            title="Student performance"
+            description="Sorted by average grade"
+            action={
+              <div className="flex flex-wrap justify-end gap-1.5" role="group" aria-label="Filter students by status">
+                {ROSTER_FILTERS.map(f => {
+                  const active = rosterFilter === f;
+                  return (
+                    <button
+                      key={f}
+                      type="button"
+                      aria-pressed={active}
+                      onClick={() => setRosterFilter(f)}
+                      className={`inline-flex h-8 items-center gap-1.5 rounded-koru-pill px-3 text-xs font-medium transition ${
+                        active
+                          ? "bg-koru-primary text-koru-on-primary shadow-koru-xs"
+                          : "bg-koru-surface-container-high text-koru-on-surface-variant hover:bg-koru-surface-container-highest"
+                      }`}
+                    >
+                      {f}
+                      <span className={`tabular-nums ${active ? "text-koru-on-primary/75" : "text-koru-outline"}`}>{rosterCounts[f]}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            }
+          >
+            {visibleRoster.length === 0 ? (
+              <PanelEmpty icon={Users}>No students in this group.</PanelEmpty>
+            ) : (
+              <DataTable
+                columns={[
+                  { label: "Student" },
+                  { label: "Avg grade", className: "w-48" },
+                  { label: "Submitted", className: "text-right" },
+                  { label: "Status" },
+                ]}
+              >
+                {visibleRoster.map(s => (
+                  <motion.tr key={s.id} layout="position" className={tr}>
+                    <td className={td}>
+                      <div className="flex items-center gap-3">
+                        <Avatar user={s} name={s.name} size={36} />
+                        <div className="min-w-0">
+                          <p className="truncate font-medium text-koru-on-surface">{s.name}</p>
+                          <p className="truncate text-koru-caption text-koru-on-surface-variant">{s.email}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className={td}><ScoreMeter value={s.avgGrade} /></td>
+                    <td className={`${td} text-right text-sm tabular-nums text-koru-on-surface`}>
+                      {s.submissions}/{s.totalAssignments}
+                    </td>
+                    <td className={td}>
+                      <Badge variant={STATUS_BADGE[s.status]} dot>{s.status}</Badge>
+                    </td>
+                  </motion.tr>
+                ))}
+              </DataTable>
+            )}
+          </Panel>
+        </div>
+
+        {/* Right column */}
+        <div className="flex flex-col gap-6">
+          <Card as={motion.section} variants={rise} tone="brand" radius="lg" padding="lg">
+            <p className="text-koru-label text-koru-on-primary-container">Class summary</p>
+            <div className="mt-3 flex items-center gap-4">
+              <KoruGauge value={classAvg} size={84} />
+              <div>
+                <p className="font-display text-koru-heading text-koru-on-primary-container">Class average</p>
+                <p className="text-sm text-koru-on-primary-container/75">
+                  {filteredCourses.length} course{filteredCourses.length !== 1 ? "s" : ""} · {totalStudents} students
+                </p>
+              </div>
+            </div>
+            <p className="mt-4 rounded-koru-md bg-koru-surface-container-lowest/70 px-3 py-2 text-sm text-koru-on-primary-container">
+              <span className="font-semibold">{rosterCounts.Excellent}</span> student{rosterCounts.Excellent !== 1 ? "s" : ""} performing excellently
+            </p>
+          </Card>
+
+          <Panel title="Grade distribution" description="All graded submissions">
+            <KoruBarList
+              label="Grades"
+              labelWidth={60}
+              items={gradeDistribution.map((b, i) => ({ label: b.range, value: b.count, color: BAND_COLORS[i] }))}
+            />
+          </Panel>
+
+          <Panel title="Grading queue" description={queue.length ? `${queue.length} assignment${queue.length !== 1 ? "s" : ""} waiting` : undefined}>
+            {queue.length === 0 ? (
+              <PanelEmpty icon={CheckCircle2}>All caught up!</PanelEmpty>
+            ) : (
+              <ul className="flex flex-col gap-2">
+                {queue.map(a => {
+                  const remaining = a.totalSubmissions - a.graded;
+                  return (
+                    <li key={a.id} className="flex items-center gap-3 rounded-koru-md bg-koru-surface-container-low p-3 transition-colors hover:bg-koru-surface-container">
+                      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-koru-md bg-koru-accent-soft text-koru-accent-ink">
+                        <FileText size={18} aria-hidden="true" />
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium text-koru-on-surface">{a.title}</p>
+                        <p className="mt-0.5 text-koru-caption text-koru-on-surface-variant">{a.courseCode}</p>
+                      </div>
+                      <Badge variant="accent">{remaining} left</Badge>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </Panel>
+
+          <Panel title="Students at risk">
+            {atRisk.length === 0 ? (
+              <PanelEmpty icon={CheckCircle2}>No students at risk.</PanelEmpty>
+            ) : (
+              <ul className="flex flex-col gap-2">
+                {atRisk.map(s => {
+                  const critical = s.status === "Critical";
+                  return (
+                    <li
+                      key={s.id}
+                      className={`flex items-center gap-3 rounded-koru-md p-3 ${critical ? "bg-koru-error-container/60" : "bg-koru-warning-soft/60"}`}
+                    >
+                      <Avatar user={s} name={s.name} size={36} />
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium text-koru-on-surface">{s.name}</p>
+                        <p className="text-koru-caption text-koru-on-surface-variant">{s.submissions}/{s.totalAssignments} submitted</p>
+                      </div>
+                      <span className={`flex items-center gap-1 text-sm font-semibold tabular-nums ${critical ? "text-koru-error" : "text-koru-warning"}`}>
+                        <AlertTriangle size={14} aria-hidden="true" />
                         {s.avgGrade}%
                       </span>
-                    </div>
-                  ))}
-                {studentRoster.filter(s => s.status === "At Risk" || s.status === "Critical").length === 0 && (
-                  <p className="text-center py-4 text-sm text-gray-400">No at-risk students</p>
-                )}
-              </div>
-            </motion.div>
-
-          </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </Panel>
         </div>
-      </motion.div>
-    </div>
+      </div>
+    </motion.div>
   );
 }
