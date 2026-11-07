@@ -9,6 +9,8 @@ import { getCourseSubmissions } from "../../services/submissionService";
 import { getCourseGrades } from "../../services/gradeService";
 import { YEARS, SEMESTERS, YEAR_LEVELS } from "./teacherMockData";
 import Avatar from "../../components/UI/Avatar";
+import { KoruBarList, KoruGauge } from "../../components/UI/charts/KoruCharts";
+import { koruChartColors } from "../../components/UI/charts/koruChartTheme";
 
 /* ─── animation variants ─── */
 const stagger = {
@@ -33,23 +35,6 @@ function FilterSelect({ label, value, options, onChange }) {
         {options.map(o => <option key={o} value={o}>{o}</option>)}
       </select>
     </label>
-  );
-}
-
-/* ─── progress ring ─── */
-function ProgressRing({ percent, size = 56, stroke = 5, color = "#3C0078" }) {
-  const r = (size - stroke) / 2;
-  const circ = 2 * Math.PI * r;
-  const offset = circ - (percent / 100) * circ;
-  return (
-    <svg width={size} height={size} className="transform -rotate-90">
-      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#f1f5f9" strokeWidth={stroke} />
-      <circle
-        cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth={stroke}
-        strokeDasharray={circ} strokeDashoffset={offset} strokeLinecap="round"
-        className="transition-all duration-700"
-      />
-    </svg>
   );
 }
 
@@ -330,11 +315,8 @@ export default function TeacherAnalytics() {
                       className={`bg-white rounded-2xl border shadow-sm p-5 cursor-pointer transition-all ${isSelected ? "border-[#3C0078]" : "border-gray-100 hover:border-gray-200"}`}
                     >
                       <div className="flex items-center gap-3 mb-3">
-                        <div className="relative shrink-0">
-                          <ProgressRing percent={courseAvg} color={course.color} />
-                          <span className="absolute inset-0 flex items-center justify-center text-sm font-black text-gray-900">
-                            {courseAvg}
-                          </span>
+                        <div className="shrink-0">
+                          <KoruGauge value={courseAvg} />
                         </div>
                         <div className="min-w-0">
                           <p className="font-bold text-sm text-gray-900 truncate">{course.code}</p>
@@ -499,25 +481,13 @@ export default function TeacherAnalytics() {
             {/* Grade Distribution — real SA bands */}
             <motion.div variants={fadeUp} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
               <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-4">Grade Distribution</h3>
-              <div className="space-y-2.5">
-                {gradeDistribution.map(b => {
-                  const maxCount = Math.max(...gradeDistribution.map(d => d.count), 1);
-                  return (
-                    <div key={b.range} className="flex items-center gap-3">
-                      <span className="text-xs font-semibold text-gray-500 w-14 text-right">{b.range}</span>
-                      <div className="flex-1 h-4 bg-gray-50 rounded-md overflow-hidden border border-gray-100">
-                        <motion.div
-                          initial={{ width: 0 }}
-                          animate={{ width: `${(b.count / maxCount) * 100}%` }}
-                          transition={{ duration: 0.7, ease: "easeOut" }}
-                          className="h-full rounded-md bg-[#3C0078]/20"
-                        />
-                      </div>
-                      <span className="text-xs font-bold text-gray-700 w-5 text-right">{b.count}</span>
-                    </div>
-                  );
-                })}
-              </div>
+              <KoruBarList
+                label="Grades"
+                labelWidth={60}
+                items={gradeDistribution.map(b => ({ label: b.range, value: b.count }))}
+                color={koruChartColors.primary}
+                xMax={Math.max(...gradeDistribution.map(d => d.count), 1)}
+              />
             </motion.div>
 
             {/* Grading Queue */}
