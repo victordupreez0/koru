@@ -143,45 +143,45 @@ export default function NovelEditor({
                 <EditableSync editable={editable} />
 
                 {showBubbleMenu && (
-                    <EditorBubble className="flex items-center gap-0.5 rounded-xl border border-gray-200 bg-white px-1.5 py-1 shadow-xl">
+                    <EditorBubble className="flex items-center gap-0.5 rounded-koru-md bg-koru-surface-container-lowest px-1.5 py-1 text-koru-on-surface shadow-koru-md ring-1 ring-inset ring-koru-outline-faint">
                         <EditorBubbleItem onSelect={(editor) => editor.chain().focus().toggleBold().run()}>
-                            <button className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors" title="Bold"><Bold size={16} /></button>
+                            <button className="rounded-koru-sm p-1.5 text-koru-on-surface-variant transition-colors hover:bg-koru-surface-container-high hover:text-koru-on-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus" title="Bold"><Bold size={16} /></button>
                         </EditorBubbleItem>
                         <EditorBubbleItem onSelect={(editor) => editor.chain().focus().toggleItalic().run()}>
-                            <button className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors" title="Italic"><Italic size={16} /></button>
+                            <button className="rounded-koru-sm p-1.5 text-koru-on-surface-variant transition-colors hover:bg-koru-surface-container-high hover:text-koru-on-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus" title="Italic"><Italic size={16} /></button>
                         </EditorBubbleItem>
                         <EditorBubbleItem onSelect={(editor) => editor.chain().focus().toggleUnderline().run()}>
-                            <button className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors" title="Underline"><Underline size={16} /></button>
+                            <button className="rounded-koru-sm p-1.5 text-koru-on-surface-variant transition-colors hover:bg-koru-surface-container-high hover:text-koru-on-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus" title="Underline"><Underline size={16} /></button>
                         </EditorBubbleItem>
                         <EditorBubbleItem onSelect={(editor) => editor.chain().focus().toggleStrike().run()}>
-                            <button className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors" title="Strikethrough"><Strikethrough size={16} /></button>
+                            <button className="rounded-koru-sm p-1.5 text-koru-on-surface-variant transition-colors hover:bg-koru-surface-container-high hover:text-koru-on-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus" title="Strikethrough"><Strikethrough size={16} /></button>
                         </EditorBubbleItem>
                         <EditorBubbleItem onSelect={(editor) => editor.chain().focus().toggleCode().run()}>
-                            <button className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors" title="Inline Code"><Code size={16} /></button>
+                            <button className="rounded-koru-sm p-1.5 text-koru-on-surface-variant transition-colors hover:bg-koru-surface-container-high hover:text-koru-on-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus" title="Inline Code"><Code size={16} /></button>
                         </EditorBubbleItem>
 
-                        <div className="w-px h-5 bg-gray-200 mx-1" />
+                        <div className="mx-1 h-5 w-px bg-koru-outline-variant" />
 
                         <EditorBubbleItem onSelect={(editor) => editor.chain().focus().toggleHeading({ level: 1 }).run()}>
-                            <button className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors" title="Heading 1"><Heading1 size={16} /></button>
+                            <button className="rounded-koru-sm p-1.5 text-koru-on-surface-variant transition-colors hover:bg-koru-surface-container-high hover:text-koru-on-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus" title="Heading 1"><Heading1 size={16} /></button>
                         </EditorBubbleItem>
                         <EditorBubbleItem onSelect={(editor) => editor.chain().focus().toggleHeading({ level: 2 }).run()}>
-                            <button className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors" title="Heading 2"><Heading2 size={16} /></button>
+                            <button className="rounded-koru-sm p-1.5 text-koru-on-surface-variant transition-colors hover:bg-koru-surface-container-high hover:text-koru-on-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus" title="Heading 2"><Heading2 size={16} /></button>
                         </EditorBubbleItem>
                         <EditorBubbleItem onSelect={(editor) => editor.chain().focus().toggleHeading({ level: 3 }).run()}>
-                            <button className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors" title="Heading 3"><Heading3 size={16} /></button>
+                            <button className="rounded-koru-sm p-1.5 text-koru-on-surface-variant transition-colors hover:bg-koru-surface-container-high hover:text-koru-on-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus" title="Heading 3"><Heading3 size={16} /></button>
                         </EditorBubbleItem>
 
-                        <div className="w-px h-5 bg-gray-200 mx-1" />
+                        <div className="mx-1 h-5 w-px bg-koru-outline-variant" />
 
                         <EditorBubbleItem onSelect={(editor) => editor.chain().focus().toggleBulletList().run()}>
-                            <button className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors" title="Bullet List"><List size={16} /></button>
+                            <button className="rounded-koru-sm p-1.5 text-koru-on-surface-variant transition-colors hover:bg-koru-surface-container-high hover:text-koru-on-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus" title="Bullet List"><List size={16} /></button>
                         </EditorBubbleItem>
                         <EditorBubbleItem onSelect={(editor) => editor.chain().focus().toggleOrderedList().run()}>
-                            <button className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors" title="Numbered List"><ListOrdered size={16} /></button>
+                            <button className="rounded-koru-sm p-1.5 text-koru-on-surface-variant transition-colors hover:bg-koru-surface-container-high hover:text-koru-on-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus" title="Numbered List"><ListOrdered size={16} /></button>
                         </EditorBubbleItem>
                         <EditorBubbleItem onSelect={(editor) => editor.chain().focus().toggleBlockquote().run()}>
-                            <button className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors" title="Quote"><Quote size={16} /></button>
+                            <button className="rounded-koru-sm p-1.5 text-koru-on-surface-variant transition-colors hover:bg-koru-surface-container-high hover:text-koru-on-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus" title="Quote"><Quote size={16} /></button>
                         </EditorBubbleItem>
                     </EditorBubble>
                 )}
@@ -189,14 +189,14 @@ export default function NovelEditor({
                 {editable && <NovelBlockMenu />}
 
                 {showSlashCommands && (
-                    <EditorCommand className="z-50 h-auto max-h-[330px] overflow-y-auto rounded-xl border border-gray-200 bg-white px-1 py-2 shadow-xl transition-all">
-                        <EditorCommandEmpty className="px-2 text-gray-500">No results</EditorCommandEmpty>
+                    <EditorCommand className="z-50 h-auto max-h-[330px] overflow-y-auto rounded-koru-md bg-koru-surface-container-lowest px-1 py-2 text-koru-on-surface shadow-koru-md ring-1 ring-inset ring-koru-outline-faint transition-all">
+                        <EditorCommandEmpty className="px-2 text-koru-on-surface-variant">No results</EditorCommandEmpty>
                         <EditorCommandList>
                             {DEFAULT_SUGGESTION_ITEMS.map((item) => (
                                 <EditorCommandItem
                                     value={item.title}
                                     onCommand={(val) => item.command(val)}
-                                    className="flex w-full items-center gap-2 rounded-md px-2 py-1 text-left text-sm hover:bg-gray-100 cursor-pointer"
+                                    className="flex w-full items-center gap-2 cursor-pointer rounded-koru-sm px-2 py-1 text-left text-sm hover:bg-koru-surface-container-high aria-selected:bg-koru-surface-container-high"
                                     key={item.title}
                                 >
                                     <span>{item.title}</span>

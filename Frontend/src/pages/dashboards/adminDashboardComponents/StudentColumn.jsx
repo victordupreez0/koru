@@ -2,42 +2,51 @@ import React from "react";
 import { Plus, X, Pencil, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { SearchInput } from "./SearchInput";
-import Avatar from "../../../components/UI/Avatar";
+import { Avatar, Button, Card } from "../../../components/UI";
 
 function StudentCard({ student, onEdit, onDelete }) {
   return (
-    <motion.div
+    <Card
+      as={motion.div}
+      variant="interactive"
+      tone="surface"
+      radius="2xl"
+      padding="none"
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25, ease: "easeOut" }}
-      className="w-full rounded-2xl px-4 py-3.5 flex items-center gap-3 bg-white/80 border border-gray-100 hover:border-gray-200 transition-colors duration-150 group"
+      className="group flex w-full items-center gap-3 px-4 py-3.5 motion-reduce:transition-none"
     >
       <Avatar user={student} name={student.name} size={36} />
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-bold text-gray-800 truncate">{student.name}</p>
-        <p className="text-xs text-gray-400 truncate">{student.email || student.major || ""}</p>
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-medium text-koru-on-surface">{student.name}</p>
+        <p className="truncate text-xs text-koru-on-surface-variant">{student.email || student.major || ""}</p>
       </div>
-      <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className="flex shrink-0 items-center gap-1 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
         {onEdit && (
-          <button
+          <Button
+            variant="text"
+            size="icon"
             onClick={() => onEdit(student)}
-            className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-[#3C0078]/10 hover:text-[#3C0078] flex items-center justify-center text-gray-400 transition-colors"
             title="Edit student"
+            aria-label="Edit student"
           >
-            <Pencil className="w-3.5 h-3.5" />
-          </button>
+            <Pencil className="h-3.5 w-3.5" />
+          </Button>
         )}
         {onDelete && (
-          <button
+          <Button
+            variant="text"
+            size="icon"
             onClick={() => onDelete(student)}
-            className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-red-50 hover:text-red-500 flex items-center justify-center text-gray-400 transition-colors"
             title="Remove student"
+            aria-label="Remove student"
           >
-            <Trash2 className="w-3.5 h-3.5" />
-          </button>
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
         )}
       </div>
-    </motion.div>
+    </Card>
   );
 }
 
@@ -67,45 +76,42 @@ export function StudentColumn({
   }, [hasCohorts, cohorts, filteredStudents, cohortStudentMap]);
 
   return (
-    <div className="flex flex-col bg-white/70 border border-gray-100 rounded-3xl p-4 h-full">
+    <Card tone="low" radius="2xl" padding="sm" className="flex h-full flex-col">
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-2xl font-bold font-['Gabarito']">Students</h2>
+        <h2 className="font-display text-koru-title text-koru-on-surface">Students</h2>
         {showAddStudent && (
-          <button
+          <Button
+            variant={isAddingStudent ? "tonal" : "outlined"}
+            size="icon"
             onClick={() => setIsAddingStudent(prev => !prev)}
-            className={`w-9 h-9 rounded-full border flex items-center justify-center transition-all ${
-              isAddingStudent
-                ? "border-[#3C0078] bg-[#3C0078]/10 text-[#3C0078]"
-                : "border-gray-200 hover:bg-gray-100 text-gray-600"
-            }`}
             aria-label="Add student to course"
           >
-            {isAddingStudent ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-          </button>
+            {isAddingStudent ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+          </Button>
         )}
       </div>
       <SearchInput value={studentSearch} onChange={setStudentSearch} />
 
       <div className="mt-4 flex flex-col gap-2 flex-1 min-h-0 overflow-y-auto pr-1">
         {!selectedCourseId ? (
-          <p className="text-sm text-gray-400 text-center py-8">Select a course to view students.</p>
+          <p className="text-sm text-koru-on-surface-variant text-center py-8">Select a course to view students.</p>
         ) : filteredStudents.length === 0 ? (
-          <p className="text-sm text-gray-400 text-center py-8">No students enrolled.</p>
+          <p className="text-sm text-koru-on-surface-variant text-center py-8">No students enrolled.</p>
         ) : hasCohorts ? (
           <>
             {cohortGroups.groups.map(({ cohort, students }) => (
               <div key={cohort.id}>
                 <div className="flex items-center gap-2 px-1 py-2 mb-1">
-                  <div className="w-2 h-2 rounded-full bg-[#3C0078] shrink-0" />
-                  <span className="text-[11px] font-black uppercase tracking-widest text-[#3C0078]">
+                  <div className="w-2 h-2 rounded-full bg-koru-primary shrink-0" />
+                  <span className="text-[11px] font-medium uppercase tracking-widest text-koru-primary">
                     {cohort.name}
                   </span>
-                  <span className="text-[10px] text-gray-400 font-semibold ml-auto">
+                  <span className="text-[10px] text-koru-on-surface-variant font-medium ml-auto">
                     {students.length} student{students.length !== 1 ? "s" : ""}
                   </span>
                 </div>
                 {students.length === 0 ? (
-                  <p className="text-xs text-gray-400 px-3 pb-2 italic">No students assigned</p>
+                  <p className="text-xs text-koru-on-surface-variant px-3 pb-2 italic">No students assigned</p>
                 ) : (
                   students.map((student) => (
                     <div key={student.id} className="mb-1.5">
@@ -119,11 +125,11 @@ export function StudentColumn({
             {cohortGroups.unassigned.length > 0 && (
               <div>
                 <div className="flex items-center gap-2 px-1 py-2 mb-1">
-                  <div className="w-2 h-2 rounded-full bg-gray-300 shrink-0" />
-                  <span className="text-[11px] font-black uppercase tracking-widest text-gray-400">
+                  <div className="w-2 h-2 rounded-full bg-koru-outline-variant shrink-0" />
+                  <span className="text-[11px] font-medium uppercase tracking-widest text-koru-on-surface-variant">
                     Unassigned
                   </span>
-                  <span className="text-[10px] text-gray-400 font-semibold ml-auto">
+                  <span className="text-[10px] text-koru-on-surface-variant font-medium ml-auto">
                     {cohortGroups.unassigned.length}
                   </span>
                 </div>
@@ -141,6 +147,6 @@ export function StudentColumn({
           ))
         )}
       </div>
-    </div>
+    </Card>
   );
 }

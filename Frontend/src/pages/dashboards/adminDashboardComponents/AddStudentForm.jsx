@@ -1,6 +1,5 @@
 import React, { useState } from "react";
-import { motion } from "framer-motion";
-import { X } from "lucide-react";
+import { Button, Input, Modal } from "../../../components/UI";
 
 export function AddStudentForm({ onSave, onCancel }) {
   const [firstName, setFirstName] = useState("");
@@ -21,94 +20,59 @@ export function AddStudentForm({ onSave, onCancel }) {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
-      onClick={(e) => e.target === e.currentTarget && onCancel()}
-    >
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 12 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 12 }}
-        transition={{ duration: 0.2 }}
-        className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8 flex flex-col gap-5"
-      >
-        <div className="flex items-center justify-between">
-          <h3 className="text-xl font-black font-['Gabarito']">Add Student</h3>
-          <button
-            onClick={onCancel}
-            className="w-9 h-9 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 transition-colors"
-          >
-            <X size={16} />
-          </button>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          <div className="flex flex-col gap-1.5">
-            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">First Name</label>
-            <input
-              type="text"
-              placeholder="First name"
-              value={firstName}
-              onChange={(e) => setFirstName(e.target.value)}
-              autoFocus
-              className="text-sm border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-[#3C0078] focus:ring-2 focus:ring-[#3C0078]/10 transition-all"
-            />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Last Name</label>
-            <input
-              type="text"
-              placeholder="Last name"
-              value={lastName}
-              onChange={(e) => setLastName(e.target.value)}
-              className="text-sm border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-[#3C0078] focus:ring-2 focus:ring-[#3C0078]/10 transition-all"
-            />
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-1.5">
-          <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Email Address</label>
-          <input
-            type="email"
-            placeholder="student@university.ac"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="text-sm border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-[#3C0078] focus:ring-2 focus:ring-[#3C0078]/10 transition-all"
-          />
-        </div>
-
-        <div className="flex flex-col gap-1.5">
-          <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Temporary Password</label>
-          <input
-            type="text"
-            placeholder="Temporary password"
-            value={tempPassword}
-            onChange={(e) => setTempPassword(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSave()}
-            className="text-sm border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-[#3C0078] focus:ring-2 focus:ring-[#3C0078]/10 transition-all"
-          />
-          <p className="text-xs text-gray-400">The student will be enrolled in the selected course and must change this password on first login.</p>
-        </div>
-
-        <div className="flex gap-3 pt-1">
-          <button
-            onClick={onCancel}
-            className="flex-1 px-4 py-3 text-sm font-bold text-gray-500 bg-gray-100 rounded-2xl hover:bg-gray-200 transition-colors"
-          >
+    <Modal
+      open
+      onClose={onCancel}
+      title="Add Student"
+      size="sm"
+      footer={
+        <>
+          <Button variant="tonal" onClick={onCancel}>
             Cancel
-          </button>
-          <button
-            onClick={handleSave}
-            disabled={!canSave}
-            className="flex-[2] px-4 py-3 text-sm font-bold text-white bg-[#3C0078] rounded-2xl hover:bg-[#2a0055] transition-colors disabled:opacity-40"
-          >
+          </Button>
+          <Button onClick={handleSave} disabled={!canSave}>
             Add Student
-          </button>
+          </Button>
+        </>
+      }
+    >
+      <div className="flex flex-col gap-4">
+        <div className="grid grid-cols-2 gap-3">
+          <Input
+            label="First Name"
+            type="text"
+            placeholder="First name"
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
+            autoFocus
+          />
+          <Input
+            label="Last Name"
+            type="text"
+            placeholder="Last name"
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
+          />
         </div>
-      </motion.div>
-    </motion.div>
+
+        <Input
+          label="Email Address"
+          type="email"
+          placeholder="student@university.ac"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+
+        <Input
+          label="Temporary Password"
+          type="text"
+          placeholder="Temporary password"
+          value={tempPassword}
+          onChange={(e) => setTempPassword(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && handleSave()}
+          hint="The student will be enrolled in the selected course and must change this password on first login."
+        />
+      </div>
+    </Modal>
   );
 }

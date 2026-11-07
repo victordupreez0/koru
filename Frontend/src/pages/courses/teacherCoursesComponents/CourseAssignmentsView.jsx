@@ -8,7 +8,7 @@ import { getCourseStudentCount } from "../../../services/enrollmentService";
 import { getCourseCohorts, getCourseStudents } from "../../../services/classGroupService";
 import { useAuth } from "../../../contexts/AuthContext";
 import CohortFilterBar from "../../../components/CohortFilterBar";
-import { Badge, Button, Card, EmptyState, Skeleton } from "../../../components/UI";
+import { Avatar, Badge, Button, Card, EmptyState, Input, Select, Skeleton } from "../../../components/UI";
 import { staggerContainer, slideUp, ASSIGNMENT_TYPES, GRADE_DISPLAY_OPTIONS, EXTERNAL_TOOLS } from "./constants";
 
 function AssignmentTypeIcon({ type, size = 18 }) {
@@ -81,7 +81,7 @@ function CreateAssignmentDrawer({ onClose, onSave, initialData, cohorts = [], de
                     <h2 className="font-display text-koru-title text-koru-on-surface">{isEditing ? "Edit Assignment" : "Create Assignment"}</h2>
                     <p className="text-sm text-koru-on-surface-variant mt-1">Fill in the details below</p>
                 </div>
-                <Button variant="text" size="icon" onClick={onClose} aria-label="Close" className="!text-koru-on-surface-variant">
+                <Button variant="text" size="icon" onClick={onClose} aria-label="Close">
                     <X size={22} />
                 </Button>
             </div>
@@ -139,7 +139,7 @@ function CreateAssignmentDrawer({ onClose, onSave, initialData, cohorts = [], de
                                         <span className={`inline-flex items-center justify-center w-9 h-9 rounded-koru-md ${t.bg}`}>
                                             <Icon size={18} style={{ color: t.color }} />
                                         </span>
-                                        <span className={`text-[10px] font-bold leading-tight ${form.type === t.id ? "text-koru-primary" : "text-koru-on-surface-variant"}`}>
+                                        <span className={`text-koru-caption font-medium leading-tight ${form.type === t.id ? "text-koru-primary" : "text-koru-on-surface-variant"}`}>
                                             {t.label}
                                         </span>
                                     </button>
@@ -149,47 +149,45 @@ function CreateAssignmentDrawer({ onClose, onSave, initialData, cohorts = [], de
                     </div>
 
                     <div>
-                        <label className="text-koru-caption font-medium text-koru-on-surface-variant mb-2 block">Title</label>
-                        <input
+                        <Input
+                            label="Title"
                             type="text"
                             placeholder="Assignment title..."
                             value={form.title}
                             onChange={e => handleChange("title", e.target.value)}
-                            className="w-full bg-koru-surface-container-low rounded-koru-xs px-5 py-4 text-koru-on-surface font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-koru-primary/20 border border-transparent transition-all"
                         />
                     </div>
 
                     <div>
-                        <label className="text-koru-caption font-medium text-koru-on-surface-variant mb-2 block">Instructions / Description</label>
+                        <label htmlFor="assignment-description" className="mb-1.5 flex items-center gap-1 text-koru-label text-koru-on-surface-variant">Instructions / Description</label>
                         <textarea
+                            id="assignment-description"
                             rows={4}
                             placeholder="Write the assignment instructions here..."
                             value={form.description}
                             onChange={e => handleChange("description", e.target.value)}
-                            className="w-full bg-koru-surface-container-low rounded-koru-xs px-5 py-4 text-koru-on-surface text-sm font-medium focus:outline-none focus:ring-2 focus:ring-koru-primary/20 border border-transparent transition-all resize-none leading-relaxed"
+                            className="w-full resize-none rounded-koru-xs bg-koru-surface-container-lowest px-4 py-3 text-sm leading-relaxed text-koru-on-surface shadow-koru-xs outline-none transition placeholder:text-koru-on-surface-variant/70 hover:bg-koru-surface focus:bg-koru-surface-container-lowest focus:ring-1 focus:ring-inset focus:ring-koru-primary"
                         />
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="text-koru-caption font-medium text-koru-on-surface-variant mb-2 block">Points</label>
-                            <input
+                            <Input
+                                label="Points"
                                 type="number"
                                 min={0}
                                 value={form.points}
                                 onChange={e => handleChange("points", parseInt(e.target.value) || 0)}
-                                className="w-full bg-koru-surface-container-low rounded-koru-xs px-5 py-4 text-koru-on-surface font-bold text-sm focus:outline-none focus:ring-2 focus:ring-koru-primary/20 border border-transparent transition-all"
                             />
                         </div>
                         <div>
-                            <label className="text-koru-caption font-medium text-koru-on-surface-variant mb-2 block">Grade Display</label>
-                            <select
+                            <Select
+                                label="Grade Display"
                                 value={form.gradeDisplay}
                                 onChange={e => handleChange("gradeDisplay", e.target.value)}
-                                className="w-full bg-koru-surface-container-low rounded-koru-xs px-5 py-4 text-koru-on-surface font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-koru-primary/20 border border-transparent transition-all appearance-none"
                             >
                                 {GRADE_DISPLAY_OPTIONS.map(o => <option key={o}>{o}</option>)}
-                            </select>
+                            </Select>
                         </div>
                     </div>
 
@@ -213,18 +211,9 @@ function CreateAssignmentDrawer({ onClose, onSave, initialData, cohorts = [], de
                     <div>
                         <label className="text-koru-caption font-medium text-koru-on-surface-variant mb-3 block">Dates</label>
                         <div className="bg-koru-surface-container-low rounded-koru-3xl p-6 space-y-4">
-                            <div>
-                                <label className="text-koru-caption font-medium text-koru-on-surface-variant mb-2 block">Opens</label>
-                                <input type="datetime-local" value={form.openDate} onChange={e => handleChange("openDate", e.target.value)} className="w-full bg-koru-surface-container-lowest rounded-koru-xs px-5 py-3 text-koru-on-surface font-medium text-sm focus:outline-none focus:ring-2 focus:ring-koru-primary/20 border border-koru-outline-faint transition-all" />
-                            </div>
-                            <div>
-                                <label className="text-koru-caption font-medium text-koru-on-surface-variant mb-2 block">Due Date</label>
-                                <input type="datetime-local" value={form.dueDate} onChange={e => handleChange("dueDate", e.target.value)} className="w-full bg-koru-surface-container-lowest rounded-koru-xs px-5 py-3 text-koru-on-surface font-medium text-sm focus:outline-none focus:ring-2 focus:ring-koru-primary/20 border border-koru-outline-faint transition-all" />
-                            </div>
-                            <div>
-                                <label className="text-koru-caption font-medium text-koru-on-surface-variant mb-2 block">Closes</label>
-                                <input type="datetime-local" value={form.closeDate} onChange={e => handleChange("closeDate", e.target.value)} className="w-full bg-koru-surface-container-lowest rounded-koru-xs px-5 py-3 text-koru-on-surface font-medium text-sm focus:outline-none focus:ring-2 focus:ring-koru-primary/20 border border-koru-outline-faint transition-all" />
-                            </div>
+                            <Input label="Opens" type="datetime-local" value={form.openDate} onChange={e => handleChange("openDate", e.target.value)} />
+                            <Input label="Due Date" type="datetime-local" value={form.dueDate} onChange={e => handleChange("dueDate", e.target.value)} />
+                            <Input label="Closes" type="datetime-local" value={form.closeDate} onChange={e => handleChange("closeDate", e.target.value)} />
                         </div>
                     </div>
 
@@ -248,27 +237,26 @@ function CreateAssignmentDrawer({ onClose, onSave, initialData, cohorts = [], de
                                         }`}
                                     >
                                         <span
-                                            className={`w-10 h-10 rounded-koru-md ${tool.bg} flex items-center justify-center text-base font-semibold shrink-0`}
+                                            className={`w-10 h-10 rounded-koru-md ${tool.bg} flex items-center justify-center text-base font-medium shrink-0`}
                                             style={{ color: tool.color }}
                                         >
                                             {tool.icon}
                                         </span>
                                         <div className="min-w-0">
-                                            <p className={`text-xs font-bold leading-tight truncate ${
+                                            <p className={`text-xs font-medium leading-tight truncate ${
                                                 form.externalToolName === tool.name ? "text-koru-info" : "text-koru-on-surface-variant"
                                             }`}>{tool.name}</p>
-                                            <p className="text-[10px] text-koru-on-surface-variant leading-tight mt-0.5">{tool.description}</p>
+                                            <p className="text-koru-caption text-koru-on-surface-variant leading-tight mt-0.5">{tool.description}</p>
                                         </div>
                                     </button>
                                 ))}
                             </div>
-                            <label className="text-koru-caption font-medium text-koru-on-surface-variant mb-2 block">Tool URL / Launch Link</label>
-                            <input
+                            <Input
+                                label="Tool URL / Launch Link"
                                 type="url"
                                 placeholder="https://..."
                                 value={form.externalToolUrl}
                                 onChange={e => handleChange("externalToolUrl", e.target.value)}
-                                className="w-full bg-koru-surface-container-low rounded-koru-xs px-5 py-4 text-koru-on-surface font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-koru-info/20 border border-transparent transition-all"
                             />
                         </div>
                     )}
@@ -288,15 +276,17 @@ function CreateAssignmentDrawer({ onClose, onSave, initialData, cohorts = [], de
                                 {quizQuestions.map((q, qi) => (
                                     <div key={qi} className="bg-koru-surface-container-low rounded-koru-2xl p-5 space-y-3">
                                         <div className="flex items-start gap-3">
-                                            <span className="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-koru-accent-soft text-[10px] font-semibold text-koru-accent-ink">{qi + 1}</span>
-                                            <input
+                                            <span className="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-koru-accent-soft text-koru-caption font-medium text-koru-accent-ink">{qi + 1}</span>
+                                            <Input
+                                                size="sm"
                                                 type="text"
+                                                aria-label={`Question ${qi + 1} text`}
                                                 placeholder="Question text..."
                                                 value={q.question}
                                                 onChange={e => updateQuestion(qi, "question", e.target.value)}
-                                                className="flex-1 bg-koru-surface-container-lowest rounded-koru-xs px-4 py-2 text-sm text-koru-on-surface font-medium focus:outline-none focus:ring-2 focus:ring-koru-accent/20 border border-koru-outline-faint"
+                                                containerClassName="flex-1"
                                             />
-                                            <Button variant="text" size="icon" onClick={() => removeQuestion(qi)} aria-label={`Remove question ${qi + 1}`} className="!h-8 !w-8 !text-koru-outline hover:!bg-koru-error-container hover:!text-koru-error">
+                                            <Button variant="text" size="icon" onClick={() => removeQuestion(qi)} aria-label={`Remove question ${qi + 1}`}>
                                                 <Trash2 size={14} />
                                             </Button>
                                         </div>
@@ -304,17 +294,19 @@ function CreateAssignmentDrawer({ onClose, onSave, initialData, cohorts = [], de
                                             {q.options.map((opt, oi) => (
                                                 <div key={oi} className="flex items-center gap-2">
                                                     <input type="radio" name={`correct-${qi}`} checked={q.correctAnswer === oi} onChange={() => updateQuestion(qi, "correctAnswer", oi)} className="accent-koru-primary" />
-                                                    <input
+                                                    <Input
+                                                        size="sm"
                                                         type="text"
+                                                        aria-label={`Question ${qi + 1} option ${oi + 1}`}
                                                         placeholder={`Option ${oi + 1}...`}
                                                         value={opt}
                                                         onChange={e => updateOption(qi, oi, e.target.value)}
-                                                        className="flex-1 bg-koru-surface-container-lowest rounded-koru-xs px-4 py-2 text-sm text-koru-on-surface-variant focus:outline-none focus:ring-2 focus:ring-koru-primary/10 border border-koru-outline-faint"
+                                                        containerClassName="flex-1"
                                                     />
                                                 </div>
                                             ))}
                                         </div>
-                                        <p className="text-[10px] text-koru-on-surface-variant pl-9">Select the radio button next to the correct answer</p>
+                                        <p className="text-koru-caption text-koru-on-surface-variant pl-9">Select the radio button next to the correct answer</p>
                                     </div>
                                 ))}
                             </div>
@@ -401,7 +393,7 @@ function SubmissionFileViewer({ submission }) {
         <div className="flex flex-col items-center justify-center h-64 bg-koru-surface-container-low rounded-koru-2xl border border-koru-outline-faint gap-3">
             <FileText size={28} className="text-koru-outline" />
             <p className="text-sm text-koru-on-surface-variant font-medium">Unable to load file preview</p>
-            <a href={fileUrl} target="_blank" rel="noreferrer" className="text-xs font-medium !text-koru-primary hover:underline">Try opening directly</a>
+            <a href={fileUrl} target="_blank" rel="noreferrer" className="text-xs font-medium text-koru-primary hover:underline">Try opening directly</a>
         </div>
     );
 
@@ -426,7 +418,7 @@ function SubmissionFileViewer({ submission }) {
         <div className="flex flex-col items-center justify-center h-64 bg-koru-surface-container-low rounded-koru-2xl border border-koru-outline-faint gap-3">
             <FileText size={28} className="text-koru-outline" />
             <p className="text-sm text-koru-on-surface-variant font-medium">{fileExt.toUpperCase()} file</p>
-            <a href={blobUrl} target="_blank" rel="noreferrer" className="inline-flex h-8 items-center rounded-koru-pill bg-koru-secondary-container px-3 text-xs font-medium !text-koru-on-secondary-container transition-colors hover:bg-koru-secondary-container/80">
+            <a href={blobUrl} target="_blank" rel="noreferrer" className="inline-flex h-8 items-center rounded-koru-pill bg-koru-secondary-container px-3 text-xs font-medium text-koru-on-secondary-container transition-colors hover:bg-koru-secondary-container/80">
                 Download File
             </a>
         </div>
@@ -559,7 +551,7 @@ function TeacherSubmissionReview({
                         Back to Assignments
                     </button>
                     <span className="text-koru-outline-variant">/</span>
-                    <span className="text-sm text-koru-on-surface-variant font-semibold truncate max-w-[320px]">{assignment.title}</span>
+                    <span className="text-sm text-koru-on-surface-variant font-medium truncate max-w-[320px]">{assignment.title}</span>
                 </div>
                 <div className="flex items-end justify-between">
                     <div>
@@ -627,21 +619,17 @@ function TeacherSubmissionReview({
                                                 : "hover:bg-koru-surface-container-lowest/60"
                                         }`}
                                     >
-                                        <div className={`shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-xs font-semibold ${
-                                            isSelected ? "bg-koru-primary text-koru-on-primary" : "bg-koru-primary/5 border-2 border-koru-primary/10 text-koru-primary"
-                                        }`}>
-                                            {(sub.student?.firstName?.[0] || "?").toUpperCase()}{(sub.student?.lastName?.[0] || "").toUpperCase()}
-                                        </div>
+                                        <Avatar user={sub.student} seed={sub.studentId} name={studentName} size="sm" />
                                         <div className="flex-1 min-w-0">
-                                            <p className={`text-sm font-bold truncate ${isSelected ? "text-koru-primary" : "text-koru-on-surface"}`}>{studentName}</p>
-                                            <p className="text-[10px] text-koru-on-surface-variant mt-0.5">
+                                            <p className={`text-sm font-medium truncate ${isSelected ? "text-koru-primary" : "text-koru-on-surface"}`}>{studentName}</p>
+                                            <p className="text-koru-caption text-koru-on-surface-variant mt-0.5">
                                                 {sub.submittedAt ? new Date(sub.submittedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "—"}
                                             </p>
                                         </div>
                                         <div className="shrink-0 flex flex-col items-end gap-1">
                                             <Badge variant={sub.status === "Graded" ? "success" : sub.status === "Late" ? "warning" : "info"}>{sub.status || "Submitted"}</Badge>
                                             {existingGrade && maxPts != null && (
-                                                <span className="text-[10px] font-bold text-koru-on-surface-variant">{existingGrade.pointsEarned}/{maxPts}</span>
+                                                <span className="text-koru-caption font-medium text-koru-on-surface-variant">{existingGrade.pointsEarned}/{maxPts}</span>
                                             )}
                                         </div>
                                     </button>
@@ -663,18 +651,14 @@ function TeacherSubmissionReview({
                                 >
                                     {/* Student header */}
                                     <div className="flex items-center gap-4">
-                                        <div className="w-11 h-11 rounded-full bg-koru-primary flex items-center justify-center">
-                                            <span className="text-koru-on-primary font-bold text-sm">
-                                                {(selectedSub.student?.firstName?.[0] || "?").toUpperCase()}{(selectedSub.student?.lastName?.[0] || "").toUpperCase()}
-                                            </span>
-                                        </div>
+                                        <Avatar user={selectedSub.student} seed={selectedSub.studentId} size="md" />
                                         <div className="flex-1">
-                                            <p className="font-bold text-koru-on-surface">{selectedSub.student ? `${selectedSub.student.firstName} ${selectedSub.student.lastName}` : selectedSub.studentId}</p>
+                                            <p className="font-medium text-koru-on-surface">{selectedSub.student ? `${selectedSub.student.firstName} ${selectedSub.student.lastName}` : selectedSub.studentId}</p>
                                             <p className="text-xs text-koru-on-surface-variant">{selectedSub.student?.email || ""}</p>
                                         </div>
                                         <div className="text-right">
-                                            <p className="text-xs font-semibold text-koru-on-surface-variant">{selectedSub.submittedAt ? new Date(selectedSub.submittedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—"}</p>
-                                            <p className="text-[10px] text-koru-on-surface-variant">{selectedSub.submittedAt ? new Date(selectedSub.submittedAt).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }) : ""}</p>
+                                            <p className="text-xs font-medium text-koru-on-surface-variant">{selectedSub.submittedAt ? new Date(selectedSub.submittedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—"}</p>
+                                            <p className="text-koru-caption text-koru-on-surface-variant">{selectedSub.submittedAt ? new Date(selectedSub.submittedAt).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }) : ""}</p>
                                         </div>
                                         <Badge
                                             size="md"
@@ -690,7 +674,7 @@ function TeacherSubmissionReview({
                                     {/* File viewer */}
                                     {isQuizAnswer(selectedSub) ? (
                                         <div className="bg-koru-warning-soft rounded-koru-2xl border border-koru-warning/30 p-6">
-                                            <p className="text-sm font-bold text-koru-warning mb-3">Quiz Response</p>
+                                            <p className="text-sm font-medium text-koru-warning mb-3">Quiz Response</p>
                                             <pre className="text-xs text-koru-on-surface-variant whitespace-pre-wrap overflow-auto max-h-96">{(() => {
                                                 try { return JSON.stringify(JSON.parse(selectedSub.fileUrl), null, 2); } catch { return selectedSub.fileUrl; }
                                             })()}</pre>
@@ -730,14 +714,14 @@ function TeacherSubmissionReview({
                                                         <div className="flex-1 space-y-2">
                                                             <label htmlFor={`grade-points-${selectedSub.id}`} className="text-koru-label text-koru-on-surface-variant">Points{maxPts != null && ` (out of ${maxPts})`}</label>
                                                             <div className="flex items-center gap-3">
-                                                                <input
+                                                                <Input
                                                                     id={`grade-points-${selectedSub.id}`}
                                                                     type="number" min="0" max={maxPts ?? undefined} step="0.5"
                                                                     value={gs.points}
                                                                     onChange={e => setField(selectedSub.id, "points", e.target.value)}
                                                                     placeholder={maxPts != null ? `0 – ${maxPts}` : "Points"}
                                                                     disabled={gs.saving}
-                                                                    className="h-12 w-32 rounded-koru-xs bg-koru-surface-container-lowest px-4 text-sm font-medium text-koru-on-surface shadow-koru-xs outline-none ring-1 ring-inset ring-koru-outline-variant transition focus:ring-koru-primary disabled:opacity-50"
+                                                                    containerClassName="w-32"
                                                                 />
                                                                 {pct !== null && (
                                                                     <div className={`px-4 py-3 rounded-koru-lg font-display font-medium tabular-nums text-lg min-w-[65px] text-center ${pct >= 75 ? "bg-koru-success-soft text-koru-success" : pct >= 50 ? "bg-koru-warning-soft text-koru-warning" : "bg-koru-error-container text-koru-error"}`}>
@@ -825,7 +809,7 @@ function AssignmentPreviewDrawer({ assignment, onClose }) {
                         </div>
                         <p className="text-sm text-koru-on-surface-variant">This is what students see</p>
                     </div>
-                    <Button variant="text" size="icon" onClick={onClose} aria-label="Close preview" className="!text-koru-on-surface-variant">
+                    <Button variant="text" size="icon" onClick={onClose} aria-label="Close preview">
                         <X size={22} />
                     </Button>
                 </div>
@@ -854,20 +838,20 @@ function AssignmentPreviewDrawer({ assignment, onClose }) {
                             <div className="bg-koru-surface-container-low rounded-koru-2xl p-5 space-y-3">
                                 {assignment.openDate && (
                                     <div className="flex items-center justify-between">
-                                        <span className="text-xs font-bold text-koru-on-surface-variant">Opens</span>
-                                        <span className="text-xs text-koru-success font-semibold">{new Date(assignment.openDate).toLocaleString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
+                                        <span className="text-xs font-medium text-koru-on-surface-variant">Opens</span>
+                                        <span className="text-xs text-koru-success font-medium">{new Date(assignment.openDate).toLocaleString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
                                     </div>
                                 )}
                                 {assignment.dueDate && (
                                     <div className="flex items-center justify-between">
-                                        <span className="text-xs font-bold text-koru-on-surface-variant">Due Date</span>
-                                        <span className="text-xs text-koru-warning font-semibold">{new Date(assignment.dueDate).toLocaleString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
+                                        <span className="text-xs font-medium text-koru-on-surface-variant">Due Date</span>
+                                        <span className="text-xs text-koru-warning font-medium">{new Date(assignment.dueDate).toLocaleString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
                                     </div>
                                 )}
                                 {assignment.closeDate && (
                                     <div className="flex items-center justify-between">
-                                        <span className="text-xs font-bold text-koru-on-surface-variant">Closes</span>
-                                        <span className="text-xs text-koru-error font-semibold">{new Date(assignment.closeDate).toLocaleString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
+                                        <span className="text-xs font-medium text-koru-on-surface-variant">Closes</span>
+                                        <span className="text-xs text-koru-error font-medium">{new Date(assignment.closeDate).toLocaleString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
                                     </div>
                                 )}
                             </div>
@@ -890,7 +874,7 @@ function AssignmentPreviewDrawer({ assignment, onClose }) {
                                 <div className="bg-koru-surface-container-low rounded-koru-2xl p-5 flex items-center gap-4">
                                     {externalTool ? (
                                         <span
-                                            className={`w-12 h-12 rounded-koru-lg ${externalTool.bg} flex items-center justify-center text-lg font-semibold shrink-0`}
+                                            className={`w-12 h-12 rounded-koru-lg ${externalTool.bg} flex items-center justify-center text-lg font-medium shrink-0`}
                                             style={{ color: externalTool.color }}
                                         >
                                             {externalTool.icon}
@@ -901,7 +885,7 @@ function AssignmentPreviewDrawer({ assignment, onClose }) {
                                         </span>
                                     )}
                                     <div className="flex-1 min-w-0">
-                                        <p className="font-bold text-koru-on-surface">{assignment.externalToolName || "External Tool"}</p>
+                                        <p className="font-medium text-koru-on-surface">{assignment.externalToolName || "External Tool"}</p>
                                         {assignment.externalToolUrl && (
                                             <p className="text-xs text-koru-on-surface-variant truncate mt-0.5">{assignment.externalToolUrl}</p>
                                         )}
@@ -911,7 +895,7 @@ function AssignmentPreviewDrawer({ assignment, onClose }) {
                                             href={assignment.externalToolUrl}
                                             target="_blank"
                                             rel="noreferrer"
-                                            className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-koru-pill bg-koru-info-soft px-3 text-xs font-medium !text-koru-info transition-colors hover:bg-koru-info-soft/70"
+                                            className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-koru-pill bg-koru-info-soft px-3 text-xs font-medium text-koru-info transition-colors hover:bg-koru-info-soft/70"
                                         >
                                             <ExternalLink size={13} /> Launch
                                         </a>
@@ -930,13 +914,13 @@ function AssignmentPreviewDrawer({ assignment, onClose }) {
                                 {quizQuestions.map((q, qi) => (
                                     <div key={qi} className="bg-koru-surface-container-low rounded-koru-2xl p-5 space-y-3">
                                         <div className="flex items-start gap-3">
-                                            <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-koru-accent-soft text-[10px] font-semibold text-koru-accent-ink">{qi + 1}</span>
-                                            <p className="text-sm text-koru-on-surface font-semibold flex-1">{q.question || <span className="text-koru-on-surface-variant italic">No question text</span>}</p>
+                                            <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-koru-accent-soft text-koru-caption font-medium text-koru-accent-ink">{qi + 1}</span>
+                                            <p className="text-sm text-koru-on-surface font-medium flex-1">{q.question || <span className="text-koru-on-surface-variant italic">No question text</span>}</p>
                                         </div>
                                         <div className="space-y-2 pl-9">
                                             {q.options?.map((opt, oi) => (
                                                 <div key={oi} className={`flex items-center gap-2 px-4 py-2 rounded-koru-md text-sm ${
-                                                    q.correctAnswer === oi ? "bg-koru-success-soft text-koru-success font-semibold" : "bg-koru-surface-container-lowest text-koru-on-surface-variant"
+                                                    q.correctAnswer === oi ? "bg-koru-success-soft text-koru-success font-medium" : "bg-koru-surface-container-lowest text-koru-on-surface-variant"
                                                 }`}>
                                                     <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
                                                         q.correctAnswer === oi ? "border-koru-success bg-koru-success" : "border-koru-outline-variant"
@@ -980,7 +964,7 @@ function AssignmentGroupRow({ group, onTogglePublish, onDelete, onEdit, onClose,
                     </span>
                     <span className="font-display text-koru-heading text-koru-on-surface">{group.name}</span>
                     <Badge>{group.weight}% of grade</Badge>
-                    <span className="text-[10px] text-koru-on-surface-variant font-medium">
+                    <span className="text-koru-caption text-koru-on-surface-variant font-medium">
                         {group.assignments.length} assignment{group.assignments.length !== 1 ? "s" : ""}
                     </span>
                 </div>
@@ -1025,10 +1009,10 @@ function AssignmentGroupRow({ group, onTogglePublish, onDelete, onEdit, onClose,
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-3.5">
-                                                    <div className="text-xs text-koru-on-surface-variant font-semibold">
+                                                    <div className="text-xs text-koru-on-surface-variant font-medium">
                                                         {item.dueDate ? new Date(item.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—"}
                                                     </div>
-                                                    {item.closeDate && <div className="text-[10px] text-koru-error mt-0.5">Closes {new Date(item.closeDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</div>}
+                                                    {item.closeDate && <div className="text-koru-caption text-koru-error mt-0.5">Closes {new Date(item.closeDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</div>}
                                                 </td>
                                                 <td className="px-6 py-3.5 text-center">
                                                     <div className="flex flex-col items-center gap-1">
@@ -1055,15 +1039,14 @@ function AssignmentGroupRow({ group, onTogglePublish, onDelete, onEdit, onClose,
                                                             variant="text"
                                                             size="sm"
                                                             onClick={() => onClose(group.id, item.id)}
-                                                            className={item.isClosed ? "!text-koru-error hover:!bg-koru-error-container" : "!text-koru-on-surface-variant hover:!bg-koru-error-container hover:!text-koru-error"}
                                                             title={item.isClosed ? "Click to reopen" : "Click to close"}
                                                         >
                                                             {item.isClosed ? "Reopen" : "Close"}
                                                         </Button>
-                                                        <Button variant="text" size="icon" onClick={() => onEdit(group.id, item.id)} aria-label={`Edit ${item.title}`} className="!h-8 !w-8 !text-koru-outline opacity-0 hover:!text-koru-primary focus-visible:opacity-100 group-hover:opacity-100">
+                                                        <Button variant="text" size="icon" onClick={() => onEdit(group.id, item.id)} aria-label={`Edit ${item.title}`}>
                                                             <Edit2 size={14} />
                                                         </Button>
-                                                        <Button variant="text" size="icon" onClick={() => onDelete(group.id, item.id)} aria-label={`Delete ${item.title}`} className="!h-8 !w-8 !text-koru-outline opacity-0 hover:!bg-koru-error-container hover:!text-koru-error focus-visible:opacity-100 group-hover:opacity-100">
+                                                        <Button variant="text" size="icon" onClick={() => onDelete(group.id, item.id)} aria-label={`Delete ${item.title}`}>
                                                             <Trash2 size={14} />
                                                         </Button>
                                                     </div>

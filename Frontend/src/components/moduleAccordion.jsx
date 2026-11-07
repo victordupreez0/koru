@@ -17,8 +17,8 @@ function AccordionItem({ title, children, defaultOpen = false, onRemove, isTeach
       <div className="flex items-center">
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className={`flex-1 flex items-center justify-between py-2.5 px-4 text-left font-bold transition-all duration-200 rounded-xl mx-2 text-sm ${
-            isOpen ? "text-[#3C0078]" : "text-gray-500 hover:bg-purple-50"
+          className={`flex-1 flex items-center justify-between py-2.5 px-4 text-left font-medium transition-all duration-200 rounded-koru-md mx-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus ${
+            isOpen ? "text-koru-primary" : "text-koru-on-surface-variant hover:bg-koru-primary-subtle"
           }`}
         >
           <span className="flex items-center gap-2">
@@ -29,7 +29,7 @@ function AccordionItem({ title, children, defaultOpen = false, onRemove, isTeach
         {isTeacher && (
           <button
             onClick={onRemove}
-            className="p-2 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
+            className="rounded-koru-sm p-2 text-koru-on-surface-variant opacity-0 transition-all hover:text-koru-error focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus group-hover:opacity-100"
             title="Remove Section"
           >
             <Trash2 size={14} />
@@ -50,10 +50,10 @@ function AccordionItem({ title, children, defaultOpen = false, onRemove, isTeach
 function SubNavItem({ label, isActive, onClick, onRemove, isTeacher }) {
   return (
     <li
-      className={`group flex items-center justify-between px-4 py-1.5 text-xs transition-colors mx-4 rounded-lg cursor-pointer ${
+      className={`group flex items-center justify-between px-4 py-1.5 text-xs transition-colors mx-4 rounded-koru-sm cursor-pointer ${
         isActive 
-          ? "bg-[#3C0078] text-white font-bold shadow-sm" 
-          : "text-gray-500 hover:text-[#3C0078] hover:bg-purple-100"
+          ? "bg-koru-primary text-koru-on-primary font-medium shadow-koru-xs"
+          : "text-koru-on-surface-variant hover:text-koru-primary hover:bg-koru-primary-soft"
       }`}
       onClick={onClick}
     >
@@ -64,8 +64,8 @@ function SubNavItem({ label, isActive, onClick, onRemove, isTeacher }) {
             e.stopPropagation();
             onRemove();
           }}
-          className={`p-1 opacity-0 group-hover:opacity-100 transition-all ${
-            isActive ? "text-white/70 hover:text-white" : "text-gray-400 hover:text-red-500"
+          className={`rounded-koru-xs p-1 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus transition-all ${
+            isActive ? "text-koru-on-primary/70 hover:text-koru-on-primary" : "text-koru-on-surface-variant hover:text-koru-error"
           }`}
           title="Remove Item"
         >
@@ -143,7 +143,7 @@ export default function ModuleAccordion() {
   };
 
   return (
-    <div className="flex flex-col gap-1 overflow-hidden bg-white/50 border border-1 border-gray-100 shadow-xl rounded-3xl min-w-[220px] max-h-[80vh] overflow-y-auto py-4 scrollbar-hide">
+    <div className="flex flex-col gap-1 overflow-hidden bg-koru-surface-container-lowest/50 shadow-koru-lg ring-1 ring-inset ring-koru-outline-faint rounded-koru-3xl min-w-[220px] max-h-[80vh] overflow-y-auto py-4 scrollbar-hide">
       {items.map((item) => (
         <AccordionItem
           key={item.id}
@@ -170,7 +170,7 @@ export default function ModuleAccordion() {
                     autoFocus
                     type="text"
                     placeholder="Item name..."
-                    className="w-full bg-white/80 border border-black/10 rounded-lg px-3 py-1.5 text-[10px] outline-none focus:border-black transition-colors"
+                    className="w-full rounded-koru-xs bg-koru-surface-container-lowest ring-1 ring-inset ring-koru-outline-variant px-3 py-1.5 text-koru-caption text-koru-on-surface outline-none focus:ring-2 focus:ring-koru-focus transition-colors"
                     value={newSubItemLabel}
                     onChange={(e) => setNewSubItemLabel(e.target.value)}
                     onKeyDown={(e) => {
@@ -181,13 +181,13 @@ export default function ModuleAccordion() {
                   <div className="flex gap-1 mb-2">
                     <button
                       onClick={() => addSubItem(item.id)}
-                      className="flex-1 py-1 bg-[#3C0078] text-white text-[9px] font-bold uppercase tracking-widest rounded-md hover:bg-[#2A0054] transition-all"
+                      className="flex-1 py-1 bg-koru-primary text-koru-on-primary text-koru-caption font-medium uppercase tracking-widest rounded-koru-sm hover:bg-koru-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus transition-all"
                     >
                       Add
                     </button>
                     <button
                       onClick={() => setAddingSubItemTo(null)}
-                      className="p-1 bg-gray-100 text-gray-500 rounded-md hover:bg-gray-200"
+                      className="p-1 bg-koru-surface-container-high text-koru-on-surface-variant rounded-koru-sm hover:bg-koru-surface-container-highest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus"
                     >
                       <X size={12} />
                     </button>
@@ -196,7 +196,7 @@ export default function ModuleAccordion() {
               ) : (
                 <button
                   onClick={() => setAddingSubItemTo(item.id)}
-                  className="w-full flex items-center justify-center gap-1.5 py-2 border border-dashed border-black/10 rounded-lg text-[9px] font-bold uppercase tracking-[0.1em] text-gray-400 hover:border-[#3C0078]/30 hover:text-[#3C0078] transition-all mb-1"
+                  className="w-full flex items-center justify-center gap-1.5 py-2 border border-dashed border-koru-outline-variant rounded-koru-sm text-koru-caption font-medium uppercase tracking-widest text-koru-on-surface-variant hover:border-koru-primary/30 hover:text-koru-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus transition-all mb-1"
                 >
                   <Plus size={10} /> Add Item
                 </button>
@@ -207,14 +207,14 @@ export default function ModuleAccordion() {
       ))}
 
       {isTeacher && (
-        <div className="mt-4 px-4 border-t border-gray-100 pt-4">
+        <div className="mt-4 px-4 border-t border-koru-outline-faint pt-4">
           {isAddingSection ? (
             <div className="flex flex-col gap-2">
               <input
                 autoFocus
                 type="text"
                 placeholder="Section name..."
-                className="w-full bg-gray-50 border border-black/10 rounded-lg px-3 py-2 text-xs outline-none focus:border-black transition-colors"
+                className="w-full rounded-koru-xs bg-koru-surface-container-lowest ring-1 ring-inset ring-koru-outline-variant px-3 py-2 text-xs text-koru-on-surface outline-none focus:ring-2 focus:ring-koru-focus transition-colors"
                 value={newSectionTitle}
                 onChange={(e) => setNewSectionTitle(e.target.value)}
                 onKeyDown={(e) => {
@@ -225,13 +225,13 @@ export default function ModuleAccordion() {
               <div className="flex gap-1">
                 <button
                   onClick={addSection}
-                  className="flex-1 py-1.5 bg-[#3C0078] text-white text-[10px] font-bold uppercase tracking-widest rounded-lg hover:bg-[#2A0054] transition-colors"
+                  className="flex-1 py-1.5 bg-koru-primary text-koru-on-primary text-koru-caption font-medium uppercase tracking-widest rounded-koru-sm hover:bg-koru-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus transition-colors"
                 >
                   Add
                 </button>
                 <button
                   onClick={() => setIsAddingSection(false)}
-                  className="p-1.5 bg-gray-100 text-gray-500 rounded-lg hover:bg-gray-200"
+                  className="p-1.5 bg-koru-surface-container-high text-koru-on-surface-variant rounded-koru-sm hover:bg-koru-surface-container-highest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus"
                 >
                   <X size={14} />
                 </button>
@@ -240,7 +240,7 @@ export default function ModuleAccordion() {
           ) : (
             <button
               onClick={() => setIsAddingSection(true)}
-              className="w-full flex items-center justify-center gap-2 py-3 border-2 border-dashed border-black/10 rounded-xl text-[10px] font-bold uppercase tracking-widest text-gray-400 hover:border-black/30 hover:text-black transition-all"
+              className="w-full flex items-center justify-center gap-2 py-3 border-2 border-dashed border-koru-outline-variant rounded-koru-md text-koru-caption font-medium uppercase tracking-widest text-koru-on-surface-variant hover:border-koru-outline hover:text-koru-on-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus transition-all"
             >
               <Plus size={14} /> Add Section
             </button>

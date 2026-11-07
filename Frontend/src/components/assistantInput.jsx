@@ -5,6 +5,7 @@ import {
   Calendar, BookOpen, FileEdit, BarChart,
   FileText, Lightbulb, ClipboardList,
 } from "lucide-react";
+import { Button } from "./UI";
 
 // ─── Role-specific tool definitions ──────────────────────────────────────────
 
@@ -110,6 +111,13 @@ export default function AssistantInput({ onSend, disabled = false, role = "teach
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Return focus to the textarea when a pending reply finishes or is stopped
+  const wasDisabled = useRef(false);
+  useEffect(() => {
+    if (wasDisabled.current && !disabled) textareaRef.current?.focus();
+    wasDisabled.current = disabled;
+  }, [disabled]);
+
   // Auto-resize textarea
   useEffect(() => {
     if (textareaRef.current) {
@@ -135,10 +143,10 @@ export default function AssistantInput({ onSend, disabled = false, role = "teach
   return (
     <div className="w-full max-w-3xl mx-auto">
       <div
-        className={`relative w-full bg-white/85 backdrop-blur-xl border shadow-lg rounded-2xl p-3 flex flex-col transition-all duration-200 ${
+        className={`relative w-full bg-koru-surface-container-lowest shadow-koru-md rounded-koru-2xl ring-1 ring-inset ring-koru-outline-faint p-3 flex flex-col transition-all duration-200 ${
           disabled
-            ? "opacity-70 border-gray-200/40"
-            : "border-white/70 focus-within:shadow-[#3C0078]/10 focus-within:ring-2 focus-within:ring-[#3C0078]/15"
+            ? "opacity-70"
+            : "focus-within:ring-2 focus-within:ring-koru-primary/30"
         }`}
       >
         {/* Textarea */}
@@ -149,7 +157,7 @@ export default function AssistantInput({ onSend, disabled = false, role = "teach
             onChange={(e) => setPrompt(e.target.value)}
             placeholder={disabled ? "Koru is thinking…" : "Ask Koru anything…"}
             disabled={disabled}
-            className="w-full bg-transparent resize-none outline-none text-slate-800 placeholder:text-gray-400 min-h-[44px] max-h-[180px] text-[15px] font-medium leading-relaxed disabled:cursor-not-allowed"
+            className="w-full bg-transparent resize-none outline-none text-koru-on-surface placeholder:text-koru-on-surface-variant/70 min-h-[44px] max-h-[180px] text-koru-body leading-relaxed disabled:cursor-not-allowed"
             rows={1}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
@@ -165,35 +173,32 @@ export default function AssistantInput({ onSend, disabled = false, role = "teach
         </div>
 
         {/* Bottom action bar */}
-        <div className="flex items-center justify-between pt-2 border-t border-gray-100/80">
+        <div className="flex items-center justify-between pt-2 border-t border-koru-outline-faint">
 
           {/* Left: attachment + tools */}
           <div className="flex items-center gap-1">
-            <button
-              type="button"
+            <Button
+              variant="text"
+              size="icon"
               disabled={disabled}
-              className="w-9 h-9 rounded-xl hover:bg-gray-100 flex items-center justify-center transition-colors text-gray-400 hover:text-gray-600 disabled:opacity-40 cursor-pointer"
               aria-label="Attach file"
             >
               <Plus className="w-4.5 h-4.5" />
-            </button>
+            </Button>
 
             {/* Tools dropdown */}
             <div ref={dropdownRef} className="relative">
-              <button
-                type="button"
+              <Button
+                variant={isToolsOpen ? "tonal" : "text"}
+                size="sm"
                 disabled={disabled}
                 onClick={() => setIsToolsOpen((o) => !o)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-colors text-sm font-semibold disabled:opacity-40 cursor-pointer ${
-                  isToolsOpen
-                    ? "bg-[#3C0078]/8 text-[#3C0078]"
-                    : "hover:bg-gray-100 text-gray-500 hover:text-gray-700"
-                }`}
+                aria-expanded={isToolsOpen}
+                startIcon={<Sparkles className="w-4 h-4" />}
+                endIcon={<ChevronDown className={`w-3.5 h-3.5 transition-transform ${isToolsOpen ? "rotate-180" : ""}`} />}
               >
-                <Sparkles className="w-4 h-4" />
                 Tools
-                <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isToolsOpen ? "rotate-180" : ""}`} />
-              </button>
+              </Button>
 
               <AnimatePresence>
                 {isToolsOpen && (
@@ -202,10 +207,10 @@ export default function AssistantInput({ onSend, disabled = false, role = "teach
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 8, scale: 0.97 }}
                     transition={{ duration: 0.15, ease: "easeOut" }}
-                    className="absolute bottom-full left-0 mb-2 w-68 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-50 py-1.5"
+                    className="absolute bottom-full left-0 mb-2 w-68 bg-koru-surface-container-lowest rounded-koru-xl shadow-koru-lg ring-1 ring-inset ring-koru-outline-faint overflow-hidden z-50 py-1.5"
                     style={{ width: "272px" }}
                   >
-                    <p className="px-4 pt-2 pb-1 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                    <p className="px-4 pt-2 pb-1 text-koru-caption font-medium text-koru-on-surface-variant uppercase tracking-wider">
                       Quick templates
                     </p>
                     {tools.map((tool, idx) => {
@@ -215,14 +220,14 @@ export default function AssistantInput({ onSend, disabled = false, role = "teach
                           key={idx}
                           type="button"
                           onClick={() => handleToolClick(tool.template)}
-                          className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 text-left transition-colors w-full cursor-pointer"
+                          className="flex items-center gap-3 px-4 py-2.5 hover:bg-koru-surface-container text-left transition-colors w-full cursor-pointer focus-visible:outline-none focus-visible:bg-koru-surface-container focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-koru-focus"
                         >
-                          <div className="w-8 h-8 rounded-xl bg-gray-100 flex items-center justify-center shrink-0">
-                            <Icon className="w-4 h-4 text-gray-500" />
+                          <div className="w-8 h-8 rounded-koru-lg bg-koru-surface-container-high flex items-center justify-center shrink-0">
+                            <Icon className="w-4 h-4 text-koru-on-surface-variant" />
                           </div>
                           <div>
-                            <p className="text-sm font-semibold text-gray-800 leading-snug">{tool.label}</p>
-                            <p className="text-xs text-gray-400">{tool.desc}</p>
+                            <p className="text-sm font-medium text-koru-on-surface leading-snug">{tool.label}</p>
+                            <p className="text-xs text-koru-on-surface-variant">{tool.desc}</p>
                           </div>
                         </button>
                       );
@@ -235,14 +240,14 @@ export default function AssistantInput({ onSend, disabled = false, role = "teach
 
           {/* Right: mic + send */}
           <div className="flex items-center gap-1.5 pr-1">
-            <button
-              type="button"
+            <Button
+              variant="text"
+              size="icon"
               disabled={disabled}
-              className="w-9 h-9 rounded-xl hover:bg-gray-100 flex items-center justify-center transition-colors text-gray-400 hover:text-gray-600 disabled:opacity-40 cursor-pointer"
               aria-label="Voice input"
             >
               <Mic className="w-4.5 h-4.5" />
-            </button>
+            </Button>
 
             <AnimatePresence>
               {prompt.trim().length > 0 && !disabled && (
@@ -255,7 +260,7 @@ export default function AssistantInput({ onSend, disabled = false, role = "teach
                   transition={{ duration: 0.15 }}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="w-9 h-9 rounded-xl bg-[#3C0078] flex items-center justify-center shadow-md shadow-[#3C0078]/20 text-white cursor-pointer"
+                  className="w-10 h-10 rounded-koru-pill bg-koru-primary flex items-center justify-center shadow-koru-sm text-koru-on-primary cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus focus-visible:ring-offset-2"
                   aria-label="Send message"
                 >
                   <Send className="w-4 h-4 ml-0.5" />
@@ -267,7 +272,7 @@ export default function AssistantInput({ onSend, disabled = false, role = "teach
       </div>
 
       {/* Hint text */}
-      <p className="text-center text-[10px] text-gray-400/70 mt-2 select-none">
+      <p className="text-center text-koru-caption text-koru-on-surface-variant mt-2 select-none">
         Koru can make mistakes. Use your judgement for important decisions.
       </p>
     </div>

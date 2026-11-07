@@ -2,7 +2,7 @@
 
 The foundation now follows Material 3 patterns while staying on Tailwind CSS. The primitives emulate Material 3 colour roles, shape, elevation and state treatment without MUI components. The one exception is charts, which use [MUI X Charts](https://mui.com/x/react-charts/) through the Koru wrappers described under Charts.
 
-Migrated so far: the auth flow (login, signup, onboarding role cards and 2FA setup), the app shell (canvas, sidebar and top bar), the dashboards, analytics, and the assignments, groups and settings pages. Other feature pages (course views, calendar, profile) still use legacy styling. Every page that shows a person uses the shared `Avatar`.
+All feature pages are migrated: auth, app shell, dashboards (including the admin dashboard forms and modals), teacher/student/admin course views, calendars and attendance, profile, settings, analytics and the assistant. Every page that shows a person uses the shared `Avatar`. Intentional raw-colour exceptions and deferred work are listed in `docs/phase-3-sweep-notes.md`.
 
 ## Preview
 
@@ -241,7 +241,19 @@ All charts go through these wrappers around MUI X Charts. Don't import `@mui/x-c
 6. Verify keyboard focus, reduced motion and small-screen behaviour.
 7. Run `npm test` and `npm run build` after each migration batch.
 
+## Migration gotchas
+
+- `cn()` is a plain join, not `tailwind-merge`. A `className` that sets the same property as the primitive (height, radius, background, shadow, padding, text colour) gives unpredictable results. Use the primitive's `variant`, `size`, `tone`, `padding` and `radius` props instead, and keep `className` to layout (`w-full`, `flex-1`, margins).
+- Avoid `!important` overrides on primitives. If no variant fits, ask for one.
+- Find-and-replace on palette classes must match whole classes: replacing `bg-green-50` inside `bg-green-500` produces `bg-koru-success-soft0`, which Tailwind silently drops.
+- `Card` is not a motion component. Where a card needs framer-motion props, the `motion.div` carries the card recipe as classes: `rounded-koru-md bg-koru-surface-container-lowest ring-1 ring-inset ring-koru-outline-faint shadow-koru-card`.
+
 ## Deliberately not included yet
+
+- Textarea (several forms hand-style a textarea with the `Input` field recipe)
+- Switch, Checkbox, segmented control
+- Button `href`/`as="a"` support and a compact (32px) icon size
+- Modal `size="full"` for full-screen previews
 
 - Toast / ConfirmDialog
 - Tabs

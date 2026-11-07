@@ -8,6 +8,7 @@ import { getCourseCohorts, getCourseStudents } from "../../../services/classGrou
 import CohortFilterBar from "../../../components/CohortFilterBar";
 import { staggerContainer, slideUp, scaleIn } from "./constants";
 import Avatar from "../../../components/UI/Avatar";
+import { Badge, Button, Input } from "../../../components/UI";
 
 function downloadAttendanceCSV(studentStats, courseName) {
     const header = ["Student Name", "Email", "Sessions Present", "Total Sessions", "Attendance Rate (%)", "Status"];
@@ -141,27 +142,20 @@ export function CourseAttendanceView({ activeCourseId, subject }) {
         <motion.div className="flex-1 overflow-y-auto" initial="hidden" animate="visible" variants={staggerContainer}>
             <motion.header variants={slideUp} className="mb-6 flex justify-between items-end">
                 <div>
-                    <h1 className="text-3xl font-semibold tracking-tight text-gray-900">Attendance & Presence</h1>
-                    <p className="text-gray-500 mt-2">Academic Presence Analytics</p>
+                    <h1 className="font-display text-koru-title text-koru-on-surface">Attendance & Presence</h1>
+                    <p className="text-koru-on-surface-variant mt-2">Academic Presence Analytics</p>
                     <div className="mt-3">
                         <CohortFilterBar cohorts={cohorts} selected={selectedCohortId} onChange={setSelectedCohortId} />
                     </div>
                 </div>
                 <div className="flex gap-4">
-                    <button
-                        onClick={() => downloadAttendanceCSV(filteredStudentStats, subject?.name || subject?.code || activeCourseId)}
-                        className="px-6 py-3 rounded-2xl border border-gray-200 text-sm font-semibold hover:bg-gray-50 transition-colors flex items-center gap-2 shadow-sm cursor-pointer"
-                    >
-                        <Folder size={18} /> Export Log
-                    </button>
-                    <button className="px-6 py-3 rounded-2xl bg-[#3C0078] text-white text-sm font-semibold shadow-lg shadow-[#3C0078]/20 hover:bg-[#2A0054] transition-all cursor-pointer">
-                        Take Attendance
-                    </button>
+                    <Button variant="outlined" startIcon={<Folder size={18} />} onClick={() => downloadAttendanceCSV(filteredStudentStats, subject?.name || subject?.code || activeCourseId)}>Export Log</Button>
+                    <Button>Take Attendance</Button>
                 </div>
             </motion.header>
 
             {/* KPI summary row */}
-            <motion.div variants={slideUp} className="flex flex-row mb-6 divide-x divide-gray-150">
+            <motion.div variants={slideUp} className="flex flex-row mb-6 divide-x divide-koru-outline-variant">
                 {[
                     {
                         label: "Overall Rate",
@@ -185,9 +179,9 @@ export function CourseAttendanceView({ activeCourseId, subject }) {
                     },
                 ].map((kpi, i) => (
                     <div key={i} className={`flex flex-col gap-1 py-1 flex-1 ${i === 0 ? "pr-6" : "px-6"}`}>
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">{kpi.label}</p>
-                        <p className="text-2xl font-black leading-none text-gray-900">{kpi.value}</p>
-                        <p className="text-xs text-gray-400 truncate mt-0.5">{kpi.sub}</p>
+                        <p className="text-[10px] font-medium uppercase tracking-widest text-koru-on-surface-variant">{kpi.label}</p>
+                        <p className="text-2xl font-medium leading-none text-koru-on-surface">{kpi.value}</p>
+                        <p className="text-xs text-koru-on-surface-variant truncate mt-0.5">{kpi.sub}</p>
                     </div>
                 ))}
             </motion.div>
@@ -195,13 +189,13 @@ export function CourseAttendanceView({ activeCourseId, subject }) {
             {/* Chart + leaderboard */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-8">
                 {/* Attendance chart */}
-                <motion.div variants={scaleIn} className="lg:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex flex-col">
+                <motion.div variants={scaleIn} className="lg:col-span-2 rounded-koru-md bg-koru-surface-container-lowest ring-1 ring-inset ring-koru-outline-faint shadow-koru-card p-6 flex flex-col">
                     <div className="flex items-start justify-between mb-5">
                         <div>
-                            <h3 className="text-base font-bold text-gray-900">Class Attendance Overview</h3>
-                            <p className="text-xs text-gray-400 mt-0.5">{subject?.code || "Course"} · {totalSessions} sessions recorded</p>
+                            <h3 className="font-display text-koru-heading text-koru-on-surface">Class Attendance Overview</h3>
+                            <p className="text-xs text-koru-on-surface-variant mt-0.5">{subject?.code || "Course"} · {totalSessions} sessions recorded</p>
                         </div>
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-[#3C0078] bg-[#3C0078]/6 px-3 py-1.5 rounded-lg shrink-0">Target 80%</span>
+                        <Badge variant="primary" className="shrink-0">Target 80%</Badge>
                     </div>
                     <div className="flex-1 min-h-[220px]">
                         <AttendanceChart
@@ -220,14 +214,14 @@ export function CourseAttendanceView({ activeCourseId, subject }) {
                 </motion.div>
 
                 {/* Top attendees leaderboard */}
-                <motion.div variants={scaleIn} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex flex-col">
+                <motion.div variants={scaleIn} className="rounded-koru-md bg-koru-surface-container-lowest ring-1 ring-inset ring-koru-outline-faint shadow-koru-card p-6 flex flex-col">
                     <div className="mb-5">
-                        <h3 className="text-base font-bold text-gray-900">Top Attendance</h3>
-                        <p className="text-xs text-gray-400 mt-0.5">Ranked by attendance rate</p>
+                        <h3 className="font-display text-koru-heading text-koru-on-surface">Top Attendance</h3>
+                        <p className="text-xs text-koru-on-surface-variant mt-0.5">Ranked by attendance rate</p>
                     </div>
                     {topAttendees.length === 0 ? (
                         <div className="flex-1 flex items-center justify-center">
-                            <p className="text-sm text-gray-400">No data yet</p>
+                            <p className="text-sm text-koru-on-surface-variant">No data yet</p>
                         </div>
                     ) : (
                         <div className="overflow-y-auto flex-1 space-y-3">
@@ -235,13 +229,13 @@ export function CourseAttendanceView({ activeCourseId, subject }) {
                                 const rate = s.total > 0 ? Math.round((s.present / s.total) * 100) : 0;
                                 return (
                                     <div key={s.id} className="flex items-center gap-3">
-                                        <span className={`w-5 text-[11px] font-black text-right shrink-0 ${
-                                            i === 0 ? "text-yellow-500" : i === 1 ? "text-gray-400" : i === 2 ? "text-orange-400" : "text-gray-300"
+                                        <span className={`w-5 text-[11px] font-medium text-right shrink-0 ${
+                                            i === 0 ? "text-koru-warning" : i === 1 ? "text-koru-on-surface-variant" : i === 2 ? "text-koru-accent-ink" : "text-koru-outline"
                                         }`}>{i + 1}</span>
                                         <Avatar user={s} name={s.name} size={28} />
-                                        <span className="flex-1 text-xs font-semibold text-gray-800 truncate">{s.name}</span>
-                                        <span className={`text-xs font-black tabular-nums shrink-0 ${
-                                            rate >= 90 ? "text-green-600" : rate >= 80 ? "text-[#3C0078]" : "text-orange-500"
+                                        <span className="flex-1 text-xs font-medium text-koru-on-surface truncate">{s.name}</span>
+                                        <span className={`text-xs font-medium tabular-nums shrink-0 ${
+                                            rate >= 90 ? "text-koru-success" : rate >= 80 ? "text-koru-primary" : "text-koru-accent-ink"
                                         }`}>{rate}%</span>
                                     </div>
                                 );
@@ -255,14 +249,16 @@ export function CourseAttendanceView({ activeCourseId, subject }) {
             <motion.div variants={slideUp} className="flex flex-row gap-5 items-start mb-8">
 
                 {/* Left: students table — shrinks when panel is open */}
-                <div className={`bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden transition-all duration-300 min-w-0 ${
+                <div className={`rounded-koru-lg bg-koru-surface-container-lowest ring-1 ring-inset ring-koru-outline-faint shadow-koru-card overflow-hidden transition-all duration-300 motion-reduce:transition-none min-w-0 ${
                     selectedStudent ? "w-[44%] shrink-0" : "w-full"
                 }`}>
-                    <div className="px-6 py-5 border-b border-gray-50 flex justify-between items-center">
-                        <h2 className="text-2xl font-bold">Students Attendance</h2>
+                    <div className="px-6 py-5 border-b border-koru-outline-faint flex justify-between items-center">
+                        <h2 className="font-display text-koru-heading text-koru-on-surface">Students Attendance</h2>
                         <button
                             onClick={() => setShowFilter(!showFilter)}
-                            className={`p-2.5 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer ${showFilter ? "text-[#3C0078] bg-[#3C0078]/10" : "text-gray-400"}`}
+                            aria-label="Toggle filters"
+ aria-pressed={showFilter}
+ className={`p-2.5 rounded-koru-sm transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus ${showFilter ? "text-koru-primary bg-koru-primary-container" : "text-koru-on-surface-variant bg-koru-surface-container hover:bg-koru-surface-container-high"}`}
                         >
                             <Filter size={20} />
                         </button>
@@ -275,43 +271,42 @@ export function CourseAttendanceView({ activeCourseId, subject }) {
                                 animate={{ height: "auto", opacity: 1 }}
                                 exit={{ height: 0, opacity: 0 }}
                                 transition={{ duration: 0.2 }}
-                                className="px-6 py-4 border-b border-gray-50 bg-gray-50/20 flex flex-col sm:flex-row gap-3 items-center overflow-hidden"
+                                className="px-6 py-4 border-b border-koru-outline-faint bg-koru-surface-container-low flex flex-col sm:flex-row gap-3 items-center overflow-hidden"
                             >
-                                <div className="relative flex-1 w-full">
-                                    <input
-                                        type="text"
-                                        placeholder="Search by student name..."
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                        className="w-full pl-10 pr-4 py-2 text-xs rounded-xl border border-gray-200 focus:outline-none focus:border-[#3C0078] focus:ring-1 focus:ring-[#3C0078] transition-all bg-white text-gray-800"
-                                    />
-                                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400">
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                        </svg>
-                                    </span>
-                                    {searchQuery && (
-                                        <button
-                                            onClick={() => setSearchQuery("")}
-                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
-                                        >
-                                            <X size={14} />
-                                        </button>
-                                    )}
-                                </div>
+                                <Input
+    type="text"
+    size="sm"
+    aria-label="Search by student name"
+    placeholder="Search by student name..."
+    value={searchQuery}
+    onChange={(e) => setSearchQuery(e.target.value)}
+    containerClassName="flex-1 w-full"
+    startIcon={
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+    }
+    endAdornment={searchQuery ? (
+        <button
+            type="button"
+            aria-label="Clear search"
+            onClick={() => setSearchQuery("")}
+            className="text-koru-on-surface-variant hover:text-koru-on-surface cursor-pointer rounded-koru-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus"
+        >
+            <X size={14} />
+        </button>
+    ) : null}
+/>
                                 <div className="flex gap-2 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0 scrollbar-hide">
                                     {["All", "Excellent", "Good", "At Risk", "Critical"].map((status) => (
-                                        <button
-                                            key={status}
-                                            onClick={() => setStatusFilter(status)}
-                                            className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer ${
-                                                statusFilter === status
-                                                    ? "bg-[#3C0078] text-white shadow-sm shadow-[#3C0078]/20"
-                                                    : "bg-gray-100 text-gray-500 hover:bg-gray-200"
-                                            }`}
-                                        >
-                                            {status}
-                                        </button>
+                                        <Button
+    key={status}
+    size="sm"
+    variant={statusFilter === status ? "filled" : "tonal"}
+    onClick={() => setStatusFilter(status)}
+>
+    {status}
+</Button>
                                     ))}
                                 </div>
                             </motion.div>
@@ -322,29 +317,29 @@ export function CourseAttendanceView({ activeCourseId, subject }) {
                         <div className="animate-pulse">
                             <table className="w-full text-left">
                                 <thead>
-                                    <tr className="border-b border-gray-50 bg-gray-50/30">
-                                        <th className="px-5 py-4"><div className="h-2.5 rounded-full bg-gray-200 w-16" /></th>
-                                        <th className="px-4 py-4 text-center"><div className="h-2.5 rounded-full bg-gray-200 w-10 mx-auto" /></th>
-                                        <th className="px-4 py-4"><div className="h-2.5 rounded-full bg-gray-200 w-14" /></th>
+                                    <tr className="border-b border-koru-outline-faint bg-koru-surface-container-low">
+                                        <th className="px-5 py-4"><div className="h-2.5 rounded-koru-pill bg-koru-surface-container-highest w-16" /></th>
+                                        <th className="px-4 py-4 text-center"><div className="h-2.5 rounded-koru-pill bg-koru-surface-container-highest w-10 mx-auto" /></th>
+                                        <th className="px-4 py-4"><div className="h-2.5 rounded-koru-pill bg-koru-surface-container-highest w-14" /></th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {[1, 2, 3, 4, 5].map(i => (
-                                        <tr key={i} className="border-b border-gray-50">
+                                        <tr key={i} className="border-b border-koru-outline-faint">
                                             <td className="py-3 pl-5 pr-3">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-8 h-8 rounded-full bg-gray-100 shrink-0" />
+                                                    <div className="w-8 h-8 rounded-koru-pill bg-koru-surface-container shrink-0" />
                                                     <div className="flex flex-col gap-2">
-                                                        <div className="h-3.5 rounded-full bg-gray-200" style={{ width: `${65 + (i * 19) % 45}px` }} />
-                                                        <div className="h-2.5 rounded-full bg-gray-100 w-28" />
+                                                        <div className="h-3.5 rounded-koru-pill bg-koru-surface-container-highest" style={{ width: `${65 + (i * 19) % 45}px` }} />
+                                                        <div className="h-2.5 rounded-koru-pill bg-koru-surface-container w-28" />
                                                     </div>
                                                 </div>
                                             </td>
                                             <td className="px-4 py-3 text-center">
-                                                <div className="h-5 rounded-full bg-gray-100 w-10 mx-auto" />
+                                                <div className="h-5 rounded-koru-pill bg-koru-surface-container w-10 mx-auto" />
                                             </td>
                                             <td className="px-4 py-3">
-                                                <div className="h-5 rounded-full bg-gray-100 w-16" />
+                                                <div className="h-5 rounded-koru-pill bg-koru-surface-container w-16" />
                                             </td>
                                         </tr>
                                     ))}
@@ -352,16 +347,16 @@ export function CourseAttendanceView({ activeCourseId, subject }) {
                             </table>
                         </div>
                     ) : studentStats.length === 0 ? (
-                        <div className="px-8 py-12 text-center text-gray-400 text-sm">No attendance records yet.</div>
+                        <div className="px-8 py-12 text-center text-koru-on-surface-variant text-sm">No attendance records yet.</div>
                     ) : filteredStudentStats.length === 0 ? (
-                        <div className="px-8 py-12 text-center text-gray-400 text-sm">No students match your filter criteria.</div>
+                        <div className="px-8 py-12 text-center text-koru-on-surface-variant text-sm">No students match your filter criteria.</div>
                     ) : (
                         <table className="w-full text-left border-collapse">
                             <thead>
-                                <tr className="border-b border-gray-50 bg-gray-50/30">
-                                    <th className="px-5 py-4 text-xs font-bold uppercase tracking-wider text-gray-400">Student</th>
-                                    <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-gray-400 text-center">Rate</th>
-                                    {!selectedStudent && <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-gray-400">Status</th>}
+                                <tr className="border-b border-koru-outline-faint bg-koru-surface-container-low">
+                                    <th className="px-5 py-4 text-xs font-medium uppercase tracking-wider text-koru-on-surface-variant">Student</th>
+                                    <th className="px-4 py-4 text-xs font-medium uppercase tracking-wider text-koru-on-surface-variant text-center">Rate</th>
+                                    {!selectedStudent && <th className="px-4 py-4 text-xs font-medium uppercase tracking-wider text-koru-on-surface-variant">Status</th>}
                                 </tr>
                             </thead>
                             <tbody>
@@ -372,35 +367,31 @@ export function CourseAttendanceView({ activeCourseId, subject }) {
                                         <tr
                                             key={student.id}
                                             onClick={() => setSelectedStudent(isActive ? null : student)}
-                                            className={`border-b border-gray-50 last:border-0 transition-all cursor-pointer group ${
-                                                isActive ? "bg-[#3C0078]/5" : "hover:bg-gray-50/60"
+                                            className={`border-b border-koru-outline-faint last:border-0 transition-all cursor-pointer group ${
+                                                isActive ? "bg-koru-primary-subtle" : "hover:bg-koru-surface-container-low"
                                             }`}
                                         >
-                                            <td className={`py-3 pl-5 pr-3 ${isActive ? "border-l-2 border-[#3C0078]" : ""}`}>
+                                            <td className={`py-3 pl-5 pr-3 ${isActive ? "border-l-2 border-koru-primary" : ""}`}>
                                                 <div className="flex items-center gap-3">
                                                     <Avatar user={student} name={student.name} size={32} />
                                                     <div className="min-w-0">
-                                                        <div className={`font-bold text-sm truncate transition-colors ${
-                                                            isActive ? "text-[#3C0078]" : "text-gray-900 group-hover:text-[#3C0078]"
+                                                        <div className={`font-medium text-sm truncate transition-colors ${
+                                                            isActive ? "text-koru-primary" : "text-koru-on-surface group-hover:text-koru-primary"
                                                         }`}>{student.name}</div>
                                                         {!selectedStudent && (
-                                                            <div className="text-xs text-gray-400 mt-0.5 truncate">{student.email}</div>
+                                                            <div className="text-xs text-koru-on-surface-variant mt-0.5 truncate">{student.email}</div>
                                                         )}
                                                     </div>
                                                 </div>
                                             </td>
                                             <td className="px-4 py-3 text-center">
-                                                <span className="text-base font-black italic text-gray-900">{rate}%</span>
+                                                <span className="text-koru-heading font-medium italic text-koru-on-surface">{rate}%</span>
                                             </td>
                                             {!selectedStudent && (
                                                 <td className="px-4 py-3">
-                                                    <span className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${
-                                                        rate > 85 ? "bg-green-100 text-green-700" :
-                                                        rate > 75 ? "bg-blue-50 text-blue-700" :
-                                                        rate > 65 ? "bg-orange-50 text-orange-700" : "bg-red-50 text-red-700"
-                                                    }`}>
+                                                    <Badge variant={rate > 85 ? "success" : rate > 75 ? "info" : rate > 65 ? "warning" : "error"}>
                                                         {rate > 85 ? "Excellent" : rate > 75 ? "Good" : rate > 65 ? "At Risk" : "Critical"}
-                                                    </span>
+                                                    </Badge>
                                                 </td>
                                             )}
                                         </tr>
@@ -420,21 +411,21 @@ export function CourseAttendanceView({ activeCourseId, subject }) {
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: 20, transition: { duration: 0.15, ease: "easeIn" } }}
                             transition={{ type: "spring", damping: 30, stiffness: 250 }}
-                            className="flex-1 min-w-0 bg-white border border-gray-100 rounded-3xl shadow-sm overflow-hidden flex flex-col"
+                            className="flex-1 min-w-0 rounded-koru-lg bg-koru-surface-container-lowest ring-1 ring-inset ring-koru-outline-faint shadow-koru-card overflow-hidden flex flex-col"
                             style={{ maxHeight: "75vh" }}
                         >
                             {/* Header */}
-                            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 shrink-0">
+                            <div className="flex items-center justify-between px-5 py-4 border-b border-koru-outline-faint shrink-0">
                                 <div className="flex items-center gap-3 min-w-0">
                                     <Avatar user={selectedStudent} name={selectedStudent.name} size={36} />
                                     <div className="min-w-0">
-                                        <h2 className="text-sm font-bold text-gray-900 leading-tight truncate">{selectedStudent.name}</h2>
-                                        <p className="text-xs text-gray-400 mt-0.5 truncate">{selectedStudent.email}</p>
+                                        <h2 className="font-display text-sm text-koru-on-surface leading-tight truncate">{selectedStudent.name}</h2>
+                                        <p className="text-xs text-koru-on-surface-variant mt-0.5 truncate">{selectedStudent.email}</p>
                                     </div>
                                 </div>
                                 <button
                                     onClick={() => setSelectedStudent(null)}
-                                    className="w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer shrink-0 ml-2"
+                                    className="w-7 h-7 rounded-koru-pill flex items-center justify-center text-koru-on-surface-variant hover:text-koru-on-surface hover:bg-koru-surface-container-high transition-colors cursor-pointer shrink-0 ml-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus"
                                     aria-label="Close"
                                 >
                                     <X size={14} />
@@ -442,36 +433,36 @@ export function CourseAttendanceView({ activeCourseId, subject }) {
                             </div>
 
                             {/* Attendance summary */}
-                            <div className="px-5 pt-4 pb-4 border-b border-gray-100 shrink-0">
+                            <div className="px-5 pt-4 pb-4 border-b border-koru-outline-faint shrink-0">
                                 {(() => {
                                     const rate = selectedStudent.total > 0 ? Math.round((selectedStudent.present / selectedStudent.total) * 100) : 0;
                                     const absent = selectedStudent.total - selectedStudent.present;
                                     return (
                                         <>
                                             <div className="grid grid-cols-3 gap-2 mb-3">
-                                                <div className="flex flex-col items-center bg-gray-50 rounded-2xl py-3">
-                                                    <span className="text-xl font-black text-gray-900">{rate}%</span>
-                                                    <span className="text-[10px] text-gray-400 font-semibold mt-0.5">Rate</span>
+                                                <div className="flex flex-col items-center bg-koru-surface-container rounded-koru-md py-3">
+                                                    <span className="text-xl font-medium text-koru-on-surface">{rate}%</span>
+                                                    <span className="text-[10px] text-koru-on-surface-variant font-medium mt-0.5">Rate</span>
                                                 </div>
-                                                <div className="flex flex-col items-center bg-gray-50 rounded-2xl py-3">
-                                                    <span className="text-xl font-black text-gray-900">{selectedStudent.present}</span>
-                                                    <span className="text-[10px] text-gray-400 font-semibold mt-0.5">Present</span>
+                                                <div className="flex flex-col items-center bg-koru-surface-container rounded-koru-md py-3">
+                                                    <span className="text-xl font-medium text-koru-on-surface">{selectedStudent.present}</span>
+                                                    <span className="text-[10px] text-koru-on-surface-variant font-medium mt-0.5">Present</span>
                                                 </div>
-                                                <div className="flex flex-col items-center bg-gray-50 rounded-2xl py-3">
-                                                    <span className="text-xl font-black text-gray-900">{absent}</span>
-                                                    <span className="text-[10px] text-gray-400 font-semibold mt-0.5">Absent</span>
+                                                <div className="flex flex-col items-center bg-koru-surface-container rounded-koru-md py-3">
+                                                    <span className="text-xl font-medium text-koru-on-surface">{absent}</span>
+                                                    <span className="text-[10px] text-koru-on-surface-variant font-medium mt-0.5">Absent</span>
                                                 </div>
                                             </div>
-                                            <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                            <div className="h-1.5 bg-koru-surface-container rounded-koru-pill overflow-hidden">
                                                 <div
-                                                    className="h-full rounded-full transition-all duration-500"
+                                                    className="h-full rounded-koru-pill transition-all duration-500"
                                                     style={{
                                                         width: `${rate}%`,
-                                                        background: rate >= 80 ? "#22c55e" : rate >= 65 ? "#f97316" : "#ef4444"
+                                                        background: rate >= 80 ? "var(--color-koru-success)" : rate >= 65 ? "var(--color-koru-accent)" : "var(--color-koru-error)"
                                                     }}
                                                 />
                                             </div>
-                                            <p className="text-[10px] text-gray-400 mt-1.5">{selectedStudent.present} of {selectedStudent.total} sessions attended</p>
+                                            <p className="text-[10px] text-koru-on-surface-variant mt-1.5">{selectedStudent.present} of {selectedStudent.total} sessions attended</p>
                                         </>
                                     );
                                 })()}
@@ -479,11 +470,11 @@ export function CourseAttendanceView({ activeCourseId, subject }) {
 
                             {/* Session list — scrollable */}
                             <div className="flex-1 overflow-y-auto px-5 py-4">
-                                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-3">Session History</p>
+                                <p className="text-[10px] font-medium uppercase tracking-widest text-koru-on-surface-variant mb-3">Session History</p>
                                 {studentRecords.length === 0 ? (
                                     <div className="flex flex-col items-center justify-center py-10 text-center">
-                                        <Calendar size={28} className="text-gray-200 mb-2" />
-                                        <p className="text-sm font-semibold text-gray-400">No sessions found</p>
+                                        <Calendar size={28} className="text-koru-outline mb-2" />
+                                        <p className="text-sm font-medium text-koru-on-surface-variant">No sessions found</p>
                                     </div>
                                 ) : (
                                     <div className="space-y-2">
@@ -496,28 +487,28 @@ export function CourseAttendanceView({ activeCourseId, subject }) {
                                                     initial={{ opacity: 0, y: 6 }}
                                                     animate={{ opacity: 1, y: 0 }}
                                                     transition={{ delay: idx * 0.03, duration: 0.2 }}
-                                                    className="bg-white border border-gray-100 rounded-xl px-3.5 py-3 flex items-center gap-3 hover:border-gray-200 transition-colors"
+                                                    className="bg-koru-surface-container-lowest border border-koru-outline-faint rounded-koru-sm px-3.5 py-3 flex items-center gap-3 hover:bg-koru-surface-container-low transition-colors"
                                                 >
-                                                    <div className={`w-6 h-6 rounded-md flex items-center justify-center shrink-0 ${
-                                                        isLate ? "bg-orange-50" : isPresent ? "bg-green-50" : "bg-red-50"
+                                                    <div className={`w-6 h-6 rounded-koru-xs flex items-center justify-center shrink-0 ${
+                                                        isLate ? "bg-koru-warning-soft" : isPresent ? "bg-koru-success-soft" : "bg-koru-error-container"
                                                     }`}>
                                                         {isLate
-                                                            ? <Clock size={11} className="text-orange-500" />
+                                                            ? <Clock size={11} className="text-koru-warning" />
                                                             : isPresent
-                                                                ? <CheckCircle2 size={11} className="text-green-500" />
-                                                                : <XCircle size={11} className="text-red-400" />
+                                                                ? <CheckCircle2 size={11} className="text-koru-success" />
+                                                                : <XCircle size={11} className="text-koru-error" />
                                                         }
                                                     </div>
                                                     <div className="flex-1 min-w-0">
-                                                        <p className="text-xs font-semibold text-gray-800 leading-tight">
+                                                        <p className="text-xs font-medium text-koru-on-surface leading-tight">
                                                             {formatSessionDate(rec.date)}
                                                         </p>
                                                         {rec.sessionType && (
-                                                            <p className="text-[10px] text-gray-400 mt-0.5">{rec.sessionType}</p>
+                                                            <p className="text-[10px] text-koru-on-surface-variant mt-0.5">{rec.sessionType}</p>
                                                         )}
                                                     </div>
-                                                    <span className={`text-[10px] font-black uppercase tracking-wider shrink-0 ${
-                                                        isLate ? "text-orange-500" : isPresent ? "text-green-600" : "text-red-400"
+                                                    <span className={`text-[10px] font-medium uppercase tracking-wider shrink-0 ${
+                                                        isLate ? "text-koru-warning" : isPresent ? "text-koru-success" : "text-koru-error"
                                                     }`}>
                                                         {rec.status}
                                                     </span>
@@ -529,8 +520,8 @@ export function CourseAttendanceView({ activeCourseId, subject }) {
                             </div>
 
                             {/* Footer */}
-                            <div className="px-5 py-3 border-t border-gray-100 shrink-0">
-                                <p className="text-[10px] text-gray-400 text-center">Rate = Sessions attended ÷ Total sessions × 100</p>
+                            <div className="px-5 py-3 border-t border-koru-outline-faint shrink-0">
+                                <p className="text-[10px] text-koru-on-surface-variant text-center">Rate = Sessions attended ÷ Total sessions × 100</p>
                             </div>
                         </motion.div>
                     )}

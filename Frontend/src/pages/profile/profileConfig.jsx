@@ -46,9 +46,9 @@ export const LEGACY_DEMO_TEXT_PATTERNS = [
   /dean'?s list, python certification/i,
 ];
 
-// Shared utility classes used across all profile components.
-export const PANEL_CLASS =
-  "rounded-[28px] border border-white/60 bg-white/85 p-6 shadow-[0_16px_40px_rgba(15,23,42,0.08)] backdrop-blur-md transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_20px_44px_rgba(15,23,42,0.12)]";
+// Shared field classes for multi-line text areas (the Input primitive is single-line).
+export const TEXTAREA_LABEL_CLASS =
+  "mb-1.5 block text-koru-label text-koru-on-surface-variant";
 
-export const INPUT_CLASS =
-  "rounded-2xl border border-slate-300 bg-white/90 px-4 py-2.5 transition focus:border-[#3C0078] focus:outline-none focus:ring-2 focus:ring-[#3C0078]/20";
+export const TEXTAREA_CLASS =
+  "w-full rounded-koru-xs bg-koru-surface-container-lowest px-4 py-3 text-sm text-koru-on-surface shadow-koru-xs outline-none transition placeholder:text-koru-on-surface-variant/70 hover:bg-koru-surface focus:bg-koru-surface-container-lowest focus:ring-1 focus:ring-inset focus:ring-koru-primary";

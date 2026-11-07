@@ -89,11 +89,11 @@ export default function CalendarDayBlock({
   return (
     <div
       className={[
-        "min-h-[140px] p-2.5 flex flex-col gap-1.5 border-r border-gray-200 last:border-r-0 transition-colors duration-150 cursor-pointer",
+        "min-h-[140px] p-2.5 flex flex-col gap-1.5 border-r border-koru-outline-faint last:border-r-0 transition-colors duration-150 cursor-pointer",
         "overflow-visible",
-        isToday ? "bg-purple-50/80" : "bg-transparent",
+        isToday ? "bg-koru-primary-subtle" : "bg-transparent",
         isOutside ? "opacity-40" : "",
-        isDragOver ? "bg-purple-50 ring-2 ring-inset ring-purple-300" : "",
+        isDragOver ? "bg-koru-primary-container/40 ring-2 ring-inset ring-koru-primary/40" : "",
       ].join(" ")}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
@@ -104,8 +104,8 @@ export default function CalendarDayBlock({
       {day !== null && (
         <span
           className={[
-            "self-start w-[22px] h-[22px] flex items-center justify-center rounded-full text-[11px] font-semibold leading-none shrink-0 mb-0.5",
-            isToday ? "bg-purple-500 text-white" : "text-gray-600",
+            "self-start w-[22px] h-[22px] flex items-center justify-center rounded-full text-koru-caption font-medium leading-none shrink-0 mb-0.5",
+            isToday ? "bg-koru-primary text-koru-on-primary" : "text-koru-on-surface-variant",
           ].join(" ")}
         >
           {day}
@@ -118,7 +118,7 @@ export default function CalendarDayBlock({
           {skeletons.map(({ id, width }) => (
             <div
               key={id}
-              className="h-5 rounded-full bg-gray-200 animate-pulse"
+              className="h-5 rounded-full bg-koru-surface-container-highest animate-pulse motion-reduce:animate-none"
               style={{ width: `${width}%` }}
             />
           ))}
@@ -159,7 +159,7 @@ export default function CalendarDayBlock({
             <button
               type="button"
               onClick={e => { e.stopPropagation(); setExpanded(true); }}
-              className="self-start text-[10px] font-semibold text-purple-600 hover:text-purple-800 bg-transparent border-none cursor-pointer px-1 py-0.5 rounded transition-colors hover:bg-purple-50"
+              className="self-start text-koru-caption font-medium text-koru-primary hover:text-koru-primary-hover bg-transparent border-none cursor-pointer px-1 py-0.5 rounded-koru-xs transition-colors hover:bg-koru-primary-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus"
             >
               +{hiddenCount} more
             </button>
@@ -169,7 +169,7 @@ export default function CalendarDayBlock({
             <button
               type="button"
               onClick={e => { e.stopPropagation(); setExpanded(false); }}
-              className="self-start text-[10px] font-semibold text-gray-400 hover:text-gray-600 bg-transparent border-none cursor-pointer px-1 py-0.5 rounded transition-colors hover:bg-gray-50"
+              className="self-start text-koru-caption font-medium text-koru-on-surface-variant hover:text-koru-on-surface bg-transparent border-none cursor-pointer px-1 py-0.5 rounded-koru-xs transition-colors hover:bg-koru-surface-container focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus"
             >
               Show less
             </button>

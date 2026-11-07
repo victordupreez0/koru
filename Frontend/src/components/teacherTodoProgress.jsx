@@ -269,7 +269,7 @@ export default function TeacherTodoProgress() {
                     </h4>
                     <p className="mt-0.5 flex flex-wrap items-center gap-2 text-koru-caption text-koru-on-surface-variant">
                       {todo.dueDate && <span>{todo.dueDate}</span>}
-                      {todo.courseCode && <span className="font-semibold text-koru-on-surface">{todo.courseCode}</span>}
+                      {todo.courseCode && <span className="font-medium text-koru-on-surface">{todo.courseCode}</span>}
                       {isAdminTodo && todo.createdByAdminName && (
                         <Badge variant={colors.badge}>{todo.createdByAdminName}</Badge>
                       )}
