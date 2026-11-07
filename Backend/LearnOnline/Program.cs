@@ -2,6 +2,11 @@ using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using LearnOnline.Data;
 
+// Load local secrets (e.g. DEEPSEEK_API_KEY) from .env before configuration is built.
+// Real environment variables always win, so Docker/hosting settings are never overridden.
+LoadDotEnv(Path.Combine(Directory.GetCurrentDirectory(), ".env"));
+LoadDotEnv(Path.Combine(Directory.GetCurrentDirectory(), "LearnOnline", ".env"));
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Register MVC controllers so ASP.NET can discover our API endpoints
@@ -32,6 +37,17 @@ builder.Services.AddOpenApi();
 
 // Register HttpClient so controllers can call external services like Google token validation
 builder.Services.AddHttpClient();
+
+// Assistant: DeepSeek first, Groq as the backup
+builder.Services.AddSingleton<LearnOnline.Services.Assistant.IChatProvider>(sp => new LearnOnline.Services.Assistant.ChatProvider(
+    LearnOnline.Services.Assistant.ProviderSettings.DeepSeek, sp.GetRequiredService<IConfiguration>(),
+    sp.GetRequiredService<IHttpClientFactory>(), sp.GetRequiredService<ILogger<LearnOnline.Services.Assistant.ChatProvider>>()));
+builder.Services.AddSingleton<LearnOnline.Services.Assistant.IChatProvider>(sp => new LearnOnline.Services.Assistant.ChatProvider(
+    LearnOnline.Services.Assistant.ProviderSettings.Groq, sp.GetRequiredService<IConfiguration>(),
+    sp.GetRequiredService<IHttpClientFactory>(), sp.GetRequiredService<ILogger<LearnOnline.Services.Assistant.ChatProvider>>()));
+builder.Services.AddSingleton<LearnOnline.Services.Assistant.ProviderFallback>();
+builder.Services.AddScoped<LearnOnline.Services.Assistant.IAssistantContextBuilder, LearnOnline.Services.Assistant.AssistantContextBuilder>();
+builder.Services.AddScoped<LearnOnline.Services.Assistant.IAssistantComposer, LearnOnline.Services.Assistant.AssistantComposer>();
 
 // Register the EF Core database context with the PostgreSQL connection string
 // PendingModelChangesWarning is suppressed because migrations in this project use raw SQL
@@ -202,3 +218,25 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+// Loads KEY=VALUE lines from a local, gitignored .env file into the environment
+// (e.g. DEEPSEEK_API_KEY). Variables that are already set win, so real
+// environment variables and Docker settings always take precedence.
+// Supports optional surrounding matching quotes in values.
+static void LoadDotEnv(string path)
+{
+    if (!File.Exists(path)) return;
+    foreach (var raw in File.ReadAllLines(path))
+    {
+        var line = raw.Trim();
+        if (line.Length == 0 || line.StartsWith('#')) continue;
+        var eq = line.IndexOf('=');
+        if (eq <= 0) continue;
+        var key = line[..eq].Trim();
+        var value = line[(eq + 1)..].Trim();
+        if (value.Length >= 2 && (value[0] == '"' || value[0] == '\'') && value[^1] == value[0])
+            value = value[1..^1];
+        if (Environment.GetEnvironmentVariable(key) == null)
+            Environment.SetEnvironmentVariable(key, value);
+    }
+}

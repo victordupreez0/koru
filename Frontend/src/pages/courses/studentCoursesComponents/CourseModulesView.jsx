@@ -9,6 +9,7 @@ import {
     ExternalLink,
     Loader
 } from "lucide-react";
+import { Button, Card, EmptyState, Skeleton } from "../../../components/UI";
 import { getCourseModules } from "../../../services/moduleService";
 
 export default function CourseModulesView({ activeCourseId }) {
@@ -56,60 +57,55 @@ export default function CourseModulesView({ activeCourseId }) {
     <div className="w-full flex flex-col gap-6 py-6 select-none">
       {/* Top action bar */}
       <div className="flex items-center justify-end gap-3 shrink-0">
-        <button
-          onClick={toggleAll}
-          className="flex items-center justify-center px-4 py-2 text-xs font-bold border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 rounded-xl transition-all cursor-pointer shadow-xs"
-        >
+        <Button variant="outlined" size="sm" onClick={toggleAll}>
           {areAllCollapsed ? "Expand all" : "Collapse all"}
-        </button>
+        </Button>
       </div>
 
       {/* Modules list */}
       <div className="flex flex-col gap-5">
         {modulesLoading ? (
           [3, 2, 4].map((itemCount, i) => (
-            <div key={i} className="border border-gray-100 rounded-2xl overflow-hidden bg-white animate-pulse">
-              <div className="flex items-center gap-3 px-5 py-4 bg-gray-50/80 border-b border-gray-100">
-                <div className="w-5 h-5 rounded-md bg-gray-200 shrink-0" />
-                <div className="h-3 rounded-full bg-gray-200" style={{ width: `${90 + i * 45}px` }} />
+            <Card key={i} variant="outlined" tone="surface" padding="none" className="overflow-hidden">
+              <div className="flex items-center gap-3 px-5 py-4 bg-koru-surface-container-low border-b border-koru-outline-faint">
+                <Skeleton className="w-5 h-5 shrink-0" />
+                <Skeleton variant="text" width={`${90 + i * 45}px`} />
               </div>
               <div className="p-5 flex flex-col gap-3">
                 {Array.from({ length: itemCount }, (_, j) => (
                   <div key={j} className="flex items-center gap-3 py-1">
-                    <div className="w-4 h-4 rounded bg-gray-100 shrink-0" />
-                    <div className="h-3 rounded-full bg-gray-100" style={{ width: `${110 + j * 55}px` }} />
+                    <Skeleton className="w-4 h-4 shrink-0" />
+                    <Skeleton variant="text" width={`${110 + j * 55}px`} />
                   </div>
                 ))}
               </div>
-            </div>
+            </Card>
           ))
         ) : modules.length === 0 ? (
-          <div className="bg-white border border-gray-100 rounded-2xl px-8 py-16 text-center">
-            <div className="w-12 h-12 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center mx-auto mb-4">
-              <FileText size={20} className="text-gray-300" />
-            </div>
-            <p className="text-gray-500 font-semibold mb-1">No modules yet</p>
-            <p className="text-xs text-gray-400">Course content will appear here once modules are published.</p>
-          </div>
+          <EmptyState
+            icon={<FileText size={20} />}
+            title="No modules yet"
+            description="Course content will appear here once modules are published."
+          />
         ) : modules.map((mod) => (
-          <div key={mod.id} className="border border-gray-200 rounded-2xl overflow-hidden shadow-xs bg-white">
+          <Card key={mod.id} variant="outlined" tone="surface" padding="none" className="overflow-hidden">
             {/* Header row */}
             <div 
               onClick={() => toggleModule(mod.id)}
-              className="flex items-center gap-3 px-5 py-4 bg-gray-50/80 border-b border-gray-200 cursor-pointer select-none group"
+              className="flex items-center gap-3 px-5 py-4 bg-koru-surface-container-low border-b border-koru-outline-faint cursor-pointer select-none group"
             >
               <span 
-                className="text-gray-400 group-hover:text-gray-600 transition-colors shrink-0 p-1 hover:bg-gray-200 rounded-md"
+                className="text-koru-on-surface-variant group-hover:text-koru-on-surface transition-colors shrink-0 p-1 hover:bg-koru-surface-container-highest rounded-koru-sm"
               >
                 {mod.isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
               </span>
               <div className="flex items-center gap-2">
                 {mod.prefix && (
-                  <span className="text-sm font-extrabold text-gray-700 shrink-0 select-none">
+                  <span className="text-sm font-medium text-koru-on-surface-variant shrink-0 select-none">
                     {mod.prefix}
                   </span>
                 )}
-                <h3 className="text-xs font-black tracking-wider text-gray-700 uppercase">
+                <h3 className="font-display text-koru-label tracking-wider text-koru-on-surface-variant uppercase">
                   {mod.title}
                 </h3>
               </div>
@@ -119,18 +115,18 @@ export default function CourseModulesView({ activeCourseId }) {
             {mod.isOpen && (
               <div className="flex flex-col">
                 {mod.items.length === 0 ? (
-                  <div className="p-6 text-center text-xs text-gray-400 font-medium">
+                  <div className="p-6 text-center text-xs text-koru-on-surface-variant font-medium">
                     No items in this module section
                   </div>
                 ) : (
                   mod.items.map((item) => (
                     <div 
                       key={item.id}
-                      className="flex items-center justify-between py-3.5 px-6 border-b border-gray-100 last:border-b-0 hover:bg-gray-50/40 transition-colors"
+                      className="flex items-center justify-between py-3.5 px-6 border-b border-koru-outline-faint last:border-b-0 hover:bg-koru-surface-container-low transition-colors"
                     >
                       <div className="flex items-center gap-3.5 min-w-0">
                         {/* Icon based on type */}
-                        <span className="text-gray-400 shrink-0">
+                        <span className="text-koru-on-surface-variant shrink-0">
                           {item.type === "attachment" && <Paperclip size={14} />}
                           {item.type === "document" && <FileText size={14} />}
                           {item.type === "link" && <LinkIcon size={14} />}
@@ -141,21 +137,21 @@ export default function CourseModulesView({ activeCourseId }) {
                           <a 
                             href="#"
                             onClick={(e) => { e.preventDefault(); alert(`Opening link: ${item.label}`); }}
-                            className="text-xs font-bold !text-blue-600 hover:underline flex items-center gap-1.5 min-w-0"
+                            className="text-xs font-medium !text-koru-info hover:underline flex items-center gap-1.5 min-w-0"
                           >
                             <span className="truncate">{item.label}</span>
                             {item.isExternal && <ExternalLink size={11} className="shrink-0" />}
                           </a>
                         ) : item.type === "document" ? (
                           <span 
-                            className="text-xs font-bold text-gray-700 hover:text-[#3C0078] hover:underline truncate cursor-pointer"
+                            className="text-xs font-medium text-koru-on-surface hover:text-koru-primary hover:underline truncate cursor-pointer"
                             onClick={() => navigate(`/courses/${activeCourseId}/items/${item.id}${window.location.search}`)}
                           >
                             {item.label}
                           </span>
                         ) : (
                           <span 
-                            className="text-xs font-bold text-gray-700 truncate cursor-pointer hover:text-gray-900"
+                            className="text-xs font-medium text-koru-on-surface truncate cursor-pointer hover:text-koru-primary"
                             onClick={() => alert(`Downloading attachment: ${item.label}`)}
                           >
                             {item.label}
@@ -167,7 +163,7 @@ export default function CourseModulesView({ activeCourseId }) {
                 )}
               </div>
             )}
-          </div>
+          </Card>
         ))}
       </div>
     </div>

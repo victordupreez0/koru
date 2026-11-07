@@ -11,6 +11,7 @@ import {
   subjectService, 
   enrollmentService 
 } from "../../services/adminService";
+import { Avatar, Badge, Button, Input, Select } from "../../components/UI";
 
 export default function CreateCoursePage() {
   const navigate = useNavigate();
@@ -158,31 +159,31 @@ export default function CreateCoursePage() {
         {/* Header skeleton */}
         <div className="mb-8 flex items-center justify-between">
           <div className="flex flex-col gap-3 mt-2">
-            <div className="h-3 rounded-full bg-gray-200 w-40" />
-            <div className="h-10 rounded-2xl bg-gray-200 w-96 mt-1" />
+            <div className="h-3 rounded-full bg-koru-surface-container-highest w-40" />
+            <div className="h-10 rounded-koru-lg bg-koru-surface-container-highest w-96 mt-1" />
           </div>
-          <div className="h-9 rounded-2xl bg-gray-100 w-52" />
+          <div className="h-9 rounded-koru-lg bg-koru-surface-container-high w-52" />
         </div>
         {/* Form skeleton */}
         <div className="flex flex-col xl:flex-row gap-8">
           {/* Left column */}
           <div className="flex-1 space-y-6">
-            <div className="p-8 bg-white border border-gray-100 rounded-3xl space-y-5">
-              <div className="h-5 rounded-full bg-gray-200 w-44 mb-2" />
-              {[1, 2, 3, 4].map(i => <div key={i} className="h-14 rounded-2xl bg-gray-100" />)}
+            <div className="p-8 bg-koru-surface-container-lowest ring-1 ring-inset ring-koru-outline-faint shadow-koru-card rounded-koru-2xl space-y-5">
+              <div className="h-5 rounded-full bg-koru-surface-container-highest w-44 mb-2" />
+              {[1, 2, 3, 4].map(i => <div key={i} className="h-14 rounded-koru-lg bg-koru-surface-container-high" />)}
             </div>
-            <div className="p-8 bg-white border border-gray-100 rounded-3xl space-y-5">
-              <div className="h-5 rounded-full bg-gray-200 w-36 mb-2" />
-              {[1, 2].map(i => <div key={i} className="h-14 rounded-2xl bg-gray-100" />)}
+            <div className="p-8 bg-koru-surface-container-lowest ring-1 ring-inset ring-koru-outline-faint shadow-koru-card rounded-koru-2xl space-y-5">
+              <div className="h-5 rounded-full bg-koru-surface-container-highest w-36 mb-2" />
+              {[1, 2].map(i => <div key={i} className="h-14 rounded-koru-lg bg-koru-surface-container-high" />)}
             </div>
           </div>
           {/* Right column */}
           <div className="xl:w-[420px] space-y-6">
-            <div className="p-8 bg-white border border-gray-100 rounded-3xl space-y-5">
-              <div className="h-5 rounded-full bg-gray-200 w-36 mb-2" />
-              {[1, 2, 3].map(i => <div key={i} className="h-14 rounded-2xl bg-gray-100" />)}
+            <div className="p-8 bg-koru-surface-container-lowest ring-1 ring-inset ring-koru-outline-faint shadow-koru-card rounded-koru-2xl space-y-5">
+              <div className="h-5 rounded-full bg-koru-surface-container-highest w-36 mb-2" />
+              {[1, 2, 3].map(i => <div key={i} className="h-14 rounded-koru-lg bg-koru-surface-container-high" />)}
             </div>
-            <div className="h-14 rounded-3xl bg-[#3C0078]/10" />
+            <div className="h-14 rounded-koru-2xl bg-koru-primary/10" />
           </div>
         </div>
       </div>
@@ -195,24 +196,26 @@ export default function CreateCoursePage() {
       {/* Breadcrumbs / Header */}
       <div className="mb-8 flex items-center justify-between">
         <div className="flex flex-col gap-2">
-          <button 
+          <Button
+            variant="text"
+            size="sm"
             onClick={() => navigate("/courses")}
-            className="flex items-center gap-2 text-xs font-bold text-[#3C0078]/80 hover:text-[#3C0078] transition-colors cursor-pointer select-none"
+            className="self-start"
+            startIcon={<ArrowLeft size={14} aria-hidden="true" />}
           >
-            <ArrowLeft size={14} />
-            <span>Back to Course Registry</span>
-          </button>
+            Back to Course Registry
+          </Button>
           <div className="flex items-center gap-2.5 mt-2">
-             <div className="w-1.5 h-6 bg-[#3C0078] rounded-full" />
-             <h1 className="text-4xl font-black tracking-tighter text-gray-900 leading-none">
-               Create New <span className="text-[#3C0078]">Course offering</span>
+             <div className="w-1.5 h-6 bg-koru-primary rounded-full" />
+             <h1 className="font-display text-koru-display text-koru-on-surface">
+               Create New <span className="text-koru-primary">Course offering</span>
              </h1>
           </div>
         </div>
-        <div className="hidden md:flex items-center gap-2 px-4 py-2 rounded-2xl bg-[#3C0078]/5 text-[#3C0078] border border-[#3C0078]/10 text-xs font-bold">
-          <Sparkles size={14} className="animate-pulse" />
-          <span>System Administrator Mode</span>
-        </div>
+        <Badge variant="primary" size="md" className="hidden md:inline-flex">
+          <Sparkles size={14} className="animate-pulse motion-reduce:animate-none" aria-hidden="true" />
+          System Administrator Mode
+        </Badge>
       </div>
 
       <AnimatePresence mode="wait">
@@ -221,18 +224,18 @@ export default function CreateCoursePage() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0 }}
-            className="w-full max-w-2xl mx-auto py-16 px-10 bg-white rounded-3xl border border-gray-100 shadow-2xl flex flex-col items-center text-center gap-6 mt-12"
+            className="w-full max-w-2xl mx-auto py-16 px-10 bg-koru-surface-container-lowest rounded-koru-2xl ring-1 ring-inset ring-koru-outline-faint shadow-koru-md flex flex-col items-center text-center gap-6 mt-12"
           >
-            <div className="w-20 h-20 rounded-full bg-green-500/10 border border-green-500/20 flex items-center justify-center text-green-600 animate-bounce">
+            <div className="w-20 h-20 rounded-full bg-koru-success-soft flex items-center justify-center text-koru-success animate-bounce motion-reduce:animate-none">
               <Check size={40} strokeWidth={3} />
             </div>
             <div className="space-y-2">
-              <h2 className="text-3xl font-black tracking-tight text-gray-900">Course Registered!</h2>
-              <p className="text-sm text-gray-500 font-medium max-w-sm">
+              <h2 className="font-display text-koru-title text-koru-on-surface">Course Registered!</h2>
+              <p className="text-sm text-koru-on-surface-variant font-medium max-w-sm">
                 The catalog subject and course offering have been created in the database. Redirecting to registry...
               </p>
             </div>
-            <Loader2 className="w-6 h-6 text-[#3C0078] animate-spin mt-4" />
+            <Loader2 className="w-6 h-6 text-koru-primary animate-spin motion-reduce:animate-none mt-4" />
           </motion.div>
         ) : (
           <form onSubmit={handleSubmit} className="flex flex-col xl:flex-row gap-8">
@@ -240,135 +243,103 @@ export default function CreateCoursePage() {
             {/* Left Column: Course Parameters */}
             <div className="flex-1 space-y-6">
               
-              <div className="p-8 bg-white border border-gray-100 shadow-md rounded-3xl space-y-6">
-                <div className="flex items-center gap-2 pb-4 border-b border-gray-100">
-                  <BookOpen className="text-[#3C0078]" size={20} />
-                  <h3 className="text-lg font-black text-gray-900 uppercase tracking-tight">Course Definition</h3>
+              <div className="p-8 bg-koru-surface-container-lowest ring-1 ring-inset ring-koru-outline-faint shadow-koru-card rounded-koru-2xl space-y-6">
+                <div className="flex items-center gap-2 pb-4 border-b border-koru-outline-faint">
+                  <BookOpen className="text-koru-primary" size={20} />
+                  <h3 className="font-display text-koru-heading text-koru-on-surface">Course Definition</h3>
                 </div>
 
                 {/* Course Name */}
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block">
-                    Course Name <span className="text-red-500">*</span>
-                  </label>
-                  <input 
-                    type="text"
-                    required
-                    placeholder="e.g. User Interface Design 300"
-                    value={subjectName}
-                    onChange={(e) => setSubjectName(e.target.value)}
-                    className="w-full bg-gray-50 border border-transparent hover:border-gray-200 focus:border-[#3C0078]/20 focus:bg-white px-6 py-4 rounded-2xl text-[14px] font-bold text-gray-900 transition-all outline-none"
-                  />
-                </div>
+                <Input
+                  label="Course Name"
+                  required
+                  type="text"
+                  placeholder="e.g. User Interface Design 300"
+                  value={subjectName}
+                  onChange={(e) => setSubjectName(e.target.value)}
+                />
 
                 {/* Code & Lecturer Selection */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Subject Code */}
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block">
-                      Course Code <span className="text-red-500">*</span>
-                    </label>
-                    <input 
-                      type="text"
-                      required
-                      placeholder="e.g. UI300"
-                      value={subjectCode}
-                      onChange={(e) => setSubjectCode(e.target.value)}
-                      className="w-full bg-gray-50 border border-transparent hover:border-gray-200 focus:border-[#3C0078]/20 focus:bg-white px-6 py-4 rounded-2xl text-[14px] font-bold text-gray-900 transition-all outline-none uppercase"
-                    />
-                  </div>
+                  <Input
+                    label="Course Code"
+                    required
+                    type="text"
+                    placeholder="e.g. UI300"
+                    value={subjectCode}
+                    onChange={(e) => setSubjectCode(e.target.value)}
+                    className="uppercase"
+                  />
 
                   {/* Lecturer Assignment */}
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block">
-                      Lecturer <span className="text-red-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <select 
-                        required
-                        value={selectedTeacherId}
-                        onChange={(e) => setSelectedTeacherId(e.target.value)}
-                        className="w-full bg-gray-50 border border-transparent hover:border-gray-200 focus:border-[#3C0078]/20 focus:bg-white px-6 py-4 rounded-2xl text-[14px] font-bold text-gray-900 transition-all outline-none appearance-none cursor-pointer"
-                      >
-                        {teachers.length === 0 ? (
-                          <option disabled value="">No Teachers Available</option>
-                        ) : (
-                          teachers.map(t => (
-                            <option key={t.id} value={t.id}>{t.firstName} {t.lastName}</option>
-                          ))
-                        )}
-                      </select>
-                      <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
-                        <ChevronDownIcon />
-                      </div>
-                    </div>
-                  </div>
+                  <Select
+                    label="Lecturer"
+                    required
+                    value={selectedTeacherId}
+                    onChange={(e) => setSelectedTeacherId(e.target.value)}
+                  >
+                    {teachers.length === 0 ? (
+                      <option disabled value="">No Teachers Available</option>
+                    ) : (
+                      teachers.map(t => (
+                        <option key={t.id} value={t.id}>{t.firstName} {t.lastName}</option>
+                      ))
+                    )}
+                  </Select>
                 </div>
 
                 {/* Description */}
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block">
+                  <label htmlFor="course-description" className="text-koru-label text-koru-on-surface-variant block">
                     Description
                   </label>
                   <textarea 
+                    id="course-description"
                     rows={4}
                     placeholder="Enter academic summary, prerequisites, or learning outcomes..."
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    className="w-full bg-gray-50 border border-transparent hover:border-gray-200 focus:border-[#3C0078]/20 focus:bg-white px-6 py-4 rounded-2xl text-[14px] font-semibold text-gray-800 transition-all outline-none resize-none leading-relaxed"
+                    className="w-full bg-koru-surface-container-lowest hover:bg-koru-surface focus:bg-koru-surface-container-lowest focus:ring-1 focus:ring-inset focus:ring-koru-primary px-4 py-3 rounded-koru-xs shadow-koru-xs text-koru-label text-koru-on-surface transition outline-none resize-none leading-relaxed placeholder:text-koru-on-surface-variant/70"
                   />
                 </div>
               </div>
 
               {/* Offer Details */}
-              <div className="p-8 bg-white border border-gray-100 shadow-md rounded-3xl space-y-6">
-                <div className="flex items-center gap-2 pb-4 border-b border-gray-100">
-                  <Calendar className="text-[#3C0078]" size={20} />
-                  <h3 className="text-lg font-black text-gray-900 uppercase tracking-tight">Academic Offer Details</h3>
+              <div className="p-8 bg-koru-surface-container-lowest ring-1 ring-inset ring-koru-outline-faint shadow-koru-card rounded-koru-2xl space-y-6">
+                <div className="flex items-center gap-2 pb-4 border-b border-koru-outline-faint">
+                  <Calendar className="text-koru-primary" size={20} />
+                  <h3 className="font-display text-koru-heading text-koru-on-surface">Academic Offer Details</h3>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {/* Academic Year */}
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block">Academic Year</label>
-                    <input 
-                      type="number"
-                      value={year}
-                      onChange={(e) => setYear(parseInt(e.target.value) || new Date().getFullYear())}
-                      className="w-full bg-gray-50 border border-transparent hover:border-gray-200 focus:border-[#3C0078]/20 focus:bg-white px-6 py-4 rounded-2xl text-[14px] font-bold text-gray-900 transition-all outline-none"
-                    />
-                  </div>
+                  <Input
+                    label="Academic Year"
+                    type="number"
+                    value={year}
+                    onChange={(e) => setYear(parseInt(e.target.value) || new Date().getFullYear())}
+                  />
 
                   {/* Semester / Term */}
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block">Active Semester</label>
-                    <div className="relative">
-                      <select 
-                        value={term}
-                        onChange={(e) => setTerm(e.target.value)}
-                        className="w-full bg-gray-50 border border-transparent hover:border-gray-200 focus:border-[#3C0078]/20 focus:bg-white px-6 py-4 rounded-2xl text-[14px] font-bold text-gray-900 transition-all outline-none appearance-none cursor-pointer"
-                      >
-                        <option>Term 1</option>
-                        <option>Term 2</option>
-                        <option>Semester 1</option>
-                        <option>Semester 2</option>
-                      </select>
-                      <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
-                        <ChevronDownIcon />
-                      </div>
-                    </div>
-                  </div>
+                  <Select
+                    label="Active Semester"
+                    value={term}
+                    onChange={(e) => setTerm(e.target.value)}
+                  >
+                    <option>Term 1</option>
+                    <option>Term 2</option>
+                    <option>Semester 1</option>
+                    <option>Semester 2</option>
+                  </Select>
 
                   {/* Capacity */}
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block">Capacity (Max Students)</label>
-                    <input 
-                      type="number"
-                      value={capacity}
-                      onChange={(e) => setCapacity(parseInt(e.target.value) || 0)}
-                      className="w-full bg-gray-50 border border-transparent hover:border-gray-200 focus:border-[#3C0078]/20 focus:bg-white px-6 py-4 rounded-2xl text-[14px] font-bold text-gray-900 transition-all outline-none"
-                    />
-                  </div>
+                  <Input
+                    label="Capacity (Max Students)"
+                    type="number"
+                    value={capacity}
+                    onChange={(e) => setCapacity(parseInt(e.target.value) || 0)}
+                  />
                 </div>
               </div>
 
@@ -377,52 +348,43 @@ export default function CreateCoursePage() {
             {/* Right Column: Student Enrolment List */}
             <div className="w-full xl:w-[500px] shrink-0">
               
-              <div className="p-8 bg-white border border-gray-100 shadow-md rounded-3xl flex flex-col h-[600px]">
-                <div className="flex items-center justify-between pb-4 border-b border-gray-100 shrink-0">
+              <div className="p-8 bg-koru-surface-container-lowest ring-1 ring-inset ring-koru-outline-faint shadow-koru-card rounded-koru-2xl flex flex-col h-[600px]">
+                <div className="flex items-center justify-between pb-4 border-b border-koru-outline-faint shrink-0">
                   <div className="flex items-center gap-2">
-                    <Users className="text-[#3C0078]" size={20} />
-                    <h3 className="text-lg font-black text-gray-900 uppercase tracking-tight">Enrol Students</h3>
+                    <Users className="text-koru-primary" size={20} />
+                    <h3 className="font-display text-koru-heading text-koru-on-surface">Enrol Students</h3>
                   </div>
-                  <span className="px-3 py-1 bg-[#3C0078]/5 rounded-xl text-[11px] font-black text-[#3C0078]">
-                    Selected: {selectedStudentIds.length}
-                  </span>
+                  <Badge variant="primary">Selected: {selectedStudentIds.length}</Badge>
                 </div>
 
                 {/* Student Search */}
-                <div className="relative my-4 shrink-0">
-                  <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-                  <input 
+                <div className="my-4 shrink-0">
+                  <Input
+                    aria-label="Search student database"
+                    size="sm"
                     type="text"
+                    startIcon={<Search size={16} />}
                     placeholder="Search student database..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-transparent focus:border-[#3C0078]/20 focus:bg-white rounded-xl text-xs font-semibold text-gray-900 outline-none transition-all"
                   />
                 </div>
 
                 {/* Bulk Actions */}
                 <div className="flex items-center gap-2 mb-3 shrink-0">
-                  <button 
-                    type="button" 
-                    onClick={handleSelectAllFiltered}
-                    className="flex-1 py-2 border border-gray-100 hover:bg-gray-50 text-[10px] font-bold uppercase tracking-wider text-gray-600 rounded-xl cursor-pointer transition-all"
-                  >
+                  <Button type="button" variant="outlined" size="sm" className="flex-1" onClick={handleSelectAllFiltered}>
                     Select All Search
-                  </button>
-                  <button 
-                    type="button" 
-                    onClick={handleDeselectAllFiltered}
-                    className="flex-1 py-2 border border-gray-100 hover:bg-gray-50 text-[10px] font-bold uppercase tracking-wider text-gray-600 rounded-xl cursor-pointer transition-all"
-                  >
+                  </Button>
+                  <Button type="button" variant="outlined" size="sm" className="flex-1" onClick={handleDeselectAllFiltered}>
                     Clear Search
-                  </button>
+                  </Button>
                 </div>
 
                 {/* Scrollable Student Cards */}
                 <div className="flex-1 overflow-y-auto space-y-2 pr-1 scrollbar-hide">
                   {filteredStudents.length === 0 ? (
                     <div className="py-12 text-center">
-                      <p className="text-xs font-semibold text-gray-400">No students matched search criteria</p>
+                      <p className="text-xs font-medium text-koru-on-surface-variant">No students matched search criteria</p>
                     </div>
                   ) : (
                     filteredStudents.map(student => {
@@ -431,37 +393,29 @@ export default function CreateCoursePage() {
                         <div 
                           key={student.id}
                           onClick={() => handleToggleStudent(student.id)}
-                          className={`flex items-center justify-between p-3 rounded-2xl border transition-all cursor-pointer select-none group
+                          className={`flex items-center justify-between p-3 rounded-koru-lg border transition-all cursor-pointer select-none group
                             ${isSelected 
-                              ? "bg-[#3C0078]/5 border-[#3C0078]/20" 
-                              : "bg-transparent border-gray-100/50 hover:bg-gray-50/60"
+                              ? "bg-koru-primary-subtle border-koru-primary/20" 
+                              : "bg-transparent border-koru-outline-faint hover:bg-koru-surface-container"
                             }`}
                         >
                           <div className="flex items-center gap-3 min-w-0">
-                            {/* Initials Badge */}
-                            <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs shrink-0
-                              ${isSelected 
-                                ? "bg-[#3C0078] text-white" 
-                                : "bg-gray-100 text-gray-500 group-hover:bg-[#3C0078]/10 group-hover:text-[#3C0078]"
-                              }`}
-                            >
-                              {student.firstName[0]}{student.lastName[0]}
-                            </div>
+                            <Avatar user={student} size="sm" />
                             <div className="min-w-0">
-                              <h4 className="text-xs font-bold text-gray-900 truncate">
+                              <h4 className="text-xs font-medium text-koru-on-surface truncate">
                                 {student.firstName} {student.lastName}
                               </h4>
-                              <p className="text-[10px] font-medium text-gray-400 truncate mt-0.5">
+                              <p className="text-koru-caption font-medium text-koru-on-surface-variant truncate mt-0.5">
                                 {student.email}
                               </p>
                             </div>
                           </div>
                           
                           {/* Checkbox indicator */}
-                          <div className={`w-5 h-5 rounded-lg border flex items-center justify-center shrink-0 transition-all
+                          <div className={`w-5 h-5 rounded-koru-sm border flex items-center justify-center shrink-0 transition-all
                             ${isSelected 
-                              ? "bg-[#3C0078] border-[#3C0078] text-white" 
-                              : "border-gray-200 group-hover:border-gray-300 bg-white"
+                              ? "bg-koru-primary border-koru-primary text-koru-on-primary" 
+                              : "border-koru-outline-variant group-hover:border-koru-outline-variant bg-koru-surface-container-lowest"
                             }`}
                           >
                             {isSelected && <Check size={12} strokeWidth={3} />}
@@ -481,42 +435,34 @@ export default function CreateCoursePage() {
 
       {/* Error & Form Actions Panel */}
       {!submitSuccess && (
-        <div className="w-full max-w-full mt-6 bg-white border border-gray-100 rounded-3xl p-6 shadow-md flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="w-full max-w-full mt-6 bg-koru-surface-container-lowest ring-1 ring-inset ring-koru-outline-faint shadow-koru-card rounded-koru-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex-1">
             {errorMessage ? (
-              <p className="text-xs font-semibold text-red-500 flex items-center gap-2">
+              <p className="text-xs font-medium text-koru-error flex items-center gap-2">
                 <HelpCircle size={16} />
                 <span>{errorMessage}</span>
               </p>
             ) : (
-              <p className="text-xs font-medium text-gray-400">
-                * By registering this course offering, it will be initialized as a <strong className="text-gray-600 font-semibold">Draft</strong>. The assigned lecturer can check it and publish it to the students when ready.
+              <p className="text-xs font-medium text-koru-on-surface-variant">
+                * By registering this course offering, it will be initialized as a <strong className="text-koru-on-surface-variant font-medium">Draft</strong>. The assigned lecturer can check it and publish it to the students when ready.
               </p>
             )}
           </div>
 
           <div className="flex items-center gap-4 shrink-0 w-full md:w-auto">
-            <button 
-              type="button"
-              onClick={() => navigate("/courses")}
-              className="flex-1 md:flex-none px-6 py-3 border-2 border-gray-100 text-gray-400 font-bold uppercase tracking-widest text-[11px] hover:bg-gray-50 rounded-2xl cursor-pointer transition-all"
-            >
+            <Button variant="outlined" className="flex-1 md:flex-none" onClick={() => navigate("/courses")}>
               Cancel
-            </button>
-            <button 
+            </Button>
+            <Button
+              variant="filled"
+              size="lg"
+              className="flex-1 md:flex-none"
               onClick={handleSubmit}
               disabled={isSubmitting || !subjectName.trim() || !subjectCode.trim() || !selectedTeacherId}
-              className="flex-1 md:flex-none px-10 py-3 bg-[#3C0078] text-white font-black uppercase tracking-widest text-[11px] shadow-lg shadow-[#3C0078]/25 hover:scale-[1.03] active:scale-[0.98] transition-all disabled:opacity-50 disabled:hover:scale-100 rounded-2xl cursor-pointer flex items-center justify-center gap-2"
+              loading={isSubmitting}
             >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Registering...</span>
-                </>
-              ) : (
-                <span>Register Course</span>
-              )}
-            </button>
+              {isSubmitting ? "Registering..." : "Register Course"}
+            </Button>
           </div>
         </div>
       )}
@@ -525,11 +471,3 @@ export default function CreateCoursePage() {
   );
 }
 
-// Chevron helper
-function ChevronDownIcon() {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="6 9 12 15 18 9"></polyline>
-    </svg>
-  );
-}

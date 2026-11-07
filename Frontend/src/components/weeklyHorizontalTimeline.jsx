@@ -11,7 +11,6 @@ import {
   MapPin,
   Video,
   User,
-  X,
   ExternalLink,
   Award
 } from "lucide-react";
@@ -20,6 +19,7 @@ import { getAllEvents } from "../services/eventService";
 import { getStudentAssignments } from "../services/assignmentService";
 import { useAuth } from "../contexts/AuthContext";
 import confetti from "canvas-confetti";
+import { Badge, Button, Card, Input, Modal } from "./UI";
 
 // Helper to find the Monday start of a week for a given date
 function getStartOfWeek(date) {
@@ -329,27 +329,27 @@ export default function WeeklyHorizontalTimeline({ onModalToggle }) {
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
           <div>
-            <h2 className="text-2xl font-['Gabarito'] text-slate-800 leading-none">Timeline</h2>
+            <h2 className="font-display text-koru-title text-koru-on-surface leading-none">Timeline</h2>
           </div>
         </div>
 
         {/* Date range switcher */}
-        <div className="flex items-center gap-4 bg-slate-100/80 border border-slate-200 p-1.5 rounded-2xl">
+        <div className="flex items-center gap-4 bg-koru-surface-container p-1.5 rounded-koru-lg">
           <button
             onClick={handlePrevWeek}
-            className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-500 hover:bg-white hover:text-purple-700 active:scale-95 transition-all shadow-sm cursor-pointer"
+            className="w-8 h-8 rounded-koru-md flex items-center justify-center text-koru-on-surface-variant hover:bg-koru-surface-container-lowest hover:text-koru-primary active:scale-95 transition-all shadow-koru-xs cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus motion-reduce:transition-none motion-reduce:active:scale-100"
             title="Previous Week"
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
 
-          <span className="text-sm font-bold text-slate-700 px-2 min-w-[200px] text-center font-['Gabarito']">
+          <span className="text-koru-label font-display text-koru-on-surface px-2 min-w-[200px] text-center">
             {formatWeekRange(currentWeekStart)}
           </span>
 
           <button
             onClick={handleNextWeek}
-            className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-500 hover:bg-white hover:text-purple-700 active:scale-95 transition-all shadow-sm cursor-pointer"
+            className="w-8 h-8 rounded-koru-md flex items-center justify-center text-koru-on-surface-variant hover:bg-koru-surface-container-lowest hover:text-koru-primary active:scale-95 transition-all shadow-koru-xs cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus motion-reduce:transition-none motion-reduce:active:scale-100"
             title="Next Week"
           >
             <ChevronRight className="w-5 h-5" />
@@ -360,14 +360,14 @@ export default function WeeklyHorizontalTimeline({ onModalToggle }) {
         {/* <div className="flex items-center gap-3">
           <button
             onClick={handleResetToToday}
-            className="text-xs font-bold px-3 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white shadow-md shadow-purple-500/20 active:scale-95 transition-all cursor-pointer font-['Gabarito']"
+            className="text-xs font-medium px-3 py-2 rounded-koru-pill bg-koru-primary hover:bg-koru-primary-hover text-koru-on-primary shadow-koru-sm active:scale-95 transition-all cursor-pointer"
           >
             Go to Today
           </button>
-          <div className="hidden sm:flex items-center gap-2 bg-slate-100 border border-slate-200/60 rounded-xl px-3 py-1.5 text-[11px] font-semibold text-slate-600">
-            <span className="flex items-center gap-1"><BookOpen className="w-3.5 h-3.5 text-purple-600" /> {weekTotals.assignmentsCount} Due</span>
-            <span className="w-1.5 h-1.5 rounded-full bg-slate-300" />
-            <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-orange-500" /> {weekTotals.classesCount} Classes</span>
+          <div className="hidden sm:flex items-center gap-2 bg-koru-surface-container rounded-koru-md px-3 py-1.5 text-koru-caption font-medium text-koru-on-surface-variant">
+            <span className="flex items-center gap-1"><BookOpen className="w-3.5 h-3.5 text-koru-primary" /> {weekTotals.assignmentsCount} Due</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-koru-outline-variant" />
+            <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-koru-accent" /> {weekTotals.classesCount} Classes</span>
           </div>
         </div> */}
       </div>
@@ -377,10 +377,9 @@ export default function WeeklyHorizontalTimeline({ onModalToggle }) {
 
         {/* Continuous horizontal timeline line */}
         <div
-          className="absolute left-[calc(100%/14)] right-[calc(100%/14)] h-[3px] rounded-full pointer-events-none opacity-60"
+          className="absolute left-[calc(100%/14)] right-[calc(100%/14)] h-[3px] rounded-full pointer-events-none bg-koru-outline-variant"
           style={{
-            top: 'calc(50% - 1.5px)',
-            background: '#d4d4d4'
+            top: 'calc(50% - 1.5px)'
           }}
         />
 
@@ -405,11 +404,11 @@ export default function WeeklyHorizontalTimeline({ onModalToggle }) {
                       exit={{ opacity: 0, scale: 0.9 }}
                       key={assignment.id}
                       onClick={() => setSelectedAssignment(assignment)}
-                      className={`w-full max-w-[135px] h-10 truncate text-[0.8rem] font-bold py-1 px-1.5 rounded-lg cursor-pointer transition-all flex items-center gap-1 text-left shrink-0 ${isPastEvent(assignment.dueDate) ? 'bg-gray-100 text-gray-400 hover:bg-gray-150' : 'bg-purple-50 text-purple-700 hover:bg-purple-100'
+                      className={`w-full max-w-[135px] h-10 truncate text-[0.8rem] font-medium py-1 px-1.5 rounded-koru-sm cursor-pointer transition-all flex items-center gap-1 text-left shrink-0 ${isPastEvent(assignment.dueDate) ? 'bg-koru-surface-container text-koru-on-surface-variant hover:bg-koru-surface-container-high' : 'bg-koru-primary-container text-koru-on-primary-container hover:bg-koru-primary-container/80'
                         }`}
                       title={`${assignment.course?.subject?.code || 'UX300'}: ${assignment.title}`}
                     >
-                      <Award className={`w-3 h-3 shrink-0 ${isPastEvent(assignment.dueDate) ? 'text-gray-400' : 'text-purple-500'}`} />
+                      <Award className={`w-3 h-3 shrink-0 ${isPastEvent(assignment.dueDate) ? 'text-koru-on-surface-variant' : 'text-koru-primary'}`} />
                       <span className="truncate">{assignment.course?.subject?.code || "UX"}: {assignment.title}</span>
                     </motion.div>
                   ))}
@@ -422,20 +421,20 @@ export default function WeeklyHorizontalTimeline({ onModalToggle }) {
                       exit={{ opacity: 0, scale: 0.9 }}
                       key={todo.id}
                       onClick={(e) => handleToggleTodo(todo.id, e)}
-                      className={`group/todo w-full max-w-[135px] truncate text-[10px] py-1 px-1.5 rounded-lg border flex items-center justify-between cursor-pointer transition-all shadow-sm text-left shrink-0 ${isPastEvent(todo.date) ? (
+                      className={`group/todo w-full max-w-[135px] truncate text-[10px] py-1 px-1.5 rounded-koru-sm flex items-center justify-between cursor-pointer transition-all shadow-koru-xs text-left shrink-0 ${isPastEvent(todo.date) ? (
                         todo.completed
-                          ? 'bg-gray-50 border-gray-200 text-gray-400 line-through'
-                          : 'bg-gray-100 border-gray-300 text-gray-500 hover:bg-gray-150 font-medium'
+                          ? 'bg-koru-surface-container-low text-koru-on-surface-variant line-through'
+                          : 'bg-koru-surface-container text-koru-on-surface-variant hover:bg-koru-surface-container-high font-medium'
                       ) : (
                         todo.completed
-                          ? 'bg-slate-50 border-slate-200 text-slate-400 line-through'
-                          : 'bg-teal-50 border-teal-200 text-teal-700 hover:bg-teal-100/80 font-medium'
+                          ? 'bg-koru-surface-container-low text-koru-on-surface-variant line-through'
+                          : 'bg-koru-success-soft text-koru-success hover:bg-koru-success-soft/80 font-medium'
                       )
                         }`}
                       title={`${todo.title} ${todo.time ? `(${todo.time})` : ''}`}
                     >
                       <div className="flex items-center gap-1 min-w-0">
-                        <div className={`w-3 h-3 rounded-full border flex items-center justify-center shrink-0 ${todo.completed ? 'bg-teal-500 border-teal-500 text-white' : isPastEvent(todo.date) ? 'border-gray-400 bg-white' : 'border-slate-300 bg-white'
+                        <div className={`w-3 h-3 rounded-full border flex items-center justify-center shrink-0 ${todo.completed ? 'bg-koru-success border-koru-success text-koru-on-primary' : isPastEvent(todo.date) ? 'border-koru-outline bg-koru-surface-container-lowest' : 'border-koru-outline bg-koru-surface-container-lowest'
                           }`}>
                           {todo.completed && <Check className="w-2.5 h-2.5 stroke-[3]" />}
                         </div>
@@ -443,7 +442,8 @@ export default function WeeklyHorizontalTimeline({ onModalToggle }) {
                       </div>
                       <button
                         onClick={(e) => handleDeleteEvent(todo.id, e)}
-                        className="opacity-0 group-hover/todo:opacity-100 text-slate-400 hover:text-red-500 shrink-0 ml-1 transition-opacity"
+                        className="opacity-0 group-hover/todo:opacity-100 text-koru-on-surface-variant hover:text-koru-error shrink-0 ml-1 transition-opacity"
+                        aria-label="Delete task"
                       >
                         <Trash2 className="w-3 h-3" />
                       </button>
@@ -454,7 +454,7 @@ export default function WeeklyHorizontalTimeline({ onModalToggle }) {
                 {/* PLUS BUTTON TRIGGER FOR CREATION MODAL */}
                 <button
                   onClick={() => openCreateModal(dayDate)}
-                  className="w-5 h-5 rounded-full bg-slate-100 hover:bg-purple-100 hover:text-purple-600 text-slate-400 flex items-center justify-center shrink-0 border border-slate-200/50 hover:border-purple-200 shadow-sm transition-all active:scale-95 cursor-pointer mt-1 opacity-0 group-hover:opacity-100 focus:opacity-100 focus-within:opacity-100"
+                  className="w-5 h-5 rounded-full bg-koru-surface-container hover:bg-koru-primary-container hover:text-koru-primary text-koru-on-surface-variant flex items-center justify-center shrink-0 shadow-koru-xs transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus active:scale-95 cursor-pointer mt-1 opacity-0 group-hover:opacity-100 focus:opacity-100 focus-within:opacity-100"
                   title="Create custom event"
                 >
                   <Plus className="w-3.5 h-3.5" />
@@ -462,26 +462,26 @@ export default function WeeklyHorizontalTimeline({ onModalToggle }) {
               </div>
 
               {/* CONNECTIVE TOP DOTTED LINE */}
-              <div className={`w-[2px] h-4 border-l-2 transition-all opacity-0 group-hover:opacity-100 ${dayA.length > 0 || dayT.length > 0 ? 'border-gray-300' : 'border-gray-200'
+              <div className={`w-[2px] h-4 border-l-2 transition-all opacity-0 group-hover:opacity-100 ${dayA.length > 0 || dayT.length > 0 ? 'border-koru-outline-variant' : 'border-koru-outline-faint'
                 }`} />
 
               {/* ── TIMELINE AXIS DOT ── */}
               <div
                 onClick={() => openCreateModal(dayDate)}
-                className={`w-9 h-9 rounded-full flex flex-col items-center justify-center transition-all duration-300 hover:scale-110 cursor-pointer shadow-md z-10 font-['Gabarito'] ${dayToday
-                  ? 'bg-purple-600 border-purple-600 text-white ring-4 ring-purple-100 shadow-purple-500/20 scale-105'
+                className={`w-9 h-9 rounded-full flex flex-col items-center justify-center transition-all duration-300 hover:scale-110 cursor-pointer shadow-koru-sm z-10 font-display ${dayToday
+                  ? 'bg-koru-primary text-koru-on-primary ring-4 ring-koru-primary-container scale-105'
                   : hasItems
-                    ? 'bg-white border-purple-400 text-slate-800'
-                    : 'bg-white border-slate-300 text-slate-500 hover:border-purple-400 hover:text-purple-600'
+                    ? 'bg-koru-surface-container-lowest ring-2 ring-inset ring-koru-primary/40 text-koru-on-surface'
+                    : 'bg-koru-surface-container-lowest text-koru-on-surface-variant hover:ring-2 hover:ring-inset hover:ring-koru-primary/40 hover:text-koru-primary'
                   }`}
                 title={dayToday ? "Today (Click to add task)" : "Click to add task"}
               >
-                <span className="text-[12px] font-bold leading-none">{dateNum}</span>
-                <span className="text-[8px] uppercase tracking-wide leading-none mt-0.5 font-bold">{dayLabel}</span>
+                <span className="text-[12px] font-medium leading-none">{dateNum}</span>
+                <span className="text-[8px] uppercase tracking-wide leading-none mt-0.5 font-medium">{dayLabel}</span>
               </div>
 
               {/* CONNECTIVE BOTTOM DOTTED LINE */}
-              <div className={`w-[2px] h-4 border-l-2 transition-all opacity-0 group-hover:opacity-100 ${dayC.length > 0 ? 'border-gray-300' : 'border-gray-200'
+              <div className={`w-[2px] h-4 border-l-2 transition-all opacity-0 group-hover:opacity-100 ${dayC.length > 0 ? 'border-koru-outline-variant' : 'border-koru-outline-faint'
                 }`} />
 
               {/* BOTTOM AREA: Classes & Meetings */}
@@ -504,23 +504,24 @@ export default function WeeklyHorizontalTimeline({ onModalToggle }) {
                         exit={{ opacity: 0, scale: 0.9 }}
                         key={cls.id}
                         onClick={() => setSelectedClass(cls)}
-                        className={`group/meeting w-full max-w-[135px] text-left text-[0.8rem] p-1.5 rounded-lg cursor-pointer transition-all flex flex-col gap-0.5 leading-tight shrink-0 relative ${isPast ? 'bg-gray-100 border border-gray-200 hover:bg-gray-150' : (cls.isCustom ? 'bg-white border-dashed border-orange-200 hover:bg-orange-100' : 'bg-purple-50 border border-purple-200 hover:bg-purple-200/80')
+                        className={`group/meeting w-full max-w-[135px] text-left text-[0.8rem] p-1.5 rounded-koru-sm cursor-pointer transition-all flex flex-col gap-0.5 leading-tight shrink-0 relative ${isPast ? 'bg-koru-surface-container hover:bg-koru-surface-container-high' : (cls.isCustom ? 'bg-koru-accent-soft text-koru-accent-ink hover:bg-koru-accent-soft/70' : 'bg-koru-primary-container text-koru-on-primary-container hover:bg-koru-primary-container/80')
                           }`}
                         title={cls.title}
                       >
                         <div className="flex justify-between items-start gap-1">
-                          <span className={`font-bold truncate ${isPast ? 'text-gray-400' : ''}`}>{cls.title}</span>
+                          <span className={`font-medium truncate ${isPast ? 'text-koru-on-surface-variant' : ''}`}>{cls.title}</span>
                           {cls.isCustom && (
                             <button
                               onClick={(e) => handleDeleteEvent(cls.id, e)}
-                              className="opacity-0 group-hover/meeting:opacity-100 text-orange-400 hover:text-red-500 shrink-0 ml-1 transition-opacity"
+                              className="opacity-0 group-hover/meeting:opacity-100 text-koru-accent-ink hover:text-koru-error shrink-0 ml-1 transition-opacity"
                               title="Delete custom meeting"
+                              aria-label="Delete custom meeting"
                             >
                               <Trash2 className="w-2.5 h-2.5" />
                             </button>
                           )}
                         </div>
-                        <div className={`flex items-center gap-1 text-[0.7rem] font-semibold shrink-0 mt-0.5 ${isPast ? 'text-gray-300' : 'text-gray-400'}`}>
+                        <div className={`flex items-center gap-1 text-[0.7rem] font-medium shrink-0 mt-0.5 ${isPast ? 'text-koru-outline' : 'text-koru-on-surface-variant'}`}>
                           <span className="flex items-center gap-0.5"><Clock className="w-2.5 h-2.5" /> {timeStr}</span>
                           <span>•</span>
                           <span className="flex items-center gap-0.5 shrink-0 truncate max-w-[50px]">
@@ -534,7 +535,7 @@ export default function WeeklyHorizontalTimeline({ onModalToggle }) {
                 </AnimatePresence>
 
                 {dayC.length === 0 && (
-                  <span className="text-[9px] font-semibold text-slate-300 italic pt-1">Free day</span>
+                  <span className="text-[9px] font-medium text-koru-outline italic pt-1">Free day</span>
                 )}
               </div>
 
@@ -545,321 +546,235 @@ export default function WeeklyHorizontalTimeline({ onModalToggle }) {
       </div>
 
       {/* ── MODAL: TASK/EVENT CREATOR MODAL ── */}
-      <AnimatePresence>
-        {isCreateModalOpen && (
-          <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 15 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 15 }}
-              className="bg-white rounded-[28px] max-w-md w-full shadow-2xl overflow-hidden border border-slate-100 flex flex-col z-[10000]"
-            >
+      <Modal
+        open={isCreateModalOpen}
+        onClose={closeCreateModal}
+        size="sm"
+        title="Create Custom Event"
+        description={`Scheduled for: ${createModalDate?.toLocaleDateString("en-US", { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' }) ?? ""}`}
+      >
+        {/* Type Tabs */}
+        <div className="flex bg-koru-surface-container p-1.5 rounded-koru-lg mb-5">
+          <button
+            type="button"
+            onClick={() => setFormType("todo")}
+            aria-pressed={formType === "todo"}
+            className={`flex-1 py-2 text-xs font-medium rounded-koru-md transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus ${formType === "todo"
+              ? "bg-koru-surface-container-lowest text-koru-primary shadow-koru-xs"
+              : "text-koru-on-surface-variant hover:bg-koru-surface-container-high"
+              }`}
+          >
+            📝 Task / Todo
+          </button>
+          <button
+            type="button"
+            onClick={() => setFormType("meeting")}
+            aria-pressed={formType === "meeting"}
+            className={`flex-1 py-2 text-xs font-medium rounded-koru-md transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus ${formType === "meeting"
+              ? "bg-koru-surface-container-lowest text-koru-accent-ink shadow-koru-xs"
+              : "text-koru-on-surface-variant hover:bg-koru-surface-container-high"
+              }`}
+          >
+            👥 Class / Meeting
+          </button>
+        </div>
 
+        <form onSubmit={handleFormSubmit} className="flex flex-col gap-4">
+          <Input
+            label={formType === "todo" ? "Task Title" : "Meeting / Class Title"}
+            type="text"
+            required
+            placeholder={formType === "todo" ? "e.g., Finish Lit Review essay" : "e.g., Visual Semiotics Study Session"}
+            value={formTitle}
+            onChange={(e) => setFormTitle(e.target.value)}
+          />
 
-              <div className="p-6">
-                <div className="flex justify-between items-center mb-3">
-                  <h3 className="text-xl font-bold font-['Gabarito'] text-slate-800 flex items-center gap-2">
-                    <Calendar className="w-5 h-5 text-purple-600" />
-                    <span>Create Custom Event</span>
-                  </h3>
-                  <button
-                    onClick={closeCreateModal}
-                    className="p-1 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-
-                <p className="text-xs font-semibold text-slate-400 mb-5">
-                  Scheduled for: {createModalDate?.toLocaleDateString("en-US", { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })}
-                </p>
-
-                {/* Type Tabs */}
-                <div className="flex bg-slate-100 p-1.5 rounded-2xl mb-5 border border-slate-200/50">
-                  <button
-                    type="button"
-                    onClick={() => setFormType("todo")}
-                    className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${formType === "todo"
-                      ? "bg-white text-purple-700 shadow-sm"
-                      : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/40"
-                      }`}
-                  >
-                    📝 Task / Todo
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setFormType("meeting")}
-                    className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${formType === "meeting"
-                      ? "bg-white text-orange-700 shadow-sm"
-                      : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/40"
-                      }`}
-                  >
-                    👥 Class / Meeting
-                  </button>
-                </div>
-
-                <form onSubmit={handleFormSubmit} className="flex flex-col gap-4">
-                  {/* Title */}
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
-                      {formType === "todo" ? "Task Title" : "Meeting / Class Title"}
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      placeholder={formType === "todo" ? "e.g., Finish Lit Review essay" : "e.g., Visual Semiotics Study Session"}
-                      className="w-full text-xs px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400 focus:bg-white transition-all font-semibold text-slate-700"
-                      value={formTitle}
-                      onChange={(e) => setFormTitle(e.target.value)}
-                    />
-                  </div>
-
-                  {/* Time & Location */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Time</label>
-                      <input
-                        type="time"
-                        className="w-full text-xs px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400 focus:bg-white transition-all font-semibold text-slate-700"
-                        value={formTime}
-                        onChange={(e) => setFormTime(e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Location / Room</label>
-                      <input
-                        type="text"
-                        disabled={formIsOnline}
-                        placeholder={formIsOnline ? "Online Session" : "e.g., Room 304"}
-                        className="w-full text-xs px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400 focus:bg-white transition-all font-semibold text-slate-700 disabled:opacity-50 disabled:bg-slate-100"
-                        value={formIsOnline ? "Online" : formPlace}
-                        onChange={(e) => setFormPlace(e.target.value)}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Online checkbox */}
-                  <div className="pt-2">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        className="w-4 h-4 rounded text-purple-600 focus:ring-purple-500 border-slate-300 cursor-pointer"
-                        checked={formIsOnline}
-                        onChange={(e) => {
-                          setFormIsOnline(e.target.checked);
-                          if (e.target.checked) setFormPlace("Online");
-                          else setFormPlace("");
-                        }}
-                      />
-                      <span className="text-[11px] font-bold text-slate-600 flex items-center gap-1 select-none">
-                        <Video className="w-3.5 h-3.5 text-purple-500 shrink-0" />
-                        This is an online/virtual session
-                      </span>
-                    </label>
-                  </div>
-
-                  {/* Meeting URL */}
-                  <AnimatePresence>
-                    {formIsOnline && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="overflow-hidden"
-                      >
-                        <div className="pt-2">
-                          <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Meeting URL / Link</label>
-                          <input
-                            type="url"
-                            required={formIsOnline}
-                            placeholder="https://teams.microsoft.com/l/meetup-join/..."
-                            className="w-full text-[11px] px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400 focus:bg-white transition-all font-semibold text-slate-700"
-                            value={formMeetingLink}
-                            onChange={(e) => setFormMeetingLink(e.target.value)}
-                          />
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-
-                  {/* Submit Button */}
-                  <div className="flex justify-end gap-2 border-t border-slate-100 pt-4 mt-2">
-                    <button
-                      type="button"
-                      onClick={closeCreateModal}
-                      className="px-4 py-2 border border-slate-200 text-slate-500 hover:bg-slate-50 text-xs font-bold rounded-xl cursor-pointer transition-all active:scale-95"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      className={`px-5 py-2 text-white text-xs font-bold rounded-xl cursor-pointer transition-all shadow-md active:scale-95 ${formType === "todo"
-                        ? "bg-purple-600 hover:bg-purple-700 shadow-purple-500/20"
-                        : "bg-orange-500 hover:bg-orange-600 shadow-orange-500/20"
-                        }`}
-                    >
-                      Create Event
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </motion.div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Input
+              label="Time"
+              type="time"
+              value={formTime}
+              onChange={(e) => setFormTime(e.target.value)}
+            />
+            <Input
+              label="Location / Room"
+              type="text"
+              disabled={formIsOnline}
+              placeholder={formIsOnline ? "Online Session" : "e.g., Room 304"}
+              value={formIsOnline ? "Online" : formPlace}
+              onChange={(e) => setFormPlace(e.target.value)}
+            />
           </div>
-        )}
-      </AnimatePresence>
+
+          {/* Online checkbox */}
+          <label className="flex items-center gap-2 cursor-pointer pt-2">
+            <input
+              type="checkbox"
+              className="w-4 h-4 rounded-koru-xs accent-koru-primary cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus"
+              checked={formIsOnline}
+              onChange={(e) => {
+                setFormIsOnline(e.target.checked);
+                if (e.target.checked) setFormPlace("Online");
+                else setFormPlace("");
+              }}
+            />
+            <span className="text-koru-caption font-medium text-koru-on-surface-variant flex items-center gap-1 select-none">
+              <Video className="w-3.5 h-3.5 text-koru-primary shrink-0" />
+              This is an online/virtual session
+            </span>
+          </label>
+
+          {/* Meeting URL */}
+          <AnimatePresence>
+            {formIsOnline && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="overflow-hidden"
+              >
+                <div className="pt-2">
+                  <Input
+                    label="Meeting URL / Link"
+                    type="url"
+                    required={formIsOnline}
+                    placeholder="https://teams.microsoft.com/l/meetup-join/..."
+                    value={formMeetingLink}
+                    onChange={(e) => setFormMeetingLink(e.target.value)}
+                  />
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <div className="flex justify-end gap-2 pt-4 mt-2">
+            <Button type="button" variant="outlined" size="sm" onClick={closeCreateModal}>
+              Cancel
+            </Button>
+            <Button type="submit" size="sm" variant={formType === "todo" ? "filled" : "accent"}>
+              Create Event
+            </Button>
+          </div>
+        </form>
+      </Modal>
 
       {/* ── MODAL: ASSIGNMENT DETAIL VIEW ── */}
-      <AnimatePresence>
+      <Modal
+        open={!!selectedAssignment}
+        onClose={() => setSelectedAssignment(null)}
+        size="sm"
+        ariaLabel="Assignment details"
+      >
         {selectedAssignment && (
-          <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className="bg-white rounded-[24px] max-w-md w-full shadow-2xl overflow-hidden border border-slate-100"
-            >
+          <>
+            <Badge variant="primary">
+              {selectedAssignment.course?.subject?.code || "UX300"} Assignment
+            </Badge>
 
+            <h3 className="font-display text-koru-heading text-koru-on-surface mt-4 leading-snug">
+              {selectedAssignment.title}
+            </h3>
 
-              <div className="p-6">
-                <div className="flex items-start justify-between">
-                  <span className="px-3 py-1 bg-purple-50 text-purple-700 text-xs font-bold rounded-full border border-purple-100">
-                    {selectedAssignment.course?.subject?.code || "UX300"} Assignment
-                  </span>
-                  <button
-                    onClick={() => setSelectedAssignment(null)}
-                    className="p-1 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 cursor-pointer transition-colors"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
+            <p className="text-xs font-medium text-koru-on-surface-variant mt-1 flex items-center gap-1.5">
+              <Calendar className="w-3.5 h-3.5" /> Due: {new Date(selectedAssignment.dueDate).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+            </p>
 
-                <h3 className="text-xl font-bold font-['Gabarito'] text-slate-800 mt-4 leading-snug">
-                  {selectedAssignment.title}
-                </h3>
+            <Card tone="muted" padding="sm" radius="lg" className="my-5">
+              <p className="text-xs font-medium text-koru-on-surface-variant uppercase tracking-wide">Description</p>
+              <p className="text-sm text-koru-on-surface mt-1.5 leading-relaxed">
+                {selectedAssignment.description || "No description provided."}
+              </p>
+            </Card>
 
-                <p className="text-xs font-semibold text-slate-400 mt-1 flex items-center gap-1.5">
-                  <Calendar className="w-3.5 h-3.5" /> Due: {new Date(selectedAssignment.dueDate).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
-                </p>
+            <div className="flex items-center justify-between pt-4 mt-6">
+              <span className="text-xs font-medium text-koru-on-surface-variant flex items-center gap-1">
+                Max Marks: <span className="text-koru-primary">{selectedAssignment.maxPoints || 100}</span>
+              </span>
 
-                <div className="my-5 p-4 bg-slate-50 border border-slate-100 rounded-2xl">
-                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Description</p>
-                  <p className="text-sm text-slate-600 mt-1.5 leading-relaxed font-medium">
-                    {selectedAssignment.description || "No description provided."}
-                  </p>
-                </div>
-
-                <div className="flex items-center justify-between border-t border-slate-100 pt-4 mt-6">
-                  <span className="text-xs font-bold text-slate-500 flex items-center gap-1">
-                    Max Marks: <span className="text-purple-600">{selectedAssignment.maxPoints || 100}</span>
-                  </span>
-
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setSelectedAssignment(null)}
-                      className="px-4 py-2 border border-slate-200 text-slate-500 hover:bg-slate-50 text-xs font-bold rounded-xl cursor-pointer transition-all"
-                    >
-                      Close
-                    </button>
-                    <a
-                      href={`/courses/${selectedAssignment.courseId}/assignments/${selectedAssignment.id}`}
-                      className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold rounded-xl cursor-pointer transition-all flex items-center gap-1 shadow-md shadow-purple-500/20"
-                    >
-                      Open Assignment <ExternalLink className="w-3.5 h-3.5" />
-                    </a>
-                  </div>
-                </div>
+              <div className="flex gap-2">
+                <Button variant="outlined" size="sm" onClick={() => setSelectedAssignment(null)}>
+                  Close
+                </Button>
+                <a
+                  href={`/courses/${selectedAssignment.courseId}/assignments/${selectedAssignment.id}`}
+                  className="inline-flex h-8 items-center justify-center gap-1.5 rounded-koru-pill px-3 text-xs font-medium shadow-koru-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus focus-visible:ring-offset-2 bg-koru-primary text-koru-on-primary hover:bg-koru-primary-hover"
+                >
+                  Open Assignment <ExternalLink className="w-3.5 h-3.5" />
+                </a>
               </div>
-            </motion.div>
-          </div>
+            </div>
+          </>
         )}
-      </AnimatePresence>
+      </Modal>
 
       {/* ── MODAL: CLASS/MEETING DETAIL VIEW ── */}
-      <AnimatePresence>
+      <Modal
+        open={!!selectedClass}
+        onClose={() => setSelectedClass(null)}
+        size="sm"
+        ariaLabel="Class details"
+      >
         {selectedClass && (
-          <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className="bg-white rounded-[24px] max-w-md w-full shadow-2xl overflow-hidden border border-slate-100"
-            >
+          <>
+            <Badge variant="accent" className="capitalize">
+              {selectedClass.eventType || "Class"}
+            </Badge>
 
+            <h3 className="font-display text-koru-heading text-koru-on-surface mt-4 leading-snug">
+              {selectedClass.title}
+            </h3>
 
-
-              <div className="p-6">
-                <div className="flex items-start justify-between">
-                  <span className="px-3 py-1 bg-orange-50 text-orange-700 text-xs font-bold rounded-full border border-orange-100 capitalize">
-                    {selectedClass.eventType || "Class"}
-                  </span>
-                  <button
-                    onClick={() => setSelectedClass(null)}
-                    className="p-1 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 cursor-pointer transition-colors"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-
-                <h3 className="text-xl font-bold font-['Gabarito'] text-slate-800 mt-4 leading-snug">
-                  {selectedClass.title}
-                </h3>
-
-                <div className="mt-4 flex flex-col gap-2.5">
-                  <div className="flex items-center gap-2 text-slate-600 text-xs font-semibold">
-                    <Clock className="w-4 h-4 text-orange-500 shrink-0" />
-                    <span>
-                      {selectedClass.isCustom ? (
-                        `${selectedClass.startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
-                      ) : (
-                        `${new Date(selectedClass.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${new Date(selectedClass.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} ({Math.round((new Date(selectedClass.endTime) - new Date(selectedClass.startTime)) / 60000)} mins)`
-                      )}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-2 text-slate-600 text-xs font-semibold">
-                    {selectedClass.description?.includes("Online") || selectedClass.description?.toLowerCase().includes("virtual") || selectedClass.description?.toLowerCase().includes("teams") ? (
-                      <Video className="w-4 h-4 text-orange-500 shrink-0" />
-                    ) : (
-                      <MapPin className="w-4 h-4 text-orange-500 shrink-0" />
-                    )}
-                    <span>
-                      Location: {selectedClass.description?.includes("|") ? selectedClass.description.split("|")[1] : "TBA"}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-2 text-slate-600 text-xs font-semibold">
-                    <User className="w-4 h-4 text-orange-500 shrink-0" />
-                    <span>Lecturer: {selectedClass.createdBy || "Unspecified"}</span>
-                  </div>
-                </div>
-
-                <div className="my-4 p-4 bg-slate-50 border border-slate-100 rounded-2xl text-xs text-slate-500 font-medium">
-                  {selectedClass.description?.includes("|") ? selectedClass.description.split("|")[0] : selectedClass.description || "Class session details."}
-                </div>
-
-                <div className="flex justify-end gap-2 border-t border-slate-100 pt-4 mt-6">
-                  <button
-                    onClick={() => setSelectedClass(null)}
-                    className="px-4 py-2 border border-slate-200 text-slate-500 hover:bg-slate-50 text-xs font-bold rounded-xl cursor-pointer transition-all"
-                  >
-                    Close
-                  </button>
-                  {(selectedClass.meetingLink || selectedClass.description?.toLowerCase().includes("online")) && (
-                    <a
-                      href={selectedClass.meetingLink || "https://teams.microsoft.com"}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold rounded-xl cursor-pointer transition-all flex items-center gap-1 shadow-md shadow-orange-500/20"
-                    >
-                      Join Meeting <ExternalLink className="w-3.5 h-3.5" />
-                    </a>
+            <div className="mt-4 flex flex-col gap-2.5">
+              <div className="flex items-center gap-2 text-koru-on-surface-variant text-xs font-medium">
+                <Clock className="w-4 h-4 text-koru-accent shrink-0" />
+                <span>
+                  {selectedClass.isCustom ? (
+                    `${selectedClass.startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+                  ) : (
+                    `${new Date(selectedClass.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${new Date(selectedClass.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} ({Math.round((new Date(selectedClass.endTime) - new Date(selectedClass.startTime)) / 60000)} mins)`
                   )}
-                </div>
+                </span>
               </div>
-            </motion.div>
-          </div>
+
+              <div className="flex items-center gap-2 text-koru-on-surface-variant text-xs font-medium">
+                {selectedClass.description?.includes("Online") || selectedClass.description?.toLowerCase().includes("virtual") || selectedClass.description?.toLowerCase().includes("teams") ? (
+                  <Video className="w-4 h-4 text-koru-accent shrink-0" />
+                ) : (
+                  <MapPin className="w-4 h-4 text-koru-accent shrink-0" />
+                )}
+                <span>
+                  Location: {selectedClass.description?.includes("|") ? selectedClass.description.split("|")[1] : "TBA"}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2 text-koru-on-surface-variant text-xs font-medium">
+                <User className="w-4 h-4 text-koru-accent shrink-0" />
+                <span>Lecturer: {selectedClass.createdBy || "Unspecified"}</span>
+              </div>
+            </div>
+
+            <Card tone="muted" padding="sm" radius="lg" className="my-4 text-xs text-koru-on-surface-variant">
+              {selectedClass.description?.includes("|") ? selectedClass.description.split("|")[0] : selectedClass.description || "Class session details."}
+            </Card>
+
+            <div className="flex justify-end gap-2 pt-4 mt-6">
+              <Button variant="outlined" size="sm" onClick={() => setSelectedClass(null)}>
+                Close
+              </Button>
+              {(selectedClass.meetingLink || selectedClass.description?.toLowerCase().includes("online")) && (
+                <a
+                  href={selectedClass.meetingLink || "https://teams.microsoft.com"}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex h-8 items-center justify-center gap-1.5 rounded-koru-pill px-3 text-xs font-medium shadow-koru-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus focus-visible:ring-offset-2 bg-koru-accent text-koru-ink hover:bg-koru-accent-hover"
+                >
+                  Join Meeting <ExternalLink className="w-3.5 h-3.5" />
+                </a>
+              )}
+            </div>
+          </>
         )}
-      </AnimatePresence>
+      </Modal>
 
     </div>
   );

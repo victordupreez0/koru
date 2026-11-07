@@ -10,7 +10,7 @@ export default function SideNavItem({ label, href = "/", icon, filledIcon, class
       <NavLink
         to={href}
         className={({ isActive }) =>
-          `inline-flex flex-col items-center justify-center gap-1 p-2 rounded-full transition-colors hover:bg-transparent ${isActive ? "bg-blue-400 !text-white [&_svg]:!text-white" : ""} ${className}`.trim()
+          `inline-flex flex-col items-center justify-center gap-1 p-2 rounded-full transition-colors hover:bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus ${isActive ? "bg-koru-primary !text-koru-on-primary [&_svg]:!text-koru-on-primary" : ""} ${className}`.trim()
         }
         aria-label={label}
       >

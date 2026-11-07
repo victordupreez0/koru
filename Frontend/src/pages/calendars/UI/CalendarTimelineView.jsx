@@ -181,15 +181,15 @@ export default function CalendarTimelineView({ events = [], weeks = [], loading 
   return (
     <div>
       {/* Week nav */}
-      <div className="flex items-center justify-between px-1 py-3 border-b border-gray-100">
+      <div className="flex items-center justify-between px-1 py-3 border-b border-koru-outline-faint">
         <div className="flex items-center gap-2">
           <button onClick={() => setWeekIdx(i => Math.max(0, i-1))} disabled={weekIdx === 0}
-            className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 text-base border-none cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed transition-colors">‹</button>
-          <span className="text-sm font-semibold text-gray-600 min-w-[110px] text-center select-none">{weekLabel()}</span>
+            className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-koru-surface-container text-koru-on-surface-variant text-base border-none cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus" aria-label="Previous week">‹</button>
+          <span className="text-sm font-medium text-koru-on-surface-variant min-w-[110px] text-center select-none">{weekLabel()}</span>
           <button onClick={() => setWeekIdx(i => Math.min(weeks.length-1, i+1))} disabled={weekIdx === weeks.length-1}
-            className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 text-base border-none cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed transition-colors">›</button>
+            className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-koru-surface-container text-koru-on-surface-variant text-base border-none cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus" aria-label="Next week">›</button>
         </div>
-        <span className="text-[11px] text-gray-400 pr-1">Week {weekIdx+1} / {weeks.length}</span>
+        <span className="text-koru-caption text-koru-on-surface-variant pr-1">Week {weekIdx+1} / {weeks.length}</span>
       </div>
 
       {/*
@@ -209,14 +209,14 @@ export default function CalendarTimelineView({ events = [], weeks = [], loading 
         <thead>
           <tr>
             {/* Empty corner above gutter */}
-            <th style={{ borderBottom: "1px solid #e5e7eb", padding: 0, height: "60px", boxSizing: "border-box" }} />
+            <th style={{ borderBottom: "1px solid var(--color-koru-outline-faint)", padding: 0, height: "60px", boxSizing: "border-box" }} />
 
             {week.map(({ date, day }, i) => {
               const isToday = date === todayStr;
               return (
                 <th key={date} style={{
-                  borderBottom: "1px solid #e5e7eb",
-                  borderLeft:   "1px solid #e5e7eb",
+                  borderBottom: "1px solid var(--color-koru-outline-faint)",
+                  borderLeft:   "1px solid var(--color-koru-outline-faint)",
                   padding:      "10px 0",
                   textAlign:    "center",
                   fontWeight:   "normal",
@@ -224,15 +224,15 @@ export default function CalendarTimelineView({ events = [], weeks = [], loading 
                   verticalAlign: "bottom",
                   boxSizing:    "border-box",
                 }}>
-                  <span style={{ display:"block", fontSize:10, fontWeight:700, letterSpacing:"0.1em", textTransform:"uppercase", color:"#9ca3af" }}>
+                  <span style={{ display:"block", fontSize:10, fontWeight:500, letterSpacing:"0.1em", textTransform:"uppercase", color:"var(--color-koru-on-surface-variant)" }}>
                     {DAY_LETTERS[i]}
                   </span>
                   <span style={{
                     display:"inline-flex", alignItems:"center", justifyContent:"center",
                     width:26, height:26, borderRadius:"50%", marginTop:2,
-                    fontSize:12, fontWeight:700,
-                    background: isToday ? "#8b5cf6" : "transparent",
-                    color:      isToday ? "#fff"     : "#374151",
+                    fontSize:12, fontWeight:500,
+                    background: isToday ? "var(--color-koru-primary)" : "transparent",
+                    color:      isToday ? "var(--color-koru-on-primary)" : "var(--color-koru-on-surface)",
                   }}>
                     {day}
                   </span>
@@ -252,7 +252,7 @@ export default function CalendarTimelineView({ events = [], weeks = [], loading 
                   <span key={label} style={{
                     position:"absolute", right:8, top:y,
                     transform:"translateY(-50%)",
-                    fontSize:10, fontWeight:500, color:"#9ca3af",
+                    fontSize:10, fontWeight:500, color:"var(--color-koru-on-surface-variant)",
                     whiteSpace:"nowrap", lineHeight:1,
                     userSelect:"none",
                   }}>
@@ -283,7 +283,7 @@ export default function CalendarTimelineView({ events = [], weeks = [], loading 
               const skelSeed = date.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
 
               return (
-                <td key={date} style={{ verticalAlign:"top", padding:0, borderLeft:"1px solid #e5e7eb", cursor:"pointer" }}
+                <td key={date} style={{ verticalAlign:"top", padding:0, borderLeft:"1px solid var(--color-koru-outline-faint)", cursor:"pointer" }}
                   onClick={() => onDayClick?.(date)}>
                   <div style={{ position:"relative", height:trackHeight }}>
 
@@ -291,14 +291,14 @@ export default function CalendarTimelineView({ events = [], weeks = [], loading 
                     {hourSlots.map(({ label, y }) => (
                       y > 0 && <div key={label} style={{
                         position:"absolute", top:y, left:0, right:0,
-                        borderTop:"1px solid #f3f4f6", pointerEvents:"none",
+                        borderTop:"1px solid var(--color-koru-outline-faint)", pointerEvents:"none",
                       }} />
                     ))}
 
                     {/* Vertical axis */}
                     <div style={{
                       position:"absolute", top:0, bottom:0,
-                      left:AXIS_X, width:1, background:"#d1d5db",
+                      left:AXIS_X, width:1, background:"var(--color-koru-outline-variant)",
                       pointerEvents:"none",
                     }} />
 
@@ -309,12 +309,12 @@ export default function CalendarTimelineView({ events = [], weeks = [], loading 
                         {/* Dot placeholder */}
                         <div style={{
                           flexShrink:0, width:8, height:8, borderRadius:"50%",
-                          background:"#e5e7eb",
+                          background:"var(--color-koru-outline-variant)",
                           marginLeft:AXIS_X - 4, marginRight:6,
                         }} />
                         {/* Pill placeholder */}
                         <div
-                          className="animate-pulse rounded-full bg-gray-200"
+                          className="animate-pulse motion-reduce:animate-none rounded-full bg-koru-surface-container-highest"
                           style={{ height: PILL_H, flex:1, width: `${45 + ((skelSeed * (i + 2) * 13) % 40)}%`, maxWidth:"calc(100% - 18px)" }}
                         />
                       </div>
@@ -331,7 +331,7 @@ export default function CalendarTimelineView({ events = [], weeks = [], loading 
                           {/* Dot */}
                           <div style={{
                             flexShrink:0, width:8, height:8, borderRadius:"50%",
-                            background:"#8b5cf6",
+                            background:"var(--color-koru-primary)",
                             marginLeft:AXIS_X - 4, marginRight:6,
                           }} />
 
@@ -339,23 +339,23 @@ export default function CalendarTimelineView({ events = [], weeks = [], loading 
                           <div className="group/pill relative min-w-0 flex-1">
                             {/* Hover Tooltip — styled exactly like month view */}
                             {hasTooltipDetails && (
-                              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 w-52 bg-purple-800 rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.12)] p-3 pointer-events-none opacity-0 group-hover/pill:opacity-100 translate-y-1.5 group-hover/pill:translate-y-0 transition-all duration-200 ease-out">
+                              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 w-52 bg-koru-inverse-surface rounded-koru-lg shadow-koru-md p-3 pointer-events-none opacity-0 group-hover/pill:opacity-100 translate-y-1.5 group-hover/pill:translate-y-0 transition-all duration-200 ease-out">
                                 {/* Title row with icon */}
                                 <div className="flex items-center gap-2 mb-2.5">
-                                  <div className="w-8 h-8 rounded-xl border border-gray-200 bg-gray-50 flex items-center justify-center shrink-0 text-gray-500">
+                                  <div className="w-8 h-8 rounded-koru-md bg-koru-surface-container flex items-center justify-center shrink-0 text-koru-on-surface-variant">
                                     {ICONS_LG[evt.type] ?? ICONS_LG.class}
                                   </div>
-                                  <span className="font-semibold text-[13px] text-white leading-snug">{evt.title}</span>
+                                  <span className="font-medium text-koru-label text-koru-inverse-on-surface leading-snug">{evt.title}</span>
                                 </div>
 
                                 {/* Divider */}
-                                <div className="h-px bg-white mb-2" />
+                                <div className="h-px bg-koru-inverse-on-surface/20 mb-2" />
 
                                 {/* Meta rows */}
                                 <div className="flex flex-col gap-1.5">
                                   {evt.startTime && (
-                                    <div className="flex items-center gap-1.5 text-[11px] text-white">
-                                      <span className="text-white shrink-0"><ClockIcon /></span>
+                                    <div className="flex items-center gap-1.5 text-koru-caption text-koru-inverse-on-surface">
+                                      <span className="text-koru-inverse-on-surface shrink-0"><ClockIcon /></span>
                                       <span>
                                         {evt.startTime}
                                         {evt.endTime ? ` – ${evt.endTime}` : ""}
@@ -363,13 +363,13 @@ export default function CalendarTimelineView({ events = [], weeks = [], loading 
                                     </div>
                                   )}
                                   {evt.lecturer && (
-                                    <div className="flex items-center gap-1.5 text-[11px] text-white">
-                                      <span className="text-white shrink-0"><PersonIcon /></span>
+                                    <div className="flex items-center gap-1.5 text-koru-caption text-koru-inverse-on-surface">
+                                      <span className="text-koru-inverse-on-surface shrink-0"><PersonIcon /></span>
                                       <span className="truncate">{evt.lecturer}</span>
                                     </div>
                                   )}
                                   {evt.location && (
-                                    <div className="flex items-center gap-1.5 text-[11px] text-white">
+                                    <div className="flex items-center gap-1.5 text-koru-caption text-koru-inverse-on-surface">
                                       <span className="shrink-0"><PinIcon /></span>
                                       <span className="truncate">{evt.location}</span>
                                     </div>
@@ -377,20 +377,20 @@ export default function CalendarTimelineView({ events = [], weeks = [], loading 
                                 </div>
 
                                 {/* Caret (pointing down) */}
-                                <div className="absolute left-1/2 -translate-x-1/2 -bottom-[5px] w-2.5 h-2.5 bg-purple-800 rotate-45 shadow-[1px_1px_0px_rgba(0,0,0,0.04)]" />
+                                <div className="absolute left-1/2 -translate-x-1/2 -bottom-[5px] w-2.5 h-2.5 bg-koru-inverse-surface rotate-45" />
                               </div>
                             )}
 
                             {/* Event pill — styled exactly like month view */}
                             <div className={[
-                              "flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-medium transition-all duration-150 shadow-xs hover:-translate-y-px hover:shadow-md border border-gray-200",
+                              "flex items-center gap-1.5 rounded-full px-3 py-1 text-koru-caption font-medium transition-all duration-150 shadow-koru-xs hover:-translate-y-px hover:shadow-koru-sm motion-reduce:transition-none motion-reduce:hover:translate-y-0",
                               evt.type === "task"
-                                ? "bg-amber-50 text-gray-800 hover:bg-amber-100"
-                                : "bg-white text-black hover:bg-purple-100",
+                                ? "bg-koru-accent-soft text-koru-accent-ink hover:bg-koru-accent-soft/70"
+                                : "bg-koru-surface-container-lowest text-koru-on-surface hover:bg-koru-primary-container",
                               "cursor-pointer"
                             ].join(" ")}>
                               {/* Type icon */}
-                              <span className={["shrink-0 mt-px", evt.type === "task" ? "text-amber-600" : "text-purple-700"].join(" ")}>
+                              <span className={["shrink-0 mt-px", evt.type === "task" ? "text-koru-accent-ink" : "text-koru-primary"].join(" ")}>
                                 {ICONS[evt.type] ?? ICONS.class}
                               </span>
 
@@ -399,7 +399,7 @@ export default function CalendarTimelineView({ events = [], weeks = [], loading 
 
                               {/* Time */}
                               {(evt.startTime || evt.endTime) && (
-                                <span className={["shrink-0 text-[10px] text-right leading-tight whitespace-nowrap", evt.type === "task" ? "text-amber-500" : "text-gray-400"].join(" ")}>
+                                <span className={["shrink-0 text-koru-caption text-right leading-tight whitespace-nowrap", evt.type === "task" ? "text-koru-accent-ink/70" : "text-koru-on-surface-variant"].join(" ")}>
                                   {evt.startTime && <span className="block">{evt.startTime}</span>}
                                   {evt.endTime && <span className="block">{evt.endTime}</span>}
                                 </span>
@@ -414,7 +414,7 @@ export default function CalendarTimelineView({ events = [], weeks = [], loading 
                     <div style={{
                       position:"absolute", left:AXIS_X - 5, bottom:14,
                       width:10, height:10, borderRadius:"50%",
-                      border:"2px solid #ddd6fe", background:"#fff",
+                      border:"2px solid var(--color-koru-primary-container)", background:"var(--color-koru-surface-container-lowest)",
                       pointerEvents:"none",
                     }} />
                   </div>

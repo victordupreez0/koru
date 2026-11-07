@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { CheckCircle } from "@solar-icons/react";
 import { Plus, ChevronDown, ChevronRight, Loader, X, Paperclip, FileText, ExternalLink, Link as LinkIcon, EyeOff, MoreVertical, Copy, Pencil, Trash2 } from "lucide-react";
+import { Alert, Button, Card, Input, Modal, Select } from "../../../components/UI";
 import { getCourseModules, createModule, updateModule, deleteModule, createModuleItem, updateModuleItem, deleteModuleItem } from "../../../services/moduleService";
 
 export function CourseModulesView({ activeCourseId }) {
@@ -264,115 +265,122 @@ export function CourseModulesView({ activeCourseId }) {
     }
   };
 
+  const menuItemClass =
+    "flex w-full cursor-pointer items-center gap-2.5 px-3.5 py-2 text-xs font-medium text-koru-on-surface transition-colors hover:bg-koru-surface-container focus-visible:bg-koru-surface-container focus-visible:outline-none";
+
   return (
     <div className="w-full flex flex-col gap-6 py-6 select-none">
       <div className="flex items-center justify-between gap-3 shrink-0 px-1">
-        <h2 className="text-lg font-black tracking-tight text-gray-900">Course Modules Manager</h2>
+        <h2 className="font-display text-koru-heading text-koru-on-surface">Course Modules Manager</h2>
         <div className="flex items-center gap-3">
-          <button onClick={() => setIsAddingModule(true)} className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold bg-[#3C0078] hover:bg-[#2A0054] text-white rounded-xl transition-all cursor-pointer shadow-sm hover:shadow">
-            <Plus size={14} /> <span>Add Section</span>
-          </button>
-          <button onClick={toggleAll} className="flex items-center justify-center px-4 py-2 text-xs font-bold border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 rounded-xl transition-all cursor-pointer">
+          <Button size="sm" startIcon={<Plus size={14} />} onClick={() => setIsAddingModule(true)}>
+            Add Section
+          </Button>
+          <Button size="sm" variant="outlined" onClick={toggleAll}>
             {areAllCollapsed ? "Expand all" : "Collapse all"}
-          </button>
+          </Button>
         </div>
       </div>
 
       {isAddingModule && (
-        <div className="border border-purple-200/50 bg-[#3C0078]/3 p-5 rounded-2xl flex flex-col gap-3">
-          <h4 className="text-xs font-extrabold text-[#3C0078] uppercase tracking-wider">Create New Module Section</h4>
+        <Card tone="brand" radius="lg" className="flex flex-col gap-3">
+          <h4 className="text-koru-caption font-medium uppercase tracking-wider text-koru-on-primary-container">Create New Module Section</h4>
           <div className="flex gap-3">
-            <input
+            <Input
               autoFocus
               type="text"
+              size="sm"
               placeholder="e.g. Week 2: Design Systems..."
               value={newModuleTitle}
               onChange={(e) => setNewModuleTitle(e.target.value)}
-              className="flex-1 bg-white border border-gray-200 rounded-xl px-4 py-2 text-xs outline-none focus:border-[#3C0078]/40 transition-colors"
+              containerClassName="flex-1"
+              aria-label="New module section title"
               onKeyDown={(e) => {
                 if (e.key === "Enter") handleAddModule();
                 if (e.key === "Escape") { setIsAddingModule(false); setCreateModuleError(""); }
               }}
             />
-            <button onClick={handleAddModule} disabled={isCreatingModule} className="flex items-center gap-1.5 px-5 py-2 bg-[#3C0078] hover:bg-[#2A0054] disabled:opacity-60 disabled:cursor-not-allowed text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm">
-              {isCreatingModule && <Loader size={12} className="animate-spin" />}
+            <Button size="md" onClick={handleAddModule} disabled={isCreatingModule} loading={isCreatingModule}>
               {isCreatingModule ? "Creating..." : "Add Section"}
-            </button>
-            <button onClick={() => { setIsAddingModule(false); setCreateModuleError(""); }} disabled={isCreatingModule} className="px-4 py-2 bg-white border border-gray-200 text-gray-500 rounded-xl hover:bg-gray-50 text-xs font-bold cursor-pointer disabled:opacity-60">
+            </Button>
+            <Button size="md" variant="outlined" onClick={() => { setIsAddingModule(false); setCreateModuleError(""); }} disabled={isCreatingModule}>
               Cancel
-            </button>
+            </Button>
           </div>
-          {createModuleError && <p className="text-xs text-red-500 font-medium mt-1">{createModuleError}</p>}
-        </div>
+          {createModuleError && <Alert variant="error">{createModuleError}</Alert>}
+        </Card>
       )}
 
       <div className="flex flex-col gap-5">
         {modulesLoading ? (
           [3, 2, 4].map((itemCount, i) => (
-            <div key={i} className="border border-gray-100 rounded-2xl overflow-hidden bg-white animate-pulse">
-              <div className="flex items-center justify-between px-5 py-4 bg-gray-50/80 border-b border-gray-100">
+            <Card key={i} variant="outlined" tone="surface" padding="none" className="overflow-hidden animate-pulse motion-reduce:animate-none">
+              <div className="flex items-center justify-between px-5 py-4 bg-koru-surface-container">
                 <div className="flex items-center gap-3">
-                  <div className="w-5 h-5 rounded-md bg-gray-200" />
-                  <div className="h-3 rounded-full bg-gray-200" style={{ width: `${90 + i * 45}px` }} />
+                  <div className="w-5 h-5 rounded-koru-xs bg-koru-surface-container-highest" />
+                  <div className="h-3 rounded-koru-pill bg-koru-surface-container-highest" style={{ width: `${90 + i * 45}px` }} />
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className="h-7 rounded-xl bg-gray-100 w-20" />
-                  <div className="h-7 rounded-xl bg-gray-100 w-6" />
+                  <div className="h-7 rounded-koru-pill bg-koru-surface-container-high w-20" />
+                  <div className="h-7 rounded-koru-pill bg-koru-surface-container-high w-6" />
                 </div>
               </div>
               <div className="p-5 flex flex-col gap-3">
                 {Array.from({ length: itemCount }, (_, j) => (
                   <div key={j} className="flex items-center gap-3 py-1">
-                    <div className="w-4 h-4 rounded bg-gray-100 shrink-0" />
-                    <div className="h-3 rounded-full bg-gray-100" style={{ width: `${110 + j * 55}px` }} />
+                    <div className="w-4 h-4 rounded-koru-xs bg-koru-surface-container-high shrink-0" />
+                    <div className="h-3 rounded-koru-pill bg-koru-surface-container-high" style={{ width: `${110 + j * 55}px` }} />
                   </div>
                 ))}
               </div>
-            </div>
+            </Card>
           ))
         ) : modules.map((mod) => (
-          <div key={mod.id} className="border border-gray-200 rounded-2xl overflow-hidden shadow-xs bg-white">
-            <div onClick={() => toggleModule(mod.id)} className="flex items-center justify-between px-5 py-4 bg-gray-50/80 border-b border-gray-200 cursor-pointer select-none group">
+          <Card key={mod.id} variant="outlined" tone="surface" padding="none" className="overflow-hidden">
+            <div onClick={() => toggleModule(mod.id)} className="flex items-center justify-between px-5 py-4 bg-koru-surface-container cursor-pointer select-none group">
               <div className="flex-1 flex items-center gap-3 min-w-0">
-                <span onClick={(e) => { e.stopPropagation(); toggleModule(mod.id); }} className="text-gray-400 group-hover:text-gray-600 transition-colors shrink-0 p-1 hover:bg-gray-200 rounded-md">
+                <span onClick={(e) => { e.stopPropagation(); toggleModule(mod.id); }} className="text-koru-on-surface-variant transition-colors shrink-0 p-1 hover:bg-koru-surface-container-highest rounded-koru-xs">
                   {mod.isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
                 </span>
 
                 {editingModuleId === mod.id ? (
                   <div className="flex-1 flex items-center gap-2 max-w-lg" onClick={(e) => e.stopPropagation()}>
-                    <input
+                    <Input
                       autoFocus
                       type="text"
+                      size="sm"
                       value={editingModuleTitle}
                       onChange={(e) => setEditingModuleTitle(e.target.value)}
-                      className="flex-1 px-3 py-1 text-xs border border-purple-300 rounded-lg outline-none"
+                      containerClassName="flex-1"
+                      aria-label="Module title"
                       onKeyDown={(e) => {
                         if (e.key === "Enter") handleRenameModule(mod.id);
                         if (e.key === "Escape") setEditingModuleId(null);
                       }}
                     />
-                    <button onClick={() => handleRenameModule(mod.id)} className="px-2.5 py-1 bg-green-500 text-white rounded-lg text-[10px] font-bold uppercase tracking-wider cursor-pointer">Save</button>
-                    <button onClick={() => setEditingModuleId(null)} className="px-2.5 py-1 bg-white border border-gray-200 text-gray-500 rounded-lg text-[10px] font-bold uppercase tracking-wider cursor-pointer">Cancel</button>
+                    <Button size="sm" onClick={() => handleRenameModule(mod.id)}>Save</Button>
+                    <Button size="sm" variant="outlined" onClick={() => setEditingModuleId(null)}>Cancel</Button>
                   </div>
                 ) : (
                   <div className="flex items-center gap-2 min-w-0">
-                    {mod.prefix && <span className="text-sm font-extrabold text-gray-700 shrink-0">{mod.prefix}</span>}
-                    <h3 className="text-xs font-black tracking-wider text-gray-700 uppercase truncate">{mod.title}</h3>
+                    {mod.prefix && <span className="text-sm font-medium text-koru-on-surface shrink-0">{mod.prefix}</span>}
+                    <h3 className="font-display text-koru-label uppercase tracking-wider text-koru-on-surface truncate">{mod.title}</h3>
                   </div>
                 )}
               </div>
 
               <div className="flex items-center gap-3.5 shrink-0" onClick={(e) => e.stopPropagation()}>
                 <div onClick={(e) => handleToggleModulePublish(mod.id, e)} title={mod.isPublished ? "Published (click to unpublish)" : "Draft (click to publish)"} className="flex items-center justify-center shrink-0 cursor-pointer">
-                  {mod.isPublished ? <CheckCircle size={15} className="text-green-500 hover:scale-110 transition-transform" /> : <EyeOff size={15} className="text-gray-400 hover:scale-110 transition-transform" />}
+                  {mod.isPublished ? <CheckCircle size={15} className="text-koru-success hover:scale-110 motion-reduce:hover:scale-100 transition-transform" /> : <EyeOff size={15} className="text-koru-on-surface-variant hover:scale-110 motion-reduce:hover:scale-100 transition-transform" />}
                 </div>
-                <button onClick={() => setAddingItemTo(mod.id)} className="flex items-center gap-1 py-1.5 px-3 rounded-lg text-[10px] font-black uppercase tracking-wider bg-purple-50 text-[#3C0078] border border-purple-100 hover:bg-[#3C0078]/5 transition-all cursor-pointer">
-                  <Plus size={11} /> <span>Add Item</span>
-                </button>
+                <Button size="sm" variant="tonal" startIcon={<Plus size={11} />} onClick={() => setAddingItemTo(mod.id)}>
+                  Add Item
+                </Button>
                 <button
                   onClick={(e) => openModuleMenu(e, mod.id)}
-                  className="p-1.5 text-gray-400 hover:text-gray-700 rounded-lg hover:bg-gray-100 transition-all cursor-pointer"
+                  className="p-1.5 text-koru-on-surface-variant hover:text-koru-on-surface rounded-koru-sm hover:bg-koru-surface-container-high transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus"
                   title="More options"
+                  aria-label="More options"
                 >
                   <MoreVertical size={15} />
                 </button>
@@ -380,35 +388,37 @@ export function CourseModulesView({ activeCourseId }) {
             </div>
 
             {addingItemTo === mod.id && (
-              <div className="p-4 bg-purple-50/30 border-b border-gray-100 flex flex-col gap-3">
+              <div className="p-4 bg-koru-primary-subtle flex flex-col gap-3">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-[10px] font-black text-[#3C0078] uppercase tracking-wider">Add Section Item</h4>
-                  <button onClick={() => setAddingItemTo(null)} className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md cursor-pointer"><X size={12} /></button>
+                  <h4 className="text-koru-caption font-medium text-koru-on-primary-container uppercase tracking-wider">Add Section Item</h4>
+                  <button onClick={() => setAddingItemTo(null)} aria-label="Close" className="p-1 text-koru-on-surface-variant hover:bg-koru-surface-container-high rounded-koru-xs cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus"><X size={12} /></button>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  <input
+                  <Input
                     autoFocus
                     type="text"
+                    size="sm"
                     placeholder="Item title..."
                     value={newItemLabel}
                     onChange={(e) => setNewItemLabel(e.target.value)}
-                    className="md:col-span-2 bg-white border border-gray-200 rounded-xl px-3 py-1.5 text-xs outline-none focus:border-[#3C0078]/40 transition-colors"
+                    containerClassName="md:col-span-2"
+                    aria-label="Item title"
                   />
-                  <select value={newItemType} onChange={(e) => setNewItemType(e.target.value)} className="bg-white border border-gray-200 rounded-xl px-3 py-1.5 text-xs outline-none cursor-pointer focus:border-[#3C0078]/40">
+                  <Select size="sm" value={newItemType} onChange={(e) => setNewItemType(e.target.value)} aria-label="Item type">
                     <option value="document">Document</option>
                     <option value="link">Link</option>
                     <option value="attachment">Attachment</option>
-                  </select>
+                  </Select>
                 </div>
                 {newItemType === "link" && (
                   <div className="flex items-center gap-2 mt-1">
-                    <input type="checkbox" id="isExternal" checked={isNewItemExternal} onChange={(e) => setIsNewItemExternal(e.target.checked)} className="rounded border-gray-300 text-[#3C0078] focus:ring-[#3C0078]" />
-                    <label htmlFor="isExternal" className="text-[10px] font-bold text-gray-500 cursor-pointer">Open in New Window (External Link)</label>
+                    <input type="checkbox" id="isExternal" checked={isNewItemExternal} onChange={(e) => setIsNewItemExternal(e.target.checked)} className="rounded-koru-xs accent-koru-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus" />
+                    <label htmlFor="isExternal" className="text-koru-caption font-medium text-koru-on-surface-variant cursor-pointer">Open in New Window (External Link)</label>
                   </div>
                 )}
                 <div className="flex justify-end gap-2 mt-2">
-                  <button onClick={() => handleAddItem(mod.id)} className="px-4 py-1.5 bg-[#3C0078] text-white text-[10px] font-bold uppercase tracking-wider rounded-lg hover:bg-[#2A0054] transition-all cursor-pointer">Add Item</button>
-                  <button onClick={() => setAddingItemTo(null)} className="px-3 py-1.5 bg-white border border-gray-200 text-gray-500 text-[10px] font-bold uppercase tracking-wider rounded-lg hover:bg-gray-50 cursor-pointer">Cancel</button>
+                  <Button size="sm" onClick={() => handleAddItem(mod.id)}>Add Item</Button>
+                  <Button size="sm" variant="outlined" onClick={() => setAddingItemTo(null)}>Cancel</Button>
                 </div>
               </div>
             )}
@@ -416,12 +426,12 @@ export function CourseModulesView({ activeCourseId }) {
             {mod.isOpen && (
               <div className="flex flex-col">
                 {mod.items.length === 0 ? (
-                  <div className="p-6 text-center text-xs text-gray-400 font-medium bg-gray-50/10">No items in this module section</div>
+                  <div className="p-6 text-center text-xs text-koru-on-surface-variant font-medium">No items in this module section</div>
                 ) : (
                   mod.items.map((item) => (
-                    <div key={item.id} className="flex items-center justify-between py-3.5 px-6 border-b border-gray-100 last:border-b-0 hover:bg-gray-50/40 transition-colors group/item">
+                    <div key={item.id} className="flex items-center justify-between py-3.5 px-6 border-b border-koru-outline-faint last:border-b-0 hover:bg-koru-surface-container-low transition-colors group/item">
                       <div className="flex-1 flex items-center gap-3.5 min-w-0">
-                        <span className="text-gray-400 shrink-0">
+                        <span className="text-koru-on-surface-variant shrink-0">
                           {item.type === "attachment" && <Paperclip size={14} />}
                           {item.type === "document" && <FileText size={14} />}
                           {item.type === "link" && <LinkIcon size={14} />}
@@ -429,33 +439,35 @@ export function CourseModulesView({ activeCourseId }) {
 
                         {editingItemId === item.id && editingItemModuleId === mod.id ? (
                           <div className="flex items-center gap-2 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
-                            <input
+                            <Input
                               autoFocus
                               type="text"
+                              size="sm"
                               value={editingItemLabel}
                               onChange={(e) => setEditingItemLabel(e.target.value)}
-                              className="flex-1 px-3 py-1 text-xs border border-purple-300 rounded-lg outline-none font-medium"
+                              containerClassName="flex-1"
+                              aria-label="Item title"
                               onKeyDown={(e) => {
                                 if (e.key === "Enter") handleRenameItem(mod.id, item.id);
                                 if (e.key === "Escape") { setEditingItemId(null); setEditingItemModuleId(null); }
                               }}
                             />
-                            <button onClick={() => handleRenameItem(mod.id, item.id)} className="px-2.5 py-1 bg-green-500 text-white rounded-lg text-[9px] font-bold uppercase tracking-wider cursor-pointer">Save</button>
-                            <button onClick={() => { setEditingItemId(null); setEditingItemModuleId(null); }} className="px-2.5 py-1 bg-white border border-gray-200 text-gray-500 rounded-lg text-[9px] font-bold uppercase tracking-wider cursor-pointer">Cancel</button>
+                            <Button size="sm" onClick={() => handleRenameItem(mod.id, item.id)}>Save</Button>
+                            <Button size="sm" variant="outlined" onClick={() => { setEditingItemId(null); setEditingItemModuleId(null); }}>Cancel</Button>
                           </div>
                         ) : (
                           <div className="flex items-center gap-2 min-w-0">
                             {item.type === "link" ? (
-                              <a href="#" onClick={(e) => { e.preventDefault(); alert(`Opening link: ${item.label}`); }} className="text-xs font-bold !text-blue-600 hover:underline flex items-center gap-1.5 min-w-0">
+                              <a href="#" onClick={(e) => { e.preventDefault(); alert(`Opening link: ${item.label}`); }} className="text-xs font-medium !text-koru-info hover:underline flex items-center gap-1.5 min-w-0">
                                 <span className="truncate">{item.label}</span>
                                 {item.isExternal && <ExternalLink size={11} className="shrink-0" />}
                               </a>
                             ) : item.type === "document" ? (
-                              <span className="text-xs font-bold text-gray-700 hover:text-[#3C0078] hover:underline truncate cursor-pointer" onClick={() => navigate(`/courses/${activeCourseId}/items/${item.id}`)}>
+                              <span className="text-xs font-medium text-koru-on-surface hover:text-koru-primary hover:underline truncate cursor-pointer" onClick={() => navigate(`/courses/${activeCourseId}/items/${item.id}`)}>
                                 {item.label}
                               </span>
                             ) : (
-                              <span className="text-xs font-bold text-gray-700 truncate cursor-pointer hover:text-gray-900" onClick={() => alert(`Downloading attachment: ${item.label}`)}>
+                              <span className="text-xs font-medium text-koru-on-surface truncate cursor-pointer hover:text-koru-primary" onClick={() => alert(`Downloading attachment: ${item.label}`)}>
                                 {item.label}
                               </span>
                             )}
@@ -465,12 +477,13 @@ export function CourseModulesView({ activeCourseId }) {
 
                       <div className="flex items-center gap-2.5 shrink-0">
                         <div onClick={() => handleToggleItemPublish(mod.id, item.id)} title={item.isPublished ? "Published (click to unpublish)" : "Draft (click to publish)"} className="flex items-center justify-center shrink-0 cursor-pointer">
-                          {item.isPublished ? <CheckCircle size={15} className="text-green-500 hover:scale-110 transition-transform shadow-2xs" /> : <EyeOff size={15} className="text-gray-400 hover:scale-110 transition-transform" />}
+                          {item.isPublished ? <CheckCircle size={15} className="text-koru-success hover:scale-110 motion-reduce:hover:scale-100 transition-transform" /> : <EyeOff size={15} className="text-koru-on-surface-variant hover:scale-110 motion-reduce:hover:scale-100 transition-transform" />}
                         </div>
                         <button
                           onClick={(e) => openItemMenu(e, mod.id, item.id)}
-                          className="p-1 text-gray-400 hover:text-gray-700 rounded hover:bg-gray-100 transition-all opacity-0 group-hover/item:opacity-100 cursor-pointer shrink-0"
+                          className="p-1 text-koru-on-surface-variant hover:text-koru-on-surface rounded-koru-xs hover:bg-koru-surface-container-high transition-all opacity-0 group-hover/item:opacity-100 focus-visible:opacity-100 cursor-pointer shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus"
                           title="More options"
+                          aria-label="More options"
                         >
                           <MoreVertical size={13} />
                         </button>
@@ -480,7 +493,7 @@ export function CourseModulesView({ activeCourseId }) {
                 )}
               </div>
             )}
-          </div>
+          </Card>
         ))}
       </div>
 
@@ -489,7 +502,7 @@ export function CourseModulesView({ activeCourseId }) {
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpenMenu(null)} />
           <div
-            className="fixed z-50 bg-white border border-gray-200 rounded-xl shadow-lg py-1 min-w-[150px]"
+            className="fixed z-50 bg-koru-surface-container-lowest rounded-koru-md shadow-koru-md py-1 min-w-[150px]"
             style={{ top: openMenu.top, right: openMenu.right }}
           >
             {openMenu.type === "module" ? (
@@ -501,20 +514,20 @@ export function CourseModulesView({ activeCourseId }) {
                     setEditingModuleTitle(mod?.title || "");
                     setOpenMenu(null);
                   }}
-                  className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+                  className={menuItemClass}
                 >
-                  <Pencil size={13} className="text-gray-400" /> Rename
+                  <Pencil size={13} className="text-koru-on-surface-variant" /> Rename
                 </button>
                 <button
                   onClick={() => { handleDuplicateModule(openMenu.id); setOpenMenu(null); }}
-                  className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+                  className={menuItemClass}
                 >
-                  <Copy size={13} className="text-gray-400" /> Duplicate
+                  <Copy size={13} className="text-koru-on-surface-variant" /> Duplicate
                 </button>
-                <div className="my-1 border-t border-gray-100" />
+                <div className="my-1 border-t border-koru-outline-variant" />
                 <button
                   onClick={() => { setDeleteConfirm({ type: "module", modId: openMenu.id }); setOpenMenu(null); }}
-                  className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
+                  className="flex w-full cursor-pointer items-center gap-2.5 px-3.5 py-2 text-xs font-medium text-koru-error transition-colors hover:bg-koru-error-container focus-visible:bg-koru-error-container focus-visible:outline-none"
                 >
                   <Trash2 size={13} /> Delete
                 </button>
@@ -530,20 +543,20 @@ export function CourseModulesView({ activeCourseId }) {
                     setEditingItemLabel(item?.label || "");
                     setOpenMenu(null);
                   }}
-                  className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+                  className={menuItemClass}
                 >
-                  <Pencil size={13} className="text-gray-400" /> Rename
+                  <Pencil size={13} className="text-koru-on-surface-variant" /> Rename
                 </button>
                 <button
                   onClick={() => { handleDuplicateItem(openMenu.modId, openMenu.id); setOpenMenu(null); }}
-                  className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+                  className={menuItemClass}
                 >
-                  <Copy size={13} className="text-gray-400" /> Duplicate
+                  <Copy size={13} className="text-koru-on-surface-variant" /> Duplicate
                 </button>
-                <div className="my-1 border-t border-gray-100" />
+                <div className="my-1 border-t border-koru-outline-variant" />
                 <button
                   onClick={() => { setDeleteConfirm({ type: "item", modId: openMenu.modId, itemId: openMenu.id }); setOpenMenu(null); }}
-                  className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
+                  className="flex w-full cursor-pointer items-center gap-2.5 px-3.5 py-2 text-xs font-medium text-koru-error transition-colors hover:bg-koru-error-container focus-visible:bg-koru-error-container focus-visible:outline-none"
                 >
                   <Trash2 size={13} /> Delete
                 </button>
@@ -554,37 +567,33 @@ export function CourseModulesView({ activeCourseId }) {
       )}
 
       {/* Delete confirmation modal */}
-      {deleteConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/25 backdrop-blur-[2px]">
-          <div className="bg-white rounded-2xl p-6 shadow-xl max-w-sm w-full mx-4 border border-gray-100">
-            <h3 className="text-base font-black text-gray-900 mb-1">
-              {deleteConfirm.type === "module" ? "Delete section?" : "Delete item?"}
-            </h3>
-            <p className="text-sm text-gray-500 mb-5">
-              {deleteConfirm.type === "module"
-                ? "This will permanently remove the section and all its items. This cannot be undone."
-                : "This will permanently remove this item. This cannot be undone."}
-            </p>
-            <div className="flex gap-2 justify-end">
-              <button
-                onClick={() => setDeleteConfirm(null)}
-                className="px-4 py-2 text-xs font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  if (deleteConfirm.type === "module") handleDeleteModule(deleteConfirm.modId);
-                  else handleDeleteItem(deleteConfirm.modId, deleteConfirm.itemId);
-                }}
-                className="px-4 py-2 text-xs font-bold text-white bg-red-500 hover:bg-red-600 rounded-xl transition-colors cursor-pointer"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal
+        open={!!deleteConfirm}
+        onClose={() => setDeleteConfirm(null)}
+        size="sm"
+        title={deleteConfirm?.type === "module" ? "Delete section?" : "Delete item?"}
+        description={
+          deleteConfirm?.type === "module"
+            ? "This will permanently remove the section and all its items. This cannot be undone."
+            : "This will permanently remove this item. This cannot be undone."
+        }
+        footer={
+          <>
+            <Button variant="text" onClick={() => setDeleteConfirm(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant="error"
+              onClick={() => {
+                if (deleteConfirm.type === "module") handleDeleteModule(deleteConfirm.modId);
+                else handleDeleteItem(deleteConfirm.modId, deleteConfirm.itemId);
+              }}
+            >
+              Delete
+            </Button>
+          </>
+        }
+      />
     </div>
   );
 }

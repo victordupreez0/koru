@@ -1,5 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
+import Badge from "./Badge";
+import Card from "./Card";
 
 /**
  * AttendanceChart Component
@@ -16,7 +18,13 @@ export default function AttendanceChart({ attended = 38, total = 42, missed = 4,
     const offset = circumference - (percentage / 100) * circumference;
 
     return (
-        <div className="relative flex flex-col items-center justify-center p-8 bg-white rounded-[40px] border border-gray-100 shadow-sm hover:shadow-md transition-shadow group">
+        <Card
+            variant="outlined"
+            tone="surface"
+            padding="xl"
+            radius="3xl"
+            className="group relative flex flex-col items-center justify-center"
+        >
             {/* Main Ring Chart */}
             <div className="relative w-64 h-64 flex items-center justify-center animate-in fade-in zoom-in duration-700">
                 <svg className="w-full h-full -rotate-90 transform">
@@ -26,9 +34,8 @@ export default function AttendanceChart({ attended = 38, total = 42, missed = 4,
                         cy="128"
                         r={radius}
                         fill="transparent"
-                        stroke="#F3F4F6"
                         strokeWidth="16"
-                        className="opacity-50"
+                        className="stroke-koru-surface-container-highest"
                     />
                     {/* Progress Fill */}
                     <motion.circle
@@ -36,7 +43,7 @@ export default function AttendanceChart({ attended = 38, total = 42, missed = 4,
                         cy="128"
                         r={radius}
                         fill="transparent"
-                        stroke="#3C0078"
+                        className="stroke-koru-primary"
                         strokeWidth="16"
                         strokeDasharray={circumference}
                         initial={{ strokeDashoffset: circumference }}
@@ -52,27 +59,27 @@ export default function AttendanceChart({ attended = 38, total = 42, missed = 4,
                         initial={{ scale: 0.5, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         transition={{ delay: 0.5, duration: 0.5 }}
-                        className="text-6xl font-black italic tracking-tighter text-[#3C0078]"
+                        className="font-display text-6xl font-medium tracking-tight text-koru-primary"
                     >
                         {percentage}%
                     </motion.span>
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mt-1">{centerLabel}</span>
+                    <span className="mt-1 text-koru-caption font-medium uppercase tracking-widest text-koru-on-surface-variant">{centerLabel}</span>
                 </div>
             </div>
 
             {/* Floating Stats Layout */}
-            <div className="grid grid-cols-3 gap-8 w-full mt-8 border-t border-gray-50 pt-8">
+            <div className="grid grid-cols-3 gap-8 w-full mt-8 border-t border-koru-outline-faint pt-8">
                 <div className="flex flex-col items-center">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">{leftStat}</span>
-                    <span className="text-xl font-bold text-gray-900">{leftValue ?? total}</span>
+                    <span className="mb-1 text-koru-caption font-medium uppercase tracking-widest text-koru-on-surface-variant">{leftStat}</span>
+                    <span className="font-display text-xl font-medium text-koru-on-surface">{leftValue ?? total}</span>
                 </div>
                 <div className="flex flex-col items-center">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-[#87CEFA] mb-1">{midStat}</span>
-                    <span className="text-xl font-bold text-gray-900">{midValue ?? attended}</span>
+                    <span className="mb-1 text-koru-caption font-medium uppercase tracking-widest text-koru-info">{midStat}</span>
+                    <span className="font-display text-xl font-medium text-koru-on-surface">{midValue ?? attended}</span>
                 </div>
                 <div className="flex flex-col items-center">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-[#FF8731] mb-1">{rightStat}</span>
-                    <span className="text-xl font-bold text-gray-900">{rightValue ?? missed}</span>
+                    <span className="mb-1 text-koru-caption font-medium uppercase tracking-widest text-koru-accent-ink">{rightStat}</span>
+                    <span className="font-display text-xl font-medium text-koru-on-surface">{rightValue ?? missed}</span>
                 </div>
             </div>
 
@@ -80,11 +87,10 @@ export default function AttendanceChart({ attended = 38, total = 42, missed = 4,
             <motion.div 
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="absolute top-6 right-8 flex items-center gap-2 px-3 py-1 rounded-full bg-green-50 text-green-600 border border-green-100 shadow-sm"
+                className="absolute top-6 right-8"
             >
-                <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                <span className="text-[10px] font-black uppercase tracking-widest">On Track</span>
+                <Badge variant="success" dot className="uppercase tracking-widest">On Track</Badge>
             </motion.div>
-        </div>
+        </Card>
     );
 }

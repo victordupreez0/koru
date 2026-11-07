@@ -1,6 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { X } from "lucide-react";
+import { Button } from "../../../components/UI";
 
 /**
  * TeacherPerspectiveModal Component
@@ -24,25 +25,25 @@ export default function TeacherPerspectiveModal({ course, onClose }) {
   const previewUrl = `/courses/${course.id}?viewAs=teacher&hideNav=true`;
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-md p-4" onClick={onClose}>
+    <div role="dialog" aria-modal="true" aria-label="Teacher perspective preview" className="fixed inset-0 z-[200] flex items-center justify-center bg-koru-scrim backdrop-blur-md p-4" onClick={onClose}>
       <motion.div 
         initial={{ scale: 0.9, opacity: 0, y: 20 }} 
         animate={{ scale: 1, opacity: 1, y: 0 }} 
         exit={{ scale: 0.9, opacity: 0, y: 20 }}
-        className="bg-white rounded-[32px] w-[98vw] h-[95vh] shadow-2xl overflow-hidden flex flex-col relative border border-white/20" 
+        className="bg-koru-surface-container-high rounded-koru-3xl w-[98vw] h-[95vh] shadow-koru-lg overflow-hidden flex flex-col relative" 
         onClick={e => e.stopPropagation()}
       >
         {/* Header Bar */}
-        <div className="px-8 py-3 bg-gray-50 border-b border-gray-100 flex items-center justify-between shrink-0">
+        <div className="px-8 py-3 bg-koru-surface-container-high flex items-center justify-between shrink-0">
           <div className="flex items-center gap-4">
-            <div className="w-10 h-10 rounded-xl bg-[#3C0078] text-white flex items-center justify-center font-black">
+            <div className="w-10 h-10 rounded-koru-md bg-koru-primary text-koru-on-primary flex items-center justify-center font-display">
               {course.subject?.code?.[0] || "T"}
             </div>
             <div>
-              <h3 className="text-sm font-black text-gray-900 uppercase tracking-tight">
-                Teacher Perspective: <span className="text-[#3C0078]">{course.subject?.name}</span>
+              <h3 className="font-display text-sm text-koru-on-surface uppercase">
+                Teacher Perspective: <span className="text-koru-primary">{course.subject?.name}</span>
               </h3>
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+              <p className="text-koru-caption text-koru-on-surface-variant uppercase tracking-wider">
                 Viewing Live Page Experience • {previewUrl}
               </p>
             </div>
@@ -50,21 +51,22 @@ export default function TeacherPerspectiveModal({ course, onClose }) {
 
           <div className="flex items-center gap-2">
             {/* Close button */}
-            <button 
-              onClick={onClose} 
-              className="p-2.5 bg-white border border-gray-100 rounded-xl text-gray-400 hover:text-red-500 hover:border-red-100 transition-all shadow-sm flex items-center gap-2"
+            <Button
+              variant="outlined"
+              size="md"
+              onClick={onClose}
               title="Close Preview"
+              endIcon={<X size={18} aria-hidden="true" />}
             >
-              <span className="text-[10px] font-black uppercase tracking-wider">Exit Preview</span>
-              <X size={18}/>
-            </button>
+              Exit Preview
+            </Button>
           </div>
         </div>
 
         {/* Iframe Content Area */}
         {/* Using an iframe to "import" the view ensures total isolation and 
             avoids any styling conflicts between the admin and teacher views. */}
-        <div className="flex-1 bg-white relative">
+        <div className="flex-1 bg-koru-surface-container-lowest relative">
           <iframe 
             src={previewUrl}
             className="w-full h-full border-none"
@@ -73,7 +75,7 @@ export default function TeacherPerspectiveModal({ course, onClose }) {
           
           {/* Floating UI Indicator */}
           <div className="absolute bottom-6 right-6 pointer-events-none z-[100]">
-            <div className="px-4 py-2 rounded-full bg-[#3C0078] text-white text-[10px] font-black uppercase tracking-[0.2em] shadow-lg shadow-[#3C0078]/20 border border-white/10">
+            <div className="px-4 py-2 rounded-koru-pill bg-koru-primary text-koru-on-primary text-koru-caption font-medium uppercase tracking-wider shadow-koru-md">
               Live URL Preview
             </div>
           </div>

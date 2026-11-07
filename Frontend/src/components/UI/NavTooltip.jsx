@@ -48,13 +48,13 @@ export default function NavTooltip({ label, children, position = "bottom" }) {
           >
             {/* Arrow — points toward the icon */}
             {isBottom ? (
-              <span className="w-2.5 h-2.5 bg-purple-400 rotate-45 rounded-sm -mb-1.5 shadow-sm" />
+              <span className="w-2.5 h-2.5 bg-koru-inverse-surface rotate-45 rounded-koru-xs -mb-1.5 shadow-koru-xs" />
             ) : (
-              <span className="w-2.5 h-2.5 bg-purple-400 rotate-45 rounded-sm -mr-1.5 shadow-sm" />
+              <span className="w-2.5 h-2.5 bg-koru-inverse-surface rotate-45 rounded-koru-xs -mr-1.5 shadow-koru-xs" />
             )}
 
             {/* Label pill */}
-            <span className="bg-purple-400 text-white text-[11px] font-semibold tracking-wide px-3 py-1.5 rounded-full shadow-lg whitespace-nowrap select-none">
+            <span className="bg-koru-inverse-surface text-koru-inverse-on-surface text-[11px] font-medium tracking-wide px-3 py-1.5 rounded-koru-pill shadow-koru-md whitespace-nowrap select-none">
               {label}
             </span>
           </motion.div>

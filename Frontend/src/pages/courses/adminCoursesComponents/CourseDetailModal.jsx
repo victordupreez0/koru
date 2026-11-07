@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { X, ChevronDown } from "lucide-react";
+import { AnimatePresence } from "framer-motion";
+import { Modal, Button, Badge, Card, Input, Select, Avatar } from "../../../components/UI";
 import TeacherPerspectiveModal from "./TeacherPerspectiveModal";
 import StudentPerspectiveModal from "./StudentPerspectiveModal";
 import CohortManagerModal from "./CohortManagerModal";
@@ -12,6 +12,10 @@ const DEGREES = [
   "Interaction Design Degree",
   "Design Leadership Degree"
 ];
+
+const ordinal = (n) => (n === 1 ? "st" : n === 2 ? "nd" : n === 3 ? "rd" : "th");
+
+const LABEL = "text-koru-caption font-medium text-koru-on-surface-variant uppercase tracking-wider block";
 
 export default function CourseDetailModal({ 
   course, 
@@ -30,268 +34,247 @@ export default function CourseDetailModal({
 
   if (!course) return null;
 
+  const nested = showTeacherPreview || showStudentPreview || showCohortManager;
+  const statusValue = isEditing ? editForm.status : course.status;
+
   return (
     <>
-      <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/40 backdrop-blur-sm p-6" onClick={onClose}>
-      <motion.div 
-        initial={{ scale: 0.95, opacity: 0 }} 
-        animate={{ scale: 1, opacity: 1 }} 
-        className="bg-white rounded-3xl w-[80vw] max-w-[1400px] shadow-3xl overflow-hidden relative" 
-        onClick={e => e.stopPropagation()}
+      <Modal
+        open
+        onClose={onClose}
+        ariaLabel={`Course details: ${course.subject?.name ?? "course"}`}
+        size="xl"
+        closeOnEscape={!nested}
       >
-          <div className="flex flex-col md:flex-row min-h-[600px]">
-            {/* Left Column: Core Info & Main Meta */}
-            <div className="p-8 md:w-2/5 bg-gray-50/50 border-r border-gray-100 flex flex-col justify-between">
-                <div className="mb-10">
-                    <div className="flex items-center gap-3 mb-4">
-                      {isEditing ? (
-                        <input 
-                          value={editForm.subject.code}
-                          onChange={(e) => setEditForm({...editForm, subject: {...editForm.subject, code: e.target.value}})}
-                          className="px-3 py-1 w-24 rounded-full bg-white border border-[#3C0078]/20 text-[10px] font-black text-[#3C0078] uppercase tracking-widest outline-none"
-                        />
-                      ) : (
-                        <span className="px-3 py-1 rounded-full bg-[#3C0078]/5 text-[10px] font-black text-[#3C0078] uppercase tracking-widest">{course.subject.code}</span>
-                      )}
-                      <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
-                        (isEditing ? editForm.status : course.status) === "Active" ? "bg-green-50 text-green-600" : "bg-red-50 text-red-600"
-                      }`}>
-                        {isEditing ? editForm.status : course.status}
-                      </span>
-                    </div>
+        <div className="flex flex-col md:flex-row gap-6">
+          {/* Left Column: Core Info & Main Meta */}
+          <div className="md:w-2/5 flex flex-col justify-between gap-6">
+            <div>
+              <div className="flex items-center gap-3 mb-4">
+                {isEditing ? (
+                  <Input
+                    aria-label="Course code"
+                    size="sm"
+                    value={editForm.subject.code}
+                    onChange={(e) => setEditForm({...editForm, subject: {...editForm.subject, code: e.target.value}})}
+                    className="uppercase tracking-wider"
+                    containerClassName="max-w-[8rem]"
+                  />
+                ) : (
+                  <Badge variant="primary">{course.subject.code}</Badge>
+                )}
+                <Badge variant={statusValue === "Active" ? "success" : "error"}>
+                  {statusValue}
+                </Badge>
+              </div>
 
-                    {isEditing ? (
-                      <div className="space-y-4">
-                        <input 
-                          value={editForm.subject.name}
-                          onChange={(e) => setEditForm({...editForm, subject: {...editForm.subject, name: e.target.value}})}
-                          className="w-full text-5xl font-black text-gray-900 tracking-tighter bg-transparent border-b-2 border-[#3C0078]/10 focus:border-[#3C0078] outline-none pb-1"
-                        />
-                        <div className="flex items-center gap-3">
-                          <span className="px-3 py-1 rounded-full bg-gray-100 text-[10px] font-black text-gray-400 uppercase tracking-widest">{editForm.year}{editForm.year===1 ? "st" : editForm.year===2 ? "nd" : editForm.year===3 ? "rd" : "th"} Year Registry</span>
-                          <span className="px-3 py-1 rounded-full bg-gray-100 text-[10px] font-black text-gray-400 uppercase tracking-widest">{editForm.term}</span>
-                        </div>
-                      </div>
-                    ) : (
-                      <h2 className="text-5xl font-black text-gray-900 tracking-tighter leading-tight">{course.subject.name}</h2>
-                    )}
-
-                    <div className="mt-8 p-6 rounded-3xl bg-[#3C0078]/5 border border-[#3C0078]/10">
-                      <label className="text-[10px] font-black text-[#3C0078] uppercase tracking-widest block mb-2">Degree Assignment</label>
-                      {isEditing ? (
-                        <select 
-                          value={editForm.degree}
-                          onChange={(e) => setEditForm({...editForm, degree: e.target.value})}
-                          className="w-full px-5 py-3 rounded-2xl bg-white border border-gray-100 text-[13px] font-bold outline-none appearance-none"
-                        >
-                          {DEGREES.map(d => <option key={d} value={d}>{d}</option>)}
-                        </select>
-                      ) : (
-                        <p className="text-[14px] font-black text-gray-900 uppercase tracking-wider">{course.degree}</p>
-                      )}
-                      <p className="mt-3 text-[11px] font-medium text-gray-500 leading-relaxed italic">
-                        * All students enrolled in this degree program will be automatically assigned to this module.
-                      </p>
-                    </div>
+              {isEditing ? (
+                <div className="space-y-4">
+                  <Input
+                    aria-label="Course name"
+                    value={editForm.subject.name}
+                    onChange={(e) => setEditForm({...editForm, subject: {...editForm.subject, name: e.target.value}})}
+                  />
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <Badge variant="neutral">{editForm.year}{ordinal(editForm.year)} Year Registry</Badge>
+                    <Badge variant="neutral">{editForm.term}</Badge>
+                  </div>
                 </div>
+              ) : (
+                <h2 className="font-display text-koru-title text-koru-on-surface">{course.subject.name}</h2>
+              )}
 
-                <div className="space-y-6">
-                    <div className="p-6 rounded-3xl bg-white border border-gray-100 shadow-sm">
-                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-4">Assigned Faculty</label>
-                        <div className="flex items-center justify-between">
-                          {isEditing ? (
-                            <div className="flex-1">
-                              <select 
-                                value={editForm.teacherId}
-                                onChange={(e) => {
-                                  setEditForm({...editForm, teacherId: e.target.value});
-                                }}
-                                className="w-full px-4 py-3 rounded-xl bg-gray-50 border-none text-[13px] font-bold outline-none"
-                              >
-                                {teachers.map(t => <option key={t.id} value={t.id}>{t.firstName} {t.lastName}</option>)}
-                              </select>
-                            </div>
-                          ) : (
-                             <div className="flex items-center gap-4 w-full">
-                              <div className="w-12 h-12 rounded-2xl bg-[#3C0078] text-white flex items-center justify-center font-black text-lg shadow-lg shadow-[#3C0078]/20">
-                                {course?.teacher?.firstName?.[0] || "?"}
-                              </div>
-                              <div className="flex-1">
-                                <h4 className="text-[14px] font-black text-gray-900">
-                                  {course?.teacher ? `${course.teacher.firstName} ${course.teacher.lastName}` : "No Teacher Assigned"}
-                                </h4>
-                                <p className="text-[10px] font-bold text-gray-400">{course?.teacher?.email || "N/A"}</p>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                    </div>
-
-                    <div className="p-6 rounded-3xl bg-white border border-gray-100 shadow-sm">
-                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">Registry Status</label>
-                        <div className="flex items-center justify-between mt-2">
-                          <span className={`text-[12px] font-black uppercase tracking-wider ${
-                            (isEditing ? editForm?.status : course?.status) === "Active" ? "text-green-600" : "text-red-500"
-                          }`}>
-                            {isEditing ? editForm?.status : (course?.status || "Active")}
-                          </span>
-                          {isEditing && (
-                            <button 
-                              onClick={() => setEditForm({...editForm, status: editForm.status === "Active" ? "Inactive" : "Active"})}
-                              className={`w-12 h-6 rounded-full transition-all relative ${editForm.status === "Active" ? "bg-green-500" : "bg-gray-300"}`}
-                            >
-                              <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${editForm.status === "Active" ? "right-1" : "left-1"}`}></div>
-                            </button>
-                          )}
-                        </div>
-                    </div>
-                </div>
+              <Card tone="brand" padding="md" radius="xl" className="mt-8">
+                {isEditing ? (
+                  <Select
+                    label="Degree Assignment"
+                    value={editForm.degree}
+                    onChange={(e) => setEditForm({...editForm, degree: e.target.value})}
+                  >
+                    {DEGREES.map(d => <option key={d} value={d}>{d}</option>)}
+                  </Select>
+                ) : (
+                  <>
+                    <span className="text-koru-caption font-medium text-koru-on-primary-container uppercase tracking-wider block mb-2">Degree Assignment</span>
+                    <p className="text-koru-label font-medium text-koru-on-surface uppercase tracking-wider">{course.degree}</p>
+                  </>
+                )}
+                <p className="mt-3 text-koru-caption text-koru-on-primary-container/80 leading-relaxed italic">
+                  * All students enrolled in this degree program will be automatically assigned to this module.
+                </p>
+              </Card>
             </div>
 
-            {/* Right Column: Narrative & Actions */}
-            <div className="p-10 md:w-3/5 flex flex-col justify-between">
-                <button onClick={onClose} className="absolute top-10 right-10 p-3 bg-gray-50 rounded-2xl hover:bg-red-50 hover:text-red-500 transition-all shadow-sm"><X size={24}/></button>
-                
-                <div className="space-y-8">
-                    <div>
-                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-4">Course Specification</label>
-                      {isEditing ? (
-                        <textarea 
-                          value={editForm?.description || ""}
-                          onChange={(e) => setEditForm({...editForm, description: e.target.value})}
-                          className="w-full px-8 py-8 rounded-[32px] bg-gray-50 border-none text-[16px] font-medium text-gray-600 leading-relaxed min-h-[250px] outline-none ring-2 ring-transparent focus:ring-[#3C0078]/5 transition-all shadow-inner"
-                          placeholder="Describe the course learning outcomes..."
-                        />
+            <div className="space-y-4">
+              <Card variant="outlined" tone="surface" padding="md" radius="xl">
+                {isEditing ? (
+                  <Select
+                    label="Assigned Faculty"
+                    value={editForm.teacherId}
+                    onChange={(e) => {
+                      setEditForm({...editForm, teacherId: e.target.value});
+                    }}
+                  >
+                    {teachers.map(t => <option key={t.id} value={t.id}>{t.firstName} {t.lastName}</option>)}
+                  </Select>
+                ) : (
+                  <>
+                    <span className={`${LABEL} mb-4`}>Assigned Faculty</span>
+                    <div className="flex items-center gap-4 w-full">
+                      {course?.teacher ? (
+                        <Avatar user={course.teacher} size="md" />
                       ) : (
-                        <div className="relative">
-                          <p className="text-[18px] font-medium text-gray-500 leading-relaxed max-w-prose">
-                            {course?.description || course?.subject?.description || "No description available."}
-                          </p>
-                        </div>
+                        <div className="w-10 h-10 rounded-full bg-koru-surface-container-high text-koru-on-surface-variant flex items-center justify-center font-display">?</div>
                       )}
-                    </div>
-
-                    <div className="mt-10 grid grid-cols-2 gap-6">
-                      {isEditing ? (
-                        <>
-                          <div className="flex flex-col gap-2">
-                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block">Academic Year</label>
-                            <div className="relative group">
-                              <select 
-                                value={editForm?.year || 1}
-                                onChange={(e) => setEditForm({...editForm, year: parseInt(e.target.value)})}
-                                className="w-full px-6 py-4 rounded-2xl bg-gray-50 border-none text-[13px] font-bold outline-none focus:bg-white focus:ring-2 focus:ring-[#3C0078]/5 transition-all appearance-none"
-                              >
-                                {[1, 2, 3, 4].map(y => <option key={y} value={y}>{y}{y===1 ? "st" : y===2 ? "nd" : y===3 ? "rd" : "th"} Year</option>)}
-                              </select>
-                              <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
-                                <ChevronDown size={16} />
-                              </div>
-                            </div>
-                          </div>
-                          <div className="flex flex-col gap-2">
-                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block">Active Semester</label>
-                            <div className="relative group">
-                              <select 
-                                value={editForm?.term || "Semester 1"}
-                                onChange={(e) => setEditForm({...editForm, term: e.target.value})}
-                                className="w-full px-6 py-4 rounded-2xl bg-gray-50 border-none text-[13px] font-bold outline-none focus:bg-white focus:ring-2 focus:ring-[#3C0078]/5 transition-all appearance-none"
-                              >
-                                {["Semester 1", "Semester 2"].map(s => <option key={s} value={s}>{s}</option>)}
-                              </select>
-                              <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
-                                <ChevronDown size={16} />
-                              </div>
-                            </div>
-                          </div>
-                        </>
-                      ) : (
-                        <>
-                          <div className="flex items-center gap-4 text-gray-400 bg-gray-50 px-6 py-4 rounded-2xl">
-                            <div className="w-2 h-2 rounded-full bg-[#3C0078]"></div>
-                            <span className="text-[12px] font-black uppercase tracking-wider">{course?.year}{course?.year===1 ? "st" : course?.year===2 ? "nd" : course?.year===3 ? "rd" : "th"} Year Registry</span>
-                          </div>
-                          <div className="flex items-center gap-4 text-gray-400 bg-gray-50 px-6 py-4 rounded-2xl">
-                            <div className="w-2 h-2 rounded-full bg-[#3C0078]"></div>
-                            <span className="text-[12px] font-black uppercase tracking-wider">{course?.term}</span>
-                          </div>
-                        </>
-                      )}
-                    </div>
-
-                    {!isEditing && (
-                      <div className="mt-8 flex items-center gap-4 p-6 rounded-3xl bg-[#3C0078]/5 border border-[#3C0078]/10 group/view">
-                        <div className="flex-1">
-                          <h4 className="text-[14px] font-black text-[#3C0078] uppercase tracking-widest mb-1">Perspective View</h4>
-                          <p className="text-[11px] font-medium text-gray-400 leading-tight">Preview this course as it appears to different platform roles.</p>
-                        </div>
-                        <div className="flex gap-3">
-                          <button 
-                            onClick={() => setShowTeacherPreview(true)}
-                            className="px-6 py-3.5 rounded-2xl bg-white border border-[#3C0078]/10 text-[11px] font-black uppercase text-[#3C0078] tracking-widest hover:bg-[#3C0078] hover:text-white hover:border-transparent transition-all shadow-sm"
-                          >
-                            Teacher View
-                          </button>
-                          <button 
-                            onClick={() => setShowStudentPreview(true)}
-                            className="px-6 py-3.5 rounded-2xl bg-white border border-[#3C0078]/10 text-[11px] font-black uppercase text-[#3C0078] tracking-widest hover:bg-[#3C0078] hover:text-white hover:border-transparent transition-all shadow-sm"
-                          >
-                            Student View
-                          </button>
-                        </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-koru-label font-medium text-koru-on-surface">
+                          {course?.teacher ? `${course.teacher.firstName} ${course.teacher.lastName}` : "No Teacher Assigned"}
+                        </h4>
+                        <p className="text-koru-caption text-koru-on-surface-variant truncate">{course?.teacher?.email || "N/A"}</p>
                       </div>
-                    )}
+                    </div>
+                  </>
+                )}
+              </Card>
 
-                    {!isEditing && (
-                      <div className="mt-4 flex items-center justify-between gap-4 p-6 rounded-3xl bg-[#3C0078] text-white shadow-xl shadow-[#3C0078]/15 group/cohort">
-                        <div className="flex-1">
-                          <h4 className="text-[14px] font-black uppercase tracking-widest mb-1">Cohorts & Schedules</h4>
-                          <p className="text-[11px] font-medium text-purple-100/70 leading-tight">Manage student cohorts (Groups A/B) and weekly timetabled sessions.</p>
-                        </div>
-                        <button 
-                          onClick={() => setShowCohortManager(true)}
-                          className="px-6 py-3.5 rounded-2xl bg-white text-[#3C0078] text-[11px] font-black uppercase tracking-widest hover:bg-purple-50 transition-all shadow-sm flex items-center gap-1.5"
-                        >
-                          Manage Cohorts
-                        </button>
-                      </div>
-                    )}
-                </div>
-
-                <div className="flex gap-4 mt-10 font-sans">
-                  {isEditing ? (
-                    <>
-                      <button 
-                        onClick={onSave}
-                        className="flex-[2] py-4 rounded-3xl bg-[#3C0078] text-white font-black uppercase tracking-widest text-[13px] shadow-2xl shadow-[#3C0078]/30 hover:scale-[1.02] active:scale-[0.98] transition-all"
-                      >
-                        Confirm Registry Update
-                      </button>
-                      <button 
-                        onClick={() => onDelete(editForm.id)}
-                        className="flex-1 py-4 rounded-3xl bg-red-50 text-red-500 font-black uppercase tracking-widest text-[13px] hover:bg-red-500 hover:text-white transition-all border-none"
-                      >
-                        Delete Registry
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <button 
-                        onClick={() => setIsEditing(true)}
-                        className="flex-[2] py-4 rounded-3xl bg-[#3C0078] text-white font-black uppercase tracking-widest text-[13px] shadow-2xl shadow-[#3C0078]/30 hover:scale-[1.02] active:scale-[0.98] transition-all"
-                      >
-                        Modify system data
-                      </button>
-                      <button className="flex-1 py-4 rounded-3xl border-2 border-gray-100 text-gray-400 font-black uppercase tracking-widest text-[13px] hover:bg-gray-50 transition-all">
-                        Archive
-                      </button>
-                    </>
+              <Card variant="outlined" tone="surface" padding="md" radius="xl">
+                <span className={`${LABEL} mb-1`}>Registry Status</span>
+                <div className="flex items-center justify-between mt-2">
+                  <span className={`text-koru-caption font-medium uppercase tracking-wider ${
+                    (isEditing ? editForm?.status : course?.status) === "Active" ? "text-koru-success" : "text-koru-error"
+                  }`}>
+                    {isEditing ? editForm?.status : (course?.status || "Active")}
+                  </span>
+                  {isEditing && (
+                    <button 
+                      type="button"
+                      role="switch"
+                      aria-checked={editForm.status === "Active"}
+                      aria-label="Toggle registry status"
+                      onClick={() => setEditForm({...editForm, status: editForm.status === "Active" ? "Inactive" : "Active"})}
+                      className={`w-12 h-6 rounded-koru-pill transition-colors motion-reduce:transition-none relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus focus-visible:ring-offset-2 ${editForm.status === "Active" ? "bg-koru-success" : "bg-koru-outline-variant"}`}
+                    >
+                      <div className={`absolute top-1 w-4 h-4 bg-koru-surface-container-lowest rounded-full transition-all motion-reduce:transition-none ${editForm.status === "Active" ? "right-1" : "left-1"}`}></div>
+                    </button>
                   )}
                 </div>
+              </Card>
             </div>
           </div>
-      </motion.div>
-      </div>
+
+          {/* Right Column: Narrative & Actions */}
+          <div className="md:w-3/5 flex flex-col justify-between gap-8">
+            <div className="space-y-8">
+              <div>
+                {isEditing ? (
+                  <>
+                    <label htmlFor="course-description" className={`${LABEL} mb-4`}>Course Specification</label>
+                    <textarea 
+                      id="course-description"
+                      value={editForm?.description || ""}
+                      onChange={(e) => setEditForm({...editForm, description: e.target.value})}
+                      className="w-full px-6 py-6 rounded-koru-xs bg-koru-surface-container-lowest text-koru-body text-koru-on-surface leading-relaxed min-h-[250px] outline-none shadow-koru-xs focus:ring-1 focus:ring-inset focus:ring-koru-primary transition motion-reduce:transition-none placeholder:text-koru-on-surface-variant/70"
+                      placeholder="Describe the course learning outcomes..."
+                    />
+                  </>
+                ) : (
+                  <>
+                    <span className={`${LABEL} mb-4`}>Course Specification</span>
+                    <p className="text-koru-body text-koru-on-surface-variant leading-relaxed max-w-prose">
+                      {course?.description || course?.subject?.description || "No description available."}
+                    </p>
+                  </>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-6">
+                {isEditing ? (
+                  <>
+                    <Select
+                      label="Academic Year"
+                      value={editForm?.year || 1}
+                      onChange={(e) => setEditForm({...editForm, year: parseInt(e.target.value)})}
+                    >
+                      {[1, 2, 3, 4].map(y => <option key={y} value={y}>{y}{ordinal(y)} Year</option>)}
+                    </Select>
+                    <Select
+                      label="Active Semester"
+                      value={editForm?.term || "Semester 1"}
+                      onChange={(e) => setEditForm({...editForm, term: e.target.value})}
+                    >
+                      {["Semester 1", "Semester 2"].map(s => <option key={s} value={s}>{s}</option>)}
+                    </Select>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-3 text-koru-on-surface-variant bg-koru-surface-container px-5 py-4 rounded-koru-md">
+                      <div className="w-2 h-2 rounded-full bg-koru-primary"></div>
+                      <span className="text-koru-caption font-medium uppercase tracking-wider">{course?.year}{ordinal(course?.year)} Year Registry</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-koru-on-surface-variant bg-koru-surface-container px-5 py-4 rounded-koru-md">
+                      <div className="w-2 h-2 rounded-full bg-koru-primary"></div>
+                      <span className="text-koru-caption font-medium uppercase tracking-wider">{course?.term}</span>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {!isEditing && (
+                <Card tone="brand" padding="md" radius="xl">
+                  <div className="flex flex-wrap items-center gap-4">
+                    <div className="flex-1 min-w-[12rem]">
+                      <h4 className="font-display text-koru-label text-koru-on-primary-container uppercase tracking-wider mb-1">Perspective View</h4>
+                      <p className="text-koru-caption text-koru-on-primary-container/80 leading-tight">Preview this course as it appears to different platform roles.</p>
+                    </div>
+                    <div className="flex gap-3">
+                      <Button variant="outlined" size="sm" onClick={() => setShowTeacherPreview(true)}>
+                        Teacher View
+                      </Button>
+                      <Button variant="outlined" size="sm" onClick={() => setShowStudentPreview(true)}>
+                        Student View
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+              )}
+
+              {!isEditing && (
+                <div className="flex flex-wrap items-center justify-between gap-4 p-5 rounded-koru-xl bg-koru-primary text-koru-on-primary shadow-koru-md">
+                  <div className="flex-1 min-w-[12rem]">
+                    <h4 className="font-display text-koru-label uppercase tracking-wider mb-1">Cohorts & Schedules</h4>
+                    <p className="text-koru-caption text-koru-on-primary/70 leading-tight">Manage student cohorts (Groups A/B) and weekly timetabled sessions.</p>
+                  </div>
+                  <Button variant="tonal" size="md" onClick={() => setShowCohortManager(true)}>
+                    Manage Cohorts
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            <div className="flex gap-4">
+              {isEditing ? (
+                <>
+                  <Button variant="filled" size="lg" className="flex-[2]" onClick={onSave}>
+                    Confirm Registry Update
+                  </Button>
+                  <Button variant="error" size="lg" className="flex-1" onClick={() => onDelete(editForm.id)}>
+                    Delete Registry
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button variant="filled" size="lg" className="flex-[2]" onClick={() => setIsEditing(true)}>
+                    Modify system data
+                  </Button>
+                  <Button variant="outlined" size="lg" className="flex-1">
+                    Archive
+                  </Button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      </Modal>
 
       <AnimatePresence>
         {showTeacherPreview && (
@@ -310,8 +293,6 @@ export default function CourseDetailModal({
           />
         )}
       </AnimatePresence>
-
-
 
       <AnimatePresence>
         {showCohortManager && (

@@ -3,7 +3,7 @@ import PageCanvas from "../../../components/PageCanvas";
 import { getCourseById, getCourseLecturers, updateCourseContent } from "../../../services/courseService";
 import { uploadImageToCloudinary } from "../../../services/cloudinaryService";
 import { Edit3, Save, Loader, Image as ImageIcon } from "lucide-react";
-import Avatar from "../../../components/UI/Avatar";
+import { Alert, Avatar, Button, Card, Skeleton } from "../../../components/UI";
 
 export function CourseHomeView({ subject, course, loading }) {
   const [pageLoading, setPageLoading] = React.useState(true);
@@ -151,27 +151,29 @@ export function CourseHomeView({ subject, course, loading }) {
       <header className="mb-8 flex justify-between items-start select-none">
         <div>
           {loading ? (
-            <div className="flex flex-col gap-3 animate-pulse">
-              <div className="h-9 rounded-2xl bg-gray-200 w-64" />
-              <div className="h-5 rounded-full bg-gray-100 w-20" />
+            <div className="flex flex-col gap-3">
+              <Skeleton width={256} height={36} />
+              <Skeleton variant="text" width={80} height={20} />
             </div>
           ) : (
             <>
-              <h1 className="text-4xl font-semibold tracking-tight text-gray-900 leading-tight">
+              <h1 className="font-display text-koru-display text-koru-on-surface">
                 {subject?.name || "Unknown"}
               </h1>
-              <p className="text-xl text-gray-500 mt-2 font-medium">{subject?.code}</p>
+              <p className="text-xl text-koru-on-surface-variant mt-2">{subject?.code}</p>
             </>
           )}
         </div>
         {!loading && !pageLoading && (
           <div className="flex items-center gap-4">
             {saveAlert && (
-              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 text-xs font-extrabold rounded-xl shadow-2xs border border-green-100 animate-pulse">
-                <span>Changes Saved Successfully!</span>
-              </div>
+              <Alert variant="success" className="motion-safe:animate-pulse">
+                Changes Saved Successfully!
+              </Alert>
             )}
-            <button
+            <Button
+              variant={isEditing ? "accent" : "filled"}
+              size="sm"
               onClick={() => {
                 if (isEditing) {
                   handleSave();
@@ -180,54 +182,44 @@ export function CourseHomeView({ subject, course, loading }) {
                 }
               }}
               disabled={saving}
-              className={`flex items-center gap-1.5 px-4 py-2 text-xs font-black rounded-xl cursor-pointer shadow-2xs border transition-all disabled:opacity-60 disabled:cursor-not-allowed ${
-                isEditing 
-                ? "bg-green-600 border-green-700 text-white hover:bg-green-700" 
-                : "bg-[#3C0078] border-[#2A0054] text-white hover:bg-[#2A0054]"
-              }`}
+              startIcon={
+                isEditing
+                  ? (saving ? <Loader size={13} className="animate-spin motion-reduce:animate-none" /> : <Save size={13} />)
+                  : <Edit3 size={13} />
+              }
             >
-              {isEditing ? (
-                <>
-                  {saving ? <Loader size={13} className="animate-spin" /> : <Save size={13} />}
-                  <span>{saving ? "Saving..." : "Save Changes"}</span>
-                </>
-              ) : (
-                <>
-                  <Edit3 size={13} />
-                  <span>Edit Home Page</span>
-                </>
-              )}
-            </button>
+              {isEditing ? (saving ? "Saving..." : "Save Changes") : "Edit Home Page"}
+            </Button>
           </div>
         )}
       </header>
 
       {pageLoading || loading ? (
-        <div className="flex-1 flex flex-col gap-6 animate-pulse">
+        <div className="flex-1 flex flex-col gap-6">
           {/* Cover image skeleton */}
-          <div className="w-full h-[250px] rounded-xl bg-gray-100" />
+          <Skeleton height={250} className="w-full" />
           {/* Content lines */}
           <div className="flex flex-col gap-3 mt-2">
             {[85, 70, 90, 55, 75].map((w, i) => (
-              <div key={i} className={`h-4 rounded-full ${i % 2 === 0 ? "bg-gray-200" : "bg-gray-100"}`} style={{ width: `${w}%` }} />
+              <Skeleton key={i} variant="text" height={16} width={`${w}%`} />
             ))}
           </div>
-          <div className="h-32 rounded-2xl bg-gray-100 mt-2" />
+          <Skeleton height={128} className="w-full mt-2" />
           <div className="flex flex-col gap-3">
             {[60, 80, 45].map((w, i) => (
-              <div key={i} className="h-4 rounded-full bg-gray-100" style={{ width: `${w}%` }} />
+              <Skeleton key={i} variant="text" height={16} width={`${w}%`} />
             ))}
           </div>
           {/* Lecturer skeleton */}
-          <div className="flex gap-4 pt-8 border-t border-gray-100 mt-4">
+          <div className="flex gap-4 pt-8 mt-4">
             {[1, 2].map(i => (
-              <div key={i} className="flex items-center gap-4 bg-gray-50 rounded-2xl p-4 flex-1">
-                <div className="w-16 h-16 rounded-full bg-gray-200 shrink-0" />
+              <Card key={i} tone="low" className="flex items-center gap-4 flex-1">
+                <Skeleton variant="circle" width={64} height={64} className="shrink-0" />
                 <div className="flex flex-col gap-2">
-                  <div className="h-4 rounded-full bg-gray-200 w-28" />
-                  <div className="h-3 rounded-full bg-gray-100 w-36" />
+                  <Skeleton variant="text" height={16} width={112} />
+                  <Skeleton variant="text" width={144} />
                 </div>
-              </div>
+              </Card>
             ))}
           </div>
         </div>
@@ -235,7 +227,7 @@ export function CourseHomeView({ subject, course, loading }) {
         <div className="flex-1 flex flex-col gap-6">
           {/* Cover Image */}
           {showCoverImage && (
-            <div className="w-full h-[250px] rounded-xl shadow-sm overflow-hidden select-none">
+            <div className="w-full h-[250px] rounded-koru-lg shadow-koru-card overflow-hidden select-none">
               <img 
                 src={courseImage} 
                 alt={subject?.name} 
@@ -246,22 +238,18 @@ export function CourseHomeView({ subject, course, loading }) {
 
           {/* Cover Image Toggle & Upload Controls */}
           {isEditing && (
-            <div className="flex flex-wrap items-center gap-3 p-4 bg-gray-50 border border-gray-100 rounded-2xl select-none">
-              <span className="text-xs font-bold text-gray-700 flex items-center gap-1.5">
-                <ImageIcon size={14} className="text-gray-500" />
+            <Card tone="low" padding="sm" className="flex flex-wrap items-center gap-3 select-none">
+              <span className="text-xs font-medium text-koru-on-surface flex items-center gap-1.5">
+                <ImageIcon size={14} className="text-koru-on-surface-variant" />
                 <span>Cover Image Settings:</span>
               </span>
-              <button
-                type="button"
+              <Button
+                variant={showCoverImage ? "tonal" : "outlined"}
+                size="sm"
                 onClick={() => setShowCoverImage(!showCoverImage)}
-                className={`px-3.5 py-1.5 text-[10px] font-black uppercase tracking-wider rounded-xl border transition-all cursor-pointer ${
-                  showCoverImage
-                  ? "bg-purple-50 text-[#3C0078] border-purple-100 hover:bg-purple-100"
-                  : "bg-gray-100 text-gray-500 border-gray-200 hover:bg-gray-200"
-                }`}
               >
                 {showCoverImage ? "Hide Cover" : "Show Cover"}
-              </button>
+              </Button>
               {showCoverImage && (
                 <>
                   <input
@@ -271,18 +259,18 @@ export function CourseHomeView({ subject, course, loading }) {
                     className="hidden"
                     onChange={handleCoverUpload}
                   />
-                  <button
-                    type="button"
+                  <Button
+                    variant="outlined"
+                    size="sm"
                     onClick={() => coverUploadRef.current?.click()}
                     disabled={uploadingCover}
-                    className="flex items-center gap-1.5 px-3.5 py-1.5 bg-white border border-gray-200 rounded-xl text-[10px] font-bold text-gray-700 hover:bg-gray-50 cursor-pointer shadow-3xs disabled:opacity-60 transition-colors"
+                    startIcon={uploadingCover ? <Loader size={11} className="animate-spin motion-reduce:animate-none" /> : null}
                   >
-                    {uploadingCover ? <Loader size={11} className="animate-spin text-gray-400" /> : null}
-                    <span>{uploadingCover ? "Uploading…" : "Upload New Cover"}</span>
-                  </button>
+                    {uploadingCover ? "Uploading…" : "Upload New Cover"}
+                  </Button>
                 </>
               )}
-            </div>
+            </Card>
           )}
           
           {/* Main Canvas Editor (Transparent background) */}
@@ -297,31 +285,31 @@ export function CourseHomeView({ subject, course, loading }) {
           </div>
 
           {/* Lecturers Grid - Centered & Revamped */}
-          <section className="w-full pt-16 pb-12 border-t border-gray-100 flex flex-col items-center mt-12">
-            <h4 className="text-[12px] font-black uppercase tracking-[0.4em] text-gray-400 mb-8 text-center select-none">
+          <section className="w-full pt-16 pb-12 border-t border-koru-outline-variant flex flex-col items-center mt-12">
+            <h4 className="text-koru-caption font-medium uppercase tracking-[0.2em] text-koru-on-surface-variant mb-8 text-center select-none">
               Lecturer{lecturers.length > 1 ? "s" : ""}
             </h4>
             <div className="flex flex-wrap justify-center gap-8 w-full max-w-4xl">
               {lecturers.map(lecturer => (
-                <div key={lecturer.id} className="flex items-center gap-4 bg-gray-50/50 hover:bg-gray-50 border border-gray-100 p-4 rounded-2xl transition-all shadow-2xs min-w-[280px]">
+                <Card key={lecturer.id} variant="outlined" tone="low" padding="sm" className="flex items-center gap-4 min-w-[280px]">
                   {/* Profile picture */}
-                  <Avatar user={lecturer} size={64} className="shadow-md ring-2 ring-white" />
+                  <Avatar user={lecturer} size={64} className="shadow-koru-md" />
                   {/* Name and Email */}
                   <div className="flex flex-col text-left">
-                    <span className="text-sm font-black text-gray-900 leading-tight">
+                    <span className="text-sm font-medium text-koru-on-surface leading-tight">
                       {lecturer.firstName} {lecturer.lastName}
                     </span>
-                    <span className="text-[11px] font-extrabold uppercase tracking-widest text-[#3C0078] mt-0.5 select-none">
+                    <span className="text-koru-caption font-medium uppercase tracking-widest text-koru-primary mt-0.5 select-none">
                       Module Head
                     </span>
                     <a 
                       href={`mailto:${lecturer.email}`} 
-                      className="text-xs text-gray-500 hover:text-[#3C0078] font-semibold mt-1 break-all transition-colors"
+                      className="text-xs text-koru-on-surface-variant hover:text-koru-primary mt-1 break-all transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus rounded-koru-xs"
                     >
                       {lecturer.email}
                     </a>
                   </div>
-                </div>
+                </Card>
               ))}
             </div>
           </section>

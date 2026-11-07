@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { Alert, Button, Card, Skeleton } from "../../components/UI";
 import PageCanvas from "../../components/PageCanvas";
 import { getPageContent, savePageContent, getCourseModules } from "../../services/moduleService";
 import { 
@@ -23,7 +24,6 @@ import {
     Save, 
     ArrowLeft, 
     ArrowRight,
-    Sparkles,
     ChevronDown,
     ChevronUp,
     Palette,
@@ -40,7 +40,7 @@ import {
 // Curated brand color options for text
 const TEXT_COLORS = [
     { label: "Default", color: "#1f2937" }, // Slate 800
-    { label: "Deep Purple", color: "#3C0078" }, // Brand purple
+    { label: "Deep Purple", color: "var(--color-koru-primary)" }, // Brand purple
     { label: "Slate Gray", color: "#6b7280" },
     { label: "Indigo Blue", color: "#2563eb" },
     { label: "Emerald Green", color: "#059669" },
@@ -177,46 +177,48 @@ export default function CourseItemView({ activeCourseId, activeItemId, isStudent
     return (
         <div className="w-full flex flex-col min-h-full">
             {pageLoading && (
-                <div className="flex flex-col gap-5 animate-pulse p-6 md:p-10">
-                    <div className="h-9 rounded-2xl bg-gray-200 w-1/2" />
+                <div className="flex flex-col gap-5 p-6 md:p-10">
+                    <Skeleton className="h-9 w-1/2" />
                     <div className="flex flex-col gap-3 mt-4">
                         {[90, 75, 85, 60, 80].map((w, i) => (
-                            <div key={i} className={`h-4 rounded-full ${i % 2 === 0 ? "bg-gray-200" : "bg-gray-100"}`} style={{ width: `${w}%` }} />
+                            <Skeleton key={i} variant="rect" className="h-4" width={`${w}%`} />
                         ))}
                     </div>
-                    <div className="h-48 rounded-3xl bg-gray-100 mt-2" />
+                    <Skeleton className="h-48 mt-2" />
                     <div className="flex flex-col gap-3">
                         {[70, 85, 55, 75].map((w, i) => (
-                            <div key={i} className="h-4 rounded-full bg-gray-100" style={{ width: `${w}%` }} />
+                            <Skeleton key={i} variant="rect" className="h-4" width={`${w}%`} />
                         ))}
                     </div>
-                    <div className="h-28 rounded-3xl bg-gray-100" />
+                    <Skeleton className="h-28" />
                 </div>
             )}
             {!pageLoading && (<>
             {/* Top Editor controls and Toggles */}
-            <div className="flex items-center justify-between border-b border-gray-100 pb-4 mb-6 shrink-0">
+            <div className="flex items-center justify-between border-b border-koru-outline-faint pb-4 mb-6 shrink-0">
                 <div className="flex items-center gap-2">
-                    <button
+                    <Button
+                        variant="outlined"
+                        size="sm"
                         onClick={() => navigate(`/courses/${activeCourseId}/modules${window.location.search}`)}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-xs font-bold text-gray-600 transition-all cursor-pointer shadow-2xs hover:border-gray-300"
+                        startIcon={<ArrowLeft size={13} />}
                     >
-                        <ArrowLeft size={13} className="text-gray-500" />
-                        <span>Back to Modules</span>
-                    </button>
+                        Back to Modules
+                    </Button>
                 </div>
                 
                 {/* Save alert toast */}
                 {saveAlert && (
-                    <div className="flex items-center gap-1.5 px-3 py-1 bg-green-50 text-green-700 text-xs font-extrabold rounded-lg shadow-2xs border border-green-100 animate-pulse">
-                        <Sparkles size={13} className="text-green-500" />
-                        <span>Layout Saved Successfully!</span>
-                    </div>
+                    <Alert variant="success" className="motion-safe:animate-pulse">
+                        Layout Saved Successfully!
+                    </Alert>
                 )}
 
                 {/* Edit/View toggle for teachers */}
                 {!isStudentView && (
-                    <button
+                    <Button
+                        variant="filled"
+                        size="sm"
                         onClick={() => {
                             if (isEditing) {
                                 handleSave();
@@ -225,24 +227,14 @@ export default function CourseItemView({ activeCourseId, activeItemId, isStudent
                             }
                         }}
                         disabled={saving}
-                        className={`flex items-center gap-1.5 px-4 py-2 text-xs font-black rounded-xl cursor-pointer shadow-2xs border transition-all disabled:opacity-60 disabled:cursor-not-allowed ${
-                            isEditing 
-                            ? "bg-green-600 border-green-700 text-white hover:bg-green-700" 
-                            : "bg-[#3C0078] border-[#2A0054] text-white hover:bg-[#2A0054]"
-                        }`}
+                        startIcon={
+                            isEditing
+                                ? (saving ? <Loader size={13} className="animate-spin" /> : <Save size={13} />)
+                                : <Edit3 size={13} />
+                        }
                     >
-                        {isEditing ? (
-                            <>
-                                {saving ? <Loader size={13} className="animate-spin" /> : <Save size={13} />}
-                                <span>{saving ? "Saving..." : "Save Changes"}</span>
-                            </>
-                        ) : (
-                            <>
-                                <Edit3 size={13} />
-                                <span>Edit Layout</span>
-                            </>
-                        )}
-                    </button>
+                        {isEditing ? (saving ? "Saving..." : "Save Changes") : "Edit Layout"}
+                    </Button>
                 )}
             </div>
 
@@ -254,11 +246,11 @@ export default function CourseItemView({ activeCourseId, activeItemId, isStudent
                         type="text"
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
-                        className="text-3xl font-black outline-none border-b border-gray-100 focus:border-[#3C0078]/40 pb-2 mb-6 w-full text-gray-900 transition-colors placeholder:text-gray-300"
+                        className="font-display text-koru-title outline-none border-b border-koru-outline-faint focus:border-koru-primary/40 bg-transparent pb-2 mb-6 w-full text-koru-on-surface transition-colors placeholder:text-koru-outline-variant"
                         placeholder="Page Title"
                     />
                 ) : (
-                    <h1 className="text-3xl font-black text-gray-900 mb-6 tracking-tight">{title}</h1>
+                    <h1 className="font-display text-koru-title text-koru-on-surface mb-6">{title}</h1>
                 )}
                 <PageCanvas
                     ref={canvasRef}
@@ -270,37 +262,49 @@ export default function CourseItemView({ activeCourseId, activeItemId, isStudent
             </div>
 
             {/* Premium Bottom Navigation Footer (Canvas-style Prev / Next) */}
-            <div className="flex items-center justify-between border-t border-gray-100 pt-6 mt-8 shrink-0 pb-12 select-none">
+            <div className="flex items-center justify-between border-t border-koru-outline-faint pt-6 mt-8 shrink-0 pb-12 select-none">
                 {prevItem ? (
-                    <button
+                    <Card
+                        as="button"
+                        type="button"
+                        variant="interactive"
+                        tone="surface"
+                        padding="none"
+                        radius="lg"
                         onClick={() => handleItemNavigation(prevItem)}
-                        className="flex flex-col text-left items-start gap-1 group py-2.5 px-5 rounded-2xl bg-white border border-gray-200 hover:border-gray-300 hover:shadow-xs transition-all cursor-pointer max-w-[280px] md:max-w-[340px]"
+                        className="flex flex-col text-left items-start gap-1 group py-2.5 px-5 cursor-pointer max-w-[280px] md:max-w-[340px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus"
                     >
-                        <span className="flex items-center gap-1 text-[9px] font-black text-gray-400 uppercase tracking-widest">
+                        <span className="flex items-center gap-1 text-koru-caption font-medium text-koru-on-surface-variant uppercase tracking-widest">
                             <ArrowLeft size={10} className="group-hover:-translate-x-0.5 transition-transform" />
                             <span>Previous Item</span>
                         </span>
-                        <span className="text-xs font-bold text-[#3C0078] truncate w-full mt-0.5 group-hover:underline">
+                        <span className="text-xs font-medium text-koru-primary truncate w-full mt-0.5 group-hover:underline">
                             {prevItem.label}
                         </span>
-                    </button>
+                    </Card>
                 ) : (
                     <div className="w-10" />
                 )}
 
                 {nextItem ? (
-                    <button
+                    <Card
+                        as="button"
+                        type="button"
+                        variant="interactive"
+                        tone="surface"
+                        padding="none"
+                        radius="lg"
                         onClick={() => handleItemNavigation(nextItem)}
-                        className="flex flex-col text-right items-end gap-1 group py-2.5 px-5 rounded-2xl bg-white border border-gray-200 hover:border-gray-300 hover:shadow-xs transition-all cursor-pointer max-w-[280px] md:max-w-[340px]"
+                        className="flex flex-col text-right items-end gap-1 group py-2.5 px-5 cursor-pointer max-w-[280px] md:max-w-[340px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus"
                     >
-                        <span className="flex items-center gap-1 text-[9px] font-black text-gray-400 uppercase tracking-widest">
+                        <span className="flex items-center gap-1 text-koru-caption font-medium text-koru-on-surface-variant uppercase tracking-widest">
                             <span>Next Item</span>
                             <ArrowRight size={10} className="group-hover:translate-x-0.5 transition-transform" />
                         </span>
-                        <span className="text-xs font-bold text-[#3C0078] truncate w-full mt-0.5 group-hover:underline">
+                        <span className="text-xs font-medium text-koru-primary truncate w-full mt-0.5 group-hover:underline">
                             {nextItem.label}
                         </span>
-                    </button>
+                    </Card>
                 ) : (
                     <div className="w-10" />
                 )}

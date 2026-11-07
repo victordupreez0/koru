@@ -1,8 +1,5 @@
 import React, { useState } from "react";
-import { createPortal } from "react-dom";
-import { motion, AnimatePresence } from "framer-motion";
-import { X, AlertCircle } from "lucide-react";
-import Avatar from "./UI/Avatar";
+import { Alert, Avatar, Badge, Card, Modal } from "./UI";
 
 const getTimestamp = (record) => {
     if (!record.date) return 0;
@@ -75,76 +72,59 @@ export default function StudentAttendanceDetailModal({
     };
 
 
-    return createPortal(
-        <div
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 overflow-y-auto"
-            onClick={onClose}
+    const STATUS_OPTIONS = [
+        { label: "Present", activeClass: "bg-koru-success-soft text-koru-success" },
+        { label: "Late", activeClass: "bg-koru-warning-soft text-koru-warning" },
+        { label: "Absent", activeClass: "bg-koru-error-container text-koru-on-error-container" },
+    ];
+
+    return (
+        <Modal
+            open
+            onClose={onClose}
+            title={student.name}
+            description={student.email}
+            size="lg"
         >
-            <motion.div
-                initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 15, scale: 0.95 }}
-                transition={{ duration: 0.2, ease: "easeOut" }}
-                className="bg-white rounded-[32px] w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]"
-                onClick={e => e.stopPropagation()}
-            >
-                {/* Header */}
-                <div className="px-8 pt-8 pb-6 border-b border-gray-100 flex items-start justify-between bg-gray-50/50">
-                    <div className="flex items-center gap-4">
-                        <Avatar user={student} name={student.name} size={56} />
-                        <div>
-                            <h2 className="text-xl font-bold text-gray-900 tracking-tight">{student.name}</h2>
-                            <p className="text-sm text-gray-500 font-medium mt-0.5">{student.email}</p>
-                        </div>
-                    </div>
-                    <button
-                        onClick={onClose}
-                        className="w-10 h-10 rounded-full bg-gray-100 hover:bg-red-50 hover:text-red-500 flex items-center justify-center transition-all text-gray-500"
-                        aria-label="Close modal"
-                    >
-                        <X size={20} />
-                    </button>
+            <div className="space-y-6">
+                <div className="flex items-center gap-4">
+                    <Avatar user={student} name={student.name} size="lg" />
+                    <p className="text-sm text-koru-on-surface-variant">Attendance overview</p>
                 </div>
 
                 {/* Stats Summary Panel */}
-                <div className="px-8 py-6 border-b border-gray-100 bg-white grid grid-cols-4 gap-4">
-                    <div className="bg-gray-50 rounded-2xl p-4 text-center">
-                        <span className="text-[10px] uppercase font-black tracking-wider text-gray-400 block mb-1">Presence Rate</span>
-                        <span className={`text-2xl font-black italic ${
-                            rate > 85 ? "text-green-600" :
-                            rate > 70 ? "text-amber-500" : "text-red-500"
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                    <Card tone="muted" padding="sm" radius="lg" className="text-center">
+                        <span className="text-koru-caption uppercase tracking-wider text-koru-on-surface-variant block mb-1">Presence Rate</span>
+                        <span className={`font-display text-koru-title ${
+                            rate > 85 ? "text-koru-success" :
+                            rate > 70 ? "text-koru-warning" : "text-koru-error"
                         }`}>{rate}%</span>
-                    </div>
-                    <div className="bg-gray-50 rounded-2xl p-4 text-center">
-                        <span className="text-[10px] uppercase font-black tracking-wider text-gray-400 block mb-1">Present</span>
-                        <span className="text-2xl font-black italic text-green-600">{present}</span>
-                    </div>
-                    <div className="bg-gray-50 rounded-2xl p-4 text-center">
-                        <span className="text-[10px] uppercase font-black tracking-wider text-gray-400 block mb-1">Late</span>
-                        <span className="text-2xl font-black italic text-amber-500">{late}</span>
-                    </div>
-                    <div className="bg-gray-50 rounded-2xl p-4 text-center">
-                        <span className="text-[10px] uppercase font-black tracking-wider text-gray-400 block mb-1">Absent</span>
-                        <span className="text-2xl font-black italic text-red-500">{absent}</span>
-                    </div>
+                    </Card>
+                    <Card tone="muted" padding="sm" radius="lg" className="text-center">
+                        <span className="text-koru-caption uppercase tracking-wider text-koru-on-surface-variant block mb-1">Present</span>
+                        <span className="font-display text-koru-title text-koru-success">{present}</span>
+                    </Card>
+                    <Card tone="muted" padding="sm" radius="lg" className="text-center">
+                        <span className="text-koru-caption uppercase tracking-wider text-koru-on-surface-variant block mb-1">Late</span>
+                        <span className="font-display text-koru-title text-koru-warning">{late}</span>
+                    </Card>
+                    <Card tone="muted" padding="sm" radius="lg" className="text-center">
+                        <span className="text-koru-caption uppercase tracking-wider text-koru-on-surface-variant block mb-1">Absent</span>
+                        <span className="font-display text-koru-title text-koru-error">{absent}</span>
+                    </Card>
                 </div>
 
-                {/* Error Banner */}
-                {error && (
-                    <div className="mx-8 mt-4 p-3 bg-red-50 border border-red-100 text-red-600 rounded-xl flex items-center gap-2 text-xs font-semibold">
-                        <AlertCircle size={16} />
-                        <span>{error}</span>
-                    </div>
-                )}
+                {error && <Alert variant="error">{error}</Alert>}
 
                 {/* List Body */}
-                <div className="flex-1 overflow-y-auto px-8 py-6">
-                    <h3 className="text-xs font-black uppercase tracking-[0.15em] text-gray-400 mb-4">
+                <div>
+                    <h3 className="text-koru-caption font-medium uppercase tracking-[0.15em] text-koru-on-surface-variant mb-4">
                         Attendance History ({total} {total === 1 ? "entry" : "entries"})
                     </h3>
 
                     {studentRecords.length === 0 ? (
-                        <div className="text-center py-12 text-gray-400 text-sm font-medium">
+                        <div className="text-center py-12 text-koru-on-surface-variant text-sm">
                             No attendance records recorded for this student.
                         </div>
                     ) : (
@@ -153,21 +133,25 @@ export default function StudentAttendanceDetailModal({
                                 const isUpdating = updatingRecordId === record.id;
 
                                 return (
-                                    <div
+                                    <Card
                                         key={record.id}
-                                        className="flex items-center justify-between p-4 rounded-2xl border border-gray-100 bg-white hover:border-[#3C0078]/10 hover:shadow-sm transition-all duration-200"
+                                        variant="outlined"
+                                        tone="surface"
+                                        padding="sm"
+                                        radius="lg"
+                                        className="flex items-center justify-between"
                                     >
                                         {/* Date and Session Type */}
                                         <div className="flex-1 min-w-0 pr-4">
-                                            <span className="text-sm font-bold text-gray-900 block truncate">
+                                            <span className="text-sm font-medium text-koru-on-surface block truncate">
                                                 {formatDate(record.date)}
                                             </span>
                                             <div className="flex items-center gap-2 mt-1">
-                                                <span className="text-[10px] font-black uppercase tracking-wider bg-gray-100 text-gray-500 px-2 py-0.5 rounded-md">
+                                                <Badge variant="neutral">
                                                     {record.sessionType || "Lecture"}
-                                                </span>
+                                                </Badge>
                                                 {record.time && (
-                                                    <span className="text-xs text-gray-400">
+                                                    <span className="text-xs text-koru-on-surface-variant">
                                                         {record.time}
                                                     </span>
                                                 )}
@@ -176,22 +160,20 @@ export default function StudentAttendanceDetailModal({
 
                                         {/* Status Switcher */}
                                         <div className="flex items-center gap-3 shrink-0">
-                                            <div className="flex items-center gap-1.5 bg-gray-50 p-1 rounded-xl">
-                                                {[
-                                                    { label: "Present", colorClass: "text-green-700 bg-green-100 hover:bg-green-200 border-green-200" },
-                                                    { label: "Late", colorClass: "text-amber-700 bg-amber-100 hover:bg-amber-200 border-amber-200" },
-                                                    { label: "Absent", colorClass: "text-red-700 bg-red-100 hover:bg-red-200 border-red-200" }
-                                                ].map(opt => {
+                                            <div className="flex items-center gap-1.5 bg-koru-surface-container p-1 rounded-koru-md">
+                                                {STATUS_OPTIONS.map(opt => {
                                                     const isActive = record.status === opt.label;
                                                     return (
                                                         <button
                                                             key={opt.label}
+                                                            type="button"
                                                             disabled={isUpdating}
+                                                            aria-pressed={isActive}
                                                             onClick={() => handleStatusChange(record.id, opt.label)}
-                                                            className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider border transition-all duration-200 ${
+                                                            className={`px-3 py-1.5 rounded-koru-sm text-koru-caption font-medium uppercase tracking-wider transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus disabled:opacity-50 ${
                                                                 isActive
-                                                                    ? `${opt.colorClass} shadow-xs`
-                                                                    : "border-transparent text-gray-400 hover:text-gray-600 hover:bg-gray-200/50"
+                                                                    ? opt.activeClass
+                                                                    : "text-koru-on-surface-variant hover:bg-koru-surface-container-highest"
                                                             }`}
                                                         >
                                                             {opt.label}
@@ -200,14 +182,13 @@ export default function StudentAttendanceDetailModal({
                                                 })}
                                             </div>
                                         </div>
-                                    </div>
+                                    </Card>
                                 );
                             })}
                         </div>
                     )}
                 </div>
-            </motion.div>
-        </div>,
-        document.body
+            </div>
+        </Modal>
     );
 }

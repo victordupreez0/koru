@@ -2,7 +2,7 @@ import React from "react";
 import PageCanvas from "../../../components/PageCanvas";
 import { getCourseById, getCourseLecturers } from "../../../services/courseService";
 import { Loader } from "lucide-react";
-import Avatar from "../../../components/UI/Avatar";
+import { Avatar, Card, Skeleton } from "../../../components/UI";
 
 export default function CourseHomeView({ subject, course, loading }) {
   const [pageLoading, setPageLoading] = React.useState(true);
@@ -102,43 +102,43 @@ export default function CourseHomeView({ subject, course, loading }) {
     <div className="flex-1 flex flex-col p-12 overflow-y-auto scrollbar-hide">
       <header className="mb-8 select-none">
         {loading ? (
-          <div className="flex flex-col gap-3 animate-pulse">
-            <div className="h-9 rounded-2xl bg-gray-200 w-64" />
-            <div className="h-5 rounded-full bg-gray-100 w-20" />
+          <div className="flex flex-col gap-3">
+            <Skeleton className="h-9 w-64" />
+            <Skeleton variant="rect" className="h-5 w-20" />
           </div>
         ) : (
           <>
-            <h1 className="text-4xl font-semibold tracking-tight text-gray-900 leading-tight">
+            <h1 className="font-display text-koru-display text-koru-on-surface">
               {subject?.name || "Unknown"}
             </h1>
-            <p className="text-xl text-gray-500 mt-2 font-medium">{subject?.code}</p>
+            <p className="text-koru-heading text-koru-on-surface-variant mt-2">{subject?.code}</p>
           </>
         )}
       </header>
 
       {pageLoading || loading ? (
-        <div className="flex-1 flex flex-col gap-6 animate-pulse">
-          <div className="w-full h-[250px] rounded-xl bg-gray-100" />
+        <div className="flex-1 flex flex-col gap-6">
+          <Skeleton className="w-full h-[250px]" />
           <div className="flex flex-col gap-3 mt-2">
             {[85, 70, 90, 55, 75].map((w, i) => (
-              <div key={i} className={`h-4 rounded-full ${i % 2 === 0 ? "bg-gray-200" : "bg-gray-100"}`} style={{ width: `${w}%` }} />
+              <Skeleton key={i} variant="rect" className="h-4" width={`${w}%`} />
             ))}
           </div>
-          <div className="h-32 rounded-2xl bg-gray-100 mt-2" />
+          <Skeleton className="h-32 mt-2" />
           <div className="flex flex-col gap-3">
             {[60, 80, 45].map((w, i) => (
-              <div key={i} className="h-4 rounded-full bg-gray-100" style={{ width: `${w}%` }} />
+              <Skeleton key={i} variant="rect" className="h-4" width={`${w}%`} />
             ))}
           </div>
-          <div className="flex gap-4 pt-8 border-t border-gray-100 mt-4">
+          <div className="flex gap-4 pt-8 border-t border-koru-outline-faint mt-4">
             {[1, 2].map(i => (
-              <div key={i} className="flex items-center gap-4 bg-gray-50 rounded-2xl p-4 flex-1">
-                <div className="w-16 h-16 rounded-full bg-gray-200 shrink-0" />
+              <Card key={i} tone="muted" className="flex items-center gap-4 flex-1">
+                <Skeleton variant="circle" className="w-16 h-16 shrink-0" />
                 <div className="flex flex-col gap-2">
-                  <div className="h-4 rounded-full bg-gray-200 w-28" />
-                  <div className="h-3 rounded-full bg-gray-100 w-36" />
+                  <Skeleton variant="rect" className="h-4 w-28" />
+                  <Skeleton variant="text" className="w-36" />
                 </div>
-              </div>
+              </Card>
             ))}
           </div>
         </div>
@@ -146,7 +146,7 @@ export default function CourseHomeView({ subject, course, loading }) {
         <div className="flex-1 flex flex-col gap-6">
           {/* Cover Image */}
           {showCoverImage && (
-            <div className="w-full h-[250px] rounded-xl shadow-sm overflow-hidden select-none">
+            <div className="w-full h-[250px] rounded-koru-lg shadow-koru-sm overflow-hidden select-none">
               <img
                 src={courseImage}
                 alt={subject?.name}
@@ -165,31 +165,31 @@ export default function CourseHomeView({ subject, course, loading }) {
           </div>
 
           {/* Lecturers Grid - Centered & Revamped */}
-          <section className="w-full pt-16 pb-12 border-t border-gray-100 flex flex-col items-center mt-12">
-            <h4 className="text-[12px] font-black uppercase tracking-[0.4em] text-gray-400 mb-8 text-center select-none">
+          <section className="w-full pt-16 pb-12 border-t border-koru-outline-faint flex flex-col items-center mt-12">
+            <h4 className="text-koru-caption font-medium uppercase tracking-[0.4em] text-koru-on-surface-variant mb-8 text-center select-none">
               Lecturer{lecturers.length > 1 ? "s" : ""}
             </h4>
             <div className="flex flex-wrap justify-center gap-8 w-full max-w-4xl">
               {lecturers.map(lecturer => (
-                <div key={lecturer.id} className="flex items-center gap-4 bg-gray-50/50 hover:bg-gray-50 border border-gray-100 p-4 rounded-2xl transition-all shadow-2xs min-w-[280px]">
+                <Card key={lecturer.id} variant="interactive" tone="low" className="flex items-center gap-4 min-w-[280px]">
                   {/* Profile picture */}
-                  <Avatar user={lecturer} size={64} className="shadow-md ring-2 ring-white" />
+                  <Avatar user={lecturer} size={64} />
                   {/* Name and Email */}
                   <div className="flex flex-col text-left">
-                    <span className="text-sm font-black text-gray-900 leading-tight">
+                    <span className="text-sm font-medium text-koru-on-surface leading-tight">
                       {lecturer.firstName} {lecturer.lastName}
                     </span>
-                    <span className="text-[11px] font-extrabold uppercase tracking-widest text-[#3C0078] mt-0.5 select-none">
+                    <span className="text-koru-caption font-medium uppercase tracking-widest text-koru-primary mt-0.5 select-none">
                       Module Head
                     </span>
                     <a
                       href={`mailto:${lecturer.email}`}
-                      className="text-xs text-gray-500 hover:text-[#3C0078] font-semibold mt-1 break-all transition-colors"
+                      className="text-xs text-koru-on-surface-variant hover:text-koru-primary font-medium mt-1 break-all transition-colors"
                     >
                       {lecturer.email}
                     </a>
                   </div>
-                </div>
+                </Card>
               ))}
             </div>
           </section>

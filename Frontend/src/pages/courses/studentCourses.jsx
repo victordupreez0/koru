@@ -97,16 +97,16 @@ export default function StudentCourses() {
             <CourseSecondaryNav activeCourseId={activeCourseId || (visibleCourses[0]?.id)} hideNav={hideNav} />
 
             {/* Main Content Area: Floating Island Card */}
-            <div className="flex-1 flex flex-col overflow-hidden transition-all duration-300 md:bg-koru-surface-container-lowest md:backdrop-blur-xl md:border md:border-white/20 md:rounded-koru-lg md:shadow-lg max-md:bg-white">
+            <div className="flex-1 flex flex-col overflow-hidden transition-all duration-300 md:bg-koru-surface-container-lowest md:rounded-koru-lg md:shadow-koru-md max-md:bg-koru-surface-container-lowest">
                 {/* Course Header Top Bar */}
                 {course && (
-                    <div className="h-14 border-b border-gray-100 bg-white/60 backdrop-blur-md flex items-center justify-between px-8 z-10 shrink-0 select-none">
+                    <div className="h-14 border-b border-koru-outline-faint bg-koru-surface-container-lowest/60 backdrop-blur-md flex items-center justify-between px-8 z-10 shrink-0 select-none">
                         <div className="flex items-center gap-3">
-                            <span className="px-2.5 py-0.5 rounded-lg text-[10px] font-black text-white shadow-sm uppercase shrink-0" style={{ backgroundColor: course.color }}>
+                            <span className="px-2.5 py-0.5 rounded-koru-sm text-koru-caption font-medium text-white shadow-koru-xs uppercase shrink-0" style={{ backgroundColor: course.color }}>
                                 {course.code}{course.number}
                             </span>
-                            <span className="text-gray-300 text-xs">/</span>
-                            <span className="text-xs font-bold text-gray-500 capitalize">{activeSubpageLabel}</span>
+                            <span className="text-koru-outline-variant text-koru-caption">/</span>
+                            <span className="text-koru-caption font-medium text-koru-on-surface-variant capitalize">{activeSubpageLabel}</span>
                         </div>
                     </div>
                 )}

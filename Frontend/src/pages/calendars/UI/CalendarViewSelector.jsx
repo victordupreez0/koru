@@ -53,7 +53,7 @@ const VIEWS = [
 export default function CalendarViewSelector({ activeView, onChange }) {
   return (
     <div
-      className="inline-flex items-center gap-0.5 bg-white/80 rounded-full shadow-sm p-1"
+      className="inline-flex items-center gap-0.5 bg-koru-surface-container-lowest rounded-full shadow-koru-xs p-1"
       role="tablist"
       aria-label="Calendar view"
     >
@@ -67,14 +67,14 @@ export default function CalendarViewSelector({ activeView, onChange }) {
             aria-selected={isActive}
             onClick={() => onChange(id)}
             className={[
-              "relative flex items-center gap-1.5 rounded-full px-4 py-3 text-[13px] cursor-pointer border-none transition-colors duration-150 font-[inherit]",
-              isActive ? "text-white bg-purple-500 font-semibold" : "text-gray-400 font-medium hover:text-gray-700",
+              "relative isolate flex items-center gap-1.5 rounded-full px-4 py-3 text-koru-label cursor-pointer border-none transition-colors duration-150 font-[inherit] font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus",
+              isActive ? "text-koru-on-secondary-container" : "text-koru-on-surface-variant hover:text-koru-on-surface",
             ].join(" ")}
           >
-            {/* Sliding white pill */}
+            {/* Sliding tonal pill */}
             {isActive && (
               <motion.span
-                className="absolute inset-0 rounded-full bg-white shadow-sm z-[-1]"
+                className="absolute inset-0 rounded-full bg-koru-secondary-container z-[-1]"
                 layoutId="cal-view-pill"
                 transition={{ type: "spring", stiffness: 380, damping: 32 }}
               />
