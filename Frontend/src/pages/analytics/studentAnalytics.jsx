@@ -5,6 +5,8 @@ import {
 } from "lucide-react";
 
 import { useAuth } from "../../contexts/AuthContext";
+import { KoruBarList, KoruGauge, KoruTrendChart } from "../../components/UI/charts/KoruCharts";
+import { koruChartColors } from "../../components/UI/charts/koruChartTheme";
 import { useCourses } from "../../contexts/CoursesContext";
 import { getStudentGrades } from "../../services/gradeService";
 import { getStudentSubmissions } from "../../services/submissionService";
@@ -21,44 +23,6 @@ const fadeUp = {
 };
 
 /* ──────────────────────────── helper components ──────────────────────────── */
-
-function MiniSparkline({ data, color = "#3C0078", height = 40 }) {
-  const max = Math.max(...data);
-  const min = Math.min(...data);
-  const range = max - min || 1;
-  const w = 100;
-  const points = data
-    .map((v, i) => `${(i / (data.length - 1)) * w},${height - ((v - min) / range) * (height - 4)}`)
-    .join(" ");
-  return (
-    <svg viewBox={`0 0 ${w} ${height}`} className="w-full" style={{ height }} preserveAspectRatio="none">
-      <defs>
-        <linearGradient id={`grad-${color.replace("#", "")}`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={color} stopOpacity="0.15" />
-          <stop offset="100%" stopColor={color} stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      <polygon points={`0,${height} ${points} ${w},${height}`} fill={`url(#grad-${color.replace("#", "")})`} />
-      <polyline points={points} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function ProgressRing({ percent, size = 56, stroke = 5, color = "#3C0078" }) {
-  const r = (size - stroke) / 2;
-  const circ = 2 * Math.PI * r;
-  const offset = circ - (percent / 100) * circ;
-  return (
-    <svg width={size} height={size} className="transform -rotate-90">
-      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#f1f5f9" strokeWidth={stroke} />
-      <circle
-        cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth={stroke}
-        strokeDasharray={circ} strokeDashoffset={offset} strokeLinecap="round"
-        className="transition-all duration-700"
-      />
-    </svg>
-  );
-}
 
 /* ──────────────────────────── main page ──────────────────────────── */
 
@@ -286,11 +250,13 @@ export default function StudentAnalytics() {
                   {monthlyTrendData.overallTrend >= 0 ? "+" : ""}{monthlyTrendData.overallTrend}%
                 </span>
               </div>
-              <div className="mt-2">
-                <MiniSparkline data={monthlyTrendData.data} color="#3C0078" height={100} />
-                <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest text-gray-300 mt-2 px-1">
-                  {monthlyTrendData.labels.map((m, i) => <span key={i}>{m}</span>)}
-                </div>
+              <div className="-mx-2 mt-2">
+                <KoruTrendChart
+                  data={monthlyTrendData.data}
+                  labels={monthlyTrendData.labels}
+                  label="Average grade"
+                  height={200}
+                />
               </div>
             </motion.div>
 
@@ -306,11 +272,8 @@ export default function StudentAnalytics() {
                       key={course.id}
                       className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex items-center gap-4 hover:border-gray-200 transition-colors"
                     >
-                      <div className="relative shrink-0">
-                        <ProgressRing percent={pct} color={course.color || "#3C0078"} />
-                        <span className="absolute inset-0 flex items-center justify-center text-sm font-black text-gray-900">
-                          {pct}
-                        </span>
+                      <div className="shrink-0">
+                        <KoruGauge value={pct} />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-bold text-sm text-gray-900 truncate">{course.subjectName || course.label}</p>
@@ -405,26 +368,17 @@ export default function StudentAnalytics() {
             {/* Submission Breakdown */}
             <motion.div variants={fadeUp} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
               <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-4">Submission Breakdown</h3>
-              <div className="space-y-3">
-                {[
-                  { label: "Graded", value: submissionsSummary.graded, total: submissionsSummary.total, color: "bg-green-500" },
-                  { label: "Pending", value: submissionsSummary.pending, total: submissionsSummary.total, color: "bg-amber-400" },
-                  { label: "Late", value: submissionsSummary.late, total: submissionsSummary.total, color: "bg-red-400" },
-                ].map(item => (
-                  <div key={item.label}>
-                    <div className="flex justify-between items-center mb-1.5">
-                      <span className="text-sm font-medium text-gray-700">{item.label}</span>
-                      <span className="text-sm font-bold text-gray-900">{item.value}/{item.total}</span>
-                    </div>
-                    <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                      <div
-                        className={`h-full rounded-full ${item.color} transition-all duration-700`}
-                        style={{ width: `${item.total > 0 ? (item.value / item.total) * 100 : 0}%` }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <KoruBarList
+                label="Submissions"
+                labelWidth={64}
+                xMax={Math.max(submissionsSummary.total, 1)}
+                valueFormatter={v => `${v ?? 0} of ${submissionsSummary.total}`}
+                items={[
+                  { label: "Graded", value: submissionsSummary.graded, color: koruChartColors.success },
+                  { label: "Pending", value: submissionsSummary.pending, color: koruChartColors.accent },
+                  { label: "Late", value: submissionsSummary.late, color: koruChartColors.error },
+                ]}
+              />
             </motion.div>
 
             {/* Upcoming Deadlines */}

@@ -1,6 +1,6 @@
 # Koru design system foundation
 
-The foundation now follows Material 3 patterns while staying on Tailwind CSS. It does not add the MUI package; the primitives emulate Material 3 colour roles, shape, elevation and state treatment.
+The foundation now follows Material 3 patterns while staying on Tailwind CSS. The primitives emulate Material 3 colour roles, shape, elevation and state treatment without MUI components. The one exception is charts, which use [MUI X Charts](https://mui.com/x/react-charts/) through the Koru wrappers described under Charts.
 
 Migrated so far: the auth flow (login, signup, onboarding role cards and 2FA setup), the app shell (canvas, sidebar and top bar), the dashboards, and the assignments, groups and settings pages. Other feature pages (course views, analytics, calendar, profile) still use legacy styling. Every page that shows a person uses the shared `Avatar`.
 
@@ -212,6 +212,24 @@ Handles Escape, backdrop dismissal, focus trapping, focus restoration and body s
 - `PageHeader` — eyebrow, title, subtitle, breadcrumbs, actions
 - `Skeleton` — `rect`, `text`, `circle`
 - `SkeletonText` — multi-line text placeholder
+
+### Charts
+
+```jsx
+import { KoruTrendChart, KoruBarList, KoruGauge } from "../components/UI/charts/KoruCharts";
+
+<KoruTrendChart data={[62, 64, 80]} labels={["Jan", "Feb", "Mar"]} label="Average grade" />
+<KoruBarList items={[{ label: "Graded", value: 14, color: koruChartColors.success }]} />
+<KoruGauge value={67} />
+```
+
+All charts go through these wrappers around MUI X Charts. Don't import `@mui/x-charts` directly in a page. Each wrapper applies the Koru chart theme (`charts/koruChartTheme.js`), so axes, grid lines, labels and series colours match the tokens.
+
+- `KoruTrendChart`: area line chart for one series over time, y-axis in percent.
+- `KoruBarList`: horizontal bars for a short list of categories, with the value at the end of each bar. Bars use each item's `color`, then `color`, then the series palette.
+- `KoruGauge`: circular 0–100 gauge with the value in the centre. It replaces the old hand-drawn progress rings.
+
+`koruChartColors` maps chart roles to Koru tokens. `koruSeriesPalette` is the categorical order: `koru-primary`, then the `koru-stat-*` colours. Both hold hex copies of the tokens in `src/index.css` because MUI paints SVG from them, so change both together.
 
 ## Rules for migration work
 

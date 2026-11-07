@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { BarChart3, ChevronDown } from "lucide-react";
 import Avatar from "../../components/UI/Avatar";
+import { KoruGauge } from "../../components/UI/charts/KoruCharts";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5299/api";
 
@@ -19,23 +20,6 @@ const fadeUp = {
   hidden: { opacity: 0, y: 16 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.45, ease: "easeOut" } },
 };
-
-/* ─── progress ring ─── */
-function ProgressRing({ percent, size = 56, stroke = 5, color = "#3C0078" }) {
-  const r = (size - stroke) / 2;
-  const circ = 2 * Math.PI * r;
-  const offset = circ - (percent / 100) * circ;
-  return (
-    <svg width={size} height={size} className="transform -rotate-90">
-      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#f1f5f9" strokeWidth={stroke} />
-      <circle
-        cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth={stroke}
-        strokeDasharray={circ} strokeDashoffset={offset} strokeLinecap="round"
-        className="transition-all duration-700"
-      />
-    </svg>
-  );
-}
 
 /* ══════════════════════ MAIN COMPONENT ══════════════════════ */
 export default function AdminAnalytics() {
@@ -534,11 +518,8 @@ export default function AdminAnalytics() {
                         return (
                           <div key={course.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 hover:border-gray-200 transition-colors">
                             <div className="flex items-center gap-3 mb-3">
-                              <div className="relative shrink-0">
-                                <ProgressRing percent={courseAvg} color={course.color} />
-                                <span className="absolute inset-0 flex items-center justify-center text-sm font-black text-gray-900">
-                                  {courseAvg}
-                                </span>
+                              <div className="shrink-0">
+                                <KoruGauge value={courseAvg} />
                               </div>
                               <div className="min-w-0">
                                 <p className="font-bold text-sm text-gray-900 truncate">{course.label}</p>
