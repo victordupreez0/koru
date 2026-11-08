@@ -32,8 +32,11 @@ public class ClassControllerTests
         var controller = new ClassController(db);
         var result = await controller.GetAll();
 
-        ((object?)((dynamic)result.Value!.Single()).Course).Should().NotBeNull();
-        ((object?)((dynamic)result.Value!.Single()).Timetable).Should().NotBeNull();
+        // GetAll returns Ok(...) with flattened names rather than navigation objects.
+        var rows = ((OkObjectResult)result.Result!).Value as System.Collections.IEnumerable;
+        var row = rows!.Cast<object>().Single();
+        row.GetType().GetProperty("CourseName")!.GetValue(row).Should().Be(course.Name);
+        row.GetType().GetProperty("TimetableId")!.GetValue(row).Should().Be(timetable.Id);
     }
 
     [Fact]
