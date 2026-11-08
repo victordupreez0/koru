@@ -7,6 +7,9 @@ import { DrawingBlock } from "../../src/components/editor/blocks/DrawingBlock";
 import { EmbedBlock } from "../../src/components/editor/blocks/EmbedBlock";
 import { FileBlock } from "../../src/components/editor/blocks/FileBlock";
 import { ImageBlock } from "../../src/components/editor/blocks/ImageBlock";
+import { MoveBlock } from "../../src/components/editor/blocks/MoveBlock";
+import { QuizBlock } from "../../src/components/editor/blocks/QuizBlock";
+import { SquaresBlock } from "../../src/components/editor/blocks/SquaresBlock";
 import { PAGE_TEMPLATES } from "../../src/components/editor/templates";
 import Table from "@tiptap/extension-table";
 import TableCell from "@tiptap/extension-table-cell";
@@ -18,7 +21,7 @@ import TaskList from "@tiptap/extension-task-list";
 const extensions = [
   StarterKit.configure({ codeBlock: false, dropcursor: false }),
   TextStyleWithSize, BlockBackground, UniqueBlockIds, TrailingParagraph, PasteAndDrop,
-  CodeBlock, CalloutBlock, ImageBlock, EmbedBlock, FileBlock, DrawingBlock,
+  CodeBlock, CalloutBlock, ImageBlock, EmbedBlock, FileBlock, DrawingBlock, SquaresBlock, MoveBlock, QuizBlock,
 ];
 
 const roundTrip = (content) => {
@@ -37,6 +40,9 @@ describe("blocks survive a save and reload", () => {
     ["file", { type: "fileAttachment", attrs: { url: "https://a.test/f.pdf", name: "f.pdf", size: 1234, uploadId: null } }],
     ["code", { type: "codeBlock", attrs: { language: "python" }, content: [{ type: "text", text: "a < b" }] }],
     ["drawing", { type: "drawing", attrs: { elements: [{ id: "a", type: "rectangle" }], svg: "<svg></svg>", alt: "A box" } }],
+    ["squares", { type: "squaresBlock", attrs: { blockId: "s1", prompt: "Pick", rows: 2, cols: 2, correct: [0, 3], exactly: 2 } }],
+    ["move", { type: "moveBlock", attrs: { blockId: "m1", prompt: "Go", rows: 3, cols: 3, start: [0, 0], target: [2, 2], obstacles: [[1, 1]] } }],
+    ["quiz", { type: "quizBlock", attrs: { blockId: "q1", passPercent: 50, questions: [{ question: "a", options: ["x", "y"], correctAnswer: 1 }] } }],
   ])("%s", (_name, node) => expect(roundTrip([node])).toEqual([node]));
 
   test("background colour is part of the document", () => {
@@ -65,6 +71,27 @@ describe("TrailingParagraph", () => {
     const editor = new Editor({ extensions, content: { type: "doc", content: [{ type: "paragraph" }] } });
     editor.commands.setContent({ type: "doc", content: [{ type: "embed", attrs: { url: "" } }] }, true);
     expect(editor.getJSON().content.at(-1).type).toBe("paragraph");
+    editor.destroy();
+  });
+});
+
+describe("UniqueBlockIds", () => {
+  const blockIds = (editor) => editor.getJSON().content.filter((n) => n.attrs?.blockId !== undefined).map((n) => n.attrs.blockId);
+
+  test("a new activity gets an id", () => {
+    const editor = new Editor({ extensions, content: { type: "doc", content: [{ type: "paragraph" }] } });
+    editor.commands.insertContent({ type: "squaresBlock" });
+    expect(blockIds(editor)[0]).toBeTruthy();
+    editor.destroy();
+  });
+
+  test("a duplicated activity gets its own id", () => {
+    const block = { type: "squaresBlock", attrs: { blockId: "same" } };
+    const editor = new Editor({ extensions, content: { type: "doc", content: [block, { type: "paragraph" }] } });
+    editor.commands.insertContentAt(0, block);
+    const ids = blockIds(editor);
+    expect(ids).toHaveLength(2);
+    expect(new Set(ids).size).toBe(2);
     editor.destroy();
   });
 });

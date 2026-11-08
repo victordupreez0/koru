@@ -13,7 +13,7 @@ import NovelBlockMenu from "./NovelBlockMenu";
 import EditorBubbleMenu from "./editor/EditorBubbleMenu";
 import EditorToolbar from "./editor/EditorToolbar";
 import { buildExtensions } from "./editor/extensions";
-import { notesSlashItems, pageSlashItems } from "./editor/slashItems";
+import { homeSlashItems, notesSlashItems, pageSlashItems } from "./editor/slashItems";
 import "./editor/editor.css";
 
 const editorProps = {
@@ -37,7 +37,7 @@ function ReportEditor({ onReady }) {
  *   onUpdate       – ({ editor }) => void, on every change
  *   onCreate       – ({ editor }) => void, once on mount
  *   editable       – false renders the same document read-only
- *   variant        – "page" has every block and the toolbar; "notes" is text only
+ *   variant        – "page" has every block; "home" leaves out auto-marked activities; "notes" is text only
  *   toolbarExtra   – extra controls at the end of the toolbar
  */
 export default function NovelEditor({
@@ -50,7 +50,7 @@ export default function NovelEditor({
     variant = "page",
     toolbarExtra,
 }) {
-    const slashItems = variant === "notes" ? notesSlashItems : pageSlashItems;
+    const slashItems = { notes: notesSlashItems, home: homeSlashItems, page: pageSlashItems }[variant];
     const extensions = useMemo(() => buildExtensions({ placeholder, slashItems }), [placeholder, slashItems]);
 
     return (
@@ -62,7 +62,7 @@ export default function NovelEditor({
                 editorProps={editorProps}
                 onUpdate={onUpdate}
                 className={`w-full max-w-none focus:outline-none ${className}`}
-                slotBefore={editable && variant === "page" ? <EditorToolbar items={slashItems} extra={toolbarExtra} /> : null}
+                slotBefore={editable && variant !== "notes" ? <EditorToolbar items={slashItems} extra={toolbarExtra} /> : null}
             >
                 <ReportEditor onReady={onCreate} />
                 {editable ? (
