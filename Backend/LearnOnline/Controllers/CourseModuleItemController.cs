@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using LearnOnline.Data;
+using LearnOnline.Helpers;
 using LearnOnline.Models;
+using LearnOnline.Services.Marking;
 
 namespace LearnOnline.Controllers
 {
@@ -17,12 +19,14 @@ namespace LearnOnline.Controllers
             _context = context;
         }
 
-        // GET /api/CourseModuleItem/{id} – return a single item by ID
+        // GET /api/CourseModuleItem/{id} – return a single item by ID.
+        // Answer keys are removed unless a lecturer asks for the editable copy (?forEdit=true&userId=).
         [HttpGet("{id}")]
-        public async Task<ActionResult<CourseModuleItem>> GetById(string id)
+        public async Task<ActionResult<CourseModuleItem>> GetById(string id, [FromQuery] bool forEdit = false, [FromQuery] string? userId = null)
         {
-            var item = await _context.CourseModuleItems.FindAsync(id);
+            var item = await _context.CourseModuleItems.AsNoTracking().FirstOrDefaultAsync(i => i.Id == id);
             if (item == null) return NotFound();
+            if (!forEdit || !await _context.IsStaffAsync(userId)) item.Content = PageBlocks.StripAnswers(item.Content);
             return item;
         }
 
@@ -30,10 +34,13 @@ namespace LearnOnline.Controllers
         [HttpGet("module/{moduleId}")]
         public async Task<ActionResult<IEnumerable<CourseModuleItem>>> GetByModule(string moduleId)
         {
-            return await _context.CourseModuleItems
+            var items = await _context.CourseModuleItems
+                .AsNoTracking()
                 .Where(i => i.ModuleId == moduleId)
                 .OrderBy(i => i.SortOrder)
                 .ToListAsync();
+            foreach (var item in items) item.Content = PageBlocks.StripAnswers(item.Content);
+            return items;
         }
 
         // POST /api/CourseModuleItem – create a new item inside a module section

@@ -59,6 +59,9 @@ namespace LearnOnline.Data
         // Live check-in sessions (teacher opens, students join with code)
         public DbSet<CheckInSession> CheckInSessions { get; set; }
 
+        // Students' tries at interactive blocks on course pages
+        public DbSet<Attempt> Attempts { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

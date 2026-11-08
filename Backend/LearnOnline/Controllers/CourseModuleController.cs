@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using LearnOnline.Data;
+using LearnOnline.Helpers;
 using LearnOnline.Models;
+using LearnOnline.Services.Marking;
 
 namespace LearnOnline.Controllers
 {
@@ -21,32 +23,47 @@ namespace LearnOnline.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<CourseModule>>> GetAll()
         {
-            return await _context.CourseModules
+            return HideAnswers(await _context.CourseModules
+                .AsNoTracking()
                 .Include(m => m.Items)
                 .OrderBy(m => m.SortOrder)
-                .ToListAsync();
+                .ToListAsync());
         }
 
         // GET /api/CourseModule/course/{courseId} – return all module sections for a course, ordered, with nested items
         [HttpGet("course/{courseId}")]
         public async Task<ActionResult<IEnumerable<CourseModule>>> GetByCourse(string courseId)
         {
-            return await _context.CourseModules
+            return HideAnswers(await _context.CourseModules
+                .AsNoTracking()
                 .Where(m => m.CourseId == courseId)
                 .Include(m => m.Items.OrderBy(i => i.SortOrder))
                 .OrderBy(m => m.SortOrder)
-                .ToListAsync();
+                .ToListAsync());
         }
 
         // GET /api/CourseModule/{id} – return a single module with its items
         [HttpGet("{id}")]
-        public async Task<ActionResult<CourseModule>> GetById(string id)
+        public async Task<ActionResult<CourseModule>> GetById(string id, [FromQuery] bool forEdit = false, [FromQuery] string? userId = null)
         {
             var module = await _context.CourseModules
+                .AsNoTracking()
                 .Include(m => m.Items.OrderBy(i => i.SortOrder))
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (module == null) return NotFound();
+            if (!forEdit || !await _context.IsStaffAsync(userId)) HideAnswers(new List<CourseModule> { module });
             return module;
+        }
+
+        // Answer keys live inside page JSON, so they come out before anything reaches a browser.
+        private static List<CourseModule> HideAnswers(List<CourseModule> modules)
+        {
+            foreach (var module in modules)
+            {
+                module.Content = PageBlocks.StripAnswers(module.Content);
+                foreach (var item in module.Items) item.Content = PageBlocks.StripAnswers(item.Content);
+            }
+            return modules;
         }
 
         // POST /api/CourseModule – create a new module section for a course
