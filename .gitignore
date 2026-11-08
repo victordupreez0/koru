@@ -15,3 +15,6 @@ node_modules
 
 # Examples are meant to be committed
 !.env.example
+
+# Files uploaded while running locally
+Backend/LearnOnline/wwwroot/uploads/

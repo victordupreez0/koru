@@ -9,6 +9,7 @@ import {
     Heading2,
     Heading3,
     Italic,
+    LayoutTemplate,
     List,
     ListOrdered,
     Palette,
@@ -24,6 +25,7 @@ import {
 import { Button, Card } from "../UI";
 import { cn } from "../../utils/cn";
 import { FONT_SIZES, TEXT_COLORS } from "./palette";
+import { PAGE_TEMPLATES } from "./templates";
 
 function ToolbarButton({ active, className, children, ...props }) {
     return (
@@ -90,8 +92,14 @@ export default function EditorToolbar({ items, extra }) {
         else chain().setMark("textStyle", { fontSize: null }).removeEmptyTextStyle().run();
     };
     const setColor = (color) => (color ? chain().setColor(color).run() : chain().unsetColor().run());
+    // On a blank page a template becomes the page; otherwise it's added at the cursor, so nothing is lost.
+    const applyTemplate = (template) => {
+        if (editor.isEmpty) editor.chain().focus().setContent({ type: "doc", content: template.blocks }, true).focus("start").run();
+        else chain().insertContent(template.blocks).run();
+    };
 
     return (
+        <>
         <div role="toolbar" aria-label="Formatting" className="sticky top-2 z-30 mb-6 flex select-none flex-wrap items-center gap-1 rounded-koru-xl bg-koru-surface-container-high p-2 shadow-koru-md">
             <ToolbarButton title="Undo" disabled={!editor.can().undo()} onClick={() => chain().undo().run()}><Undo2 size={15} /></ToolbarButton>
             <ToolbarButton title="Redo" disabled={!editor.can().redo()} onClick={() => chain().redo().run()}><Redo2 size={15} /></ToolbarButton>
@@ -167,7 +175,46 @@ export default function EditorToolbar({ items, extra }) {
                     </MenuItem>
                 ))}
             </ToolbarMenu>
+            <ToolbarMenu
+                className="w-72 md:left-auto md:right-0"
+                trigger={({ toggle }) => (
+                    <Button variant="text" size="sm" onMouseDown={(e) => e.preventDefault()} onClick={toggle} startIcon={<LayoutTemplate size={13} />}>
+                        Templates
+                    </Button>
+                )}
+            >
+                {(close) => PAGE_TEMPLATES.map((t) => (
+                    <MenuItem key={t.id} onClick={() => { applyTemplate(t); close(); }}>
+                        <span>
+                            <span className="block text-koru-on-surface">{t.title}</span>
+                            <span className="block text-koru-caption font-normal">{t.description}</span>
+                        </span>
+                    </MenuItem>
+                ))}
+            </ToolbarMenu>
             {extra}
         </div>
+
+        {editor.isEmpty ? (
+            <div className="mb-6 grid gap-3 md:grid-cols-3">
+                {PAGE_TEMPLATES.map((t) => (
+                    <Card
+                        key={t.id}
+                        as="button"
+                        type="button"
+                        variant="interactive"
+                        tone="surface"
+                        padding="sm"
+                        radius="lg"
+                        onClick={() => applyTemplate(t)}
+                        className="cursor-pointer text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus"
+                    >
+                        <span className="block text-koru-label text-koru-on-surface">{t.title}</span>
+                        <span className="mt-0.5 block text-koru-caption text-koru-on-surface-variant">{t.description}</span>
+                    </Card>
+                ))}
+            </div>
+        ) : null}
+        </>
     );
 }
