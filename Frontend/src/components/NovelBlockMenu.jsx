@@ -185,7 +185,8 @@ export default function NovelBlockMenu() {
         draggedIndex.current = index;
         e.dataTransfer.effectAllowed = "move";
         e.dataTransfer.setData("text/plain", hoveredBlock.textContent || "");
-        e.dataTransfer.setDragImage(hoveredBlock, 0, 0);
+        // Chrome can crash painting a live iframe as a drag preview, so videos use the default ghost.
+        if (!hoveredBlock.querySelector("iframe")) e.dataTransfer.setDragImage(hoveredBlock, 0, 0);
     }, [editor, hoveredBlock]);
 
     useEffect(() => {

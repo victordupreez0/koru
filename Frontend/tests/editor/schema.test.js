@@ -6,6 +6,13 @@ import { CodeBlock } from "../../src/components/editor/blocks/CodeBlock";
 import { EmbedBlock } from "../../src/components/editor/blocks/EmbedBlock";
 import { FileBlock } from "../../src/components/editor/blocks/FileBlock";
 import { ImageBlock } from "../../src/components/editor/blocks/ImageBlock";
+import { PAGE_TEMPLATES } from "../../src/components/editor/templates";
+import Table from "@tiptap/extension-table";
+import TableCell from "@tiptap/extension-table-cell";
+import TableHeader from "@tiptap/extension-table-header";
+import TableRow from "@tiptap/extension-table-row";
+import TaskItem from "@tiptap/extension-task-item";
+import TaskList from "@tiptap/extension-task-list";
 
 const extensions = [
   StarterKit.configure({ codeBlock: false, dropcursor: false }),
@@ -38,6 +45,16 @@ describe("blocks survive a save and reload", () => {
   test("font size is part of the document", () => {
     const node = { type: "paragraph", attrs: { background: null }, content: [{ type: "text", text: "x", marks: [{ type: "textStyle", attrs: { fontSize: "1.25rem" } }] }] };
     expect(roundTrip([node])).toEqual([node]);
+  });
+});
+
+describe("page templates", () => {
+  const full = [...extensions, Table, TableRow, TableHeader, TableCell, TaskList, TaskItem];
+  test.each(PAGE_TEMPLATES.map((t) => [t.title, t]))("%s is a valid document", (_title, template) => {
+    const editor = new Editor({ extensions: full, content: { type: "doc", content: template.blocks } });
+    editor.state.doc.check();
+    expect(editor.getJSON().content.length).toBeGreaterThanOrEqual(template.blocks.length);
+    editor.destroy();
   });
 });
 

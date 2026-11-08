@@ -3,7 +3,7 @@ import { Badge } from "../UI";
 
 const STATES = {
     saved: { variant: "success", label: "Saved" },
-    dirty: { variant: "neutral", label: "Saving soon…" },
+    dirty: { variant: "neutral", label: "Saving…" },
     saving: { variant: "neutral", label: "Saving…" },
     error: { variant: "error", label: "Couldn't save, retrying" },
 };
