@@ -5,6 +5,19 @@ import { newBlockId, toEmbed } from "./pageDocument";
 import { BACKGROUNDS } from "./palette";
 import { nodesForFiles } from "./uploads";
 
+/** A block attribute holding structured data, kept in a data-* attribute so copy and paste preserves it. */
+export const jsonAttribute = (name, fallback) => ({
+    default: fallback,
+    parseHTML: (el) => {
+        try {
+            return JSON.parse(el.getAttribute(`data-${name}`)) ?? fallback;
+        } catch {
+            return fallback;
+        }
+    },
+    renderHTML: (attrs) => ({ [`data-${name}`]: JSON.stringify(attrs[name]) }),
+});
+
 /** Text style that can also carry a font size. */
 export const TextStyleWithSize = TextStyle.extend({
     addAttributes() {

@@ -12,6 +12,7 @@ import {
     Minus,
     MonitorPlay,
     Paperclip,
+    PenLine,
     Quote,
     Table as TableIcon,
     Type,
@@ -49,6 +50,7 @@ export const PAGE_ITEMS = [
     { title: "Video", description: "YouTube or Vimeo", searchTerms: ["youtube", "vimeo"], icon: icon(MonitorPlay), command: insertBlock("embed") },
     { title: "Embed", description: "Google Slides, Canva, Figma", searchTerms: ["slides", "canva", "figma", "iframe", "docs", "forms"], icon: icon(MonitorPlay), command: insertBlock("embed") },
     { title: "File", description: "Attach something to download", searchTerms: ["attachment", "pdf", "upload"], icon: icon(Paperclip), command: insertBlock("fileAttachment") },
+    { title: "Drawing", description: "Sketch a diagram", searchTerms: ["excalidraw", "sketch", "diagram", "shapes"], icon: icon(PenLine), command: insertBlock("drawing") },
 ];
 
 // Notes are personal rich text, so they only get the text blocks.

@@ -9,4 +9,12 @@ export default defineConfig({
   server: {
     port: 5200,
   },
+  // Excalidraw is only imported when a drawing is opened. Pre-bundling it here stops
+  // the dev server pausing to bundle it the first time someone clicks a drawing.
+  optimizeDeps: {
+    include: ['@excalidraw/excalidraw'],
+  },
+  define: {
+    'process.env.IS_PREACT': JSON.stringify('false'),
+  },
 })
