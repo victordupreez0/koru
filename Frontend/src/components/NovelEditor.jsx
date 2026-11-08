@@ -1,119 +1,44 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import {
-    EditorRoot,
-    EditorContent,
     EditorCommand,
+    EditorCommandEmpty,
     EditorCommandItem,
     EditorCommandList,
-    EditorCommandEmpty,
-    EditorBubble,
-    EditorBubbleItem,
-    StarterKit,
-    Placeholder,
-    TiptapUnderline,
-    Color,
-    TextStyle,
-    createSuggestionItems,
+    EditorContent,
+    EditorRoot,
+    handleCommandNavigation,
     useEditor,
 } from "novel";
-import {
-    Bold,
-    Italic,
-    Underline,
-    Strikethrough,
-    Code,
-    Heading1,
-    Heading2,
-    Heading3,
-    List,
-    ListOrdered,
-    Quote,
-} from "lucide-react";
 import NovelBlockMenu from "./NovelBlockMenu";
+import EditorBubbleMenu from "./editor/EditorBubbleMenu";
+import EditorToolbar from "./editor/EditorToolbar";
+import { buildExtensions } from "./editor/extensions";
+import { notesSlashItems, pageSlashItems } from "./editor/slashItems";
+import "./editor/editor.css";
 
-// Syncs the editable prop to the live Tiptap editor instance.
-// Novel only sets editability on creation, so we must do it imperatively on change.
-function EditableSync({ editable }) {
+const editorProps = {
+    handleDOMEvents: { keydown: (_view, event) => handleCommandNavigation(event) },
+};
+
+// Tiptap's own onCreate can report an instance that React's strict mode has already
+// thrown away, so hand callers the editor that is actually on screen.
+function ReportEditor({ onReady }) {
     const { editor } = useEditor();
     useEffect(() => {
-        if (editor && editor.isEditable !== editable) {
-            editor.setEditable(editable);
-        }
-    }, [editor, editable]);
+        if (editor) onReady?.({ editor });
+    }, [editor, onReady]);
     return null;
 }
 
-const DEFAULT_EXTENSIONS = [
-    StarterKit,
-    TiptapUnderline,
-    TextStyle,
-    Color,
-];
-
-const DEFAULT_SUGGESTION_ITEMS = createSuggestionItems([
-    {
-        title: "Heading 1",
-        searchTerms: ["title", "heading", "h1"],
-        command: ({ editor, range }) => {
-            editor.chain().focus().deleteRange(range).setNode("heading", { level: 1 }).run();
-        },
-    },
-    {
-        title: "Heading 2",
-        searchTerms: ["subtitle", "heading", "h2"],
-        command: ({ editor, range }) => {
-            editor.chain().focus().deleteRange(range).setNode("heading", { level: 2 }).run();
-        },
-    },
-    {
-        title: "Heading 3",
-        searchTerms: ["heading", "h3"],
-        command: ({ editor, range }) => {
-            editor.chain().focus().deleteRange(range).setNode("heading", { level: 3 }).run();
-        },
-    },
-    {
-        title: "Bullet List",
-        searchTerms: ["unordered", "list", "bullet"],
-        command: ({ editor, range }) => {
-            editor.chain().focus().deleteRange(range).toggleBulletList().run();
-        },
-    },
-    {
-        title: "Numbered List",
-        searchTerms: ["ordered", "list", "number"],
-        command: ({ editor, range }) => {
-            editor.chain().focus().deleteRange(range).toggleOrderedList().run();
-        },
-    },
-    {
-        title: "Quote",
-        searchTerms: ["blockquote", "quote"],
-        command: ({ editor, range }) => {
-            editor.chain().focus().deleteRange(range).toggleBlockquote().run();
-        },
-    },
-    {
-        title: "Code Block",
-        searchTerms: ["code", "codeblock"],
-        command: ({ editor, range }) => {
-            editor.chain().focus().deleteRange(range).toggleCodeBlock().run();
-        },
-    },
-]);
-
 /**
- * Shared Novel rich-text editor component.
+ * Shared Novel rich-text editor.
  *
- * Props:
- *   initialContent    – Tiptap JSON document to pre-populate the editor
- *   onUpdate          – ({ editor }) => void  called on every content change
- *   onCreate          – ({ editor }) => void  called once when editor mounts
- *   editable          – boolean (default true)
- *   placeholder       – string shown when editor is empty
- *   className         – extra classes applied to EditorContent
- *   showBubbleMenu    – render the floating text-format bubble (default true)
- *   showSlashCommands – render the "/" slash-command palette (default true)
+ *   initialContent – Tiptap JSON. Only read on mount, so give it a React key to load another document.
+ *   onUpdate       – ({ editor }) => void, on every change
+ *   onCreate       – ({ editor }) => void, once on mount
+ *   editable       – false renders the same document read-only
+ *   variant        – "page" has every block and the toolbar; "notes" is text only
+ *   toolbarExtra   – extra controls at the end of the toolbar
  */
 export default function NovelEditor({
     initialContent,
@@ -122,13 +47,11 @@ export default function NovelEditor({
     editable = true,
     placeholder = "Start writing...",
     className = "",
-    showBubbleMenu = true,
-    showSlashCommands = true,
+    variant = "page",
+    toolbarExtra,
 }) {
-    const extensions = [
-        ...DEFAULT_EXTENSIONS,
-        Placeholder.configure({ placeholder }),
-    ];
+    const slashItems = variant === "notes" ? notesSlashItems : pageSlashItems;
+    const extensions = useMemo(() => buildExtensions({ placeholder, slashItems }), [placeholder, slashItems]);
 
     return (
         <EditorRoot>
@@ -136,75 +59,38 @@ export default function NovelEditor({
                 initialContent={initialContent}
                 editable={editable}
                 extensions={extensions}
-                onCreate={onCreate}
+                editorProps={editorProps}
                 onUpdate={onUpdate}
                 className={`w-full max-w-none focus:outline-none ${className}`}
+                slotBefore={editable && variant === "page" ? <EditorToolbar items={slashItems} extra={toolbarExtra} /> : null}
             >
-                <EditableSync editable={editable} />
-
-                {showBubbleMenu && (
-                    <EditorBubble className="flex items-center gap-0.5 rounded-koru-md bg-koru-surface-container-lowest px-1.5 py-1 text-koru-on-surface shadow-koru-md ring-1 ring-inset ring-koru-outline-faint">
-                        <EditorBubbleItem onSelect={(editor) => editor.chain().focus().toggleBold().run()}>
-                            <button className="rounded-koru-sm p-1.5 text-koru-on-surface-variant transition-colors hover:bg-koru-surface-container-high hover:text-koru-on-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus" title="Bold"><Bold size={16} /></button>
-                        </EditorBubbleItem>
-                        <EditorBubbleItem onSelect={(editor) => editor.chain().focus().toggleItalic().run()}>
-                            <button className="rounded-koru-sm p-1.5 text-koru-on-surface-variant transition-colors hover:bg-koru-surface-container-high hover:text-koru-on-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus" title="Italic"><Italic size={16} /></button>
-                        </EditorBubbleItem>
-                        <EditorBubbleItem onSelect={(editor) => editor.chain().focus().toggleUnderline().run()}>
-                            <button className="rounded-koru-sm p-1.5 text-koru-on-surface-variant transition-colors hover:bg-koru-surface-container-high hover:text-koru-on-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus" title="Underline"><Underline size={16} /></button>
-                        </EditorBubbleItem>
-                        <EditorBubbleItem onSelect={(editor) => editor.chain().focus().toggleStrike().run()}>
-                            <button className="rounded-koru-sm p-1.5 text-koru-on-surface-variant transition-colors hover:bg-koru-surface-container-high hover:text-koru-on-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus" title="Strikethrough"><Strikethrough size={16} /></button>
-                        </EditorBubbleItem>
-                        <EditorBubbleItem onSelect={(editor) => editor.chain().focus().toggleCode().run()}>
-                            <button className="rounded-koru-sm p-1.5 text-koru-on-surface-variant transition-colors hover:bg-koru-surface-container-high hover:text-koru-on-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus" title="Inline Code"><Code size={16} /></button>
-                        </EditorBubbleItem>
-
-                        <div className="mx-1 h-5 w-px bg-koru-outline-variant" />
-
-                        <EditorBubbleItem onSelect={(editor) => editor.chain().focus().toggleHeading({ level: 1 }).run()}>
-                            <button className="rounded-koru-sm p-1.5 text-koru-on-surface-variant transition-colors hover:bg-koru-surface-container-high hover:text-koru-on-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus" title="Heading 1"><Heading1 size={16} /></button>
-                        </EditorBubbleItem>
-                        <EditorBubbleItem onSelect={(editor) => editor.chain().focus().toggleHeading({ level: 2 }).run()}>
-                            <button className="rounded-koru-sm p-1.5 text-koru-on-surface-variant transition-colors hover:bg-koru-surface-container-high hover:text-koru-on-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus" title="Heading 2"><Heading2 size={16} /></button>
-                        </EditorBubbleItem>
-                        <EditorBubbleItem onSelect={(editor) => editor.chain().focus().toggleHeading({ level: 3 }).run()}>
-                            <button className="rounded-koru-sm p-1.5 text-koru-on-surface-variant transition-colors hover:bg-koru-surface-container-high hover:text-koru-on-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus" title="Heading 3"><Heading3 size={16} /></button>
-                        </EditorBubbleItem>
-
-                        <div className="mx-1 h-5 w-px bg-koru-outline-variant" />
-
-                        <EditorBubbleItem onSelect={(editor) => editor.chain().focus().toggleBulletList().run()}>
-                            <button className="rounded-koru-sm p-1.5 text-koru-on-surface-variant transition-colors hover:bg-koru-surface-container-high hover:text-koru-on-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus" title="Bullet List"><List size={16} /></button>
-                        </EditorBubbleItem>
-                        <EditorBubbleItem onSelect={(editor) => editor.chain().focus().toggleOrderedList().run()}>
-                            <button className="rounded-koru-sm p-1.5 text-koru-on-surface-variant transition-colors hover:bg-koru-surface-container-high hover:text-koru-on-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus" title="Numbered List"><ListOrdered size={16} /></button>
-                        </EditorBubbleItem>
-                        <EditorBubbleItem onSelect={(editor) => editor.chain().focus().toggleBlockquote().run()}>
-                            <button className="rounded-koru-sm p-1.5 text-koru-on-surface-variant transition-colors hover:bg-koru-surface-container-high hover:text-koru-on-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus" title="Quote"><Quote size={16} /></button>
-                        </EditorBubbleItem>
-                    </EditorBubble>
-                )}
-
-                {editable && <NovelBlockMenu />}
-
-                {showSlashCommands && (
-                    <EditorCommand className="z-50 h-auto max-h-[330px] overflow-y-auto rounded-koru-md bg-koru-surface-container-lowest px-1 py-2 text-koru-on-surface shadow-koru-md ring-1 ring-inset ring-koru-outline-faint transition-all">
-                        <EditorCommandEmpty className="px-2 text-koru-on-surface-variant">No results</EditorCommandEmpty>
-                        <EditorCommandList>
-                            {DEFAULT_SUGGESTION_ITEMS.map((item) => (
-                                <EditorCommandItem
-                                    value={item.title}
-                                    onCommand={(val) => item.command(val)}
-                                    className="flex w-full items-center gap-2 cursor-pointer rounded-koru-sm px-2 py-1 text-left text-sm hover:bg-koru-surface-container-high aria-selected:bg-koru-surface-container-high"
-                                    key={item.title}
-                                >
-                                    <span>{item.title}</span>
-                                </EditorCommandItem>
-                            ))}
-                        </EditorCommandList>
-                    </EditorCommand>
-                )}
+                <ReportEditor onReady={onCreate} />
+                {editable ? (
+                    <>
+                        <EditorBubbleMenu />
+                        <NovelBlockMenu />
+                        <EditorCommand className="z-50 h-auto max-h-[330px] w-72 overflow-y-auto rounded-koru-md bg-koru-surface-container-lowest p-1.5 text-koru-on-surface shadow-koru-md ring-1 ring-inset ring-koru-outline-faint">
+                            <EditorCommandEmpty className="px-2 py-1 text-koru-label text-koru-on-surface-variant">No matching blocks</EditorCommandEmpty>
+                            <EditorCommandList>
+                                {slashItems.map((item) => (
+                                    <EditorCommandItem
+                                        key={item.title}
+                                        value={item.title}
+                                        keywords={item.searchTerms}
+                                        onCommand={(val) => item.command(val)}
+                                        className="flex w-full cursor-pointer items-center gap-2.5 rounded-koru-sm px-2 py-1.5 text-left hover:bg-koru-surface-container-high aria-selected:bg-koru-surface-container-high"
+                                    >
+                                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-koru-sm bg-koru-surface-container text-koru-on-surface-variant">{item.icon}</span>
+                                        <span className="min-w-0">
+                                            <span className="block text-koru-label text-koru-on-surface">{item.title}</span>
+                                            <span className="block truncate text-koru-caption text-koru-on-surface-variant">{item.description}</span>
+                                        </span>
+                                    </EditorCommandItem>
+                                ))}
+                            </EditorCommandList>
+                        </EditorCommand>
+                    </>
+                ) : null}
             </EditorContent>
         </EditorRoot>
     );

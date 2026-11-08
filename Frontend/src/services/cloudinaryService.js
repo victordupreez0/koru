@@ -25,6 +25,20 @@ export async function uploadImageToCloudinary(file) {
     return cloudinaryUpload(file, "image");
 }
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5299/api";
+
+// Editor uploads use Cloudinary when it's configured, otherwise the backend's own upload folder.
+export async function uploadEditorFile(file) {
+    if (CLOUD_NAME && UPLOAD_PRESET) return uploadFileToCloudinary(file);
+
+    const formData = new FormData();
+    formData.append("file", file);
+    const res = await fetch(`${API_BASE}/Submission/upload`, { method: "POST", body: formData });
+    if (!res.ok) throw new Error("The file couldn't be uploaded.");
+    const { url } = await res.json();
+    return new URL(url, API_BASE).href;
+}
+
 // Any file type — routes to the correct Cloudinary resource type
 export async function uploadFileToCloudinary(file) {
     const type = file.type || "";

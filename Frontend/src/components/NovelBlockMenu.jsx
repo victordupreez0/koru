@@ -9,6 +9,7 @@ import {
     Heading3,
     List,
     ListOrdered,
+    ListChecks,
     Quote,
     Code2,
     Copy,
@@ -17,6 +18,7 @@ import {
     Palette,
     ChevronRight,
 } from "lucide-react";
+import { BACKGROUNDS, TEXT_COLORS } from "./editor/palette";
 
 // ── Turn Into options (command + args for single-chain execution) ──
 const TURN_INTO_OPTIONS = [
@@ -26,31 +28,45 @@ const TURN_INTO_OPTIONS = [
     { label: "Heading 3", icon: Heading3, command: "setHeading", args: { level: 3 } },
     { label: "Bullet List", icon: List, command: "toggleBulletList", args: undefined },
     { label: "Numbered List", icon: ListOrdered, command: "toggleOrderedList", args: undefined },
+    { label: "Checklist", icon: ListChecks, command: "toggleTaskList", args: undefined },
     { label: "Quote", icon: Quote, command: "toggleBlockquote", args: undefined },
     { label: "Code Block", icon: Code2, command: "toggleCodeBlock", args: undefined },
 ];
 
-// ── Color options ──
-const TEXT_COLORS = [
-    { label: "Default", color: null },
-    { label: "Gray", color: "#9ca3af" },
-    { label: "Red", color: "#ef4444" },
-    { label: "Orange", color: "#f97316" },
-    { label: "Green", color: "#22c55e" },
-    { label: "Blue", color: "#3b82f6" },
-    { label: "Purple", color: "#8b5cf6" },
-];
+const BG_OPTIONS = [{ key: null, label: "None", color: null }, ...Object.entries(BACKGROUNDS).map(([key, v]) => ({ key, ...v }))];
 
-const BG_COLORS = [
-    { label: "None", color: null },
-    { label: "Gray", color: "#f3f4f6" },
-    { label: "Red", color: "#fef2f2" },
-    { label: "Orange", color: "#fff7ed" },
-    { label: "Yellow", color: "#fefce8" },
-    { label: "Green", color: "#f0fdf4" },
-    { label: "Blue", color: "#eff6ff" },
-    { label: "Purple", color: "#faf5ff" },
-];
+// Top-level DOM children map 1:1 to document children, apart from editor widgets.
+const topLevelBlocks = (editor) =>
+    Array.from(editor.view.dom.children).filter((el) => !el.matches(".ProseMirror-gapcursor, .ProseMirror-widget"));
+
+// Where a dragged block would land: the gap between blocks nearest the pointer's height.
+function dropGap(editor, clientY, wrapper) {
+    const blocks = topLevelBlocks(editor);
+    let index = blocks.findIndex((el) => {
+        const r = el.getBoundingClientRect();
+        return clientY < r.top + r.height / 2;
+    });
+    if (index === -1) index = blocks.length;
+    const wrapperTop = wrapper.getBoundingClientRect().top;
+    const top = index < blocks.length ? blocks[index].getBoundingClientRect().top - 3 : blocks[blocks.length - 1].getBoundingClientRect().bottom + 3;
+    return { index, top: top - wrapperTop };
+}
+
+function moveBlock(editor, fromIndex, toIndex) {
+    const { doc, tr } = editor.state;
+    if (toIndex === fromIndex || toIndex === fromIndex + 1) return;
+    const posOf = (i) => {
+        let pos = 0;
+        for (let n = 0; n < i; n++) pos += doc.child(n).nodeSize;
+        return pos;
+    };
+    const node = doc.child(fromIndex);
+    const from = posOf(fromIndex);
+    tr.delete(from, from + node.nodeSize);
+    tr.insert(tr.mapping.map(posOf(toIndex)), node);
+    editor.view.dispatch(tr);
+    editor.view.focus();
+}
 
 export default function NovelBlockMenu() {
     const { editor } = useEditor();
@@ -62,40 +78,24 @@ export default function NovelBlockMenu() {
     const menuRef = useRef(null);
     const handleHovered = useRef(false);
     const savedBlockPos = useRef(null); // Store block position when menu opens
+    const draggedIndex = useRef(null);
+    const [dropTop, setDropTop] = useState(null);
+    const [openUp, setOpenUp] = useState(false);
 
     // Find the closest top-level block by Y position
     const getClosestBlock = useCallback((clientY) => {
         if (!editor) return null;
-        const editorDom = editor.view.dom;
-        const children = Array.from(editorDom.children);
         let closest = null;
         let closestDist = Infinity;
-
-        for (const child of children) {
+        for (const child of topLevelBlocks(editor)) {
             const rect = child.getBoundingClientRect();
-            // Match if cursor is vertically within the block (with tolerance)
-            if (clientY >= rect.top - 4 && clientY <= rect.bottom + 4) {
-                const dist = Math.abs(clientY - (rect.top + rect.height / 2));
-                if (dist < closestDist) {
-                    closestDist = dist;
-                    closest = child;
-                }
+            const inside = clientY >= rect.top - 4 && clientY <= rect.bottom + 4;
+            const dist = (inside ? 0 : 1e6) + Math.abs(clientY - (rect.top + rect.height / 2));
+            if (dist < closestDist) {
+                closestDist = dist;
+                closest = child;
             }
         }
-
-        // Fallback: if no block matched, find the absolute nearest one
-        if (!closest && children.length > 0) {
-            for (const child of children) {
-                const rect = child.getBoundingClientRect();
-                const mid = rect.top + rect.height / 2;
-                const dist = Math.abs(clientY - mid);
-                if (dist < closestDist) {
-                    closestDist = dist;
-                    closest = child;
-                }
-            }
-        }
-
         return closest;
     }, [editor]);
 
@@ -164,25 +164,72 @@ export default function NovelBlockMenu() {
         return () => document.removeEventListener("mousedown", onClick);
     }, [menuOpen]);
 
-    // ── Helper: get ProseMirror position for a DOM block ──
+    // ── Helper: find a DOM block's node and start position in the document ──
     const getBlockPos = useCallback((block) => {
         if (!block || !editor) return null;
-        try {
-            const pos = editor.view.posAtDOM(block, 0);
-            const resolvedPos = editor.state.doc.resolve(pos);
-            const blockStart = resolvedPos.before(1);
-            const node = editor.state.doc.nodeAt(blockStart);
-            return node ? { blockStart, node } : null;
-        } catch {
-            return null;
+        const { doc } = editor.state;
+        const index = topLevelBlocks(editor).indexOf(block);
+        if (index < 0 || index >= doc.childCount) return null;
+        let blockStart = 0;
+        for (let i = 0; i < index; i++) blockStart += doc.child(i).nodeSize;
+        return { blockStart, node: doc.child(index) };
+    }, [editor]);
+
+    // Dragging the grip moves the whole block to the gap shown by the purple line.
+    const handleDragStart = useCallback((e) => {
+        const index = topLevelBlocks(editor).indexOf(hoveredBlock);
+        if (index < 0) {
+            e.preventDefault();
+            return;
         }
+        draggedIndex.current = index;
+        e.dataTransfer.effectAllowed = "move";
+        e.dataTransfer.setData("text/plain", hoveredBlock.textContent || "");
+        e.dataTransfer.setDragImage(hoveredBlock, 0, 0);
+    }, [editor, hoveredBlock]);
+
+    useEffect(() => {
+        if (!editor) return;
+        const wrapper = editor.view.dom.closest(".novel-editor-wrapper");
+        const area = wrapper?.parentElement;
+        if (!area) return;
+
+        const onDragOver = (e) => {
+            if (draggedIndex.current === null) return;
+            e.preventDefault();
+            setDropTop(dropGap(editor, e.clientY, wrapper).top);
+        };
+        // Capture phase, so ProseMirror doesn't also treat this as dropped text.
+        const onDrop = (e) => {
+            if (draggedIndex.current === null) return;
+            e.preventDefault();
+            e.stopPropagation();
+            moveBlock(editor, draggedIndex.current, dropGap(editor, e.clientY, wrapper).index);
+            draggedIndex.current = null;
+            setDropTop(null);
+        };
+        const onDragEnd = () => {
+            draggedIndex.current = null;
+            setDropTop(null);
+        };
+
+        area.addEventListener("dragover", onDragOver, true);
+        area.addEventListener("drop", onDrop, true);
+        area.addEventListener("dragend", onDragEnd, true);
+        return () => {
+            area.removeEventListener("dragover", onDragOver, true);
+            area.removeEventListener("drop", onDrop, true);
+            area.removeEventListener("dragend", onDragEnd, true);
+        };
     }, [editor]);
 
     // ── Action Handlers ──
     const selectBlock = useCallback(() => {
-        if (!hoveredBlock || !editor) return;
         const info = getBlockPos(hoveredBlock);
-        if (!info) { editor.commands.focus(); return; }
+        if (!info) {
+            editor?.commands.focus();
+            return;
+        }
         const { blockStart, node } = info;
         // For empty blocks, just place cursor inside; for blocks with content, select all
         if (node.textContent.length === 0) {
@@ -193,16 +240,11 @@ export default function NovelBlockMenu() {
     }, [hoveredBlock, editor, getBlockPos]);
 
     const handleAddBlock = useCallback(() => {
-        if (!hoveredBlock || !editor) return;
         const info = getBlockPos(hoveredBlock);
-        if (info) {
-            const { blockStart, node } = info;
-            const insertPos = blockStart + node.nodeSize;
-            editor.chain().focus().insertContentAt(insertPos, { type: "paragraph" }).run();
-        } else {
-            // Fallback: just add a paragraph at the end
-            editor.chain().focus().setTextSelection(editor.state.doc.content.size - 1).createParagraphNear().run();
-        }
+        if (!info) return;
+        const insertPos = info.blockStart + info.node.nodeSize;
+        // Inserting a "/" opens the slash menu straight away, like Notion's plus button.
+        editor.chain().insertContentAt(insertPos, { type: "paragraph", content: [{ type: "text", text: "/" }] }).setTextSelection(insertPos + 2).focus().run();
     }, [hoveredBlock, editor, getBlockPos]);
 
     const handleCopy = useCallback(() => {
@@ -213,19 +255,16 @@ export default function NovelBlockMenu() {
     }, [hoveredBlock]);
 
     const handleDuplicate = useCallback(() => {
-        if (!hoveredBlock || !editor) return;
         const info = getBlockPos(hoveredBlock);
         if (info) {
             const { blockStart, node } = info;
-            const insertPos = blockStart + node.nodeSize;
-            editor.chain().focus().insertContentAt(insertPos, node.toJSON()).run();
+            editor.chain().focus().insertContentAt(blockStart + node.nodeSize, node.toJSON()).run();
         }
         setMenuOpen(false);
         setSubMenu(null);
     }, [hoveredBlock, editor, getBlockPos]);
 
     const handleDelete = useCallback(() => {
-        if (!hoveredBlock || !editor) return;
         const info = getBlockPos(hoveredBlock);
         if (info) {
             const { blockStart, node } = info;
@@ -284,24 +323,33 @@ export default function NovelBlockMenu() {
         setSubMenu(null);
     }, [editor, selectBlock]);
 
-    const handleBgColor = useCallback((color) => {
-        if (!editor || !hoveredBlock) return;
-        if (color) {
-            hoveredBlock.style.backgroundColor = color;
-            hoveredBlock.style.borderRadius = "8px";
-            hoveredBlock.style.padding = "4px 8px";
-        } else {
-            hoveredBlock.style.backgroundColor = "";
-            hoveredBlock.style.borderRadius = "";
-            hoveredBlock.style.padding = "";
+    const handleBgColor = useCallback((background) => {
+        const info = getBlockPos(hoveredBlock);
+        if (info) {
+            const { blockStart, node } = info;
+            editor.chain().focus().command(({ tr }) => {
+                tr.setNodeMarkup(blockStart, undefined, { ...node.attrs, background });
+                return true;
+            }).run();
         }
         setMenuOpen(false);
         setSubMenu(null);
-    }, [editor, hoveredBlock]);
+    }, [editor, hoveredBlock, getBlockPos]);
 
     if (!handlePos) return null;
 
+    const dropLine = dropTop === null ? null : (
+        <div aria-hidden="true" className="pointer-events-none absolute z-30 h-[3px] rounded-koru-pill bg-koru-primary" style={{ top: dropTop, left: 0, right: 0 }} />
+    );
+
+    // Blocks like images and quizzes can be moved, copied and deleted but not restyled as text.
+    const hovered = getBlockPos(hoveredBlock)?.node;
+    const isTextual = !!hovered && !hovered.isAtom;
+    const canHaveBackground = hovered?.type.name === "paragraph" || hovered?.type.name === "heading";
+
     return (
+        <>
+        {dropLine}
         <div
             ref={containerRef}
             className="absolute flex items-center gap-0.5 z-40"
@@ -327,24 +375,33 @@ export default function NovelBlockMenu() {
         >
             {/* Plus button */}
             <button
+                type="button"
                 onClick={handleAddBlock}
-                className="rounded-koru-sm p-1 text-koru-outline transition-all hover:bg-koru-surface-container-high hover:text-koru-on-surface-variant focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus"
+                className="cursor-pointer rounded-koru-sm p-1 text-koru-outline transition-all hover:bg-koru-surface-container-high hover:text-koru-on-surface-variant focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus"
                 title="Add block below"
+                aria-label="Add block below"
             >
                 <Plus size={16} />
             </button>
 
-            {/* Grip / Menu button */}
+            {/* Grip: drag to move, click for the menu */}
             <button
-                onClick={() => {
+                type="button"
+                draggable
+                onDragStart={handleDragStart}
+                onClick={(e) => {
+                    setOpenUp(e.currentTarget.getBoundingClientRect().bottom + 260 > window.innerHeight);
                     // Save the block position before opening the menu
                     const info = getBlockPos(hoveredBlock);
                     savedBlockPos.current = info ? info.blockStart + 1 : null;
                     setMenuOpen(!menuOpen);
                     setSubMenu(null);
                 }}
-                className="rounded-koru-sm p-1 text-koru-outline transition-all hover:bg-koru-surface-container-high hover:text-koru-on-surface-variant focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus cursor-grab"
-                title="Block menu"
+                className="rounded-koru-sm p-1 text-koru-outline transition-all hover:bg-koru-surface-container-high hover:text-koru-on-surface-variant focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus cursor-grab active:cursor-grabbing"
+                title="Drag to move, click for options"
+                aria-label="Block options"
+                aria-haspopup="menu"
+                aria-expanded={menuOpen}
             >
                 <GripVertical size={16} />
             </button>
@@ -353,84 +410,105 @@ export default function NovelBlockMenu() {
             {menuOpen && (
                 <div
                     ref={menuRef}
-                    className="absolute left-0 top-8 w-56 rounded-koru-md bg-koru-surface-container-lowest py-1 text-sm text-koru-on-surface shadow-koru-lg ring-1 ring-inset ring-koru-outline-faint z-50"
+                    role="menu"
+                    className={`absolute left-0 ${openUp ? "bottom-8" : "top-8"} w-56 rounded-koru-md bg-koru-surface-container-lowest py-1 text-sm text-koru-on-surface shadow-koru-lg ring-1 ring-inset ring-koru-outline-faint z-50`}
                 >
-                    {/* Turn Into */}
-                    <div className="relative">
-                        <button
-                            className="flex items-center justify-between w-full px-3 py-2 hover:bg-koru-surface-container transition-colors"
-                            onMouseEnter={() => setSubMenu("turnInto")}
-                        >
-                            <span className="flex items-center gap-2"><Type size={14} /> Turn into</span>
-                            <ChevronRight size={14} className="text-koru-on-surface-variant" />
-                        </button>
-                        {subMenu === "turnInto" && (
-                            <div className="absolute left-full top-0 ml-1 w-48 rounded-koru-md bg-koru-surface-container-lowest py-1 text-koru-on-surface shadow-koru-lg ring-1 ring-inset ring-koru-outline-faint z-50">
-                                {TURN_INTO_OPTIONS.map((opt) => (
-                                    <button
-                                        key={opt.label}
-                                        className="flex items-center gap-2 w-full px-3 py-2 hover:bg-koru-surface-container transition-colors text-left"
-                                        onClick={() => handleTurnInto(opt)}
-                                    >
-                                        <opt.icon size={14} className="text-koru-on-surface-variant" />
-                                        {opt.label}
-                                    </button>
-                                ))}
+                    {isTextual && (
+                        <>
+                            {/* Turn Into */}
+                            <div className="relative">
+                                <button
+                                    type="button"
+                                    className="flex items-center justify-between w-full px-3 py-2 hover:bg-koru-surface-container transition-colors"
+                                    onMouseEnter={() => setSubMenu("turnInto")}
+                                    onClick={() => setSubMenu("turnInto")}
+                                >
+                                    <span className="flex items-center gap-2"><Type size={14} /> Turn into</span>
+                                    <ChevronRight size={14} className="text-koru-on-surface-variant" />
+                                </button>
+                                {subMenu === "turnInto" && (
+                                    <div className={`absolute left-full ${openUp ? "bottom-0" : "top-0"} ml-1 w-48 rounded-koru-md bg-koru-surface-container-lowest py-1 text-koru-on-surface shadow-koru-lg ring-1 ring-inset ring-koru-outline-faint z-50`}>
+                                        {TURN_INTO_OPTIONS.map((opt) => (
+                                            <button
+                                                type="button"
+                                                key={opt.label}
+                                                className="flex items-center gap-2 w-full px-3 py-2 hover:bg-koru-surface-container transition-colors text-left"
+                                                onClick={() => handleTurnInto(opt)}
+                                            >
+                                                <opt.icon size={14} className="text-koru-on-surface-variant" />
+                                                {opt.label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
-                        )}
-                    </div>
 
-                    {/* Color */}
-                    <div className="relative">
-                        <button
-                            className="flex items-center justify-between w-full px-3 py-2 hover:bg-koru-surface-container transition-colors"
-                            onMouseEnter={() => setSubMenu("color")}
-                        >
-                            <span className="flex items-center gap-2"><Palette size={14} /> Color</span>
-                            <ChevronRight size={14} className="text-koru-on-surface-variant" />
-                        </button>
-                        {subMenu === "color" && (
-                            <div className="absolute left-full top-0 ml-1 w-48 rounded-koru-md bg-koru-surface-container-lowest py-1 text-koru-on-surface shadow-koru-lg ring-1 ring-inset ring-koru-outline-faint z-50">
-                                <div className="px-3 py-1.5 text-koru-caption font-medium uppercase tracking-widest text-koru-on-surface-variant">Text Color</div>
-                                {TEXT_COLORS.map((c) => (
-                                    <button
-                                        key={c.label + "-text"}
-                                        className="flex items-center gap-2 w-full px-3 py-1.5 hover:bg-koru-surface-container transition-colors text-left"
-                                        onClick={() => handleTextColor(c.color)}
-                                    >
-                                        <span className="w-4 h-4 rounded-full border border-koru-outline-variant shrink-0" style={{ backgroundColor: c.color || "var(--color-koru-on-surface)" }} />
-                                        {c.label}
-                                    </button>
-                                ))}
-                                <div className="my-1 border-t border-koru-outline-faint" />
-                                <div className="px-3 py-1.5 text-koru-caption font-medium uppercase tracking-widest text-koru-on-surface-variant">Background</div>
-                                {BG_COLORS.map((c) => (
-                                    <button
-                                        key={c.label + "-bg"}
-                                        className="flex items-center gap-2 w-full px-3 py-1.5 hover:bg-koru-surface-container transition-colors text-left"
-                                        onClick={() => handleBgColor(c.color)}
-                                    >
-                                        <span className="w-4 h-4 rounded border border-koru-outline-variant shrink-0" style={{ backgroundColor: c.color || "var(--color-koru-surface-container-lowest)" }} />
-                                        {c.label}
-                                    </button>
-                                ))}
+                            {/* Color */}
+                            <div className="relative">
+                                <button
+                                    type="button"
+                                    className="flex items-center justify-between w-full px-3 py-2 hover:bg-koru-surface-container transition-colors"
+                                    onMouseEnter={() => setSubMenu("color")}
+                                    onClick={() => setSubMenu("color")}
+                                >
+                                    <span className="flex items-center gap-2"><Palette size={14} /> Color</span>
+                                    <ChevronRight size={14} className="text-koru-on-surface-variant" />
+                                </button>
+                                {subMenu === "color" && (
+                                    <div className={`absolute left-full ${openUp ? "bottom-0" : "top-0"} ml-1 w-52 rounded-koru-md bg-koru-surface-container-lowest p-3 text-koru-on-surface shadow-koru-lg ring-1 ring-inset ring-koru-outline-faint z-50`}>
+                                        <div className="mb-2 text-koru-caption font-medium uppercase tracking-widest text-koru-on-surface-variant">Text</div>
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {TEXT_COLORS.map((c) => (
+                                                <button
+                                                    type="button"
+                                                    key={c.label}
+                                                    title={c.label}
+                                                    aria-label={`Text ${c.label}`}
+                                                    className="h-6 w-6 cursor-pointer rounded-full ring-1 ring-inset ring-koru-outline-variant transition-transform hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus"
+                                                    style={{ backgroundColor: c.color || "var(--color-koru-on-surface)" }}
+                                                    onClick={() => handleTextColor(c.color)}
+                                                />
+                                            ))}
+                                        </div>
+                                        {canHaveBackground && (
+                                            <>
+                                                <div className="mb-2 mt-3 text-koru-caption font-medium uppercase tracking-widest text-koru-on-surface-variant">Background</div>
+                                                <div className="flex flex-wrap gap-1.5">
+                                                    {BG_OPTIONS.map((c) => (
+                                                        <button
+                                                            type="button"
+                                                            key={c.label}
+                                                            title={c.label}
+                                                            aria-label={`Background ${c.label}`}
+                                                            className="h-6 w-6 cursor-pointer rounded-koru-xs ring-1 ring-inset ring-koru-outline-variant transition-transform hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koru-focus"
+                                                            style={{ backgroundColor: c.color || "var(--color-koru-surface-container-lowest)" }}
+                                                            onClick={() => handleBgColor(c.key)}
+                                                        />
+                                                    ))}
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
+                                )}
                             </div>
-                        )}
-                    </div>
 
-                    <div className="my-1 border-t border-koru-outline-faint" />
+                            <div className="my-1 border-t border-koru-outline-faint" />
 
-                    {/* Copy */}
-                    <button
-                        className="flex items-center gap-2 w-full px-3 py-2 hover:bg-koru-surface-container transition-colors"
-                        onClick={handleCopy}
-                        onMouseEnter={() => setSubMenu(null)}
-                    >
-                        <Copy size={14} className="text-koru-on-surface-variant" /> Copy
-                    </button>
+                            {/* Copy */}
+                            <button
+                                type="button"
+                                className="flex items-center gap-2 w-full px-3 py-2 hover:bg-koru-surface-container transition-colors"
+                                onClick={handleCopy}
+                                onMouseEnter={() => setSubMenu(null)}
+                            >
+                                <Copy size={14} className="text-koru-on-surface-variant" /> Copy
+                            </button>
+                        </>
+                    )}
 
                     {/* Duplicate */}
                     <button
+                        type="button"
                         className="flex items-center gap-2 w-full px-3 py-2 hover:bg-koru-surface-container transition-colors"
                         onClick={handleDuplicate}
                         onMouseEnter={() => setSubMenu(null)}
@@ -442,6 +520,7 @@ export default function NovelBlockMenu() {
 
                     {/* Delete */}
                     <button
+                        type="button"
                         className="flex items-center gap-2 w-full px-3 py-2 text-koru-error hover:bg-koru-error-container transition-colors"
                         onClick={handleDelete}
                         onMouseEnter={() => setSubMenu(null)}
@@ -451,5 +530,6 @@ export default function NovelBlockMenu() {
                 </div>
             )}
         </div>
+        </>
     );
 }

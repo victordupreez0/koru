@@ -7,6 +7,7 @@ module.exports = {
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
     '\\.(png|jpg|jpeg|gif|svg|webp)$': '<rootDir>/tests/__mocks__/fileMock.cjs',
     '^canvas-confetti$': '<rootDir>/tests/__mocks__/canvasConfetti.cjs',
+    '^lowlight$': '<rootDir>/tests/__mocks__/lowlight.cjs',
   },
   transform: {
     '^.+\\.(js|jsx)$': 'babel-jest',

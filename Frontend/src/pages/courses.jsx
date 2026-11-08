@@ -1,4 +1,5 @@
 import React from "react";
+import { useSearchParams } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 
 // View components
@@ -10,8 +11,11 @@ import CreateCoursePage from "./courses/createCoursePage";
 // The unified Courses route - acts as a traffic controller based on user role
 export default function Courses() {
   const { role } = useAuth();
-  const searchParams = new URLSearchParams(window.location.search);
-  const viewAs = searchParams.get("viewAs");
+  const [hashParams] = useSearchParams();
+  // The app uses HashRouter, so links put viewAs in the hash; the admin preview iframes use the real query string.
+  const requestedView = hashParams.get("viewAs") ?? new URLSearchParams(window.location.search).get("viewAs");
+  // Only staff can look through another role's eyes.
+  const viewAs = role === "teacher" || role === "admin" ? requestedView : null;
 
   // Route intercept for course creation
   const path = window.location.pathname;
