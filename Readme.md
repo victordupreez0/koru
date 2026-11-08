@@ -1,4 +1,4 @@
-<img width="7188" height="4968" alt="KoruPromo (1)" src="https://github.com/user-attachments/assets/a761ac91-3da9-476c-80b9-ffda67503267" />
+<img src="docs/media/koru-hero.png" alt="Koru: one place to teach, learn and run a campus. Courses, timetables, attendance, grading and an AI teaching assistant, built for students, lecturers and admins with React 19, a .NET 10 API, Electron and PostgreSQL" width="100%" />
 
 
 # Koru
@@ -6,7 +6,14 @@
 Koru is a full-stack Learning Management System (LMS) built to centralise academic workflows into a single platform. Designed as a cross-platform desktop application, Koru provides dedicated experiences for Students, Teachers, and Administrators while ensuring compliance with South Africa's Protection of Personal Information Act (POPIA).
 
 By combining course management, scheduling, assessments, analytics, and communication tools into one ecosystem, Koru eliminates the inefficiencies caused by fragmented educational systems.
-<img width="6337" height="3282" alt="TeacherView" src="https://github.com/user-attachments/assets/2840f1ff-d27f-4806-b7fe-9908730f6d4c" />
+
+<p align="center">
+  <img src="docs/media/koru-centrepiece.png" alt="Koru lecturer dashboard surrounded by its key features: check-in code, class average, grade distribution, AI assistant answer, at-risk students and today's classes" width="100%" />
+</p>
+
+<p align="center">
+  <img src="docs/media/koru-tour.gif" alt="A 20-second tour of the lecturer view: dashboard, calendar, analytics and the AI assistant" width="100%" />
+</p>
 
 
 
@@ -137,9 +144,10 @@ The application was developed as a native desktop experience using Electron, all
 
 
 ## Features
-<img width="3851" height="2121" alt="StudentFeatures" src="https://github.com/user-attachments/assets/2ec9db5d-a60f-42f0-86ca-ddc5840846f1" />
 
 ### Student Features
+
+<img src="docs/media/koru-tile-check-in.png" alt="Check in with a 4-digit code from the lecturer" width="49%" /> <img src="docs/media/koru-tile-progress.png" alt="Track every grade across the year: a student's monthly grade trend" width="49%" />
 
 * View enrolled courses
 * Access course materials
@@ -152,9 +160,10 @@ The application was developed as a native desktop experience using Electron, all
 * Monitor upcoming deadlines
 
 
-<img width="6337" height="3282" alt="TeacherView (1)" src="https://github.com/user-attachments/assets/de93c026-2654-48a2-90c4-342dc6666953" />
-
 ### Teacher Features
+
+<img src="docs/media/koru-tile-day.png" alt="Your teaching day at a glance: today's classes and the to-do list" width="49%" /> <img src="docs/media/koru-tile-week.png" alt="Your week, built from the timetable: this week's classes, meetings and deadlines" width="49%" />
+<img src="docs/media/koru-tile-falling-behind.png" alt="See who's falling behind: DV300 students filtered to At Risk" width="49%" /> <img src="docs/media/koru-tile-ask.png" alt="Ask about your classes in plain English: the assistant lists three students who need a check-in" width="49%" />
 
 * Manage courses and modules
 * Upload learning materials
@@ -166,12 +175,9 @@ The application was developed as a native desktop experience using Electron, all
 * Manage teaching schedules
 * Create calendar events and reminders
 
-<img width="8448" height="4377" alt="AdminView" src="https://github.com/user-attachments/assets/cd1988be-8ad4-4f8b-8bb1-6c6ecbfc5980" />
-
-
-
 ### Administrator Features
 
+<img src="docs/media/koru-tile-semester.png" alt="Set up a semester from one screen: courses, lecturers and students side by side" width="49%" /> <img src="docs/media/koru-shot-admin-dashboard.png" alt="Admin dashboard" width="49%" />
 
 * Full user management
 * Create and manage courses
@@ -179,6 +185,16 @@ The application was developed as a native desktop experience using Electron, all
 * Assign teachers to courses
 * Monitor institutional activity
 * Maintain oversight across the platform
+
+<details>
+<summary><b>More screenshots</b></summary>
+<br />
+
+<img src="docs/media/koru-shot-lecturer-dashboard.png" alt="Lecturer dashboard" width="49%" /> <img src="docs/media/koru-shot-student-dashboard.png" alt="Student dashboard" width="49%" />
+<img src="docs/media/koru-shot-analytics.png" alt="Lecturer analytics" width="49%" /> <img src="docs/media/koru-shot-calendar.png" alt="Calendar" width="49%" />
+<img src="docs/media/koru-shot-assistant.png" alt="AI assistant" width="49%" />
+
+</details>
 
 ## **Meet the Team** 
 <img width="977" height="475" alt="Screenshot 2026-06-09 160206" src="https://github.com/user-attachments/assets/f4110907-ecd7-4b92-ba05-407dfca4386f" />
