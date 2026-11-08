@@ -111,6 +111,13 @@ namespace LearnOnline.Data
                 return;
             }
 
+            // Everything below wipes every table. Never do that to a database that already
+            // has people in it unless someone has explicitly asked for it.
+            if (context.Users.Any() && Environment.GetEnvironmentVariable("ALLOW_DESTRUCTIVE_SEED") != "true")
+            {
+                return;
+            }
+
             // Rebuild Announcements table (prevents schema drift across restarts)
             context.Database.ExecuteSqlRaw(@"DROP TABLE IF EXISTS ""Announcements"" CASCADE;");
             context.Database.ExecuteSqlRaw(@"
