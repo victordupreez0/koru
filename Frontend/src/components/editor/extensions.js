@@ -17,6 +17,7 @@ import TableRow from "@tiptap/extension-table-row";
 import { BlockBackground, PasteAndDrop, TextStyleWithSize, TrailingParagraph, UniqueBlockIds } from "./behaviours";
 import { CalloutBlock } from "./blocks/CalloutBlock";
 import { CodeBlock } from "./blocks/CodeBlock";
+import { DrawingBlock } from "./blocks/DrawingBlock";
 import { EmbedBlock } from "./blocks/EmbedBlock";
 import { FileBlock } from "./blocks/FileBlock";
 import { ImageBlock } from "./blocks/ImageBlock";
@@ -45,6 +46,7 @@ export const contentExtensions = [
     ImageBlock,
     EmbedBlock,
     FileBlock,
+    DrawingBlock,
     BlockBackground,
     UniqueBlockIds,
     TrailingParagraph,

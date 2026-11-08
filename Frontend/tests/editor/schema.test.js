@@ -3,6 +3,7 @@ import StarterKit from "@tiptap/starter-kit";
 import { BlockBackground, PasteAndDrop, TextStyleWithSize, TrailingParagraph, UniqueBlockIds, cleanPastedHtml } from "../../src/components/editor/behaviours";
 import { CalloutBlock } from "../../src/components/editor/blocks/CalloutBlock";
 import { CodeBlock } from "../../src/components/editor/blocks/CodeBlock";
+import { DrawingBlock } from "../../src/components/editor/blocks/DrawingBlock";
 import { EmbedBlock } from "../../src/components/editor/blocks/EmbedBlock";
 import { FileBlock } from "../../src/components/editor/blocks/FileBlock";
 import { ImageBlock } from "../../src/components/editor/blocks/ImageBlock";
@@ -17,7 +18,7 @@ import TaskList from "@tiptap/extension-task-list";
 const extensions = [
   StarterKit.configure({ codeBlock: false, dropcursor: false }),
   TextStyleWithSize, BlockBackground, UniqueBlockIds, TrailingParagraph, PasteAndDrop,
-  CodeBlock, CalloutBlock, ImageBlock, EmbedBlock, FileBlock,
+  CodeBlock, CalloutBlock, ImageBlock, EmbedBlock, FileBlock, DrawingBlock,
 ];
 
 const roundTrip = (content) => {
@@ -35,6 +36,7 @@ describe("blocks survive a save and reload", () => {
     ["embed", { type: "embed", attrs: { url: "https://vimeo.com/1" } }],
     ["file", { type: "fileAttachment", attrs: { url: "https://a.test/f.pdf", name: "f.pdf", size: 1234, uploadId: null } }],
     ["code", { type: "codeBlock", attrs: { language: "python" }, content: [{ type: "text", text: "a < b" }] }],
+    ["drawing", { type: "drawing", attrs: { elements: [{ id: "a", type: "rectangle" }], svg: "<svg></svg>", alt: "A box" } }],
   ])("%s", (_name, node) => expect(roundTrip([node])).toEqual([node]));
 
   test("background colour is part of the document", () => {
