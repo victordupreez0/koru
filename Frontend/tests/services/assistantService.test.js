@@ -1,4 +1,4 @@
-import { createSseParser, streamAssistant } from '../../src/services/assistantService.js';
+﻿import { createSseParser, generateQuizDraft, streamAssistant } from '../../src/services/assistantService.js';
 
 function streamOf(chunks) {
   const enc = new TextEncoder();
@@ -15,6 +15,26 @@ const mockStream = (chunks, extra = {}) => {
 };
 
 const RESULT = { ok: true, message: 'Hello **there**', question: 'Which course?', context: { summary: 'your 2 courses' }, provider: 'deepseek', fallback: false };
+
+describe("generateQuizDraft", () => {
+  afterEach(() => delete global.fetch);
+
+  test("returns the drafted questions", async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({ questions: [{ question: "q" }] }) });
+    await expect(generateQuizDraft("page text", 3, "t1")).resolves.toEqual([{ question: "q" }]);
+    expect(JSON.parse(global.fetch.mock.calls[0][1].body)).toEqual({ text: "page text", count: 3, userId: "t1" });
+  });
+
+  test("passes on the server's explanation when AI is unavailable", async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: false, json: async () => ({ message: "Not available" }) });
+    await expect(generateQuizDraft("x", 3, "t1")).rejects.toThrow("Not available");
+  });
+
+  test("still explains itself if the response isn't JSON", async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: false, json: async () => { throw new Error("bad"); } });
+    await expect(generateQuizDraft("x", 3, "t1")).rejects.toThrow("write the questions yourself");
+  });
+});
 
 describe('createSseParser', () => {
   it('handles chunks split mid-line and comments', () => {
