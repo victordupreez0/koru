@@ -1,11 +1,35 @@
 <img src="docs/media/koru-hero.png" alt="Koru: one place to teach, learn and run a campus. Courses, timetables, attendance, grading and an AI teaching assistant, built for students, lecturers and admins with React 19, a .NET 10 API, Electron and PostgreSQL" width="100%" />
 
-
 # Koru
 
-Koru is a full-stack Learning Management System (LMS) built to centralise academic workflows into a single platform. Designed as a cross-platform desktop application, Koru provides dedicated experiences for Students, Teachers, and Administrators while ensuring compliance with South Africa's Protection of Personal Information Act (POPIA).
+**A cross-platform desktop learning management system for students, lecturers and administrators.**
 
-By combining course management, scheduling, assessments, analytics, and communication tools into one ecosystem, Koru eliminates the inefficiencies caused by fragmented educational systems.
+Built by Chloe Robinson, Danae Swart, Rikus Pretorius and Victor du Preez · Version 2.0 · November 2026
+
+![React](https://img.shields.io/badge/React_19-161b22?style=flat-square&logo=react&logoColor=61DAFB) ![TypeScript](https://img.shields.io/badge/TypeScript-161b22?style=flat-square&logo=typescript&logoColor=3178C6) ![Electron](https://img.shields.io/badge/Electron-161b22?style=flat-square&logo=electron&logoColor=9FEAF9) ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-161b22?style=flat-square&logo=tailwindcss&logoColor=06B6D4) ![MUI X Charts](https://img.shields.io/badge/MUI_X_Charts-161b22?style=flat-square&logo=mui&logoColor=007FFF) ![ASP.NET Core](https://img.shields.io/badge/ASP.NET_Core_10-161b22?style=flat-square&logo=dotnet&logoColor=A57BE8) ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-161b22?style=flat-square&logo=postgresql&logoColor=6CA6E0) ![Docker](https://img.shields.io/badge/Docker-161b22?style=flat-square&logo=docker&logoColor=2496ED) ![Jest](https://img.shields.io/badge/Jest-161b22?style=flat-square&logo=jest&logoColor=C21325) ![xUnit](https://img.shields.io/badge/xUnit-161b22?style=flat-square&logo=dotnet&logoColor=A57BE8)
+
+<details>
+<summary><b>Table of contents</b></summary>
+
+1. [About the project](#about-the-project)
+2. [What's new in version 2.0](#whats-new-in-version-20)
+3. [Getting started](#getting-started)
+4. [Features](#features)
+5. [Development process](#development-process)
+6. [Testing](#testing)
+7. [Feedback and iteration](#feedback-and-iteration)
+8. [Conclusion](#conclusion)
+9. [Team, licence and acknowledgements](#team-licence-and-acknowledgements)
+
+</details>
+
+---
+
+## About the project
+
+Colleges often run teaching, scheduling, grading and administration on separate tools that don't talk to each other. Staff duplicate work, students miss deadlines and nobody gets a clear view of how a class is doing.
+
+Koru brings all of it into one desktop app with a shared database. Students, lecturers and administrators each get a workspace built around their own work: courses, assignments, grading, attendance, timetables, analytics and an AI teaching assistant. It runs natively on Windows and macOS through Electron, and it is **POPIA-compliant by design**: it never stores South African ID numbers or dates of birth.
 
 <p align="center">
   <img src="docs/media/koru-centrepiece.png" alt="Koru lecturer dashboard surrounded by its key features: check-in code, class average, grade distribution, AI assistant answer, at-risk students and today's classes" width="100%" />
@@ -15,176 +39,154 @@ By combining course management, scheduling, assessments, analytics, and communic
   <img src="docs/media/koru-tour.gif" alt="A 20-second tour of the lecturer view: dashboard, calendar, analytics and the AI assistant" width="100%" />
 </p>
 
+### Goals from the client brief
 
+| Goal | How Koru meets it |
+|---|---|
+| One platform instead of many | A single PostgreSQL database behind every workflow |
+| The right tools for each role | Separate student, lecturer and admin workspaces, routed by role |
+| POPIA compliance | Only name, surname, student number, gender and email are stored |
+| Desktop on Windows and macOS | React app packaged with Electron |
+| An MVP within R250,000 and 12 weeks | Delivered in four sprints, then refined in version 2.0 |
 
-## Overview
+### Built with
 
-Educational institutions often rely on multiple disconnected platforms to manage teaching, learning, scheduling, grading, and administration. This fragmentation creates unnecessary complexity for both staff and students, resulting in duplicated work, missed deadlines, and poor visibility across academic operations.
+| Layer | Technology | Used for |
+|---|---|---|
+| Desktop | Electron 36 | Native window, packaging for Windows and macOS |
+| Frontend | React 19, Vite 7, TypeScript, React Router 7 | Role-based interface and routing |
+| Styling | Tailwind CSS 4 with the Koru design system (Material 3 patterns) | Consistent tokens and components across every page |
+| Charts | MUI X Charts | Analytics dashboards |
+| Motion and content | Framer Motion, Novel, jsPDF, Solar Icons | Transitions, rich-text notes, PDF export, icons |
+| Backend | ASP.NET Core (.NET 10), Entity Framework Core 10 | REST API with 21 controllers, code-first migrations |
+| Database | PostgreSQL (Npgsql provider) | Relational academic records |
+| Security | BCrypt.Net-Next, Google sign-in, Otp.NET | Password hashing, single sign-on, two-factor codes |
+| AI | DeepSeek, with Groq as a fallback | The teaching assistant |
+| Tooling | Docker Compose, Swagger UI, ESLint, Jest, xUnit | Containerised API, API testing, linting, automated tests |
 
-Koru was developed to solve this problem by providing a centralised platform where all academic activities can be managed in one place.
+---
 
-The application was developed as a native desktop experience using Electron, allowing it to run seamlessly on both Windows and macOS while maintaining the flexibility of modern web technologies.
+## What's new in version 2.0
 
+Version 2.0 (November 2026) is a design and quality release. It acts on our [UX audit](ux_audit_report.md) and the lecturer feedback below, without changing how the app behaves.
 
+<img src="docs/media/koru-tile-day.png" alt="The redesigned lecturer dashboard: today's classes and the to-do list" width="49%" /> <img src="docs/media/koru-tile-ask.png" alt="The reworked assistant answering a question about a class" width="49%" />
 
+| Area | Version 1.0 (June 2026) | Version 2.0 (November 2026) |
+|---|---|---|
+| **Design system** | Mixed DaisyUI components and one-off styles | A Koru design system on Material 3 patterns: colour roles, type scale, shape, elevation and motion tokens, plus shared primitives (Button, Card, Input, Select, Alert, Badge, Modal, Avatar, Skeleton, EmptyState, PageHeader) |
+| **Consistency** | Pages styled independently | **Every page migrated**: sign-in, app shell, all three dashboards, course views for each role, calendars and attendance, profile, settings, analytics and the assistant |
+| **Look and feel** | Light pages on a plain background | A dark purple canvas with solid page shells, and a redesigned split-screen sign-in and sign-up flow |
+| **People** | Initials in circles | Generated avatars for every user, shown through one shared `Avatar` component |
+| **Analytics** | Hand-built graphs | Rebuilt on MUI X Charts through Koru wrappers, styled with the design tokens |
+| **AI assistant** | One request, one reply | Streams its reply with visible progress, checks every answer against a JSON schema, and falls back from DeepSeek to Groq if the first provider fails |
+| **AI keys** | Set in `appsettings.json` | Loaded from a local, git-ignored `.env` file |
+| **Code structure** | `teacherCourses.jsx` at about 125 KB and 3,500 lines | Split into focused components; the page itself is now about 5 KB |
 
-## **Core Objectives** 
+The design system is documented in [`Frontend/DESIGN_SYSTEM.md`](Frontend/DESIGN_SYSTEM.md). While the frontend runs in development, every token and primitive can be previewed at `http://localhost:5200/#/design-system`.
 
-- Centralise all academic workflows into a single, shared database, eliminating the client's fragmented systems. 
+---
 
-- Deliver role-specific interfaces that are intuitive and efficient for every type of user. 
+## Getting started
 
+### Prerequisites
 
-- Enforce full POPIA (Protection of Personal Information Act) compliance by design,  including an absolute prohibition on storing South African ID numbers or dates of birth. 
+| Requirement | Version | Get it |
+|---|---|---|
+| .NET SDK | 10.0 | [dotnet.microsoft.com/download](https://dotnet.microsoft.com/download) |
+| Node.js and npm | 20.19 or later | [nodejs.org](https://nodejs.org) |
+| PostgreSQL | 14 or later, local or hosted | [postgresql.org/download](https://www.postgresql.org/download/) |
+| Docker (optional) | Any recent version | [docker.com](https://www.docker.com/products/docker-desktop/) |
+| AI keys (optional, for the assistant) | DeepSeek and/or Groq | [platform.deepseek.com](https://platform.deepseek.com) · [console.groq.com](https://console.groq.com) |
 
-- Deliver a complete Minimum Viable Product within the client's R250,000 budget and  a 12-week development timeline.
+### 1. Clone the repository
 
-# How to run Kuro
-## Backend (ASP.NET Core)
-1. Open a terminal in the `Backend` folder.
+```bash
+git clone https://github.com/wrapperik/koru.git
+cd koru
+```
 
-2. Run:
-  
-       cd backend/LearnOnline
+### 2. Configure the backend
 
-       dotnet watch run
-       
-       dotnet run
-3. The API will be available at the URL shown in the terminal.
+Point the API at your PostgreSQL database and add the assistant keys in `Backend/LearnOnline/.env`. The file is git-ignored, and real environment variables always take precedence over it.
 
+```bash
+ConnectionStrings__LearnOnlineDb=Host=localhost;Port=5432;Database=koru;Username=postgres;Password=your-password
+DEEPSEEK_API_KEY=your-deepseek-key
+GROQ_API_KEY=your-groq-key
+```
 
-## Frontend (React + Vite)
-1. Open a terminal in the `Frontend` folder. 
+On start-up the API applies all migrations and seeds the database.
 
-        cd frontend
+### 3. Run the backend
 
-2. Install dependencies:
+```bash
+cd Backend/LearnOnline
+dotnet run
+```
 
-       npm install
-3. Start the dev server:
+The API runs at `http://localhost:5299`, with Swagger UI at `http://localhost:5299/swagger`.
 
-        npm run dev
-4. Open the local URL (shown in the terminal) in your browser.
+To run it in Docker instead, from the repository root:
 
+```bash
+docker compose up --build
+```
 
-## **Summary of Client Requirements** 
+### 4. Run the frontend
 
-●  User Management & Access Control: 
+In a second terminal:
 
-- Secure login functionality 
+```bash
+cd Frontend
+npm install
+npm run electron:dev
+```
 
-- Role-based access control for three roles: Admin, Teacher, and Student Account creation for students and teachers, managed by the Admin 
+This starts Vite on `http://localhost:5200` and opens Koru in an Electron window. Use `npm run dev` to work in the browser only, or `npm run electron:build` to package the desktop app.
 
-## ● Admin Requirements: 
+### 5. Run the tests
 
-- Full CRUD (Create, Read, Update, Delete) over all user accounts 
+```bash
+npm run test:backend              # from the repository root: xUnit
+cd Frontend && npm test           # Jest and React Testing Library
+```
 
-- Ability to create and manage courses and subjects 
-
-- Ability to assign teachers to courses and students to classes 
-
-- System usage monitoring and oversight 
-
-## ● Teacher Requirements: 
-
-- Role-specific dashboard 
-
-- Create and upload assignments 
-
--  View enrolled students and class rosters 
-
--  Grade submitted assignments and provide feedback 
-
-- View class performance analytics and personal marking statistics 
-
--  Manage a personal to-do list and calendar with event creation 
-
-- Student Requirements: 
-
--  Role-specific dashboard 
-
-
-   - View assignments 
-
-   - Submit assignments 
-
-   - View grades and teacher feedback 
-
-   - Track academic progress and attendance 
-
-   - Add items to a personal to-do list and mark them as done 
-
-   - View a weekly and daily calendar and create personal events 
-
-   - View enrolled classes 
-
-- Core Functional Requirements: 
-
-   - Interactive calendar showing upcoming classes, assignments, and deadlines 
-
-   - Analytics dashboards with data visualisations (performance trends, averages) 
-
-   - A timetable algorithm to automatically generate class schedules 
-
-   - Document management - upload and view files (PDFs, links, slides) 
-
-   - Cross-platform desktop application (Windows and macOS) via Electron 
-
-- Data Privacy Requirements (POPIA): 
-
-   - Absolutely no South African ID numbers or dates of birth to be stored 
-
-   - Only name, surname, student number, and gender may be stored 
-
-   - All data handling must comply with POPIA 
-
-   - Highly sensitive data to remain exclusively with the institution's registry 
-
-      - department 
-
+---
 
 ## Features
 
-### Student Features
+### Students
 
 <img src="docs/media/koru-tile-check-in.png" alt="Check in with a 4-digit code from the lecturer" width="49%" /> <img src="docs/media/koru-tile-progress.png" alt="Track every grade across the year: a student's monthly grade trend" width="49%" />
 
-* View enrolled courses
-* Access course materials
-* Submit assignments
-* View grades and lecturer feedback
-* Track academic progress
-* Manage personal notes
-* View daily and weekly schedules
-* Create personal calendar events
-* Monitor upcoming deadlines
+- A dashboard with today's classes, deadlines and course progress
+- Course pages with modules, materials and announcements
+- Assignment submission, grades and lecturer feedback
+- Class check-in with a 4-digit code
+- Grade trends and attendance across the year
+- A personal calendar and rich-text notes
 
+### Lecturers
 
-### Teacher Features
+<img src="docs/media/koru-tile-week.png" alt="Your week, built from the timetable: this week's classes, meetings and deadlines" width="49%" /> <img src="docs/media/koru-tile-falling-behind.png" alt="See who's falling behind: DV300 students filtered to At Risk" width="49%" />
 
-<img src="docs/media/koru-tile-day.png" alt="Your teaching day at a glance: today's classes and the to-do list" width="49%" /> <img src="docs/media/koru-tile-week.png" alt="Your week, built from the timetable: this week's classes, meetings and deadlines" width="49%" />
-<img src="docs/media/koru-tile-falling-behind.png" alt="See who's falling behind: DV300 students filtered to At Risk" width="49%" /> <img src="docs/media/koru-tile-ask.png" alt="Ask about your classes in plain English: the assistant lists three students who need a check-in" width="49%" />
+- A teaching day at a glance: today's classes, tasks and course pulse
+- Course, module and assignment management, with due dates per class group
+- Grading and feedback on submissions
+- Attendance sessions and check-in codes
+- Analytics: class averages, grade distribution and students at risk
+- An AI assistant that answers questions about their classes in plain English
+- A weekly calendar built from the timetable
 
-* Manage courses and modules
-* Upload learning materials
-* Create assignments
-* Grade student submissions
-* Provide feedback
-* View class analytics
-* Track student performance
-* Manage teaching schedules
-* Create calendar events and reminders
-
-### Administrator Features
+### Administrators
 
 <img src="docs/media/koru-tile-semester.png" alt="Set up a semester from one screen: courses, lecturers and students side by side" width="49%" /> <img src="docs/media/koru-shot-admin-dashboard.png" alt="Admin dashboard" width="49%" />
 
-* Full user management
-* Create and manage courses
-* Manage subjects and enrolments
-* Assign teachers to courses
-* Monitor institutional activity
-* Maintain oversight across the platform
+- Full user management for students, lecturers and admins
+- Subjects, courses and class groups
+- Semester set-up: assign lecturers and enrol students from one screen
+- Institution-wide announcements, notifications and analytics
 
 <details>
 <summary><b>More screenshots</b></summary>
@@ -196,543 +198,224 @@ The application was developed as a native desktop experience using Electron, all
 
 </details>
 
-## **Meet the Team** 
-<img width="977" height="475" alt="Screenshot 2026-06-09 160206" src="https://github.com/user-attachments/assets/f4110907-ecd7-4b92-ba05-407dfca4386f" />
+---
 
+## Development process
 
-## **Team Setup** 
+### Team and roles
 
-Git and Github were the team’s primary collaboration platform. All work was tracked, reviewed, and merged through the shared repository with a clear branching strategy to isolate features and prevent conflicts. The team used Whatsapp and Discord to 
+<img width="977" alt="Chloe Robinson, Danae Swart, Rikus Pretorius and Victor du Preez" src="https://github.com/user-attachments/assets/f4110907-ecd7-4b92-ba05-407dfca4386f" />
 
-communicate changes, ideas and have team discussions throughout the project. Roles were clearly defined from the outset to minimise overlap and keep responsibilities unambiguous throughout delivery. 
-
-## **Technologies Used** 
-
-## **Backend** 
-
-|**Backend**|||
-|---|---|---|
-|**Technology**|**Version**|**Purpose**|
-|ASP.NET Core (C#)|.NET 10.0|Web API framework|
-|Entity Framework Core|10.0.4|ORM - database access<br>layer|
-|PostgreSQL|-|Relational database|
-|Npgsql EF Core Provider|10.0.1|EF Core adapter for<br>PostgreSQL|
-|BCrypt.Net-Next|4.1.0|Secure password hashing|
-|Swagger / Swashbuckle|10.1.5|API documentation & testing<br>UI|
-|ASP.NET Core OpenAPI  / Swashbuckle| 10.0.3 |OpenAPI specification support <br>UI|
-
-
-## **Frontend** 
-
-|**Frontend**|||
-|---|---|---|
-|**Technology**|**Version**|**Purpose**|
-|React|19.2.0|Component-based UI<br>framework|
-|Electron|36.3.1|Cross-platform desktop<br>packaging|
-|Vite|7.2.2|Build tool and dev server|
-|TypeScript|6.0.3|Type-safe development|
-|React Router DOM|7.14.1|Client-side routing|
-|Tailwind CSS|4.1.17|Utility-first CSS framework|
-|DaisyUI|5.5.5|Pre-built Tailwind UI<br>components|
-|Framer Motion|12.38.0|Animations and page<br>transitions|
-|Solar Icons|1.1.0|Icon Library|
-|jsPDF|4.2.1|PDF export functionality|
-|OGL (WebGL)|1.0.11|Visual effects (Orb<br>background)|
-|canvas-confetti|1.9.4|Celebration animations|
-|Novel|1.0.2|Rich text / notes editor|
-
-
-<img width="1000" height="342" alt="Screenshot 2026-06-09 210736" src="https://github.com/user-attachments/assets/1de65f97-c7eb-454a-8aea-2153c0f75d06" />
-
-
-
-## **DevOps and Tooling** 
-
-|**DevOps and Tooling**||
+| Member | Responsibilities |
 |---|---|
-|**Tool**|**Purpose**|
-|GitHub|Version control, branching, collaboration|
-|Swagger UI|Manual API endpoint testing during dev|
-|ESLint|Code linting and quality checks|
-|Docker - proposed|Backend containerisation for deployment|
+| **Chloe Robinson** | Sprint management, backlog, all documentation |
+| **Danae Swart** | Integration testing, UI consistency, QA |
+| **Rikus Pretorius** | React architecture, full UI/UX implementation, the version 2.0 design system |
+| **Victor du Preez** | ASP.NET Core API, PostgreSQL, unit tests |
 
+We worked in four sprints with a shared GitHub repository, feature branches and reviewed merges, and planned on WhatsApp and Discord. Backend and frontend were separate workstreams from day one, so they could progress in parallel.
 
+### Architecture
 
+Koru is a three-tier application: an Electron shell around the React frontend, talking to an ASP.NET Core API over REST.
 
-## **Reasoning Behind Frameworks and Tools** 
+```mermaid
+flowchart LR
+  subgraph Desktop["Electron desktop app"]
+    UI["React 19 + Vite<br/>Koru design system"]
+    Main["Electron main process<br/>window, OS integration, packaging"]
+  end
+  subgraph API["ASP.NET Core Web API (.NET 10)"]
+    Controllers["21 REST controllers"]
+    EF["Entity Framework Core"]
+    Assistant["Assistant service<br/>schema-checked replies"]
+  end
+  DB[("PostgreSQL")]
+  DeepSeek["DeepSeek"]
+  Groq["Groq (fallback)"]
+  UI <-->|"HTTP REST + streaming"| Controllers
+  Controllers --> EF --> DB
+  Controllers --> Assistant
+  Assistant --> DeepSeek
+  Assistant -. "if DeepSeek fails" .-> Groq
+```
 
-- **Electron:** The client brief strictly mandated the delivery of a cross-platform desktop application accessible on both Windows and macOS. Electron was chosen because it allows us to package the React + Vite frontend as a native desktop application that runs smoothly on both operating systems without requiring users to open a browser or manage a local web server. It wraps the web application in a Chromium shell, giving it native desktop behaviour such as a dedicated application window, taskbar presence, and OS-level integration while allowing us to continue using our existing React codebase without rewriting it for a native platform. 
+### Data model
 
-- **ASP.NET Core (C#):** The project required a backend  that strictly adheres to Object-Oriented Programming (OOP) principles necessary for managing the complex role-based access control across Admin, Teacher, and Student. .NET 10 provides a high-performance, modern runtime with built-in dependency injection, excellent EF Core support, and the structure needed for a secure, scalable API. 
+```mermaid
+erDiagram
+  USER ||--o{ ENROLLMENT : "enrols in"
+  USER ||--o{ SUBMISSION : submits
+  USER ||--|| TIMETABLE : has
+  SUBJECT ||--o{ COURSE : "is taught as"
+  USER ||--o{ COURSE : teaches
+  COURSE ||--o{ CLASS_GROUP : "is split into"
+  COURSE ||--o{ ENROLLMENT : has
+  CLASS_GROUP ||--o{ ENROLLMENT : groups
+  COURSE ||--o{ COURSE_MODULE : contains
+  COURSE_MODULE ||--o{ COURSE_MODULE_ITEM : contains
+  COURSE ||--o{ ASSIGNMENT : sets
+  ASSIGNMENT ||--o{ ASSIGNMENT_CLASS_OVERRIDE : "has due dates per group"
+  ASSIGNMENT ||--o{ SUBMISSION : receives
+  SUBMISSION ||--o| GRADE : "is graded"
+  SUBMISSION ||--o{ FEEDBACK : "gets"
+  COURSE ||--o{ CHECK_IN_SESSION : opens
+  CHECK_IN_SESSION ||--o{ ATTENDANCE : records
+  TIMETABLE ||--o{ CLASS : schedules
+  COURSE ||--o{ ANNOUNCEMENT : posts
+  COURSE ||--o{ MATERIAL : shares
+```
 
-- **PostgreSQL:** The brief mandated a complex relational  database. PostgreSQL was chosen because it enforces strict data types and validation rules critical for maintaining academic record integrity. Its support for normalised schemas, foreign key constraints, and ENUM types made it the right fit for the system's POPIA-compliant data model. 
+All three roles share one `Users` table with a role enum (student, teacher, admin), which keeps identity normalised. It stores only name, surname, student number, gender, email and a BCrypt-hashed password.
 
-- **Entity Framework Core:** EF Core provides a strongly-typed, code-first abstraction over PostgreSQL, allowing the team to manage the database schema through migrations and interact with data using C# objects. This reduced raw SQL errors and accelerated backend development significantly. 
+### Key API endpoints
 
-- **React + Vite:** React was chosen to build a dynamic, component-based user interface that scales as the platform grows. It is one of the three explicitly permitted frontend frameworks (React, Vue, Angular) in the project brief. Vite provides extremely fast hot module replacement during development and optimised production builds that feed directly into the Electron packager. 
-
-
-
-- **TypeScript:** TypeScript was a core requirement in the proposal to ensure a type-safe, structured codebase. It enforces compatibility with backend entity shapes, 
-
-   - catches errors at compile time, and improves overall code reliability — particularly important when the same data models are referenced across both the React UI and the Electron main process. 
-
-- **Tailwind CSS + DaisyUI:** Tailwind allows rapid, consistent  UI development using utility classes, removing the need to write custom CSS from scratch. DaisyUI adds pre-built accessible components on top of Tailwind. Together they support the "corporate fun" visual design brief while ensuring fast, responsive, and consistent styling aligned with the Learn More brand across all screens of the desktop application. 
-
-
-
-### Using Tailwind CSS
-
-- Tailwind is already set up in this project.
-- You can use Tailwind utility classes directly in your JSX, e.g.:
-  `<div className="bg-white p-4 rounded-lg shadow-md">Hello</div>`
-- Custom styles and plugins (like DaisyUI) are included in `src/index.css`.
-- For custom scrollbars, see the `.scrollbar-black` class in `src/index.css`.
-- If you want to add new Tailwind classes, just use them in your components—no extra setup needed.
-
-For Tailwind https://tailwindcss.com/docs
-
-For Solar icons check here: https://solar-icons.vercel.app/icons (Use these icons, NOT REACT ICONS)
-
-For DaisyUI elements check here: https://daisyui.com/components/ (simply copy jsx code and paste inside your component)
-
- 
-## **Technical Decisions** 
-
-## **Important Decisions Made Throughout the Project** 
-
-- Building the frontend as a React + Vite web application first, then wrapping it with Electron, allowed the team to develop and test the UI rapidly in the browser before packaging it as a desktop application. This approach avoided the complexity of building directly in Electron from day one and kept the development workflow fast. 
-
-- Adopting a strict client-server separation from day one, with the backend and frontend developed as entirely independent workstreams, allowed the team to work in parallel without blocking each other. 
-
-- Choosing a code-first approach with Entity Framework Core migrations meant the database schema evolved alongside the codebase, with every change tracked in version control. 
-
-- Implementing BCrypt password hashing via BCrypt.Net-Next ensured that no plaintext passwords were ever stored, meeting the security requirements from day one. 
-
-
-- Using a centralised users table with a role ENUM (student, teacher, admin) rather than separate tables per role kept the identity system clean, normalised, and scalable. 
-
-## **Structure of Application** 
-
-The application follows a three-tier architecture: an Electron desktop shell wrapping a 
-
-React frontend, communicating with an ASP.NET Core backend over HTTP REST: 
-
-## **Architecture** 
-
-●  Identity and Registration 
-
-   - Users - Central authentication table for all roles. Stores only name, surname, student number, gender, email, and hashed password. Role controlled by  ENUM (student, teacher, admin). 
-
-   - Subjects - The institutional course catalogue (e.g., "Development/DV") 
-
-   - Courses - Active instances of a subject for a given year and term,assigned to a specific teacher. 
-
-   - Enrollments - Bridge table linking students to specific course instances. 
-
-● Scheduling Engine 
-
-
-
-- Timetables - User-specific master schedule linked to their profile. 
-
-- Classes - Scheduled sessions link a course to a room and time slot, surfacing on the user's personal timetable dashboard. 
-
-- Events - User created personal calendar entries 
-
-- Materials - Course-specific uploaded resources (PDFs, links, slides). 
-
- ●  Assessment Pipeline 
-
-- Assignments - Faculty creates a deliverable for a course (prompt, due date, maximum marks). 
-
-- Submissions - Students submit work that links the file/link to both the assignment and their user ID. 
-
-- Grades - Linked directly to the submission record, ensuring every grade is traceable to a specific piece of submitted work. 
-
-- Feedback - Lecturer commentary, also linked to the submission record. 
-
-- Notes - Personal notes per user. 
-
-- Announcements - Course specific or system wide announcements. 
-
-## **Key Entities** 
-
-|**Key Entities**||
+| Area | Controllers |
 |---|---|
-|**Entity**|**Key Relationships**|
-|User|Has a role; enrolls in Courses; submits<br>Assignments; has Notes; Events; Timetable|
-|Course|Belongs to a Subject; has Modules,<br>Enrollments, Assignments, Announcements|
-|CourseModule|Belongs to a Course; contains<br>CourseModuleItems|
-|Assignment|Belongs to a Course; has many<br>Submissions|
-|Submission|Belongs to an Assignment and a User; has<br>Grade and Feedback|
-|Grade|Linked to a Submission and a User|
+| Identity | `User` (register, sign in, Google sign-in, two-factor, roles) |
+| Catalogue | `Subject`, `Course`, `ClassGroup`, `Enrollment` |
+| Content | `CourseModule`, `CourseModuleItem`, `Material`, `Announcement` |
+| Assessment | `Assignment`, `Submission`, `Grade`, `Feedback` |
+| Attendance | `Attendance`, `CheckIn` (open a session, check in with a code, mark students) |
+| Scheduling | `Timetable`, `Class`, `Event`, `Todo` |
+| Personal | `Note` |
+| AI | `Assistant` (`POST /api/assistant/chat` and `/chat/stream`) |
 
+The full API is documented in Swagger UI when the backend runs.
 
+### Key decisions
 
+- **Web first, then Electron.** We built the React app in the browser and wrapped it in Electron, which kept development fast and avoided Electron-specific problems early on.
+- **Code-first migrations.** Entity Framework Core migrations keep the schema in version control alongside the code.
+- **One users table with a role enum** instead of a table per role.
+- **Due dates per class group.** The `AssignmentClassOverride` table lets one assignment have different open, due and close dates for different groups, a direct response to lecturer feedback.
+- **A design system before more features.** In version 2.0 we stopped adding screens and moved every page onto shared tokens and primitives, so the three roles finally look like one product.
+- **The AI never has the final say on data.** Assistant replies are checked against a schema before the app uses them, with a second provider as a fallback.
 
+### Why these tools
 
-|Enrollment|Links a Student User to a Course|
-|---|---|
-|Timetable|User-specific schedule record|
-|Class|Scheduled session links Course, room, and<br>time|
-|Event|Personal calendar entry for a User|
-|Note|Personal notes for a User|
-|Announcement|Linked to a Course or system-wide|
-|Material|Study material attached to a Course or<br>Module|
-|Feedback|Associated with a specific Submission<br>record|
-
-
-
-**Figure 1** _: ER Diagram of Koru_ 
-
-
-
-## **Key API Endpoints** 
-
-|**Key API Endpoints**||
-|---|---|
-|**Controller**|**Key Operations**|
-|UserController|Register, login, get/update, roles|
-|CourseController|CRUD for courses|
-|CourseModuleController|CRUD for modules|
-|CourseModuleItemController|Module content items|
-|AssignmentController|Create, update, retrieve|
-|SubmissionController|Submit, retrieve, review|
-|GradeController|Grade, retrieve grades|
-|EnrollmentController|Enroll / unenroll|
-|AnnouncementController|Post and retrieve|
-|EventController|Calendar event management|
-|TimetableController|Class scheduling|
-|FeedbackController|Submission feedback|
-|MaterialController|Course materials|
-|NoteController|Personal notes|
-|SubjectController|Academic subjects|
+- **Electron:** the brief required a desktop app for Windows and macOS. Electron packages our React code as a native app with its own window and taskbar presence, without a rewrite.
+- **ASP.NET Core:** strong object-oriented structure, built-in dependency injection and first-class EF Core support suit an API with complex role-based access.
+- **PostgreSQL:** strict types, foreign keys and enums protect academic record integrity and support the POPIA-compliant data model.
+- **React and Vite:** a component model that scales with the app, and fast reloads during development.
+- **TypeScript:** catches mismatches between frontend and backend data shapes before they reach users.
+- **Tailwind CSS with our own design system:** Tailwind gives fast, consistent styling, and the version 2.0 tokens and primitives (following Material 3 patterns) keep every screen on the same visual language.
 
 ---
 
 ## Testing
 
-### Backend (xUnit + Coverlet)
+| Suite | Tools | Location | Tests |
+|---|---|---|---|
+| Backend | xUnit, EF Core InMemory, Moq, FluentAssertions, Coverlet | `Backend/LearnOnline.Tests` | 173 (172 pass) |
+| Frontend | Jest 30, React Testing Library, jsdom | `Frontend/tests` | 98 in 14 suites (all pass) |
+| Manual | Swagger UI, packaged Electron builds | — | All controllers; Windows and macOS |
 
-- **Location**: `Backend/LearnOnline.Tests`
-- **Framework**: xUnit with EF Core InMemory provider, Moq, FluentAssertions
-- **Tests**: 134 (covers every controller's CRUD paths plus auth/Google flows)
+*Last run on 8 November 2026. One backend test, `ClassControllerTests.GetAll_IncludesNavs`, currently fails and is being fixed.*
 
-Run from the repo root:
+The backend suite covers every controller's create, read, update and delete paths, plus the sign-in and Google flows. The frontend suite covers the API services, `AuthContext`, `ProtectedRoute` and shared components.
 
-```
-dotnet test Backend/LearnOnline.Tests/LearnOnline.Tests.csproj
-```
+**Coverage (version 1.0 report, June 2026)**
 
-Generate the HTML coverage report (the colourful per-file web view):
-
-```
-dotnet test Backend/LearnOnline.Tests/LearnOnline.Tests.csproj --collect:"XPlat Code Coverage" --results-directory reports/backend/raw
-reportgenerator -reports:"reports/backend/raw/**/coverage.cobertura.xml" -targetdir:"reports/backend/html" -reporttypes:"Html;TextSummary" -title:"LearnOnline Backend Coverage" -classfilters:"-TodoApi.Migrations.*;-LearnOnline.Data.DbSeeder;-LearnOnline.Data.RealDataSeeder;-Program;-Microsoft.AspNetCore.OpenApi.Generated;-System.Runtime.CompilerServices.*"
-```
-
-Open `reports/backend/html/index.html` in a browser for the coverage dashboard. Summary text lives at `reports/backend/html/Summary.txt`.
-
-One-time setup (already done locally):
-
-```
-dotnet tool install -g dotnet-reportgenerator-globaltool
-```
-
-### Frontend (Jest + React Testing Library)
-
-- **Location**: `Frontend/tests`
-- **Framework**: Jest 30, jsdom, React Testing Library, Babel transform
-- **Tests**: 82 (API services, AuthContext, ProtectedRoute, ChipListEditor, profile utils)
-
-Run from `Frontend/`:
-
-```
-npm test
-npm run test:coverage
-```
-
-Open `reports/frontend/index.html` for the coverage dashboard.
-
-
-## **Testing Approach** 
-
-The team implemented a two-pronged testing strategy covering both the backend(.NET) and the frontend (React), with automated test runs and code coverage reporting on both sides of the stack. 
-
-## **Backend:** 
-
-●  Tool: xUnit.net (test framework) + FluentAssertions (assertion library) 
-
-- Coverage: ReportGenerator (MultiReport / 2x Cobertura) 
-
-- Command: dotnet test 
- 
-
-The backend test suite was written using xUnit.net combined with FluentAssertions, which provides a more readable and expressive assertion syntax for verifying expected outcomes. 
-
-Tests were written to cover controller logic across all 15 API controllers, as well as model validation and DTO behaviour. 
-
-Coverage was measured using Coverlet and visualised using ReportGenerator, producing a detailed HTML report broken down per class and method. 
-<img width="751" height="612" alt="Screenshot 2026-06-09 105143" src="https://github.com/user-attachments/assets/5b0a08a5-93e4-4a7b-bb95-7694d2dee357" />
-
-##  _Summary of Backend Coverage_ 
-
-The risk hotspot identified by ReportGenerator was the GoogleAuth() method in UserController, which has a Cyclomatic Complexity of 22 reflecting the number of conditional paths involved in validating a Google OAuth token, checking email verification, matching existing accounts, and handling edge cases. This is the most complex method in the codebase and would benefit from further dedicated test cases to fully cover all branches. 
-
-CourseModule and CourseModuleItem controllers show 0% automated coverage, 
-these were tested manually via Swagger UI throughout development but dedicated unit tests were not written for them within the project timeline. 
-
-## **Frontend:** 
-
-●  Tool: Vitest + React Testing Library 
-
-●  Command: npm test 
-
-The frontend test suite covers the core authentication context, protected routing logic, and key reusable UI components. Tests verify that components render correctly, that the AuthContext provides the correct state, and that the ProtectedRoute correctly restricts or allows access based on user role. 
-
-##  _Summary of Frontend_ 
-
-The components and contexts folders achieved full or near-full coverage, reflecting their importance as the foundation of the application. The AuthContext and ProtectedRoute are critical to the entire role-based access system and were prioritised accordingly. 
-
-The services folder achieved strong line coverage (98.14%) with lower branch coverage (62.5%), meaning the happy-path API calls are well tested but some error-handling branches (e.g. failed fetch responses) were not fully covered. 
-
-
-
-The pages/profile folder has the lowest coverage (~58%), as the profile pages contain complex multi-step UI flows and multiple sub-components that each fetch data independently, making them harder to unit test in isolation. 
-
-## **Manual Testing:** 
-
-Swagger UI was used throughout all four development sprints to manually test all 15 API controllers, verifying correct request/response behaviour, HTTP status codes, and data integrity for every endpoint before frontend integration. The packaged Electron application was also tested on both Windows and macOS to verify cross-platform compatibility. 
-
-## **Test Report** 
-
-## **Test Types** 
-
-|**Test Types**|||
+| | Lines | Branches |
 |---|---|---|
-|**Test Type**|**Description**|**Status**|
-|Backend Unit Tests|xUnit.net tests covering all 15 API controllers,<br>model validation, and DTO behaviour.<br>FluentAssertions used for readable, expressive<br>assertions.|PASSED|
-|Frontend Unit Tests|Vitest + React Testing Library tests covering<br>AuthContext, ProtectedRoute, and key<br>reusable UI components.|PASSED|
-|Manual Testing|All 15 API controllers tested via Swagger UI<br>throughout development.|Done|
-|Cross-Platform Testing|Electron application tested on both Windows<br>and macOS environments.|Done|
+| Backend | 83.3% (1,019 of 1,222) | 76.4% (133 of 174) |
+| Frontend | 84.8% (178 of 210) | 57.7% (112 of 194) |
 
+<img width="751" alt="Backend coverage report from ReportGenerator" src="https://github.com/user-attachments/assets/5b0a08a5-93e4-4a7b-bb95-7694d2dee357" />
 
+The riskiest method was `UserController.GoogleAuth()` (cyclomatic complexity 22), which needs more branch tests. `CourseModuleController` and `CourseModuleItemController` were tested manually in Swagger UI but have no automated tests yet.
 
-## **Number of Tests** 
+<details>
+<summary><b>Generating the coverage reports</b></summary>
 
-|**Number of Tests**||
+```bash
+# Backend (one-time: dotnet tool install -g dotnet-reportgenerator-globaltool)
+npm run test:backend:coverage
+# then open reports/backend/html/index.html
+
+# Frontend
+cd Frontend && npm run test:coverage
+# then open reports/frontend/index.html
+```
+
+</details>
+
+---
+
+## Feedback and iteration
+
+We showed an early build to our UX lecturer and acted on three points.
+
+| Feedback | What we changed |
 |---|---|
-|**Metric**|**Result**|
-|Backend tests (xUnit.net)|134 / 134 passed|
-|Frontend tests (Vitest)|82 / 82 passed|
-|Total tests written|216|
-|Total tests passed|216|
-|Total tests failed|0|
-|Backend test duration|9.7s|
-|Frontend test duration|2.831s|
-|Frontend test suites|12 / 12 passed|
-|API Endpoints Manually Verified|15 / 15|
-|Platforms tested (Electron)|Windows, macOS|
+| **No clear visual hierarchy.** Everything on the dashboards had the same weight. | Rebuilt all three dashboards on a three-column grid, added a shared top bar with breadcrumbs and a role badge, and introduced a consistent card system. Version 2.0 takes this further with the full design system. |
+| **Too complicated.** Too much on screen at once. | Split the 3,500-line `teacherCourses.jsx` into focused views, so lecturers see one task at a time, and used staggered entrance animations to guide attention. |
+| **Different classes need different due dates.** | Added open, due and close dates per assignment, per class group, in both the data model and the assignment drawer, and plotted due work on the student's day timeline. |
 
+---
 
+## Conclusion
 
-## **Code Coverage Metrics** 
+### Highlights
 
-**Backend** (ReportGenerator — Coverlet / Cobertura) 
+- A complete LMS for three roles, running natively on Windows and macOS
+- 21 REST controllers over a normalised, POPIA-compliant PostgreSQL database
+- A version 2.0 design system that brings every page onto one visual language
+- An AI assistant with streaming, schema-checked replies and a fallback provider
+- 271 automated tests across the stack
 
-- Line coverage:    83.3%  (1019 / 1222 coverable lines) 
+### Challenges
 
-- Branch coverage:  76.4%  (133 / 174 branches) 
+- **Electron packaging:** getting the packaged app to behave the same on Windows and macOS took dedicated iteration.
+- **Component size:** `teacherCourses.jsx` grew to 125 KB before we broke it apart; merge conflicts in that file cost us time.
+- **Three roles, one product:** role views drifted apart in structure and style until the version 2.0 design system unified them.
+- **POPIA by design:** keeping ID numbers and dates of birth out of every form and table needed constant attention.
+- **The assessment pipeline:** modelling assignments, submissions, grades and feedback took several rounds of migrations.
 
-**Frontend** (Vitest — Istanbul/c8) 
+### Future improvements
 
-●  Statements: 79.91% (199 / 249) 
+- Share one base calendar between the student, lecturer and admin calendars
+- Replace the remaining browser `alert()` and `confirm()` dialogs with design-system dialogs and toasts
+- Desktop notifications, a system tray icon and auto-updates through Electron
+- CI that runs both test suites and builds the Electron app for both platforms before every merge
+- Pagination and virtual scrolling for large admin and analytics tables
+- Discussion boards, plagiarism checks and CSV or PDF grade exports
 
-- Branches: 57.73% (112 / 194) 
+### What we learned
 
-- Functions: 75% (72 / 96) 
+- Delivering a full-stack product against a real client brief, as a team of four
+- Splitting work cleanly between frontend and backend so neither blocked the other
+- Packaging and testing a desktop app across two operating systems
+- Building privacy into the data model rather than adding it later
+- Turning feedback into concrete changes, and why a design system pays off as an app grows
 
-- Lines: 84.76% (178 / 210) 
+The full project report is on [Google Docs](https://docs.google.com/document/d/18CDNf5jPBDjGq7J_sfvUBfOsw2AmLEYMO7007erZ_zI/edit?usp=sharing).
 
-The backend achieved strong line coverage at 83.3%, meaning the vast majority of executable code in the API was exercised by tests. The 76.4% branch coverage indicates that most conditional logic paths were also tested, though some edge cases were not fully covered. The two controllers with 0% coverage (CourseModuleController and CourseModuleItemController) are a clear gap that would be the first priority in a future testing sprint. 
+---
 
-On the frontend, the 100% coverage of the components and contexts folders reflects the team's correct prioritisation of the most critical shared code. The lower branch coverage 
-overall (57.73%) is largely driven by the pages/profile folder (50.86% branches), where complex multi-step UI flows and role-specific rendering paths were harder to cover with unit tests alone. The services folder's high line coverage (98.14%) but lower branch coverage (62.5%) indicates that API service functions are well exercised on the happy path but error-handling branches were partially untested. 
+## Team, licence and acknowledgements
 
-Overall, with 216 tests written and 216 passing the test suite demonstrates a stable, reliable codebase with no regressions at the point of final submission. 
+### Authors
 
-## **External Feedback** 
+| Name | GitHub |
+|---|---|
+| Chloe Robinson | [@corbyn-jpg](https://github.com/corbyn-jpg) |
+| Danae Swart | [@danaeswart](https://github.com/danaeswart) |
+| Rikus Pretorius | [@wrapperik](https://github.com/wrapperik) |
+| Victor du Preez | [@victordupreez0](https://github.com/victordupreez0) |
 
-The team presented an early version of the application to our UX lecturer, who provided direct feedback on three key concerns. The following explains what each concern meant, and how the team responded with concrete changes to the codebase. 
+Created at Open Window, 2026.
 
-## **Key Issues Identified** 
+### Licence
 
-- Hierarchy: 
+No open-source licence applies. © 2026 the Koru team. All rights reserved: the code may not be reproduced, distributed or used to create derivative works without permission.
 
-   - The lecturer's concern was that there was no clear visual hierarchy on screen. Information across the dashboards was presented at the same visual weight, making it difficult for users to know what to look at first, what was most 
+### Acknowledgements
 
-      - important, and how sections related to each other. 
-
-- It was too complicated: 
-
-   - The lecturer felt the application was overwhelming, too much happening on 
-
-      - screen at once, too many features crammed into single views, and 
-
-      - interactions that were not intuitive for a non-technical user. 
-
-●  Different classes should have different due dates: 
-
-- The lecturer identified that the original assignment model treated due dates as a global setting, meaning a single assignment deadline applied uniformly without considering that different classes or course instances might need different submission windows. 
-
-## **Incorporation of Feedback** 
-
-- Hierarchy: 
-
-   - Rikus restructured all three role-specific dashboards into a deliberate three-column grid layout, giving each section of the screen a clear and distinct purpose. 
-
-- A unified Dashboard.jsx was introduced as a "traffic controller" — a single 
-
-- route that determines which role-specific dashboard to render based on the logged-in user's role. This replaced the previous approach of separate, inconsistently structured pages that felt like different apps. 
-
-- A HeaderTopBar component was added across all pages, providing consistent breadcrumb navigation with a colour-coded role badge (e.g., "COURSES / DV300") so users always know where they are in the application. This directly addresses hierarchy by anchoring the user's context at the top of every screen. 
-
-- Within content areas like analytics and the admin dashboard, Rikus introduced a consistent card system using rounded-[28px] containers, icon-labelled stat cards (e.g., Total Students, Pending to Grade), and clearly 
-weighted typography so the visual hierarchy guides the eye naturally from the most important information down to supporting detail. 
-
-- It was too complicated: 
-
-   - The single biggest response to this feedback was Rikus beginning the decomposition of the monolithic teacherCourses.jsx file — which had grown to approximately 125KB and ~3,500 lines with 15+ features packed into one component into a dedicated folder of focused, single-purpose components. 
-
-
-- This separation meant that each view within the teacher's course management area became its own focused screen rather than one giant, scrollable wall of UI. Teachers see one thing at a time, navigating between course content, assignments, and student management as distinct sections rather than all at once. 
-
-- The use of Framer Motion animations (fadeUp, slideUp transitions) was also deliberate in response to this feedback. Staggered entrance animations draw the user's attention to one section at a time as content loads, rather than everything appearing on screen simultaneously, which felt overwhelming in the earlier version. 
-
-- Different classes should have different due dates: 
-
-   - This feedback drove both a backend data model change and a frontend UI update. The team extended the Assignment model and the database schema to support three distinct date fields per assignment, each scoped to the specific course the assignment belongs to. 
-
-   - On the frontend, Rikus updated the CreateAssignmentDrawer to expose all three date fields clearly with distinct labelled inputs. 
-
-   - Since every assignment is linked to a specific courseId, a teacher can create the same assignment for two different courses and set entirely different open, due, and close dates for each one directly addressing the lecturer's concern. 
-
-   - The TodayTimeline component on the student dashboard also reads the due date of each assignment and plots it as a time block on the day's schedule, so students can see at a glance which submissions are due today alongside  their regular classes. 
-
-
-
-## **Challenges and Future Implementation** 
-
-## **Challenges** 
-
-- **Electron Integration and Cross-Platform Packaging:** Configuring Electron to 
-
-   - correctly wrap the React + Vite application and package it for both Windows and macOS introduced OS-specific challenges that were not present during browser-based development. Ensuring that the Electron main process communicated correctly with the React renderer, and that the packaged build behaved consistently across both operating systems, required dedicated time and iteration. 
-
-- **Component Complexity:** 
-The teacherCourses.jsx component  grew organically to over 125KB and approximately 3,500 lines of code as features were added across sprints. Fitting course CRUD, module management, assignment handling, grading, and more into a single file made debugging and team collaboration increasingly difficult as the project progressed. 
-
-- **Enforcing POPIA Compliance:** Ensuring no South African  ID numbers or dates of birth were captured anywhere in the system required active enforcement at both the database schema and application form level throughout the entire development cycle. (If you can find the user, we messed up) 
-
-- **Building a Unified System Across Three Roles:** Designing  a clean, consistent experience for three very different user types while keeping the codebase maintainable was more complex than initially scoped. At times, role-specific views began to diverge in structure and visual design. 
-
-- **Calendar Code Duplication:** The student and teacher  calendar components ended up being approximately 95% identical code. What started as a quick shortcut became a maintenance burden as any change or bug fix needed to be applied in two places. 
-
-- **Database Relationship Design:** Correctly modelling  the full assessment pipeline (assignments → submissions → grades → feedback) in Entity Framework Core required multiple iterations of migrations to get the referential integrity and normalisation right. 
-
-
-
-- **Merge Conflicts/Overwrites:** At key points, there were merge conflicts and accidental overwrites, notably in TeacherCourses which would require backtracking and resolving conflicts. (Much to Victor’s chagrin) 
-
-## **Highlights** 
-
-- Successfully delivering 15 fully functional REST API controllers covering the entire academic system scope. 
-
-- Packaging and running the full application as a native Electron desktop app on both Windows and macOS. 
-
-- Building a cohesive, role-differentiated UI with a strong visual identity across all three user types. 
-
-- Receiving praise from the client and lecturers, ie. “It is very pretty” 
-
-- Growing closer as a team and developers throughout the processes (Love you  guys❤) 
-
-## **Potential Improvements** 
-
-● Short Term 
-
-
-   - Extract a shared <BaseCalendar> component to eliminate the ~95% code  duplication between student and teacher calendar views. 
-
-   - Replace all browser alert() / confirm() dialogs with custom Toast notifications and ConfirmDialog modals. 
-
-   - Add loading states (skeleton loaders), error states, and empty states to all data-driven components 
-
-   - Build a standardised, reusable component library: Button, Card, Input, Modal, Toast, ConfirmDialog, SkeletonLoader. 
-
-●  Medium Term: 
-
-- Unify role-based URL routing: replace /studentDashboard, /teacherCourses etc. with /dashboard, /courses, /calendar (role determined by context). 
-
-- Leverage Electron's native capabilities more deeply — e.g., desktop notifications for assignment deadlines, system tray presence, and offline caching of recently viewed content via Electron's local storage APIs. 
-
-- Implement full CI/CD pipelines with automated test runs before any code is merged, including automated Electron build checks for both platforms. 
-
-## **Additional Features and Optimisations** 
-
-●  Additional Features: 
-
-○  Multiple theme options - currently only a dark mode is available and a user selected theme would add more customisation and visual interest. 
-
-○  Real-time desktop notifications via Electron's native notification API. Push alerts directly to the OS notification centre for new assignments, grades, and announcements. 
-
-○  Discussion forums: course-specific boards for student-teacher collaboration. 
-
-○  Plagiarism checker integration for assignment submissions. 
-
-○  CSV / PDF export for grade reports and analytics dashboards. 
-
-○  Auto-updater: use Electron's built-in auto-update mechanism to push new 
-
-application versions to users without requiring manual reinstall. 
-
-## ●  Performance Optimisations: 
-
-- Add pagination to admin data tables currently rendering all rows at once. 
-
-- Add memoisation (React.memo, useMemo) to prevent unnecessary  re-renders in complex components like weeklyHorizontalTimeline.jsx. 
-
-- Scope the WebGL Orb visual effect to specific pages rather than loading it on 
- every screen. 
-
-
-- Add virtual scrolling for large data sets in analytics and grade tables. 
-
-## **Conclusion** 
-
-Koru was built to solve a real, specific problem: a client whose educational institution was held back by severely fragmented administrative systems. Our solution replaces that fragmentation with a single, centralised, POPIA-compliant Learning Management System delivered as a native cross-platform desktop application using Electron. 
-
-## **What We Built:** 
-
-- A full-stack LMS packaged as an Electron desktop application running natively on  Windows and macOS — directly meeting the client's core platform requirement 
-
-- Three distinct, fully functional user roles (Admin, Teacher, Student) each with their own dashboard and workflows. 
-
-- A secure ASP.NET Core Web API with 15 REST controllers and a normalised  PostgreSQL database enforcing POPIA compliance by design. 
-
-- A React + Vite frontend with role-based routing, an interactive calendar, analytics dashboards, an assignment submission and grading pipeline, and personal timetable and note management. 
-
-## **What We Learned:** 
-
-- Full-stack development across a real-world, client-driven brief. 
-
-- How to work as a team and delegate work across developers. 
-
-- Packaging and distributing a desktop application with Electron across two operating systems. 
-
-- POPIA compliance and data privacy enforcement by design. 
-
-- Responding constructively to external feedback and using it to improve. 
-
-## Link to full report
-https://docs.google.com/document/d/18CDNf5jPBDjGq7J_sfvUBfOsw2AmLEYMO7007erZ_zI/edit?usp=sharing 
+- [React](https://react.dev), [Vite](https://vite.dev), [Electron](https://www.electronjs.org), [Tailwind CSS](https://tailwindcss.com), [MUI X Charts](https://mui.com/x/react-charts/), [Framer Motion](https://motion.dev), [Novel](https://novel.sh), [jsPDF](https://github.com/parallax/jsPDF)
+- [ASP.NET Core](https://learn.microsoft.com/aspnet/core), [Entity Framework Core](https://learn.microsoft.com/ef/core), [Npgsql](https://www.npgsql.org), [BCrypt.Net-Next](https://github.com/BcryptNet/bcrypt.net), [Otp.NET](https://github.com/kspearrin/Otp.NET), [Swashbuckle](https://github.com/domaindrivendev/Swashbuckle.AspNetCore)
+- [Material 3](https://m3.material.io) design guidance, [Solar Icons](https://solar-icons.vercel.app), [DiceBear](https://www.dicebear.com) avatars, and the Gabarito and Google Sans typefaces
+- [DeepSeek](https://www.deepseek.com) and [Groq](https://groq.com), which power the in-app assistant
+- AI coding assistants, including Claude Code, used for parts of the version 2.0 design-system migration and the assistant rework
+- Our UX lecturer at Open Window, for the feedback that shaped this release
