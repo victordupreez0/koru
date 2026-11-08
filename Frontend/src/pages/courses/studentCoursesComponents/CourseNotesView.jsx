@@ -4,6 +4,9 @@ import { useAuth } from "../../../contexts/AuthContext";
 import { Plus, Trash2, Maximize2, Minimize2 } from "lucide-react";
 import { Button, Card, Skeleton } from "../../../components/UI";
 import NovelEditor from "../../../components/NovelEditor";
+import { useAutosave } from "../../../components/editor/useAutosave";
+
+const saveNote = (note) => updateNote(note.id, note);
 
 export default function CourseNotesView({ activeCourseId }) {
     const { user } = useAuth();
@@ -11,6 +14,7 @@ export default function CourseNotesView({ activeCourseId }) {
     const [activeNote, setActiveNote] = React.useState(null);
     const [loading, setLoading] = React.useState(true);
     const [expanded, setExpanded] = React.useState(false);
+    const { schedule, flush } = useAutosave(saveNote);
 
     React.useEffect(() => {
         let mounted = true;
@@ -51,15 +55,13 @@ export default function CourseNotesView({ activeCourseId }) {
         }
     };
 
-    const handleUpdateNote = async (updatedContent) => {
-        if (!activeNote) return;
-        try {
-            const updated = { ...activeNote, content: JSON.stringify(updatedContent) };
-            await updateNote(activeNote.id, updated);
-            setNotes(prev => prev.map(n => n.id === activeNote.id ? updated : n));
-        } catch (err) {
-            console.error("Failed to update note:", err);
-        }
+    // Keep the open note current and let autosave send it, so a title edit can't
+    // overwrite the body with an old copy and typing doesn't send a request per key.
+    const changeNote = (changes) => {
+        const updated = { ...activeNote, ...changes };
+        setActiveNote(updated);
+        setNotes(prev => prev.map(n => n.id === updated.id ? updated : n));
+        schedule(updated);
     };
 
     return (
@@ -99,7 +101,7 @@ export default function CourseNotesView({ activeCourseId }) {
                             <div
                                 key={note.id}
                                 className={`group w-full text-left p-4 rounded-koru-lg transition-colors flex items-start justify-between gap-2 cursor-pointer ${activeNote?.id === note.id ? 'bg-koru-primary text-koru-on-primary' : 'bg-koru-surface-container-low hover:bg-koru-surface-container-high text-koru-on-surface'}`}
-                                onClick={() => setActiveNote(note)}
+                                onClick={() => { flush(); setActiveNote(note); }}
                             >
                                 <div className="min-w-0">
                                     <div className={`font-medium text-sm truncate ${!note.title ? 'opacity-40' : ''}`}>{note.title || "New Note"}</div>
@@ -111,6 +113,7 @@ export default function CourseNotesView({ activeCourseId }) {
                                     onClick={async (e) => {
                                         e.stopPropagation();
                                         try {
+                                            await flush();
                                             await deleteNote(note.id);
                                             setNotes(prev => prev.filter(n => n.id !== note.id));
                                             if (activeNote?.id === note.id) setActiveNote(null);
@@ -164,18 +167,7 @@ export default function CourseNotesView({ activeCourseId }) {
                         <input
                             type="text"
                             value={activeNote.title}
-                            onChange={(e) => {
-                                const updatedTitle = e.target.value;
-                                setActiveNote(prev => ({ ...prev, title: updatedTitle }));
-                                setNotes(prev => prev.map(n => n.id === activeNote.id ? { ...n, title: updatedTitle } : n));
-                            }}
-                            onBlur={async () => {
-                                try {
-                                    await updateNote(activeNote.id, activeNote);
-                                } catch (err) {
-                                    console.error("Failed to update note title", err);
-                                }
-                            }}
+                            onChange={(e) => changeNote({ title: e.target.value })}
                             className="font-display text-koru-display mb-8 outline-none border-b border-transparent focus:border-koru-outline-variant bg-transparent w-full pb-2 transition-colors text-koru-on-surface placeholder:text-koru-outline-variant"
                             placeholder="New Note"
                         />
@@ -188,10 +180,9 @@ export default function CourseNotesView({ activeCourseId }) {
                                     } catch {}
                                     return { type: "doc", content: [{ type: "paragraph" }] };
                                 })()}
-                                placeholder="Type something..."
-                                onUpdate={({ editor }) => {
-                                    if (editor) handleUpdateNote(editor.getJSON());
-                                }}
+                                placeholder="Type something, or / for blocks"
+                                variant="notes"
+                                onUpdate={({ editor }) => changeNote({ content: JSON.stringify(editor.getJSON()) })}
                             />
                         </div>
                     </div>

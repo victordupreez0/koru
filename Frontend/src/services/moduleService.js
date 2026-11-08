@@ -1,3 +1,5 @@
+import { parseStoredContent } from "../components/editor/pageDocument";
+
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5299/api";
 
 // Shared response handler – unwraps JSON and surfaces backend error messages
@@ -110,45 +112,23 @@ export async function deleteModuleItem(id) {
 // ─── Unified page content (used by CourseItemView) ───────────────────────────
 
 /**
- * Load the NovelEditor page content for any ID that may be either a module section
- * or a module item.  Returns { data: parsedContent, pageType: 'item'|'module' }.
+ * Load the page content for an ID that may be a module item or a module section.
+ * Throws when the page can't be loaded, so a failed request is never mistaken for an empty page.
  */
 export async function getPageContent(pageId) {
-  // Try module item first
-  try {
-    const res = await fetch(`${API_BASE}/CourseModuleItem/${encodeURIComponent(pageId)}`);
-    if (res.ok) {
-      const item = await res.json();
-      const parsed = item.content ? JSON.parse(item.content) : null;
-      return {
-        pageType: "item",
-        title: parsed?.title ?? item.label ?? "Untitled",
-        sections: parsed?.sections ?? null,
-        raw: item,
-      };
-    }
-  } catch {
-    // fall through
+  const kinds = [
+    { pageType: "item", resource: "CourseModuleItem", titleField: "label" },
+    { pageType: "module", resource: "CourseModule", titleField: "title" },
+  ];
+  for (const { pageType, resource, titleField } of kinds) {
+    const res = await fetch(`${API_BASE}/${resource}/${encodeURIComponent(pageId)}`);
+    if (res.status === 404) continue;
+    if (!res.ok) throw new Error("The server couldn't load this page. Please try again.");
+    const raw = await res.json();
+    const parsed = parseStoredContent(raw.content);
+    return { pageType, title: parsed?.title ?? raw[titleField] ?? "Untitled", sections: parsed?.sections ?? [], raw };
   }
-
-  // Fall back to module section
-  try {
-    const res = await fetch(`${API_BASE}/CourseModule/${encodeURIComponent(pageId)}`);
-    if (res.ok) {
-      const mod = await res.json();
-      const parsed = mod.content ? JSON.parse(mod.content) : null;
-      return {
-        pageType: "module",
-        title: parsed?.title ?? mod.title ?? "Untitled",
-        sections: parsed?.sections ?? null,
-        raw: mod,
-      };
-    }
-  } catch {
-    // fall through
-  }
-
-  return { pageType: null, title: "New Page", sections: null, raw: null };
+  throw new Error("This page doesn't exist any more.");
 }
 
 /**

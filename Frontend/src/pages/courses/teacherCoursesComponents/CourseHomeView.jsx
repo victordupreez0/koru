@@ -2,17 +2,20 @@ import React from "react";
 import PageCanvas from "../../../components/PageCanvas";
 import { getCourseById, getCourseLecturers, updateCourseContent } from "../../../services/courseService";
 import { uploadImageToCloudinary } from "../../../services/cloudinaryService";
-import { Edit3, Save, Loader, Image as ImageIcon } from "lucide-react";
+import { Check, Edit3, Loader, Image as ImageIcon } from "lucide-react";
 import { Alert, Avatar, Button, Card, Skeleton } from "../../../components/UI";
+import SaveStatus from "../../../components/editor/SaveStatus";
+import { useAutosave } from "../../../components/editor/useAutosave";
+
+const saveHome = ({ courseId, ...content }) => updateCourseContent(courseId, JSON.stringify(content));
 
 export function CourseHomeView({ subject, course, loading }) {
   const [pageLoading, setPageLoading] = React.useState(true);
-  const [saving, setSaving] = React.useState(false);
   const [sections, setSections] = React.useState([]);
   const [lecturers, setLecturers] = React.useState([]);
   const [isEditing, setIsEditing] = React.useState(false);
-  const [saveAlert, setSaveAlert] = React.useState(false);
-  
+  const { status, schedule, flush } = useAutosave(saveHome);
+
   // Cover Image States
   const [showCoverImage, setShowCoverImage] = React.useState(true);
   const [coverImageUrl, setCoverImageUrl] = React.useState("");
@@ -103,27 +106,20 @@ export function CourseHomeView({ subject, course, loading }) {
     return () => { mounted = false; };
   }, [course?.id]);
 
-  const handleSave = async () => {
+  const queueSave = (settings = {}) => {
     if (!canvasRef.current || !course?.id) return;
-    const updatedSections = canvasRef.current.getSections();
-    setSections(updatedSections);
-    setSaving(true);
-    try {
-      const payload = {
-        sections: updatedSections,
-        settings: {
-          showCoverImage,
-          coverImageUrl
-        }
-      };
-      await updateCourseContent(course.id, JSON.stringify(payload));
-      setSaveAlert(true);
+    schedule({
+      courseId: course.id,
+      sections: canvasRef.current.getSections(),
+      settings: { showCoverImage, coverImageUrl, ...settings },
+    });
+  };
+
+  const finishEditing = async () => {
+    const latest = canvasRef.current?.getSections();
+    if (await flush()) {
+      if (latest) setSections(latest);
       setIsEditing(false);
-      setTimeout(() => setSaveAlert(false), 2000);
-    } catch (err) {
-      console.error("Failed to save homepage content:", err);
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -135,6 +131,7 @@ export function CourseHomeView({ subject, course, loading }) {
       setUploadingCover(true);
       const url = await uploadImageToCloudinary(file);
       setCoverImageUrl(url);
+      queueSave({ coverImageUrl: url });
     } catch (err) {
       console.error("Cover image upload failed:", err);
     } finally {
@@ -166,29 +163,14 @@ export function CourseHomeView({ subject, course, loading }) {
         </div>
         {!loading && !pageLoading && (
           <div className="flex items-center gap-4">
-            {saveAlert && (
-              <Alert variant="success" className="motion-safe:animate-pulse">
-                Changes Saved Successfully!
-              </Alert>
-            )}
+            {isEditing && <SaveStatus status={status} />}
             <Button
               variant={isEditing ? "accent" : "filled"}
               size="sm"
-              onClick={() => {
-                if (isEditing) {
-                  handleSave();
-                } else {
-                  setIsEditing(true);
-                }
-              }}
-              disabled={saving}
-              startIcon={
-                isEditing
-                  ? (saving ? <Loader size={13} className="animate-spin motion-reduce:animate-none" /> : <Save size={13} />)
-                  : <Edit3 size={13} />
-              }
+              onClick={() => (isEditing ? finishEditing() : setIsEditing(true))}
+              startIcon={isEditing ? <Check size={13} /> : <Edit3 size={13} />}
             >
-              {isEditing ? (saving ? "Saving..." : "Save Changes") : "Edit Home Page"}
+              {isEditing ? "Done" : "Edit Home Page"}
             </Button>
           </div>
         )}
@@ -246,7 +228,10 @@ export function CourseHomeView({ subject, course, loading }) {
               <Button
                 variant={showCoverImage ? "tonal" : "outlined"}
                 size="sm"
-                onClick={() => setShowCoverImage(!showCoverImage)}
+                onClick={() => {
+                  setShowCoverImage(!showCoverImage);
+                  queueSave({ showCoverImage: !showCoverImage });
+                }}
               >
                 {showCoverImage ? "Hide Cover" : "Show Cover"}
               </Button>
@@ -278,8 +263,8 @@ export function CourseHomeView({ subject, course, loading }) {
             <PageCanvas
               ref={canvasRef}
               sections={sections}
-              setSections={setSections}
               isEditing={isEditing}
+              onChange={() => queueSave()}
               placeholder="Customize the course homepage with syllabus outlines, assignments guidelines, and other important course resources..."
             />
           </div>

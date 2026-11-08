@@ -1,0 +1,192 @@
+/* Page content inside the editor. Colours, type and radii all come from the design tokens in index.css. */
+
+.novel-editor-wrapper .tiptap {
+  outline: none;
+  font-size: var(--text-koru-body);
+  line-height: 1.7;
+  color: var(--color-koru-on-surface);
+}
+
+.novel-editor-wrapper .tiptap > * + * { margin-top: 0.5rem; }
+.novel-editor-wrapper .tiptap > *:first-child { margin-top: 0; }
+.novel-editor-wrapper .tiptap p { margin: 0; }
+
+.novel-editor-wrapper .tiptap h1,
+.novel-editor-wrapper .tiptap h2 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  color: var(--color-koru-on-surface);
+}
+.novel-editor-wrapper .tiptap h1 {
+  font-size: var(--text-koru-title);
+  line-height: var(--text-koru-title--line-height);
+  letter-spacing: var(--text-koru-title--letter-spacing);
+  margin-top: 1.75rem;
+}
+.novel-editor-wrapper .tiptap h2 {
+  font-size: var(--text-koru-heading);
+  line-height: var(--text-koru-heading--line-height);
+  margin-top: 1.5rem;
+}
+.novel-editor-wrapper .tiptap h3 {
+  font-size: var(--text-koru-body);
+  font-weight: 500;
+  line-height: 1.5;
+  margin-top: 1.25rem;
+}
+
+.novel-editor-wrapper .tiptap strong { font-weight: 600; }
+.novel-editor-wrapper .tiptap em { font-style: italic; }
+.novel-editor-wrapper .tiptap u { text-decoration: underline; }
+.novel-editor-wrapper .tiptap s { text-decoration: line-through; }
+.novel-editor-wrapper .tiptap a {
+  color: var(--color-koru-primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.novel-editor-wrapper .tiptap [data-background] {
+  border-radius: var(--radius-koru-sm);
+  padding: 0.25rem 0.5rem;
+}
+
+/* Inline code and code blocks */
+.novel-editor-wrapper .tiptap code {
+  background: var(--color-koru-primary-subtle);
+  color: var(--color-koru-primary);
+  padding: 0.15em 0.4em;
+  border-radius: var(--radius-koru-xs);
+  font-size: 0.875em;
+  font-family: "Fira Code", Consolas, monospace;
+}
+.novel-editor-wrapper .tiptap pre {
+  background: var(--color-koru-inverse-surface);
+  color: var(--color-koru-inverse-on-surface);
+  border-radius: var(--radius-koru-md);
+  padding: 1rem 1.25rem;
+  padding-top: 2.75rem;
+  overflow-x: auto;
+  font-family: "Fira Code", Consolas, monospace;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+.novel-editor-wrapper .tiptap pre code {
+  background: none;
+  color: inherit;
+  padding: 0;
+  border-radius: 0;
+  font-size: inherit;
+}
+.novel-editor-wrapper .hljs-keyword,
+.novel-editor-wrapper .hljs-selector-tag,
+.novel-editor-wrapper .hljs-built_in,
+.novel-editor-wrapper .hljs-type { color: var(--color-koru-inverse-primary); }
+.novel-editor-wrapper .hljs-string,
+.novel-editor-wrapper .hljs-attr,
+.novel-editor-wrapper .hljs-attribute { color: var(--color-koru-success-soft); }
+.novel-editor-wrapper .hljs-number,
+.novel-editor-wrapper .hljs-literal { color: var(--color-koru-warning-soft); }
+.novel-editor-wrapper .hljs-title,
+.novel-editor-wrapper .hljs-name,
+.novel-editor-wrapper .hljs-section { color: var(--color-koru-info-soft); }
+.novel-editor-wrapper .hljs-comment,
+.novel-editor-wrapper .hljs-quote { color: var(--color-koru-outline-variant); font-style: italic; }
+.novel-editor-wrapper .hljs-variable,
+.novel-editor-wrapper .hljs-params { color: var(--color-koru-tertiary-container); }
+
+/* Lists */
+.novel-editor-wrapper .tiptap ul { list-style-type: disc; padding-left: 1.5rem; }
+.novel-editor-wrapper .tiptap ul ul { list-style-type: circle; }
+.novel-editor-wrapper .tiptap ul ul ul { list-style-type: square; }
+.novel-editor-wrapper .tiptap ol { list-style-type: decimal; padding-left: 1.5rem; }
+.novel-editor-wrapper .tiptap li { margin: 0.2rem 0; }
+
+.novel-editor-wrapper .tiptap ul[data-type="taskList"] { list-style: none; padding-left: 0; }
+.novel-editor-wrapper .tiptap ul[data-type="taskList"] li { display: flex; align-items: flex-start; gap: 0.5rem; }
+.novel-editor-wrapper .tiptap ul[data-type="taskList"] li > label { margin-top: 0.3rem; }
+.novel-editor-wrapper .tiptap ul[data-type="taskList"] li > div { flex: 1; min-width: 0; }
+.novel-editor-wrapper .tiptap ul[data-type="taskList"] input[type="checkbox"] {
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--color-koru-primary);
+  cursor: pointer;
+}
+.novel-editor-wrapper .tiptap ul[data-type="taskList"] li[data-checked="true"] > div {
+  color: var(--color-koru-on-surface-variant);
+  text-decoration: line-through;
+}
+
+/* Quotes and dividers */
+.novel-editor-wrapper .tiptap blockquote {
+  border-left: 3px solid var(--color-koru-primary);
+  padding: 0.25rem 0 0.25rem 1rem;
+  color: var(--color-koru-on-surface-variant);
+}
+.novel-editor-wrapper .tiptap hr {
+  border: none;
+  border-top: 1px solid var(--color-koru-outline-variant);
+  margin: 1.5rem 0;
+}
+
+/* Tables */
+.novel-editor-wrapper .tiptap table {
+  border-collapse: collapse;
+  table-layout: fixed;
+  width: 100%;
+  margin: 1rem 0;
+  overflow: hidden;
+}
+.novel-editor-wrapper .tiptap th,
+.novel-editor-wrapper .tiptap td {
+  border: 1px solid var(--color-koru-outline-variant);
+  padding: 0.4rem 0.6rem;
+  vertical-align: top;
+  position: relative;
+  min-width: 4rem;
+}
+.novel-editor-wrapper .tiptap th {
+  background: var(--color-koru-surface-container);
+  font-weight: 500;
+  text-align: left;
+}
+.novel-editor-wrapper .tiptap .selectedCell::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--color-koru-primary);
+  opacity: 0.08;
+  pointer-events: none;
+}
+
+/* Hints for empty blocks while editing */
+.novel-editor-wrapper .tiptap .is-empty::before,
+.novel-editor-wrapper .tiptap .is-editor-empty::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  color: var(--color-koru-outline);
+  pointer-events: none;
+}
+
+/* The cursor that sits between two blocks that can't hold text */
+.novel-editor-wrapper .ProseMirror-gapcursor {
+  display: none;
+  pointer-events: none;
+  position: absolute;
+}
+.novel-editor-wrapper .ProseMirror-gapcursor::after {
+  content: "";
+  display: block;
+  position: absolute;
+  top: -2px;
+  width: 24px;
+  border-top: 2px solid var(--color-koru-primary);
+}
+.novel-editor-wrapper .ProseMirror-focused .ProseMirror-gapcursor { display: block; }
+
+.novel-editor-wrapper .tiptap .ProseMirror-selectednode {
+  outline: 2px solid var(--color-koru-focus);
+  outline-offset: 2px;
+  border-radius: var(--radius-koru-sm);
+}
