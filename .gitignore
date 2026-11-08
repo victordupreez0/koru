@@ -12,3 +12,6 @@ node_modules
 *.user
 *.suo
 .vs/
+
+# Examples are meant to be committed
+!.env.example

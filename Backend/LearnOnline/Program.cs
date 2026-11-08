@@ -52,8 +52,10 @@ builder.Services.AddScoped<LearnOnline.Services.Assistant.IAssistantComposer, Le
 // Register the EF Core database context with the PostgreSQL connection string
 // PendingModelChangesWarning is suppressed because migrations in this project use raw SQL
 // and intentionally don't update the EF snapshot.
+var connectionString = builder.Configuration.GetConnectionString("LearnOnlineDb");
+LearnOnline.Helpers.DatabaseGuard.EnsureSafe(connectionString);
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("LearnOnlineDb"))
+    options.UseNpgsql(connectionString)
            .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning)));
 
 var app = builder.Build();
@@ -62,6 +64,23 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+    // A brand-new database has no tables, so the ALTER TABLE patches below would fail.
+    // Build the schema from the model and mark every migration as already applied.
+    if (context.Database.EnsureCreated())
+    {
+        context.Database.ExecuteSqlRaw(@"
+            CREATE TABLE IF NOT EXISTS ""__EFMigrationsHistory"" (
+                ""MigrationId"" character varying(150) NOT NULL,
+                ""ProductVersion"" character varying(32) NOT NULL,
+                CONSTRAINT ""PK___EFMigrationsHistory"" PRIMARY KEY (""MigrationId"")
+            );");
+        foreach (var migrationId in context.Database.GetMigrations())
+            context.Database.ExecuteSqlRaw(
+                @"INSERT INTO ""__EFMigrationsHistory"" (""MigrationId"", ""ProductVersion"") VALUES ({0}, '9.0.3') ON CONFLICT DO NOTHING;",
+                migrationId);
+    }
+
     var conn = context.Database.GetDbConnection();
     conn.Open();
     using (var cmd = conn.CreateCommand())
