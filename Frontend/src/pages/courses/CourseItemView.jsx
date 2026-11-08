@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
 import { Alert, Button, Card, Skeleton } from "../../components/UI";
 import PageCanvas from "../../components/PageCanvas";
 import SaveStatus from "../../components/editor/SaveStatus";
@@ -13,6 +14,8 @@ const savePage = ({ pageId, pageType, ...content }) => savePageContent(pageId, p
 export default function CourseItemView({ activeCourseId, activeItemId, isStudentView = false }) {
     const navigate = useNavigate();
     const { search } = useLocation();
+    const { user } = useAuth();
+    const editorId = isStudentView ? null : user?.userId;
     // Everything about the loaded page lives together, tagged with the page id it belongs to,
     // so moving to another page immediately shows the loading state and leaves edit mode.
     const [page, setPage] = useState({ id: null });
@@ -78,7 +81,7 @@ export default function CourseItemView({ activeCourseId, activeItemId, isStudent
         if (!activeItemId) return;
         let mounted = true;
 
-        getPageContent(activeItemId)
+        getPageContent(activeItemId, editorId)
             .then(({ pageType: pt, title: t, sections: s }) => {
                 if (mounted) setPage({ id: activeItemId, pageType: pt, title: t, sections: s });
             })
@@ -91,7 +94,7 @@ export default function CourseItemView({ activeCourseId, activeItemId, isStudent
             mounted = false;
             flush();
         };
-    }, [activeItemId, reloadCount, flush]);
+    }, [activeItemId, reloadCount, flush, editorId]);
 
     // Saves first, then loads the page back from the server the way a student's browser does.
     const startPreview = async () => {
@@ -194,7 +197,7 @@ export default function CourseItemView({ activeCourseId, activeItemId, isStudent
             <div className="flex-1 flex flex-col bg-transparent min-h-[500px] p-6 md:p-10">
                 <Alert variant="info" className="mb-6">This is exactly what students see. Attempts you make here aren't recorded.</Alert>
                 <h1 className="font-display text-koru-display text-koru-on-surface mb-6">{preview.title}</h1>
-                <PageCanvas key="preview" sections={preview.sections} isEditing={false} placeholder={EMPTY_PAGE_FOR_STUDENTS} />
+                <PageCanvas key="preview" sections={preview.sections} isEditing={false} placeholder={EMPTY_PAGE_FOR_STUDENTS} pageId={activeItemId} studentPreview />
             </div>
             ) : (
             <div className="flex-1 flex flex-col bg-transparent min-h-[500px] p-6 md:p-10">
@@ -218,6 +221,7 @@ export default function CourseItemView({ activeCourseId, activeItemId, isStudent
                     ref={canvasRef}
                     sections={sections}
                     isEditing={isEditing}
+                    pageId={activeItemId}
                     onChange={() => queueSave(title)}
                     placeholder={isEditing ? "Start writing, or type / to add a block" : EMPTY_PAGE_FOR_STUDENTS}
                 />

@@ -115,13 +115,15 @@ export async function deleteModuleItem(id) {
  * Load the page content for an ID that may be a module item or a module section.
  * Throws when the page can't be loaded, so a failed request is never mistaken for an empty page.
  */
-export async function getPageContent(pageId) {
+export async function getPageContent(pageId, editorId = null) {
+  // Lecturers ask for the editable copy; everyone else gets the page without its answer keys.
+  const query = editorId ? `?forEdit=true&userId=${encodeURIComponent(editorId)}` : "";
   const kinds = [
     { pageType: "item", resource: "CourseModuleItem", titleField: "label" },
     { pageType: "module", resource: "CourseModule", titleField: "title" },
   ];
   for (const { pageType, resource, titleField } of kinds) {
-    const res = await fetch(`${API_BASE}/${resource}/${encodeURIComponent(pageId)}`);
+    const res = await fetch(`${API_BASE}/${resource}/${encodeURIComponent(pageId)}${query}`);
     if (res.status === 404) continue;
     if (!res.ok) throw new Error("The server couldn't load this page. Please try again.");
     const raw = await res.json();

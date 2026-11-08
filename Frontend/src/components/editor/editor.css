@@ -159,6 +159,20 @@
   pointer-events: none;
 }
 
+/* Feedback when an activity is marked */
+@keyframes koru-pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+@keyframes koru-shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-6px); }
+  40%, 80% { transform: translateX(6px); }
+}
+.koru-pop { animation: koru-pop 320ms var(--ease-koru-out) both; }
+.koru-shake { animation: koru-shake 360ms var(--ease-koru-in-out); }
+
 /* Hints for empty blocks while editing */
 .novel-editor-wrapper .tiptap .is-empty::before,
 .novel-editor-wrapper .tiptap .is-editor-empty::before {

@@ -1,7 +1,10 @@
 import React from "react";
 import {
     CheckSquare,
+    Bot,
+    CircleHelp,
     Code2,
+    Grid3x3,
     Heading1,
     Heading2,
     Heading3,
@@ -53,6 +56,14 @@ export const PAGE_ITEMS = [
     { title: "Drawing", description: "Sketch a diagram", searchTerms: ["excalidraw", "sketch", "diagram", "shapes"], icon: icon(PenLine), command: insertBlock("drawing") },
 ];
 
+// Auto-marked activities. They need a module page to save attempts against.
+export const ACTIVITY_ITEMS = [
+    { title: "Pick the right squares", description: "Auto-marked grid activity", searchTerms: ["activity", "grid", "squares", "assignment"], icon: icon(Grid3x3), command: insertBlock("squaresBlock") },
+    { title: "Move the block", description: "Students code a path to the target", searchTerms: ["activity", "code", "robot", "assignment", "programming"], icon: icon(Bot), command: insertBlock("moveBlock") },
+    { title: "Quiz", description: "Auto-marked multiple choice", searchTerms: ["activity", "questions", "test", "assignment"], icon: icon(CircleHelp), command: insertBlock("quizBlock") },
+];
+
 // Notes are personal rich text, so they only get the text blocks.
 export const notesSlashItems = createSuggestionItems(TEXT_ITEMS);
-export const pageSlashItems = createSuggestionItems([...TEXT_ITEMS, ...PAGE_ITEMS]);
+export const homeSlashItems = createSuggestionItems([...TEXT_ITEMS, ...PAGE_ITEMS]);
+export const pageSlashItems = createSuggestionItems([...TEXT_ITEMS, ...PAGE_ITEMS, ...ACTIVITY_ITEMS]);
