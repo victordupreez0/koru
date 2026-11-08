@@ -261,7 +261,7 @@ erDiagram
   SUBMISSION ||--o{ FEEDBACK : "gets"
   COURSE ||--o{ CHECK_IN_SESSION : opens
   CHECK_IN_SESSION ||--o{ ATTENDANCE : records
-  TIMETABLE ||--o{ CLASS : schedules
+  TIMETABLE ||--o{ SCHEDULED_CLASS : schedules
   COURSE ||--o{ ANNOUNCEMENT : posts
   COURSE ||--o{ MATERIAL : shares
 ```
