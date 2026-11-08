@@ -5,8 +5,9 @@ import PageCanvas from "../../components/PageCanvas";
 import SaveStatus from "../../components/editor/SaveStatus";
 import { useAutosave } from "../../components/editor/useAutosave";
 import { getPageContent, savePageContent, getCourseModules } from "../../services/moduleService";
-import { ArrowLeft, ArrowRight, Check, Edit3 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Edit3, Eye, EyeOff } from "lucide-react";
 
+const EMPTY_PAGE_FOR_STUDENTS = "The lecturer hasn't added anything to this page yet.";
 const savePage = ({ pageId, pageType, ...content }) => savePageContent(pageId, pageType, content);
 
 export default function CourseItemView({ activeCourseId, activeItemId, isStudentView = false }) {
@@ -17,6 +18,8 @@ export default function CourseItemView({ activeCourseId, activeItemId, isStudent
     const [page, setPage] = useState({ id: null });
     const [editingId, setEditingId] = useState(null);
     const [reloadCount, setReloadCount] = useState(0);
+    const [preview, setPreview] = useState(null);
+    const previewing = preview?.id === activeItemId;
     const pageLoading = page.id !== activeItemId;
     const isEditing = editingId === activeItemId;
     const { title = "", sections = [], pageType = null, error: loadError = null } = pageLoading ? {} : page;
@@ -90,6 +93,20 @@ export default function CourseItemView({ activeCourseId, activeItemId, isStudent
         };
     }, [activeItemId, reloadCount, flush]);
 
+    // Saves first, then loads the page back from the server the way a student's browser does.
+    const startPreview = async () => {
+        const latest = canvasRef.current?.getSections();
+        if (!(await flush())) return;
+        if (latest) setPage(p => ({ ...p, sections: latest }));
+        try {
+            const loaded = await getPageContent(activeItemId);
+            setPreview({ id: activeItemId, title: loaded.title, sections: loaded.sections });
+        } catch (err) {
+            console.error("Failed to load the student view:", err);
+            setPage(p => ({ ...p, error: err.message }));
+        }
+    };
+
     const queueSave = useCallback((nextTitle) => {
         if (!canvasRef.current) return;
         schedule({ pageId: activeItemId, pageType, title: nextTitle, sections: canvasRef.current.getSections() });
@@ -138,15 +155,26 @@ export default function CourseItemView({ activeCourseId, activeItemId, isStudent
 
                 {!isStudentView && !loadError && (
                     <div className="flex items-center gap-3">
-                        {isEditing && <SaveStatus status={status} />}
+                        {isEditing && !previewing && <SaveStatus status={status} />}
                         <Button
-                            variant="filled"
+                            variant={previewing ? "tonal" : "outlined"}
                             size="sm"
-                            onClick={() => (isEditing ? finishEditing() : setEditingId(activeItemId))}
-                            startIcon={isEditing ? <Check size={13} /> : <Edit3 size={13} />}
+                            aria-pressed={previewing}
+                            onClick={() => (previewing ? setPreview(null) : startPreview())}
+                            startIcon={previewing ? <EyeOff size={13} /> : <Eye size={13} />}
                         >
-                            {isEditing ? "Done" : "Edit page"}
+                            {previewing ? "Exit student view" : "View as student"}
                         </Button>
+                        {!previewing && (
+                            <Button
+                                variant="filled"
+                                size="sm"
+                                onClick={() => (isEditing ? finishEditing() : setEditingId(activeItemId))}
+                                startIcon={isEditing ? <Check size={13} /> : <Edit3 size={13} />}
+                            >
+                                {isEditing ? "Done" : "Edit page"}
+                            </Button>
+                        )}
                     </div>
                 )}
             </div>
@@ -162,6 +190,12 @@ export default function CourseItemView({ activeCourseId, activeItemId, isStudent
                     <Alert variant="error" title="This page couldn't be loaded">{loadError}</Alert>
                     <Button variant="tonal" size="sm" onClick={() => { setPage({ id: null }); setReloadCount(c => c + 1); }}>Try again</Button>
                 </div>
+            ) : previewing ? (
+            <div className="flex-1 flex flex-col bg-transparent min-h-[500px] p-6 md:p-10">
+                <Alert variant="info" className="mb-6">This is exactly what students see. Attempts you make here aren't recorded.</Alert>
+                <h1 className="font-display text-koru-display text-koru-on-surface mb-6">{preview.title}</h1>
+                <PageCanvas key="preview" sections={preview.sections} isEditing={false} placeholder={EMPTY_PAGE_FOR_STUDENTS} />
+            </div>
             ) : (
             <div className="flex-1 flex flex-col bg-transparent min-h-[500px] p-6 md:p-10">
                 {/* Title Input or View Label */}
@@ -185,7 +219,7 @@ export default function CourseItemView({ activeCourseId, activeItemId, isStudent
                     sections={sections}
                     isEditing={isEditing}
                     onChange={() => queueSave(title)}
-                    placeholder={isEditing ? "Start writing, or type / to add a block" : "The lecturer hasn't added anything to this page yet."}
+                    placeholder={isEditing ? "Start writing, or type / to add a block" : EMPTY_PAGE_FOR_STUDENTS}
                 />
             </div>
             )}
