@@ -147,3 +147,15 @@ export async function streamAssistant({ messages, userId, role, signal, onStage 
 }
 
 export { isAbort as isAbortError };
+
+// POST /api/Assistant/generate-quiz – returns drafted questions for the lecturer to review
+export async function generateQuizDraft(text, count, userId) {
+  const res = await fetch(`${API_BASE}/Assistant/generate-quiz`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text, count, userId }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.message || "The AI assistant isn't available right now. You can still write the questions yourself.");
+  return data.questions;
+}

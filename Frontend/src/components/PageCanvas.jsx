@@ -5,6 +5,7 @@ import { EmptyState } from "./UI";
 import { useAuth } from "../contexts/AuthContext";
 import { getMyAttempts } from "../services/attemptService";
 import { PageBlockContext } from "./editor/PageBlockContext";
+import GenerateQuiz from "./editor/GenerateQuiz";
 import { fromPageDoc, isDocEmpty, toPageDoc } from "./editor/pageDocument";
 
 /**
@@ -15,7 +16,7 @@ import { fromPageDoc, isDocEmpty, toPageDoc } from "./editor/pageDocument";
  *   pageId    – the module page this is; auto-marked activities are only offered when it's set
  *   studentPreview – a lecturer looking through a student's eyes
  */
-const PageCanvas = forwardRef(({ sections = [], isEditing = false, placeholder = "Start writing, or type / for blocks", onChange, toolbarExtra, pageId = null, studentPreview = false }, ref) => {
+const PageCanvas = forwardRef(({ sections = [], isEditing = false, placeholder = "Start writing, or type / for blocks", onChange, pageId = null, studentPreview = false }, ref) => {
     const editorRef = useRef(null);
     const doc = useMemo(() => toPageDoc(sections), [sections]);
     const { user, role } = useAuth();
@@ -55,7 +56,7 @@ const PageCanvas = forwardRef(({ sections = [], isEditing = false, placeholder =
                     editable={isEditing}
                     placeholder={placeholder}
                     variant={pageId ? "page" : "home"}
-                    toolbarExtra={toolbarExtra}
+                    toolbarExtra={pageId ? <GenerateQuiz /> : null}
                     onCreate={rememberEditor}
                     onUpdate={() => onChange?.()}
                     className="flex-1"
