@@ -3,8 +3,15 @@ using LearnOnline.Helpers;
 
 namespace LearnOnline.Tests.Helpers;
 
-public class DatabaseGuardTests
+// xUnit runs the tests in one class one at a time, so changing this variable here is safe.
+public class DatabaseGuardTests : IDisposable
 {
+    private const string Variable = "KORU_DB_GUARD";
+
+    public DatabaseGuardTests() => Environment.SetEnvironmentVariable(Variable, "true");
+
+    public void Dispose() => Environment.SetEnvironmentVariable(Variable, null);
+
     [Theory]
     [InlineData(null)]
     [InlineData("")]
@@ -31,5 +38,20 @@ public class DatabaseGuardTests
     {
         var act = () => DatabaseGuard.EnsureSafe(value);
         act.Should().NotThrow();
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("false")]
+    [InlineData("1")]
+    public void Does_nothing_unless_switched_on(string? setting)
+    {
+        Environment.SetEnvironmentVariable(Variable, setting);
+
+        var missing = () => DatabaseGuard.EnsureSafe(null);
+        var shared = () => DatabaseGuard.EnsureSafe("Host=x;Database=defaultdb;Username=u;Password=p");
+
+        missing.Should().NotThrow();
+        shared.Should().NotThrow();
     }
 }

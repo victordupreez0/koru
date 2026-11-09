@@ -118,6 +118,10 @@ GROQ_API_KEY=your-groq-key
 
 On start-up the API applies all migrations and seeds the database.
 
+| Optional variable | What it does |
+|---|---|
+| `KORU_DB_GUARD=true` | Stops the API at start-up if the connection string is missing or points at the shared `defaultdb` database. Off unless set to `true`. |
+
 ### 3. Run the backend
 
 ```bash
