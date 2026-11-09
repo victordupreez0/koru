@@ -197,6 +197,19 @@ using (var scope = app.Services.CreateScope())
         logger.LogError(ex, "RealDataSeeder threw an exception. Database may be in a partial state.");
     }
 
+    // The editor demo course, only when asked for.
+    if (Environment.GetEnvironmentVariable("SEED_DEMO_COURSE") == "true")
+    {
+        try
+        {
+            DemoCourseSeeder.Seed(context);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Demo course seeding failed.");
+        }
+    }
+
     // Backfill a random DiceBear avatar for any user without a profile picture
     try
     {

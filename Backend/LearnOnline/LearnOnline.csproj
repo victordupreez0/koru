@@ -22,4 +22,8 @@
     <Content Remove="wwwroot\uploads\**" />
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="Data\demo-course.json" LogicalName="LearnOnline.Data.demo-course.json" />
+  </ItemGroup>
+
 </Project>
