@@ -35,6 +35,10 @@ export default function HeaderTopBar({ children }) {
       badgeText = "Performance";
       titleText = "Learning Analytics";
       sectionText = "Progress Insights";
+    } else if (path.startsWith("/marketplace")) {
+      badgeText = "Marketplace";
+      titleText = "Curriculum Marketplace";
+      sectionText = "Browse curricula";
     } else if (path.startsWith("/settings")) {
       badgeText = "Preferences";
       titleText = "System Settings";

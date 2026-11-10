@@ -1,17 +1,20 @@
 import React, { useState } from "react";
 import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
 import { NodeViewContent, NodeViewWrapper, ReactNodeViewRenderer } from "@tiptap/react";
+import delphi from "highlight.js/lib/languages/delphi";
 import { common, createLowlight } from "lowlight";
 import { Check, Copy } from "lucide-react";
 import { Select } from "../../UI";
 
-const lowlight = createLowlight(common);
+// Delphi is what South African IT classes write, and it isn't in the common set.
+const lowlight = createLowlight({ ...common, delphi });
 
 const LANGUAGES = [
     ["", "Auto"],
     ["javascript", "JavaScript"],
     ["typescript", "TypeScript"],
     ["python", "Python"],
+    ["delphi", "Delphi"],
     ["csharp", "C#"],
     ["java", "Java"],
     ["xml", "HTML"],

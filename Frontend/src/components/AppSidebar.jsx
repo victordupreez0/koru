@@ -10,6 +10,7 @@ import {
   PieChart2,
   Settings,
   Eye,
+  Shop2,
 } from "@solar-icons/react";
 import { Menu as MenuIcon, X } from "lucide-react";
 import { useCourses } from "../contexts/CoursesContext";
@@ -196,6 +197,15 @@ export default function AppSidebar() {
       icon: <PieChart2 weight="Outline" size={22} color="currentColor" />,
       filledIcon: <PieChart2 weight="Bold" size={22} color="currentColor" />,
     },
+    // Teachers pick curricula; students only see the courses that come out of it.
+    ...(role === "teacher"
+      ? [{
+          label: "Market",
+          href: "/marketplace",
+          icon: <Shop2 weight="Outline" size={22} color="currentColor" />,
+          filledIcon: <Shop2 weight="Bold" size={22} color="currentColor" />,
+        }]
+      : []),
     {
       label: "Assistant",
       href: "/teacherassistant",

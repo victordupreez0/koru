@@ -15,15 +15,7 @@ import TableCell from "@tiptap/extension-table-cell";
 import TableHeader from "@tiptap/extension-table-header";
 import TableRow from "@tiptap/extension-table-row";
 import { BlockBackground, PasteAndDrop, TextStyleWithSize, TrailingParagraph, UniqueBlockIds } from "./behaviours";
-import { CalloutBlock } from "./blocks/CalloutBlock";
-import { CodeBlock } from "./blocks/CodeBlock";
-import { DrawingBlock } from "./blocks/DrawingBlock";
-import { EmbedBlock } from "./blocks/EmbedBlock";
-import { FileBlock } from "./blocks/FileBlock";
-import { ImageBlock } from "./blocks/ImageBlock";
-import { MoveBlock } from "./blocks/MoveBlock";
-import { QuizBlock } from "./blocks/QuizBlock";
-import { SquaresBlock } from "./blocks/SquaresBlock";
+import { koruBlocks } from "./blocks/registry";
 
 // Every block a page can contain. Read-only views use the same list, so a student's
 // page is rendered by exactly the same code as the lecturer's.
@@ -44,15 +36,7 @@ export const contentExtensions = [
     TableRow,
     TableHeader,
     TableCell,
-    CodeBlock,
-    CalloutBlock,
-    ImageBlock,
-    EmbedBlock,
-    FileBlock,
-    DrawingBlock,
-    SquaresBlock,
-    MoveBlock,
-    QuizBlock,
+    ...koruBlocks,
     BlockBackground,
     UniqueBlockIds,
     TrailingParagraph,

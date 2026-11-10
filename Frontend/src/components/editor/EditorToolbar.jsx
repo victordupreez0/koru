@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { Button, Card } from "../UI";
 import { cn } from "../../utils/cn";
+import BlockGallery from "./BlockGallery";
 import { FONT_SIZES, TEXT_COLORS } from "./palette";
 import { PAGE_TEMPLATES } from "./templates";
 
@@ -92,6 +93,25 @@ export default function EditorToolbar({ items, extra }) {
         else chain().setMark("textStyle", { fontSize: null }).removeEmptyTextStyle().run();
     };
     const setColor = (color) => (color ? chain().setColor(color).run() : chain().unsetColor().run());
+
+    // The set of columns the cursor is inside, if any: where it is and which column the cursor is in.
+    const columns = (() => {
+        const { $from } = editor.state.selection;
+        for (let depth = $from.depth; depth > 0; depth--) {
+            if ($from.node(depth).type.name === "columns") return { node: $from.node(depth), pos: $from.before(depth), index: $from.index(depth) };
+        }
+        return null;
+    })();
+    const addColumn = () => chain().insertContentAt(columns.pos + columns.node.nodeSize - 1, { type: "column", content: [{ type: "paragraph" }] }).run();
+    const removeColumn = () => {
+        let from = columns.pos + 1;
+        for (let i = 0; i < columns.index; i++) from += columns.node.child(i).nodeSize;
+        chain().deleteRange({ from, to: from + columns.node.child(columns.index).nodeSize }).run();
+    };
+    const cycleLayout = () => {
+        const order = ["equal", "wide-left", "wide-right"];
+        chain().updateAttributes("columns", { layout: order[(order.indexOf(columns.node.attrs.layout) + 1) % order.length] }).run();
+    };
     // On a blank page a template becomes the page; otherwise it's added at the cursor, so nothing is lost.
     const applyTemplate = (template) => {
         if (editor.isEmpty) editor.chain().focus().setContent({ type: "doc", content: template.blocks }, true).focus("start").run();
@@ -159,22 +179,21 @@ export default function EditorToolbar({ items, extra }) {
                 </>
             ) : null}
 
+            {columns ? (
+                <>
+                    <Divider />
+                    <ToolbarButton title="Add a column" disabled={columns.node.childCount >= 4} onClick={addColumn} className="gap-0.5"><Columns2 size={15} /><Plus size={11} /></ToolbarButton>
+                    <ToolbarButton title="Remove this column" disabled={columns.node.childCount <= 2} onClick={removeColumn} className="gap-0.5"><Columns2 size={15} /><Trash2 size={11} /></ToolbarButton>
+                    {columns.node.childCount === 2 ? (
+                        <ToolbarButton title="Change which column is wider" onClick={cycleLayout} className="px-2 text-koru-caption">
+                            {{ equal: "1 : 1", "wide-left": "2 : 1", "wide-right": "1 : 2" }[columns.node.attrs.layout] ?? "1 : 1"}
+                        </ToolbarButton>
+                    ) : null}
+                </>
+            ) : null}
+
             <Divider />
-            <ToolbarMenu
-                className="max-h-[60vh] w-64 overflow-y-auto md:left-auto md:right-0"
-                trigger={({ toggle }) => (
-                    <Button variant="tonal" size="sm" onMouseDown={(e) => e.preventDefault()} onClick={toggle} startIcon={<Plus size={13} />}>
-                        Insert
-                    </Button>
-                )}
-            >
-                {(close) => items.map((item) => (
-                    <MenuItem key={item.title} onClick={() => { item.command({ editor }); close(); }}>
-                        <span className="text-koru-on-surface-variant">{item.icon}</span>
-                        <span>{item.title}</span>
-                    </MenuItem>
-                ))}
-            </ToolbarMenu>
+            <BlockGallery items={items} />
             <ToolbarMenu
                 className="w-72 md:left-auto md:right-0"
                 trigger={({ toggle }) => (

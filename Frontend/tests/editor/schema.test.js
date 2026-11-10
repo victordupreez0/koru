@@ -41,7 +41,7 @@ describe("blocks survive a save and reload", () => {
     ["code", { type: "codeBlock", attrs: { language: "python" }, content: [{ type: "text", text: "a < b" }] }],
     ["drawing", { type: "drawing", attrs: { elements: [{ id: "a", type: "rectangle" }], svg: "<svg></svg>", alt: "A box" } }],
     ["squares", { type: "squaresBlock", attrs: { blockId: "s1", prompt: "Pick", rows: 2, cols: 2, correct: [0, 3], exactly: 2 } }],
-    ["move", { type: "moveBlock", attrs: { blockId: "m1", prompt: "Go", rows: 3, cols: 3, start: [0, 0], target: [2, 2], obstacles: [[1, 1]] } }],
+    ["move", { type: "moveBlock", attrs: { blockId: "m1", prompt: "Go", rows: 3, cols: 3, start: [0, 0], target: [2, 2], obstacles: [[1, 1]], stars: [[0, 2]], theme: "bee", mode: "turns", facing: "up", maxBlocks: 4, starter: "fwd" } }],
     ["quiz", { type: "quizBlock", attrs: { blockId: "q1", passPercent: 50, questions: [{ question: "a", options: ["x", "y"], correctAnswer: 1 }] } }],
   ])("%s", (_name, node) => expect(roundTrip([node])).toEqual([node]));
 

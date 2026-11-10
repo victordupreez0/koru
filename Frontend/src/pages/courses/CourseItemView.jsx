@@ -76,14 +76,15 @@ export default function CourseItemView({ activeCourseId, activeItemId, isStudent
         }
     };
 
-    // Load content from backend whenever the active item changes
+    // Everyone, lecturers included, reads the copy without answer keys, so a lecturer sees each
+    // activity exactly as the class does. The copy with the answers is only fetched to edit.
     useEffect(() => {
         if (!activeItemId) return;
         let mounted = true;
 
-        getPageContent(activeItemId, editorId)
+        getPageContent(activeItemId)
             .then(({ pageType: pt, title: t, sections: s }) => {
-                if (mounted) setPage({ id: activeItemId, pageType: pt, title: t, sections: s });
+                if (mounted) setPage({ id: activeItemId, pageType: pt, title: t, sections: s, stamp: Date.now() });
             })
             .catch(err => {
                 console.error("Failed to load page content:", err);
@@ -94,13 +95,31 @@ export default function CourseItemView({ activeCourseId, activeItemId, isStudent
             mounted = false;
             flush();
         };
-    }, [activeItemId, reloadCount, flush, editorId]);
+    }, [activeItemId, reloadCount, flush]);
+
+    // Replaces what is on screen with a fresh copy: with the answers to edit, without them to read.
+    const loadCopy = async (forEditing) => {
+        try {
+            const loaded = await getPageContent(activeItemId, forEditing ? editorId : null);
+            setPage({ id: activeItemId, pageType: loaded.pageType, title: loaded.title, sections: loaded.sections, stamp: Date.now() });
+            return true;
+        } catch (err) {
+            console.error("Failed to load page content:", err);
+            setPage(p => ({ ...p, error: err.message || "This page couldn't be loaded." }));
+            return false;
+        }
+    };
+
+    const startEditing = async () => {
+        if (await loadCopy(true)) setEditingId(activeItemId);
+    };
 
     // Saves first, then loads the page back from the server the way a student's browser does.
     const startPreview = async () => {
-        const latest = canvasRef.current?.getSections();
+        // The editor is unmounted while previewing, so keep its latest content to come back to.
+        const latest = isEditing ? canvasRef.current?.getSections() : null;
         if (!(await flush())) return;
-        if (latest) setPage(p => ({ ...p, sections: latest }));
+        if (latest) setPage(p => ({ ...p, sections: latest, stamp: Date.now() }));
         try {
             const loaded = await getPageContent(activeItemId);
             setPreview({ id: activeItemId, title: loaded.title, sections: loaded.sections });
@@ -116,10 +135,9 @@ export default function CourseItemView({ activeCourseId, activeItemId, isStudent
     }, [activeItemId, pageType, schedule]);
 
     const finishEditing = async () => {
-        const latest = canvasRef.current?.getSections();
         if (await flush()) {
-            if (latest) setPage(p => ({ ...p, sections: latest }));
             setEditingId(null);
+            await loadCopy(false);
         }
     };
 
@@ -172,7 +190,7 @@ export default function CourseItemView({ activeCourseId, activeItemId, isStudent
                             <Button
                                 variant="filled"
                                 size="sm"
-                                onClick={() => (isEditing ? finishEditing() : setEditingId(activeItemId))}
+                                onClick={() => (isEditing ? finishEditing() : startEditing())}
                                 startIcon={isEditing ? <Check size={13} /> : <Edit3 size={13} />}
                             >
                                 {isEditing ? "Done" : "Edit page"}
@@ -218,6 +236,7 @@ export default function CourseItemView({ activeCourseId, activeItemId, isStudent
                     <h1 className="font-display text-koru-display text-koru-on-surface mb-6">{title}</h1>
                 )}
                 <PageCanvas
+                    key={page.stamp}
                     ref={canvasRef}
                     sections={sections}
                     isEditing={isEditing}

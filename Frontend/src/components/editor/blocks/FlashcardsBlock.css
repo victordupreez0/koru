@@ -1,0 +1,53 @@
+/* Flashcards block: the 3D flip. */
+.koru-flip {
+  perspective: 1400px;
+}
+.koru-flip-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 600ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.koru-flip-inner.is-flipped {
+  transform: rotateY(180deg);
+}
+@media (hover: hover) {
+  .koru-flip:hover .koru-flip-inner {
+    transform: rotateY(-5deg) translateY(-2px);
+  }
+  .koru-flip:hover .koru-flip-inner.is-flipped {
+    transform: rotateY(185deg) translateY(-2px);
+  }
+}
+.koru-flip-face {
+  position: absolute;
+  inset: 0;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+.koru-flip-back {
+  transform: rotateY(180deg);
+}
+.koru-flip-hint {
+  animation: koru-flip-nudge 2.4s ease-in-out infinite;
+}
+@keyframes koru-flip-nudge {
+  0%, 70%, 100% { transform: translateY(0); opacity: 0.75; }
+  80% { transform: translateY(-3px); opacity: 1; }
+  90% { transform: translateY(0); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .koru-flip-inner,
+  .koru-flip-inner.is-flipped,
+  .koru-flip:hover .koru-flip-inner,
+  .koru-flip:hover .koru-flip-inner.is-flipped {
+    transition: none;
+    transform: none;
+  }
+  .koru-flip-back { transform: none; visibility: hidden; }
+  .koru-flip-inner.is-flipped .koru-flip-back { visibility: visible; }
+  .koru-flip-inner.is-flipped .koru-flip-front { visibility: hidden; }
+  .koru-flip-hint { animation: none; }
+}

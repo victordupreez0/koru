@@ -197,16 +197,17 @@ using (var scope = app.Services.CreateScope())
         logger.LogError(ex, "RealDataSeeder threw an exception. Database may be in a partial state.");
     }
 
-    // The editor demo course, only when asked for.
-    if (Environment.GetEnvironmentVariable("SEED_DEMO_COURSE") == "true")
+    // The showcase courses (Grade 1 to college), only when asked for: "true" adds what is missing, "refresh" rebuilds them.
+    var showcase = Environment.GetEnvironmentVariable("SEED_DEMO_COURSE");
+    if (showcase is "true" or "refresh")
     {
         try
         {
-            DemoCourseSeeder.Seed(context);
+            ShowcaseSeeder.Seed(context, refresh: showcase == "refresh");
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Demo course seeding failed.");
+            logger.LogError(ex, "Showcase seeding failed.");
         }
     }
 

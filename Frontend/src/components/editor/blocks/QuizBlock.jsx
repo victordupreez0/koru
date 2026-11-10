@@ -3,9 +3,10 @@ import { CircleHelp } from "lucide-react";
 import { Alert, Button, Input } from "../../UI";
 import { cn } from "../../../utils/cn";
 import { jsonAttribute } from "../behaviours";
-import BlockShell from "./BlockShell";
-import { blankQuestion, celebrate, makeInteractiveBlock, useBlockAttempt } from "./interactive";
+import { makeActivityBlock } from "./activity";
+import { blankQuestion, celebrate, useBlockAttempt } from "./interactive";
 import QuizQuestionsEditor from "./QuizQuestionsEditor";
+import Prose from "./Prose";
 
 function Play({ attrs }) {
     const { blockId, questions } = attrs;
@@ -30,10 +31,10 @@ function Play({ attrs }) {
     };
 
     return (
-        <BlockShell icon={<CircleHelp size={16} aria-hidden="true" />} label="Quiz" blockId={blockId} progress={progress}>
+        <>
             {questions.map((q, qi) => (
                 <fieldset key={qi} className="flex flex-col gap-1.5">
-                    <legend className="mb-1 text-koru-body font-medium text-koru-on-surface">{qi + 1}. {q.question}</legend>
+                    <legend className="mb-1 text-koru-body font-medium text-koru-on-surface"><Prose as="span" text={`${qi + 1}. ${q.question}`} /></legend>
                     {q.options.filter(Boolean).map((option, oi) => (
                         <label
                             key={oi}
@@ -54,30 +55,36 @@ function Play({ attrs }) {
             </div>
             {result ? <Alert variant={result.passed ? "success" : "warning"}>{result.message}</Alert> : null}
             {error ? <Alert variant="error">{error}</Alert> : null}
-        </BlockShell>
+        </>
     );
 }
 
-function QuizView({ node, updateAttributes, editor }) {
-    if (!editor.isEditable) return <Play attrs={node.attrs} />;
+function Author({ attrs, update }) {
     return (
-        <BlockShell icon={<CircleHelp size={16} aria-hidden="true" />} label="Quiz" blockId={node.attrs.blockId}>
-            <QuizQuestionsEditor questions={node.attrs.questions} onChange={(questions) => updateAttributes({ questions })} />
+        <>
+            <QuizQuestionsEditor questions={attrs.questions} onChange={(questions) => update({ questions })} />
             <Input
                 size="sm"
                 type="number"
                 min={1}
                 max={100}
                 label="Pass mark (%)"
-                value={node.attrs.passPercent}
-                onChange={(e) => updateAttributes({ passPercent: Math.min(100, Math.max(1, Number(e.target.value) || 1)) })}
+                value={attrs.passPercent}
+                onChange={(e) => update({ passPercent: Math.min(100, Math.max(1, Number(e.target.value) || 1)) })}
                 containerClassName="w-32"
             />
-        </BlockShell>
+        </>
     );
 }
 
-export const QuizBlock = makeInteractiveBlock("quizBlock", {
-    questions: jsonAttribute("questions", [blankQuestion()]),
-    passPercent: { default: 50 },
-}, QuizView);
+export const QuizBlock = makeActivityBlock({
+    name: "quizBlock",
+    label: "Quiz",
+    icon: <CircleHelp size={15} aria-hidden="true" />,
+    attributes: {
+        questions: jsonAttribute("questions", [blankQuestion()]),
+        passPercent: { default: 50 },
+    },
+    Author,
+    Play,
+});

@@ -1,0 +1,38 @@
+/* Logic gates block: live signals in the circuit diagram. */
+.koru-logic-wire,
+.koru-logic-gate,
+.koru-logic-input,
+.koru-logic-lamp {
+  transition: stroke 220ms var(--ease-koru-out), stroke-width 220ms var(--ease-koru-out), fill 220ms var(--ease-koru-out), filter 220ms var(--ease-koru-out), opacity 220ms var(--ease-koru-out);
+}
+.koru-logic-on {
+  filter: drop-shadow(0 0 3px color-mix(in srgb, var(--color-koru-success) 55%, transparent));
+}
+.koru-logic-flow {
+  stroke-dasharray: 3 12;
+  animation: koru-logic-flow 900ms linear infinite;
+}
+@keyframes koru-logic-flow {
+  to { stroke-dashoffset: -15; }
+}
+.koru-logic-lamp-on {
+  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--color-koru-accent) 80%, transparent));
+}
+.koru-logic-rays {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: opacity 260ms var(--ease-koru-out), transform 260ms var(--ease-koru-out);
+}
+.koru-logic-knob {
+  transition: transform 200ms var(--ease-koru-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .koru-logic-flow { animation: none; display: none; }
+  .koru-logic-wire,
+  .koru-logic-gate,
+  .koru-logic-input,
+  .koru-logic-lamp,
+  .koru-logic-rays,
+  .koru-logic-knob { transition: none; }
+}

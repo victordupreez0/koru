@@ -20,6 +20,7 @@ import AnalyticsPage from "./pages/analytics";
 import AdminCourses from "./pages/courses/adminCourses";
 import AppSidebar from "./components/AppSidebar";
 import DesignSystemPreview from "./pages/DesignSystemPreview";
+import Marketplace from "./pages/marketplace";
 
 // Routes that render full-bleed, outside the app shell (no sidebar, no gutter)
 const PUBLIC_PATHS = ["/", "/student/login", "/teacher/login", "/admin/login", "/signup"];
@@ -65,6 +66,7 @@ function AppShell() {
           <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
           <Route path="/teacherassistant" element={<ProtectedRoute allowedRoles={["teacher", "admin", "student"]}><TeacherAssistant /></ProtectedRoute>} />
           <Route path="/analytics" element={<ProtectedRoute><AnalyticsPage /></ProtectedRoute>} />
+          <Route path="/marketplace" element={<ProtectedRoute allowedRoles={["teacher"]}><Marketplace /></ProtectedRoute>} />
           <Route path="/admin/courses" element={<ProtectedRoute allowedRoles={["admin"]}><AdminCourses /></ProtectedRoute>} />
 
           {/* Profile routes */}

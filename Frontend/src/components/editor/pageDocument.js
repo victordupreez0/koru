@@ -71,6 +71,10 @@ export function toEmbed(rawUrl) {
     if (host === "figma.com" && ["file", "design", "proto", "board"].includes(parts[0])) {
         return { provider: "Figma", src: `https://www.figma.com/embed?embed_host=koru&url=${encodeURIComponent(href)}` };
     }
+
+    // The two tools South African schools use for block coding: Scratch projects and micro:bit programs.
+    if (host === "scratch.mit.edu" && parts[0] === "projects" && /^\d+$/.test(parts[1] ?? "")) return { provider: "Scratch", src: `https://scratch.mit.edu/projects/${parts[1]}/embed` };
+    if (host === "makecode.microbit.org" && /^_[A-Za-z0-9]+$/.test(parts[0] ?? "")) return { provider: "MakeCode", src: `https://makecode.microbit.org/---run?id=${parts[0]}` };
     return null;
 }
 

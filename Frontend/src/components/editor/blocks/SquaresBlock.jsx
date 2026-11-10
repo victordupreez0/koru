@@ -3,8 +3,9 @@ import { Grid3x3 } from "lucide-react";
 import { Alert, Button, Input } from "../../UI";
 import { cn } from "../../../utils/cn";
 import { jsonAttribute } from "../behaviours";
-import BlockShell from "./BlockShell";
-import { celebrate, makeInteractiveBlock, useBlockAttempt } from "./interactive";
+import { makeActivityBlock } from "./activity";
+import { celebrate, useBlockAttempt } from "./interactive";
+import Prose from "./Prose";
 
 const MAX_SIZE = 10;
 const clampSize = (value) => Math.min(MAX_SIZE, Math.max(1, Number(value) || 1));
@@ -106,8 +107,8 @@ function Play({ attrs }) {
     };
 
     return (
-        <BlockShell icon={<Grid3x3 size={16} aria-hidden="true" />} label="Pick the right squares" blockId={blockId} progress={progress}>
-            {prompt ? <p className="text-koru-body text-koru-on-surface">{prompt}</p> : null}
+        <>
+            {prompt ? <Prose text={prompt} className="text-koru-body text-koru-on-surface" /> : null}
             <Grid rows={rows} cols={cols} isOn={(i) => selected.includes(i)} onToggle={toggle} disabled={busy || result?.passed} state={result ? (result.passed ? "right" : "wrong") : null} />
             <div className="flex flex-wrap items-center gap-3">
                 <Button size="sm" onClick={check} loading={busy} disabled={!ready || result?.passed}>Check my answer</Button>
@@ -117,23 +118,21 @@ function Play({ attrs }) {
             </div>
             {result ? <Alert variant={result.passed ? "success" : "warning"}>{result.message}</Alert> : null}
             {error ? <Alert variant="error">{error}</Alert> : null}
-        </BlockShell>
+        </>
     );
 }
 
-function SquaresView({ node, updateAttributes, editor }) {
-    if (!editor.isEditable) return <Play attrs={node.attrs} />;
-    return (
-        <BlockShell icon={<Grid3x3 size={16} aria-hidden="true" />} label="Pick the right squares" blockId={node.attrs.blockId}>
-            <Author attrs={node.attrs} update={updateAttributes} />
-        </BlockShell>
-    );
-}
-
-export const SquaresBlock = makeInteractiveBlock("squaresBlock", {
-    prompt: { default: "" },
-    rows: { default: 3 },
-    cols: { default: 3 },
-    correct: jsonAttribute("correct", []),
-    exactly: { default: null },
-}, SquaresView);
+export const SquaresBlock = makeActivityBlock({
+    name: "squaresBlock",
+    label: "Pick the right squares",
+    icon: <Grid3x3 size={15} aria-hidden="true" />,
+    attributes: {
+        prompt: { default: "" },
+        rows: { default: 3 },
+        cols: { default: 3 },
+        correct: jsonAttribute("correct", []),
+        exactly: { default: null },
+    },
+    Author,
+    Play,
+});

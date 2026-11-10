@@ -30,3 +30,16 @@ export async function getBlockResults(pageId, blockId, userId) {
   const res = await fetch(`${blockUrl(pageId, blockId)}/results?userId=${encodeURIComponent(userId)}`);
   return handle(res);
 }
+
+const preview = (path, userId, block, answer) =>
+  fetch(`${API_BASE}/Attempt/preview/${path}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userId, block, answer }),
+  }).then(handle);
+
+// POST – a lecturer's unsaved block exactly as a student would receive it: { attrs }
+export const previewStudentView = (userId, block) => preview("student-view", userId, block);
+
+// POST – marks an answer against a lecturer's unsaved block. Nothing is recorded.
+export const previewMark = (userId, block, answer) => preview("mark", userId, block, answer);

@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using LearnOnline.Data;
 using LearnOnline.Helpers;
 using LearnOnline.Models;
@@ -88,6 +89,46 @@ namespace LearnOnline.Controllers
             }
 
             return Ok(new { result.Passed, result.Score, result.MaxScore, result.Message, result.Details, recorded = isStudent });
+        }
+
+        // A lecturer trying out a block they are still building. The block comes from their editor,
+        // not from a saved page, so nothing here is stored and only staff may call it.
+        public class PreviewRequest
+        {
+            public string? UserId { get; set; }
+            public JsonObject? Block { get; set; }
+            public JsonElement Answer { get; set; }
+        }
+
+        // POST /api/Attempt/preview/student-view – the block exactly as a student would receive it
+        [HttpPost("preview/student-view")]
+        public async Task<IActionResult> PreviewStudentView([FromBody] PreviewRequest request)
+        {
+            if (!await _context.IsStaffAsync(request.UserId)) return StatusCode(403, new { message = "Only lecturers can preview activities." });
+            if (request.Block?["attrs"] is not JsonObject) return BadRequest(new { message = "This block has no settings." });
+
+            PageBlocks.StripBlock(request.Block);
+            return Ok(new { attrs = request.Block["attrs"] });
+        }
+
+        // POST /api/Attempt/preview/mark – mark an answer against the unsaved block
+        [HttpPost("preview/mark")]
+        public async Task<IActionResult> PreviewMark([FromBody] PreviewRequest request)
+        {
+            if (!await _context.IsStaffAsync(request.UserId)) return StatusCode(403, new { message = "Only lecturers can preview activities." });
+            if (request.Block == null) return BadRequest(new { message = "This block has no settings." });
+            if (request.Answer.ValueKind != JsonValueKind.Undefined && request.Answer.GetRawText().Length > MaxAnswerLength)
+                return BadRequest(new { message = "That answer is too long." });
+
+            try
+            {
+                var result = BlockMarker.Mark(request.Block, request.Answer);
+                return Ok(new { result.Passed, result.Score, result.MaxScore, result.Message, result.Details, recorded = false });
+            }
+            catch (MarkingException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         // GET /api/Attempt/pages/{pageId}/mine?userId= – a student's progress on each block of a page

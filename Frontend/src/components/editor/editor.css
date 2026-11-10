@@ -1,5 +1,8 @@
 /* Page content inside the editor. Colours, type and radii all come from the design tokens in index.css. */
 
+/* In the "components" layer so that utility classes on a block's own elements win over these page styles. */
+@layer components {
+
 .novel-editor-wrapper .tiptap {
   outline: none;
   font-size: var(--text-koru-body);
@@ -203,4 +206,47 @@
   outline: 2px solid var(--color-koru-focus);
   outline-offset: 2px;
   border-radius: var(--radius-koru-sm);
+}
+
+/* Columns: side by side on a wide page, stacked when the page itself is narrow. */
+.novel-editor-wrapper { container-type: inline-size; }
+.novel-editor-wrapper .tiptap .koru-columns {
+  display: grid;
+  gap: 1.5rem;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  align-items: start;
+  margin: 1rem 0;
+}
+.novel-editor-wrapper .tiptap .koru-columns[data-layout="wide-left"] { grid-auto-columns: auto; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); }
+.novel-editor-wrapper .tiptap .koru-columns[data-layout="wide-right"] { grid-auto-columns: auto; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); }
+.novel-editor-wrapper .tiptap .koru-column { min-width: 0; }
+.novel-editor-wrapper .tiptap .koru-column > * + * { margin-top: 0.5rem; }
+.novel-editor-wrapper .tiptap .koru-column > *:first-child { margin-top: 0; }
+.novel-editor-wrapper .tiptap[contenteditable="true"] .koru-column {
+  outline: 1px dashed var(--color-koru-outline-variant);
+  outline-offset: 0.5rem;
+  border-radius: var(--radius-koru-sm);
+  min-height: 2.5rem;
+}
+@container (max-width: 560px) {
+  .novel-editor-wrapper .tiptap .koru-columns,
+  .novel-editor-wrapper .tiptap .koru-columns[data-layout] { grid-auto-flow: row; grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Diagrams fit the page instead of scrolling it. */
+.novel-editor-wrapper .koru-diagram svg { max-width: 100%; height: auto; }
+
+/* Blocks such as activities are islands with their own layout. Lists, tables and code inside
+   them are part of that block's design, not page content, so the page styles above are undone. */
+.novel-editor-wrapper .tiptap [contenteditable="false"] :is(ul, ol) { list-style: none; padding-left: 0; }
+.novel-editor-wrapper .tiptap [contenteditable="false"] li { margin: 0; }
+.novel-editor-wrapper .tiptap [contenteditable="false"] table { margin: 0; table-layout: auto; width: auto; overflow: visible; }
+.novel-editor-wrapper .tiptap [contenteditable="false"] :is(th, td) { border: 0; padding: 0; min-width: 0; background: none; font-weight: inherit; vertical-align: middle; }
+.novel-editor-wrapper .tiptap [contenteditable="false"] pre { background: none; color: inherit; padding: 0; border-radius: 0; font-size: inherit; overflow: visible; }
+.novel-editor-wrapper .tiptap [contenteditable="false"] code { background: none; color: inherit; padding: 0; border-radius: 0; font-size: inherit; }
+.novel-editor-wrapper .tiptap [contenteditable="false"] :is(h1, h2, h3) { margin-top: 0; }
+
+/* The outline shows which block is selected while editing. Readers don't select blocks. */
+.novel-editor-wrapper .tiptap[contenteditable="false"] .ProseMirror-selectednode { outline: none; }
 }
